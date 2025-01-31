@@ -166,7 +166,7 @@ export class UserService {
 
     async validateToken(data: IValidateUserToken) {
         try {
-            const tokenIsValidResponse = await this.userSessionTokenRepository.validateToken(data.session_id, data.token)
+            const tokenIsValidResponse = await this.userSessionTokenRepository.validateToken(data['session-id'], data.token)
 
             if (tokenIsValidResponse !== false) {
                 return {

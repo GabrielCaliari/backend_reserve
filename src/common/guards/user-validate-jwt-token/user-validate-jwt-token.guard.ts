@@ -17,17 +17,17 @@ export class UserValidateJwtTokenGuard implements CanActivate {
 
 		if (
 			headers.hasOwnProperty('authorization') &&
-			headers.hasOwnProperty('session_id') &&
+			headers.hasOwnProperty('session-id') &&
 			/^Bearer\s[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$/.test(headers.authorization) &&
-			+headers.session_id
+			+headers['session-id']
 		) {
 			const token = headers.authorization.replaceAll('Bearer ', '') as string;
-			const canActivateResult = await this.userService.validateToken({ token, session_id: +headers.session_id }) as { status, data: { user_id: number } };
+			const canActivateResult = await this.userService.validateToken({ token, 'session-id': +headers['session-id'] }) as { status, data: { user_id: number } };
 
 			if (canActivateResult.status === 200) {
 				req.user_id = canActivateResult.data.user_id;
 				req.token = token;
-				req.session_id = headers.session_id;
+				req['session-id'] = headers['session-id'];
 				return true;
 			}
 		}
