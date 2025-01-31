@@ -1,0 +1,475 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["views"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                        Int                         @id @default(autoincrement())
+  email                     String                      @unique
+  name                      String                      @db.VarChar(100)
+  cpf                       String                      @unique @db.VarChar(11)
+  phone_number              String                      @db.VarChar(13)
+  sex                       Int?                        @default(1) @db.SmallInt
+  date_of_birth             DateTime?                   @db.Date
+  date_expires_in           DateTime?                   @db.Date
+  Plan                      Plan                        @relation(fields: [plan_id], references: [id])
+  plan_id                   Int
+  created_at                DateTime                    @default(now())
+  updated_at                DateTime                    @updatedAt
+  Credential                UserCredential?
+  UserSessionToken          UserSessionToken[]
+  UserPasswordChangeSession UserPasswordChangeSession[]
+  Search                    Search[]
+  CompanyExport             CompanyExport[]
+  Brand                     Brand[]
+  BrandMonitoring           BrandMonitoring[]
+  BrandNotification         BrandNotification[]
+  MonitoringPlan            MonitoringPlan[]
+  BrandAlert                BrandAlert[]
+  BrandAnalysis             BrandAnalysis[]
+}
+
+model Plan {
+  id                        Int              @id @default(autoincrement())
+  name                      String           @db.VarChar(100)
+  slug                      String           @unique
+  maximum_queries           Int
+  maximum_queries_to_export Int              @default(0)
+  User                      User[]
+  MonitoringPlan            MonitoringPlan[]
+}
+
+model MonitoringPlan {
+  id                   Int       @id @default(autoincrement())
+  plan_amount          Decimal   @db.Money
+  status               Int       @db.SmallInt
+  checkout_status      String
+  plan_nickname        String?
+  plan_currency        String
+  interval             String
+  start_date           DateTime
+  current_period_start DateTime
+  current_period_end   DateTime
+  trial_end            DateTime?
+  cancel_at            DateTime?
+  canceled_at          DateTime?
+  ended_at             DateTime?
+  billing_cycle_anchor DateTime
+  plan_id              Int?
+  Plan                 Plan?     @relation(fields: [plan_id], references: [id])
+  brand_id             Int?
+  Brand                Brand?    @relation(fields: [brand_id], references: [id])
+  subscription_id      String    @unique
+  User                 User      @relation(fields: [user_id], references: [id])
+  user_id              Int
+  created_at           DateTime  @default(now())
+  updated_at           DateTime  @updatedAt
+}
+
+model UserSessionToken {
+  id         Int      @id @default(autoincrement())
+  hash_token String   @db.Text
+  salt       String
+  User       User     @relation(fields: [user_id], references: [id])
+  user_id    Int
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+model UserCredential {
+  id         Int      @id @default(autoincrement())
+  user_id    Int      @unique
+  hash       String
+  salt       String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  User       User     @relation(fields: [user_id], references: [id])
+}
+
+model UserCredentialHistory {
+  id         Int      @id @default(autoincrement())
+  user_id    Int
+  hash       String
+  salt       String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+model UserPasswordChangeSession {
+  id         Int       @id @default(autoincrement())
+  slug       String    @db.VarChar(64)
+  status     Int       @db.SmallInt
+  hash_token String    @db.Text
+  salt       String
+  lat        String?
+  long       String?
+  device_ip  String    @db.VarChar(16)
+  expires_in DateTime
+  expired_at DateTime?
+  user_id    Int
+  User       User      @relation(fields: [user_id], references: [id])
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+}
+
+model Company {
+  id                    Int       @id @default(autoincrement())
+  cnpj                  String    @unique @db.VarChar(14)
+  branch_type           Int       @db.SmallInt
+  business_name         String?   @db.VarChar(255)
+  status                String    @db.VarChar(2) // 01 = nula; 02 = ativa; 03 = suspensa; 04 = inapta; 08 = baixada
+  date_status           DateTime? @db.Date
+  code_detail_status    String    @db.VarChar(2)
+  outer_city            String?   @db.VarChar(70)
+  coutry_code           String?   @db.VarChar(20)
+  start_date            DateTime? @db.Date
+  main_cnae             String?   @db.VarChar(16)
+  secondary_cnae        String?
+  type_of_place         String?   @db.VarChar(20)
+  place                 String?   @db.VarChar(120)
+  house_number          String?   @db.VarChar(25)
+  address_complement    String?   @db.VarChar(156)
+  district              String?   @db.VarChar(120)
+  cep                   String?   @db.VarChar(10)
+  uf                    String?   @db.VarChar(5)
+  city_code             String?   @db.VarChar(5)
+  ddd_1                 String?   @db.VarChar(5)
+  phone_1               String?   @db.VarChar(8)
+  ddd_2                 String?   @db.VarChar(5)
+  phone_2               String?   @db.VarChar(8)
+  ddd_fax               String?   @db.VarChar(5)
+  fax                   String?   @db.VarChar(8)
+  email                 String?   @db.VarChar(115)
+  special_citation      String?   @db.VarChar(150)
+  special_citation_date DateTime? @db.Date
+  load_update_date      DateTime  @db.Date
+  created_at            DateTime  @default(now())
+  updated_at            DateTime  @default(now()) @updatedAt
+
+  @@index([uf, city_code, branch_type, business_name, status, date_status, code_detail_status, coutry_code, start_date, main_cnae, secondary_cnae, created_at(sort: Desc)])
+}
+
+// SELECT
+//     c.id AS company_id,
+// 	a.id AS auxiliary_company_information_id,
+// 	c.cnpj,
+// 	c.branch_type,
+// 	c.business_name,
+// 	c.status,
+// 	c.date_status,
+// 	c.code_detail_status,
+// 	c.outer_city,
+// 	c.coutry_code,
+// 	c.start_date,
+// 	c.main_cnae_id,
+// 	c.type_of_place,
+// 	c.place,
+// 	c.house_number,
+// 	c.address_complement,
+// 	c.district,
+// 	c.cep,
+// 	c.uf,
+// 	c.city_code,
+// 	c.ddd_1,
+// 	c.phone_1,
+// 	c.ddd_2,
+// 	c.phone_2,
+// 	c.ddd_fax,
+// 	c.fax,
+// 	c.email,
+// 	c.special_citation,
+// 	c.special_citation_date,
+// 	c.load_update_date,
+// 	a.fantasy_name,
+// 	a.legal_nature,
+// 	a.qualification_representative_before_cnpj,
+// 	a.social_capital,
+// 	a.size,
+// 	a.federative_entity,
+// 	c.created_at AS company_created_at, 
+// 	c.updated_at AS company_updated_at
+// FROM
+//     "public"."Company" c
+// JOIN
+//     "public"."AuxiliaryCompanyInformation" a
+// ON
+//     LEFT(c.cnpj, 8) = a.cnpj
+
+view ViewCompany {
+  company_id                               Int
+  auxiliary_company_information_id         Int
+  cnpj                                     String?
+  branch_type                              Int?
+  business_name                            String?
+  status                                   String?
+  date_status                              DateTime?
+  code_detail_status                       String?
+  outer_city                               String?
+  coutry_code                              String?
+  main_cnae                                String?
+  secondary_cnae                           String?
+  start_date                               DateTime?
+  type_of_place                            String?
+  place                                    String?
+  house_number                             String?
+  address_complement                       String?
+  district                                 String?
+  cep                                      String?
+  uf                                       String?
+  city_code                                String?
+  ddd_1                                    String?
+  phone_1                                  String?
+  ddd_2                                    String?
+  phone_2                                  String?
+  ddd_fax                                  String?
+  fax                                      String?
+  email                                    String?
+  special_citation                         String?
+  special_citation_date                    DateTime?
+  load_update_date                         DateTime?
+  fantasy_name                             String?
+  legal_nature                             String?
+  qualification_representative_before_cnpj String?
+  social_capital                           Decimal?
+  size                                     String?
+  federative_entity                        String?
+  company_created_at                       DateTime
+  company_updated_at                       DateTime
+
+  @@id([company_id])
+  @@map("viewcompany")
+}
+
+model AuxiliaryCompanyInformation {
+  id                                       Int      @id @default(autoincrement())
+  cnpj                                     String   @unique @db.VarChar(14)
+  fantasy_name                             String?  @db.VarChar(150)
+  legal_nature                             String?  @db.VarChar(4)
+  qualification_representative_before_cnpj String?  @db.VarChar(2)
+  social_capital                           Decimal? @db.Decimal(22, 2)
+  size                                     String?  @db.VarChar(2) // 00 - NAO INFORMADO; 01 - MICRO EMPRESA; 03 - EMPRESA DE PEQUENO PORTE; 05 - DEMAIS
+  federative_entity                        String?  @db.VarChar(100)
+  created_at                               DateTime @default(now())
+  updated_at                               DateTime @default(now()) @updatedAt
+}
+
+model Search {
+  id         Int      @id @default(autoincrement())
+  amount     Int
+  limit      Int      @db.SmallInt
+  hash       String   @unique @db.VarChar(100)
+  filters    Json
+  user_id    Int
+  User       User     @relation(fields: [user_id], references: [id])
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+model TaxRegime {
+  id               Int      @id @default(autoincrement())
+  cnpj             String   @db.VarChar(14)
+  year             DateTime @db.Date
+  scp_cnpj         String   @db.VarChar(115)
+  type_of_taxation Int      @db.SmallInt // 1 = Imenes e isentas; 2 = Lucro arbitrado; 3 = Lucro real; 4 = Lucro presumido
+  taxation         String   @db.VarChar(115)
+  company_id       Int?
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+}
+
+model Partner {
+  id                           Int       @id @default(autoincrement())
+  cnpj                         String    @db.VarChar(14)
+  partner_type                 String    @db.VarChar(2)
+  name                         String?   @db.VarChar(150)
+  etary_age                    String?   @db.VarChar(10)
+  identifier                   String    @db.VarChar(14)
+  inclusion_date               DateTime? @db.Date
+  coutry_code                  String?   @db.VarChar(5)
+  cpf_representative           String?   @db.VarChar(11)
+  name_representative          String?   @db.VarChar(150)
+  representative_qualification String?   @db.VarChar(2)
+  company_id                   Int?
+  created_at                   DateTime  @default(now())
+  updated_at                   DateTime  @updatedAt
+}
+
+// Nome da marca
+// CNPJ ou CPF (OP)
+// E-mail (Notificação)
+// Telefone
+// Processo do INPI (Num)
+
+model Brand {
+  id                Int                 @id @default(autoincrement())
+  name              String
+  identifier        String?             @db.VarChar(14)
+  email             String
+  phone_number      String
+  user_id           Int
+  User              User                @relation(fields: [user_id], references: [id])
+  inpi_number       String?             @db.VarChar(30)
+  created_at        DateTime            @default(now())
+  updated_at        DateTime            @updatedAt
+  BrandMonitoring   BrandMonitoring[]
+  BrandNotification BrandNotification[]
+  MonitoringPlan    MonitoringPlan[]
+  BrandAlert        BrandAlert[]
+}
+
+model Cnae {
+  id         Int      @id @default(autoincrement())
+  code       String   @db.VarChar(11)
+  name       String   @db.VarChar(255)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+model Journal {
+  id         Int      @id @default(autoincrement())
+  name       String   @unique
+  extension  String   @db.VarChar(10)
+  size       String
+  loaded     Boolean  @default(false)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+model JournalToFetch {
+  id           Int            @id @default(autoincrement())
+  zip_name     String         @unique @db.VarChar(100)
+  name         String         @db.VarChar(100)
+  searched     Boolean        @default(false)
+  created_at   DateTime       @default(now())
+  updated_at   DateTime       @updatedAt
+  JournalAlert JournalAlert[]
+  BrandAlert   BrandAlert[]
+}
+
+model BrandAlert {
+  id                   Int             @id @default(autoincrement())
+  brand                String?
+  deposit_date         DateTime?
+  conception_date      DateTime?
+  effective_date       DateTime?
+  nature               String?         @db.VarChar(100)
+  presentation         String?         @db.VarChar(100)
+  classe_nice          Json?
+  prioridade_unionista Json?
+  apostila             String?
+  classe_viena         Json?
+  journal_number       String
+  journal_date         DateTime
+  process_number       String          @db.VarChar(50)
+  attorney             String?
+  titular              Json
+  despacho             Json
+  sobrestador          Json
+  Brand                Brand           @relation(fields: [brand_id], references: [id])
+  brand_id             Int
+  BrandMonitoring      BrandMonitoring @relation(fields: [brand_monitoring_id], references: [id])
+  brand_monitoring_id  Int
+  User                 User            @relation(fields: [user_id], references: [id])
+  user_id              Int
+  Journal_to_fetch     JournalToFetch  @relation(fields: [jornal_to_fetch_id], references: [id])
+  jornal_to_fetch_id   Int
+  created_at           DateTime        @default(now())
+  updated_at           DateTime        @updatedAt
+}
+
+model BrandMonitoring {
+  id                      Int                 @id @default(autoincrement())
+  processed_last_analysis Int                 @default(0)
+  total_processed         Int                 @default(0)
+  triggered_notifications Int                 @default(0)
+  status                  Int                 @db.SmallInt
+  user_id                 Int
+  User                    User                @relation(fields: [user_id], references: [id])
+  brand_id                Int
+  Brand                   Brand               @relation(fields: [brand_id], references: [id])
+  inpi_number             String?             @db.VarChar(30)
+  last_magazine_searched  String?             @db.VarChar(20)
+  last_movement           DateTime?
+  deposit                 DateTime?
+  last_search             DateTime?
+  created_at              DateTime            @default(now())
+  updated_at              DateTime            @updatedAt
+  BrandNotification       BrandNotification[]
+  BrandAlert              BrandAlert[]
+}
+
+model JournalAlert {
+  id                   Int            @id @default(autoincrement())
+  brand                String?
+  deposit_date         DateTime?
+  conception_date      DateTime?
+  effective_date       DateTime?
+  nature               String?        @db.VarChar(100)
+  presentation         String?        @db.VarChar(100)
+  classe_nice          Json?
+  prioridade_unionista Json?
+  apostila             String?
+  classe_viena         Json?
+  journal_number       String
+  journal_date         DateTime
+  process_number       String         @db.VarChar(50)
+  attorney             String?
+  titular              Json
+  despacho             Json
+  sobrestador          Json
+  Journal_to_fetch     JournalToFetch @relation(fields: [jornal_to_fetch_id], references: [id])
+  jornal_to_fetch_id   Int
+  created_at           DateTime       @default(now())
+  updated_at           DateTime       @updatedAt
+}
+
+model BrandAnalysis {
+  id                 Int      @id @default(autoincrement())
+  user_message       Json
+  response           Json
+  json_data_response Json
+  md_data_reposnse   Json
+  html_data_response Json
+  brand              String   @db.VarChar(255)
+  niche              String   @db.VarChar(155)
+  description        String   @db.VarChar(255)
+  User               User     @relation(fields: [user_id], references: [id])
+  user_id            Int
+  created_at         DateTime @default(now())
+  updated_at         DateTime @updatedAt
+}
+
+model BrandNotification {
+  id                  Int             @id @default(autoincrement())
+  Brand               Brand           @relation(fields: [brand_id], references: [id])
+  brand_id            Int
+  User                User            @relation(fields: [user_id], references: [id])
+  user_id             Int
+  Brand_monitoring    BrandMonitoring @relation(fields: [brand_monitoring_id], references: [id])
+  brand_monitoring_id Int
+  created_at          DateTime        @default(now())
+  updated_at          DateTime        @updatedAt
+}
+
+model CompanyExport {
+  id            Int       @id @default(autoincrement())
+  company_count Int
+  public_link   String
+  deletion_date DateTime?
+  filters       Json
+  user_id       Int
+  User          User      @relation(fields: [user_id], references: [id])
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
+}

@@ -1,0 +1,23 @@
+{
+  "name": "script",
+  "version": "1.0.0",
+  "main": "cluster.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "bull": "^4.16.5",
+    "csv-parser": "^3.1.0",
+    "fast-csv": "^5.0.2",
+    "mysql2": "^3.12.0",
+    "pg": "^8.13.1",
+    "pg-hstore": "^2.3.4",
+    "progress": "^2.0.3",
+    "sequelize": "^6.37.5",
+    "throttled-queue": "^2.1.4"
+  }
+}

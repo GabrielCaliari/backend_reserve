@@ -1,0 +1,39 @@
+import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+import { errorTypes } from 'src/core/error-types';
+import CustomHttpException from 'src/core/exceptions/CustomHttpException';
+import { UserService } from 'src/modules/user/user.service';
+
+@Injectable()
+export class UserValidateJwtTokenGuard implements CanActivate {
+	constructor(
+		private readonly userService: UserService
+	) { }
+
+	async canActivate(
+		context: ExecutionContext,
+	): Promise<boolean> {
+		const req = context.switchToHttp().getRequest();
+		const headers = req.headers;
+
+		if (
+			headers.hasOwnProperty('authorization') &&
+			headers.hasOwnProperty('session_id') &&
+			/^Bearer\s[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$/.test(headers.authorization) &&
+			+headers.session_id
+		) {
+			const token = headers.authorization.replaceAll('Bearer ', '') as string;
+			const canActivateResult = await this.userService.validateToken({ token, session_id: +headers.session_id }) as { status, data: { user_id: number } };
+
+			if (canActivateResult.status === 200) {
+				req.user_id = canActivateResult.data.user_id;
+				req.token = token;
+				req.session_id = headers.session_id;
+				return true;
+			}
+		}
+
+		throw new CustomHttpException({
+			code: errorTypes._401.user_token_in
+		});
+	}
+}

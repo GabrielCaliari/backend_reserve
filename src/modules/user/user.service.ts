@@ -1,0 +1,217 @@
+import { Injectable } from '@nestjs/common';
+import { errorTypes } from 'src/core/error-types';
+import { errorResponse } from 'src/core/functions';
+import UserRepository, { ICreateUser } from './user.repository';
+import { IAuthenticateUser, IValidateUserToken } from 'src/@types/@authenticate-user';
+import UserCredentialRepository from './user-credential.repository';
+import UserSessionTokenRepository from './user-session-token.repository';
+import SearchRepository from '../company/search.repository';
+import PlanRepository from './plan.repository';
+import BrandRepository from '../brand/brand.repository';
+import BrandAlertRepository from '../brand/brand-alert.repository';
+import { EStatus } from 'src/@types/@plan';
+
+@Injectable()
+export class UserService {
+    constructor(
+        private readonly userRepository: UserRepository,
+        private readonly userCredentialRepository: UserCredentialRepository,
+        private readonly userSessionTokenRepository: UserSessionTokenRepository,
+        private readonly searchRepository: SearchRepository,
+        private readonly planRepository: PlanRepository,
+        private readonly brandAlertRepository: BrandAlertRepository,
+        private readonly brandRepository: BrandRepository
+    ) { }
+
+    async create({ email, name, password, cpf, phone_number }: ICreateUser) {
+        try {
+            const existingUserByEmail = await this.userRepository.selectByEmail(email);
+
+            if (existingUserByEmail) {
+                return errorResponse(errorTypes._400.user_alr_exe, 400);
+            }
+
+            const existingUserByCPF = await this.userRepository.selectByCPF(cpf);
+
+            if (existingUserByCPF) {
+                return errorResponse(errorTypes._400.user_alr_exc, 400);
+            }
+
+            const raw = await this.userRepository.create({
+                email,
+                name,
+                password,
+                cpf,
+                phone_number
+                // date_of_birth,
+                // sex,
+            });
+
+            return {
+                status: 201,
+                data: {
+                    id: raw.id
+                }
+            }
+        } catch (error) {
+            return errorResponse(errorTypes._500.user_nc, 500, error);
+        }
+    }
+
+    async feed(userId: number) {
+        try {
+            const user = await this.userRepository.selectById(userId, {
+                Plan: true
+            });
+
+            const searcheds = await this.searchRepository.count(userId);
+            const countBrands = await this.planRepository.countMonitoringPlans(userId);
+
+            const brands = await this.brandRepository.find({
+                user_id: user.id,
+                MonitoringPlan: {
+                    some: {
+                        status: EStatus.active
+                    }
+                }
+            }, {
+                pag: {
+                    limit: 5,
+                    page: 1
+                }
+            });
+
+            const brandDetails = await Promise.all(brands.map(async brand => {
+                const lastMove = await this.brandAlertRepository.findByBrand(brand.id, 1);
+
+                return {
+                    id: brand.id,
+                    name: brand.name,
+                    email: brand.email,
+                    phone_number: brand.phone_number,
+                    inpi_number: brand.inpi_number,
+                    latest_brand_moves: lastMove
+                }
+            }))
+
+            return {
+                status: 200,
+                data: {
+                    search_done: searcheds,
+                    max_search: user.Plan.maximum_queries,
+                    brand: brandDetails,
+                    brand_monitoring: {
+                        used: countBrands.used,
+                        not_used: countBrands.not_used
+                    },
+                },
+            }
+        } catch (error) {
+            return errorResponse(errorTypes._500.user_feed, 500, error);
+        }
+    }
+
+    async authenticate(data: IAuthenticateUser) {
+        try {
+            const user = await this.userRepository.selectByEmail(data.email);
+
+            if (!user || !user.id) {
+                return errorResponse(errorTypes._401.user_email_nf, 401);
+            }
+
+            if (user.email !== data.email) {
+                return {
+                    status: 401,
+                    data: {
+                        code: errorTypes._401.user_email_in
+                    }
+                }
+            }
+
+            const compareHashByUserId = await this.userCredentialRepository.compareHashByUserId(data.password, user.id);
+
+            if (!compareHashByUserId) {
+                return errorResponse(errorTypes._401.user_password_in, 401);
+            }
+
+            const session = await this.userSessionTokenRepository.create({
+                userId: user.id,
+                password: data.password,
+                payload: {
+                    id: user.id,
+                    email: user.email,
+                    name: user.name
+                }
+            });
+
+            if (!session.token) {
+                return errorResponse(errorTypes._401.user_password_in, 401);
+            }
+
+            return {
+                status: 200,
+                data: {
+                    session_id: session.id,
+                    session_token: session.token,
+                    details: {
+                        name: user.name,
+                        email: user.email
+                    }
+                }
+            }
+        } catch (error) {
+            return errorResponse(errorTypes._500.user_una, 500, error);
+        }
+    }
+
+    async validateToken(data: IValidateUserToken) {
+        try {
+            const tokenIsValidResponse = await this.userSessionTokenRepository.validateToken(data.session_id, data.token)
+
+            if (tokenIsValidResponse !== false) {
+                return {
+                    status: 200,
+                    data: {
+                        user_id: tokenIsValidResponse.userId
+                    }
+                }
+            }
+
+            return errorResponse(errorTypes._401.user_token_in, 401);
+        } catch (error) {
+            return errorResponse(errorTypes._500.unable_vausertoken, 500, error);
+        }
+    }
+
+    async me(userId: number) {
+        try {
+            const user = await this.userRepository.selectById(userId, {
+                Plan: true
+            });
+
+            const countSearches = await this.searchRepository.countUserMonth(user.id);
+            const countMonitoringPlans = await this.planRepository.countMonitoringPlans(user.id);
+
+            return {
+                status: 200,
+                data: {
+                    name: user.name,
+                    email: user.email,
+                    phone_number: user.phone_number,
+                    cpf: user.cpf,
+                    max_search: user.Plan.maximum_queries,
+                    used_search: countSearches,
+                    plan_slug: user.Plan.slug,
+                    plan_expires_in: user.date_expires_in,
+                    maximum_queries_to_export: user.Plan.maximum_queries_to_export,
+                    monitoring: {
+                        used: countMonitoringPlans.used,
+                        not_used: countMonitoringPlans.not_used
+                    }
+                }
+            }
+        } catch (error) {
+            return errorResponse(errorTypes._500.listing_user_data, 500, error);
+        }
+    }
+}
