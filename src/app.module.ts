@@ -32,6 +32,7 @@ import { BrandAnalysisService } from './modules/brand-analysis/brand-analysis.se
 import PlanRepository from './modules/user/plan.repository';
 import BrandAlertRepository from './modules/brand/brand-alert.repository';
 import BrandAnalysisRepository from './modules/brand-analysis/brand-analysis.repository';
+import { AppController } from './app.controller';
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import BrandAnalysisRepository from './modules/brand-analysis/brand-analysis.rep
     CnaeController,
     BrandController,
     BrandAnalysisController,
+    AppController
   ],
   providers: [
     JournalAlertService,
