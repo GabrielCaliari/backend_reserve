@@ -117,7 +117,7 @@ export class CompanyService {
                     main_cnae: {
                         in:
                             Array.isArray(searchParams.cnae) ?
-                                searchParams.cnae.map(value => +value) :
+                                searchParams.cnae.map(value => value) :
                                 [searchParams.cnae]
                     }
                 } : {}),
@@ -125,7 +125,7 @@ export class CompanyService {
                     secondary_cnae: {
                         in:
                             Array.isArray(searchParams.cnae) ?
-                                searchParams.cnae.map(value => +value) :
+                                searchParams.cnae.map(value => value) :
                                 [searchParams.cnae]
                     }
                 } : {}),
