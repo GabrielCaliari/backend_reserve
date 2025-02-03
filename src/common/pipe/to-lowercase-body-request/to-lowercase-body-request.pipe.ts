@@ -9,7 +9,7 @@ export class ToLowercaseBodyRequestPipe implements PipeTransform {
 
 		const lowercasedValue = {};
 		for (const [key, val] of Object.entries(value)) {
-			if (typeof val === 'string') {
+			if (typeof val === 'string' && key != 'password') {
 				lowercasedValue[key] = val.toLowerCase();
 			} else {
 				lowercasedValue[key] = val;
