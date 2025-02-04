@@ -25,10 +25,10 @@ export class BrandAnalysisService {
                 'messages': messages,
                 "model": "gpt-4o-mini",
                 "max_tokens": 16000,
-                "temperature": 0.7,
-                "top_p": 0.95,
-                "frequency_penalty": 0,
-                "presence_penalty": 0,
+                "temperature": 0.3, // 7
+                "top_p": 0.90, // 0.95
+                "frequency_penalty": 0.02, // 0
+                "presence_penalty": 0.02, // 0
                 "stop": null,
                 "stream": false,
                 "data_sources": [

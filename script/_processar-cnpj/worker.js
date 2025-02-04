@@ -196,88 +196,30 @@ process.on('message', ({ datas, path, aux }) => {
     const validData = datas.reduce((acc, item) => {
         const messages = validateRow(item);
 
-        if (messages.length) {
-            failData.push({
-                row: {
-                    ...item,
-                    'nome-fantasia_nome-empresarial': _opTxT(item['nome-fantasia_nome-empresarial']),
-                    'NM-cidade-exterior': _opTxT(item['NM-cidade-exterior']),
-                    'CO-pais': _opTxT(item['CO-pais']),
-                    'tipo-logradouro': _opTxT(item['tipo-logradouro']),
-                    'logradouro': _opTxT(item['logradouro']),
-                    'complemento': _opTxT(item['complemento']),
-                    'bairro': _opTxT(item['bairro']),
-                    'uf': _opTxT(item['uf']),
-                    'email': _opTxT(item['email']),
-                    'situacao-especial': _opTxT(item['situacao-especial']),
-                    'mensagens': messages.join(',')
-                },
-                messages
-            });
-        } else {
-            const found = acc.findIndex(entry => entry.uf == _opTxT(item.uf));
-
-            if (found != -1) {
-                acc[found].data.push({
-                    cnpj: `${item['CNPJ-1']}${item['CNPJ-2']}${item['CNPJ-3']}`,
-                    branch_type: +item.matriz_filial,
-                    business_name: _opTxT(item['nome-fantasia_nome-empresarial']),
-                    // qualification_representative_before_cnpj: null,
-                    // nacimal_simple_option: null,
-                    // nacimal_simple_opting_date: null,
-                    // mei_option: null,
-                    // mei_opting_date: null,
-                    // mei_non_option_date: null,
-                    // federative_entity: null,
-                    // size: null,
-                    // fantasy_name: null,
-                    // social_capital: null,
-                    // legal_nature: null,
-                    status: item['situacao-cadastral'],
-                    ...(
-                        formatarData(item['data-situacao-cadastral']) && typeof formatarData(item['data-situacao-cadastral']) == 'object' ?
-                            { date_status: formatarData(item['data-situacao-cadastral']).toISOString() } :
-                            { date_status: null }
-                    ),
-                    code_detail_status: item['codigo-motivo-situacao-cadastral'],
-                    outer_city: item['NM-cidade-exterior'],
-                    coutry_code: item['CO-pais'],
-                    ...(
-                        formatarData(item['data-inicio-atividades']) && typeof formatarData(item['data-inicio-atividades']) == 'object' ?
-                            { start_date: formatarData(item['data-inicio-atividades']).toISOString() } :
-                            { start_date: null }
-                    ),
-                    main_cnae: item['cnae-principal'],
-                    secondary_cnae: item['cnaes-secundarios'],
-                    type_of_place: item['tipo-logradouro'],
-                    place: item['logradouro'],
-                    house_number: item['numero'],
-                    address_complement: item['complemento'],
-                    district: item['bairro'],
-                    cep: item['cep'],
-                    uf: item['uf'],
-                    city_code: item['codigo-municipio'],
-                    ddd_1: item['ddd-1'],
-                    phone_1: item['telefone-1'],
-                    ddd_2: item['ddd-2'],
-                    phone_2: item['telefone-2'],
-                    ddd_fax: item['ddd-fax'],
-                    fax: item['num-fax'],
-                    email: item['email'],
-                    code_detail_status: item['codigo-motivo-situacao-cadastral'],
-                    special_citation: item['situacao-especial'],
-                    ...(
-                        formatarData(item['data-situacao-especial']) && typeof formatarData(item['data-situacao-especial']) == 'object' ?
-                            { special_citation_date: formatarData(item['data-situacao-especial']).toISOString() } :
-                            { special_citation_date: null }
-                    ),
-                    load_update_date: new Date().toISOString(),
-                    updated_at: new Date().toISOString(),
+        if (_opTxT(item['uf']) == 'sp') {
+            if (messages.length) {
+                failData.push({
+                    row: {
+                        ...item,
+                        'nome-fantasia_nome-empresarial': _opTxT(item['nome-fantasia_nome-empresarial']),
+                        'NM-cidade-exterior': _opTxT(item['NM-cidade-exterior']),
+                        'CO-pais': _opTxT(item['CO-pais']),
+                        'tipo-logradouro': _opTxT(item['tipo-logradouro']),
+                        'logradouro': _opTxT(item['logradouro']),
+                        'complemento': _opTxT(item['complemento']),
+                        'bairro': _opTxT(item['bairro']),
+                        'uf': _opTxT(item['uf']),
+                        'email': _opTxT(item['email']),
+                        'situacao-especial': _opTxT(item['situacao-especial']),
+                        'mensagens': messages.join(',')
+                    },
+                    messages
                 });
             } else {
-                acc.push({
-                    uf: _opTxT(item.uf),
-                    data: [{
+                const found = acc.findIndex(entry => entry.uf == _opTxT(item.uf));
+
+                if (found != -1) {
+                    acc[found].data.push({
                         cnpj: `${item['CNPJ-1']}${item['CNPJ-2']}${item['CNPJ-3']}`,
                         branch_type: +item.matriz_filial,
                         business_name: _opTxT(item['nome-fantasia_nome-empresarial']),
@@ -332,12 +274,72 @@ process.on('message', ({ datas, path, aux }) => {
                         ),
                         load_update_date: new Date().toISOString(),
                         updated_at: new Date().toISOString(),
-                    }]
-                });
+                    });
+                } else {
+                    acc.push({
+                        uf: _opTxT(item.uf),
+                        data: [{
+                            cnpj: `${item['CNPJ-1']}${item['CNPJ-2']}${item['CNPJ-3']}`,
+                            branch_type: +item.matriz_filial,
+                            business_name: _opTxT(item['nome-fantasia_nome-empresarial']),
+                            // qualification_representative_before_cnpj: null,
+                            // nacimal_simple_option: null,
+                            // nacimal_simple_opting_date: null,
+                            // mei_option: null,
+                            // mei_opting_date: null,
+                            // mei_non_option_date: null,
+                            // federative_entity: null,
+                            // size: null,
+                            // fantasy_name: null,
+                            // social_capital: null,
+                            // legal_nature: null,
+                            status: item['situacao-cadastral'],
+                            ...(
+                                formatarData(item['data-situacao-cadastral']) && typeof formatarData(item['data-situacao-cadastral']) == 'object' ?
+                                    { date_status: formatarData(item['data-situacao-cadastral']).toISOString() } :
+                                    { date_status: null }
+                            ),
+                            code_detail_status: item['codigo-motivo-situacao-cadastral'],
+                            outer_city: item['NM-cidade-exterior'],
+                            coutry_code: item['CO-pais'],
+                            ...(
+                                formatarData(item['data-inicio-atividades']) && typeof formatarData(item['data-inicio-atividades']) == 'object' ?
+                                    { start_date: formatarData(item['data-inicio-atividades']).toISOString() } :
+                                    { start_date: null }
+                            ),
+                            main_cnae: item['cnae-principal'],
+                            secondary_cnae: item['cnaes-secundarios'],
+                            type_of_place: item['tipo-logradouro'],
+                            place: item['logradouro'],
+                            house_number: item['numero'],
+                            address_complement: item['complemento'],
+                            district: item['bairro'],
+                            cep: item['cep'],
+                            uf: item['uf'],
+                            city_code: item['codigo-municipio'],
+                            ddd_1: item['ddd-1'],
+                            phone_1: item['telefone-1'],
+                            ddd_2: item['ddd-2'],
+                            phone_2: item['telefone-2'],
+                            ddd_fax: item['ddd-fax'],
+                            fax: item['num-fax'],
+                            email: item['email'],
+                            code_detail_status: item['codigo-motivo-situacao-cadastral'],
+                            special_citation: item['situacao-especial'],
+                            ...(
+                                formatarData(item['data-situacao-especial']) && typeof formatarData(item['data-situacao-especial']) == 'object' ?
+                                    { special_citation_date: formatarData(item['data-situacao-especial']).toISOString() } :
+                                    { special_citation_date: null }
+                            ),
+                            load_update_date: new Date().toISOString(),
+                            updated_at: new Date().toISOString(),
+                        }]
+                    });
+                }
+
             }
-
         }
-
+        
         return acc;
     }, []);
 

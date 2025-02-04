@@ -12,7 +12,7 @@ const TOTAL_VALUE = 4000;
 let TOTAL = 0;
 let totalProcessed = 0;
 
-let filePath = '../estabelecimento09.csv';
+let filePath = '../estabelecimento03.csv';
 
 await authenticate();
 
@@ -66,7 +66,7 @@ fs.createReadStream(`${filePath}`)
         if (datas.length === TOTAL_VALUE) {
             cp.sendToChild({
                 datas: datas,
-                path: '../arquivos-processados-cnpj/empresas',
+                path: '../arquivos-processados-cnpj/_empresas',
                 aux: {
                     cnae: cnae,
                 },
@@ -83,7 +83,7 @@ fs.createReadStream(`${filePath}`)
             cp.sendToChild({
                 datas: datas,
                 file: 'empresa',
-                path: '../arquivos-processados-cnpj/empresas',
+                path: '../arquivos-processados-cnpj/_empresas',
                 aux: {
                     cnae: cnae,
                 },

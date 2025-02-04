@@ -6,13 +6,13 @@ import cliProgress from 'cli-progress'
 import { authenticate, getPostgresConnectionAux, getPostgresConnection } from '../sequelize.js';
 
 const TASK_FILE = './worker-empresa.js';
-const CLUSTER_SIZE = 20;
+const CLUSTER_SIZE = 10;
 const TOTAL_VALUE = 4000;
 
 let TOTAL = 0;
 let totalProcessed = 0;
 
-let filePath = '../empresa04.csv';
+let filePath = '../empresa07.csv';
 
 await authenticate();
 
