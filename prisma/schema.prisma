@@ -38,6 +38,7 @@ model User {
   MonitoringPlan            MonitoringPlan[]
   BrandAlert                BrandAlert[]
   BrandAnalysis             BrandAnalysis[]
+  BrandAnalysisRequest      BrandAnalysisRequest[]
 }
 
 model Plan {
@@ -436,19 +437,31 @@ model JournalAlert {
 }
 
 model BrandAnalysis {
-  id                 Int      @id @default(autoincrement())
-  user_message       Json
-  response           Json
-  json_data_response Json
-  md_data_reposnse   Json
-  html_data_response Json
-  brand              String   @db.VarChar(255)
-  niche              String   @db.VarChar(155)
-  description        String   @db.VarChar(255)
-  User               User     @relation(fields: [user_id], references: [id])
-  user_id            Int
-  created_at         DateTime @default(now())
-  updated_at         DateTime @updatedAt
+  id                   Int                    @id @default(autoincrement())
+  user_message         Json
+  response             Json
+  json_data_response   Json
+  md_data_reposnse     Json
+  html_data_response   Json
+  brand                String                 @db.VarChar(255)
+  niche                String                 @db.VarChar(155)
+  description          String                 @db.VarChar(255)
+  User                 User                   @relation(fields: [user_id], references: [id])
+  user_id              Int
+  created_at           DateTime               @default(now())
+  updated_at           DateTime               @updatedAt
+  BrandAnalysisRequest BrandAnalysisRequest[]
+}
+
+model BrandAnalysisRequest {
+  id                Int            @id @default(autoincrement())
+  valid             Boolean
+  Brand_analysis    BrandAnalysis? @relation(fields: [brand_analysis_id], references: [id])
+  brand_analysis_id Int?
+  User              User           @relation(fields: [user_id], references: [id])
+  user_id           Int
+  created_at        DateTime       @default(now())
+  updated_at        DateTime       @updatedAt
 }
 
 model BrandNotification {

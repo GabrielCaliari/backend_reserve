@@ -4,6 +4,7 @@ import { errorTypes } from 'src/core/error-types';
 import { errorResponse } from 'src/core/functions';
 import BrandAnalysisRepository from 'src/modules/brand-analysis/brand-analysis.repository';
 import UserRepository from '../user/user.repository';
+import prismaClient from 'src/core/prisma/prismaClient';
 const marked = require('marked');
 
 @Injectable()
@@ -21,7 +22,7 @@ export class BrandAnalysisService {
             });
 
             const maxSearches = user.Plan.maximum_brand_analysis;
-            const countSearches = await this.brandAnalysisRepository.countBrandAnalysisMonth(user.id);
+            const countSearches = await this.brandAnalysisRepository.countBrandAnalysisRequestMonth(user.id);
 
             if (maxSearches != 999 && countSearches >= maxSearches) {
                 return {
@@ -31,6 +32,11 @@ export class BrandAnalysisService {
                     }
                 }
             }
+
+            const brandAnalysisRequest = await this.brandAnalysisRepository.brandAnalysisRequestCreate({
+                user_id: userId,
+                valid: true,
+            });
 
             const messages = [{
                 role: 'user',
@@ -84,6 +90,12 @@ export class BrandAnalysisService {
                     'Content-Type': 'application/json',
                     'api-key': process.env.AZURE_OPENAI_API_KEY,
                 }
+            }).catch(async err => {
+                await this.brandAnalysisRepository.invalidateBrandAnalysisRequest(
+                    brandAnalysisRequest.id
+                );
+
+                throw err;
             });
 
             const message = result.data.choices[0].message.content;
@@ -154,26 +166,43 @@ export class BrandAnalysisService {
                     'Content-Type': 'application/json',
                     'api-key': process.env.AZURE_OPENAI_API_KEY,
                 }
-            });
+            }).catch(async err => {
+                await this.brandAnalysisRepository.invalidateBrandAnalysisRequest(
+                    brandAnalysisRequest.id
+                );
+                
+                throw err;
+            });;
 
             const cleanValue = resultFormated.data.choices[0].message.content.replace(/```json\n/, '').replace(/```$/, '').trim();
 
-            const raw = await this.brandAnalysisRepository.create({
-                html_data_response: marked.parse(message).replaceAll('\\n'),
-                json_data_response: JSON.parse(cleanValue),
-                md_data_reposnse: message,
-                response: result.data,
-                user_message: messages,
-                brand,
-                description: description,
-                user_id: userId,
-                niche: niche,
+            const returned = await prismaClient.$transaction(async (tx: any) => {
+                const raw = await this.brandAnalysisRepository.create({
+                    html_data_response: marked.parse(message).replaceAll('\\n'),
+                    json_data_response: JSON.parse(cleanValue),
+                    md_data_reposnse: message,
+                    response: result.data,
+                    user_message: messages,
+                    brand,
+                    description: description,
+                    user_id: userId,
+                    niche: niche,
+                }, tx);
+
+                await this.brandAnalysisRepository.validateBrandAnalysisRequest(
+                    brandAnalysisRequest.id,
+                    raw.id,
+                    tx
+                );
+
+                return raw;
             });
+            
 
             return {
                 status: 200,
                 data: {
-                    id: raw.id
+                    id: returned.id
                 }
             }
         } catch (error) {
