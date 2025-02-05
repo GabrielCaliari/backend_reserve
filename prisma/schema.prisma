@@ -39,6 +39,7 @@ model User {
   BrandAlert                BrandAlert[]
   BrandAnalysis             BrandAnalysis[]
   BrandAnalysisRequest      BrandAnalysisRequest[]
+  Subscription              Subscription[]
 }
 
 model Plan {
@@ -48,8 +49,56 @@ model Plan {
   maximum_queries           Int
   maximum_queries_to_export Int              @default(0)
   maximum_brand_analysis    Int              @default(0)
+  month_price_id            String?
+  annual_price_id            String?
   User                      User[]
   MonitoringPlan            MonitoringPlan[]
+  Subscription              Subscription[]
+}
+
+model Subscription {
+  id                     Int       @id @default(autoincrement())
+  name                   String
+  subscription_id        String    @unique // ID da assinatura gerado pela Stripe (ex: sub_1234567890)
+  customer_id            String // ID do cliente associado (ex: cus_987654321)
+  status                 String // Status da assinatura (ex: active, canceled, trialing)
+  string_plan_id         String // ID do plano Stripe (ex: price_1234567890)
+  string_plan_nickname   String? // Nome do plano (opcional)
+  string_plan_amount     Int // Valor do plano em centavos (ex: 1999 para $19.99)
+  string_plan_currency   String // Moeda usada (ex: usd)
+  interval               String // Frequência do plano (ex: day, week, month, year)
+  start_date             DateTime // Data de início da assinatura
+  current_period_start   DateTime // Início do período de faturamento atual
+  current_period_end     DateTime // Fim do período de faturamento atual
+  trial_end              DateTime? // Data de término do período de teste, se aplicável
+  cancel_at              DateTime? // Data programada para cancelamento, se aplicável
+  canceled_at            DateTime? // Data em que a assinatura foi cancelada, se aplicável
+  ended_at               DateTime? // Data em que a assinatura terminou, se aplicável
+  billing_cycle_anchor   DateTime // Data de reinício do ciclo de cobrança
+  payment_method         String? // ID do método de pagamento (ex: pm_1234567890)
+  default_payment_method String? // Método de pagamento padrão associado
+  auto_renew             Boolean // Indica se a assinatura será renovada automaticamente
+  quantity               Int // Quantidade associada ao plano (ex: 1)
+  tax_percent            Float? // Percentual de imposto aplicado, se houver
+  discount               Json? // Detalhes de descontos aplicados
+  latest_invoice_id      String? // ID da última fatura gerada (ex: in_987654321)
+  next_invoice_date      DateTime? // Data estimada para a próxima fatura
+  cancel_at_period_end   Boolean // Se a assinatura será cancelada no fim do período atual
+  metadata               Json? // Metadados personalizados (ex: {"user_id": "1234"})
+  created_from_webhook   Boolean // Indica se foi criado a partir de um webhook
+  event_history          Json? // Histórico de eventos importantes
+
+  created_at DateTime @default(now()) // Data de criação do registro
+  updated_at DateTime @updatedAt // Data da última atualização
+
+  Plan    Plan @relation(fields: [plan_id], references: [id])
+  plan_id Int
+
+  User    User @relation(fields: [user_id], references: [id])
+  user_id Int
+
+  @@index([subscription_id])
+  @@index([customer_id])
 }
 
 model MonitoringPlan {

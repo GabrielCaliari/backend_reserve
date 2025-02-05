@@ -10,6 +10,8 @@ import PlanRepository from './plan.repository';
 import BrandRepository from '../brand/brand.repository';
 import BrandAlertRepository from '../brand/brand-alert.repository';
 import { EStatus } from 'src/@types/@plan';
+import BrandAnalysisRepository from '../brand-analysis/brand-analysis.repository';
+const Stripe = require('stripe');
 
 @Injectable()
 export class UserService {
@@ -20,7 +22,8 @@ export class UserService {
         private readonly searchRepository: SearchRepository,
         private readonly planRepository: PlanRepository,
         private readonly brandAlertRepository: BrandAlertRepository,
-        private readonly brandRepository: BrandRepository
+        private readonly brandRepository: BrandRepository,
+        private readonly brandAnalysisRepository: BrandAnalysisRepository
     ) { }
 
     async create({ email, name, password, cpf, phone_number }: ICreateUser) {
@@ -58,6 +61,37 @@ export class UserService {
         }
     }
 
+    async generatePaymentAccountLink(vetId: number) {
+        try {
+            const stripe = new Stripe(process.env.SECRET_KEY);
+
+            const user = await this.userRepository.selectById(vetId, {
+                Plan: true,
+                Subscription: true,
+            })
+
+            if (!user) {
+                return errorResponse(errorTypes._404.user_nf, 400);
+            }
+
+            const subscription = user.Subscription.find(subs => subs.status == 'active' || subs.status == 'trialing');
+
+            const session = await stripe.billingPortal.sessions.create({
+                customer: subscription.customer_id,
+                return_url: process.env.USER_DASHBOARD,
+            });
+
+            return {
+                status: 200,
+                data: {
+                    link: session.url
+                }
+            }
+        } catch (error) {
+            return errorResponse(errorTypes._500.generate_subscription_management_link_error, 500);
+        }
+    }
+
     async feed(userId: number) {
         try {
             const user = await this.userRepository.selectById(userId, {
@@ -66,6 +100,7 @@ export class UserService {
 
             const searcheds = await this.searchRepository.count(userId);
             const countBrands = await this.planRepository.countMonitoringPlans(userId);
+            const countBrandsAnal = await this.brandAnalysisRepository.countBrandAnalysisRequestMonth(userId);
 
             const brands = await this.brandRepository.find({
                 user_id: user.id,
@@ -99,6 +134,10 @@ export class UserService {
                 data: {
                     search_done: searcheds,
                     max_search: user.Plan.maximum_queries,
+                    brand_analysis: {
+                        done: countBrandsAnal,
+                        max_analysis: user.Plan.maximum_brand_analysis
+                    },
                     brand: brandDetails,
                     brand_monitoring: {
                         used: countBrands.used,
@@ -191,6 +230,7 @@ export class UserService {
 
             const countSearches = await this.searchRepository.countUserMonth(user.id);
             const countMonitoringPlans = await this.planRepository.countMonitoringPlans(user.id);
+            const countBrandsAnal = await this.brandAnalysisRepository.countBrandAnalysisRequestMonth(userId);
 
             return {
                 status: 200,
@@ -204,6 +244,10 @@ export class UserService {
                     plan_slug: user.Plan.slug,
                     plan_expires_in: user.date_expires_in,
                     maximum_queries_to_export: user.Plan.maximum_queries_to_export,
+                    brand_analysis: {
+                        done: countBrandsAnal,
+                        max_analysis: user.Plan.maximum_brand_analysis
+                    },
                     monitoring: {
                         used: countMonitoringPlans.used,
                         not_used: countMonitoringPlans.not_used
@@ -212,6 +256,50 @@ export class UserService {
             }
         } catch (error) {
             return errorResponse(errorTypes._500.listing_user_data, 500, error);
+        }
+    }
+
+    async checkout(
+        slug: string,
+        userId: number,
+        period: string,
+    ) {
+        try {
+            const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+            const plan = await this.planRepository.selectBySlug(slug);
+
+            if (!plan) {
+                return errorResponse(404, errorTypes._400.plan_not_found)
+            }
+
+            if (!plan[`${period}_price_id`]) {
+                return errorResponse(500, errorTypes._500.checkout_error)
+            }
+
+            const session = await stripe.checkout.sessions.create({
+                payment_method_types: ['card'],
+                line_items: [
+                    {
+                        price: plan[`${period}_price_id`],
+                        quantity: 1,
+                    },
+                ],
+                mode: 'subscription',
+                success_url: `${process.env.STRIPE_SUCCESS_URL}?session_id={CHECKOUT_SESSION_ID}`,
+                cancel_url: process.env.STRIPE_CANCEL_URL,
+                metadata: {
+                    userId: userId
+                },
+            });
+
+            return {
+                status: 200,
+                data: {
+                    url: session.url
+                }
+            }
+        } catch (error) {
+            return errorResponse(errorTypes._500.checkout_error, 500);
         }
     }
 }

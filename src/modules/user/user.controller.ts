@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Req, Res, UseGuards, UseInterceptors, UsePipes } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Req, Res, UseGuards, UseInterceptors, UsePipes } from '@nestjs/common';
 import { UserService } from './user.service';
 import { ToLowercaseBodyRequestPipe } from 'src/common/pipe/to-lowercase-body-request/to-lowercase-body-request.pipe';
 import { Response } from 'express';
@@ -57,5 +57,40 @@ export class UserController {
         const userId = req.user_id;
         const result = await this.userService.me(userId);
         return res.status(result.status).json(result.data)
+    }
+
+    @Post('/generate-payment-account-link')
+    @UseGuards(UserValidateJwtTokenGuard)
+    async generatePaymentAccountLink(
+        @Res() res: Response,
+        @Req() req: Request & { user_id: number; },
+    ) {
+        const result = await this.userService.generatePaymentAccountLink(
+            req.user_id
+        );
+
+        return res.status(result.status).json(result.data);
+    }
+
+    @Get('/checkout/:slug/:period')
+    @UseGuards(UserValidateJwtTokenGuard)
+    async checkout(
+        @Res() res: Response,
+        @Req() req: Request & { user_id: number; },
+        @Param('period') period: string,
+        @Param('slug') slug: string,
+    ) {
+        switch (period.toLocaleLowerCase()) {
+            case 'annual':
+            case 'month':
+                break;
+            default:
+                period = 'month';
+                break;
+        }
+
+        const result = await this.userService.checkout(slug, req.user_id, period.toLocaleLowerCase());
+
+        return res.status(result.status).json(result.data);
     }
 }

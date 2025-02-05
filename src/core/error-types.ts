@@ -5,7 +5,8 @@ export const errorTypes = {
         user_alr_exc: '400:USER_CPF_ALREADY_EXISTS',
         search_nf: '400:SEARCH_NOT_FOUND',
         page_out_of_range: '400:PAGE_OUT_OF_RANGE',
-        has_no_moni_plan: '400:USER_HAS_NO_MONITORING_PLANS'
+        has_no_moni_plan: '400:USER_HAS_NO_MONITORING_PLANS',
+        plan_not_found: '400:PLAN_NOT_FOUND'
     },
     _403: {
         search_limit_reached: '403:SEARCH_LIMIT_REACHED',
@@ -13,7 +14,8 @@ export const errorTypes = {
     },
     _404: {
         brand_nf_user: '404:BRAND_NOT_FOUND_FOR_THIS_USER',
-        ba_nf: '404:BRAND_ANALYSIS_NOT_FOUND'
+        ba_nf: '404:BRAND_ANALYSIS_NOT_FOUND',
+        user_nf: '404:USER_NOT_FOUND'
     },
     _401: {
         user_email_nf: '401:USER_EMAIL_NOT_FOUND',
@@ -37,6 +39,8 @@ export const errorTypes = {
         brand_monitoring: '500:ERROR_BRAND_MONITORING',
         user_feed: '500:USER_FEED',
         ba_send_message: '500:ERROR_BRAND_ANALYSIS',
-        ba_find_buser: '500:ERROR_BRAND_ANALYSIS_FIND_USER'
+        ba_find_buser: '500:ERROR_BRAND_ANALYSIS_FIND_USER',
+        generate_subscription_management_link_error: 'GENERATE_SUBSCRIPTION_MANAGEMENT_LINK_ERROR',
+        checkout_error: '500:CHECKOUT_ERROR',
     }
 }

@@ -43,13 +43,27 @@ export default class PlanRepository {
                     brand_id: null
                 }
             });
-            
+
             return {
                 used: countUsed,
                 not_used: countNotUsed
             }
         } catch (error) {
             throw new RepositoryException('Erro ao contar o número de monitoramentos disponíveis', error);
+        }
+    }
+
+    async selectBySlug(slug: string) {
+        try {
+            const raw = await prismaClient.plan.findFirst({
+                where: {
+                    slug: slug,
+                }
+            });
+
+            return raw;
+        } catch (error) {
+            throw new RepositoryException('Erro ao buscar um plano de monitoramento pelo slug', error);
         }
     }
 

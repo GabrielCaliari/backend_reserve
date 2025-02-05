@@ -14,7 +14,8 @@ export interface ICreateUser {
 }
 
 export interface IUserFindInclude {
-    Plan?: boolean
+    Plan?: boolean,
+    Subscription?: boolean
 }
 
 export default class UserRepository {
