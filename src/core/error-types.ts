@@ -8,7 +8,8 @@ export const errorTypes = {
         has_no_moni_plan: '400:USER_HAS_NO_MONITORING_PLANS'
     },
     _403: {
-        search_limit_reached: '403:SEARCH_LIMIT_REACHED'
+        search_limit_reached: '403:SEARCH_LIMIT_REACHED',
+        analysis_limit_reached: '403:ANALYSIS_LIMIT_REACHED'
     },
     _404: {
         brand_nf_user: '404:BRAND_NOT_FOUND_FOR_THIS_USER',

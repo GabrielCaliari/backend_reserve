@@ -46,6 +46,7 @@ model Plan {
   slug                      String           @unique
   maximum_queries           Int
   maximum_queries_to_export Int              @default(0)
+  maximum_brand_analysis    Int              @default(0)
   User                      User[]
   MonitoringPlan            MonitoringPlan[]
 }

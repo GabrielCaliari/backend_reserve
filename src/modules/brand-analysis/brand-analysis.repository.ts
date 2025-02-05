@@ -64,4 +64,25 @@ export default class BrandAnalysisRepository {
             throw new RepositoryException('Erro ao selecionar uma marca e um usuário.', error);
         }
     }
+
+    async countBrandAnalysisMonth(userId: number) {
+        try {
+            const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+            const endOfMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0);
+
+            const raw = await prismaClient.brandAnalysis.count({
+                where: {
+                    user_id: userId,
+                    created_at: {
+                        gte: startOfMonth,
+                        lte: endOfMonth,
+                    },
+                },
+            });
+
+            return raw;
+        } catch (error) {
+            throw new RepositoryException('Erro ao contar o número de análise de marcas por usuário.', error);
+        }
+    }
 }
