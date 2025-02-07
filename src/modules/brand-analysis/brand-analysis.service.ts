@@ -213,7 +213,7 @@ export class BrandAnalysisService {
                 }
             }
         } catch (error) {
-            return errorResponse(errorTypes._500.ba_send_message, 500);
+            return errorResponse(errorTypes._500.ba_send_message, 500, error);
         }
     }
 

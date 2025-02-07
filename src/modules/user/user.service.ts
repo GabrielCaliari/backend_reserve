@@ -130,7 +130,9 @@ export class UserService {
                     inpi_number: brand.inpi_number,
                     latest_brand_moves: lastMove
                 }
-            }))
+            }));
+
+
 
             return {
                 status: 200,
@@ -147,6 +149,9 @@ export class UserService {
                         used: countBrands.used,
                         not_used: countBrands.not_used
                     },
+                    plan: {
+
+                    }
                 },
             }
         } catch (error) {
@@ -229,7 +234,8 @@ export class UserService {
     async me(userId: number) {
         try {
             const user = await this.userRepository.selectById(userId, {
-                Plan: true
+                Plan: true,
+                Subscription: true
             });
 
             const countSearches = await this.searchRepository.countUserMonth(user.id);
@@ -251,6 +257,10 @@ export class UserService {
                     plan_slug: user.Plan.slug,
                     plan_expires_in: user.date_expires_in,
                     maximum_queries_to_export: user.Plan.maximum_queries_to_export,
+                    plan: {
+                        slug: user.Plan.slug,
+                        interval: user.Subscription.find(subs => subs.status == 'active' || subs.status == 'trialing').interval
+                    },
                     brand_analysis: {
                         tokens: countBrandsAnalTotal,
                         used: countBrandsAnalUsed,
@@ -277,11 +287,11 @@ export class UserService {
             const plan = await this.planRepository.selectBySlug(slug);
 
             if (!plan) {
-                return errorResponse(404, errorTypes._400.plan_not_found)
+                return errorResponse(errorTypes._400.plan_not_found, 404)
             }
 
             if (!plan[`${period}_price_id`]) {
-                return errorResponse(500, errorTypes._500.checkout_error)
+                return errorResponse(errorTypes._500.checkout_error, 500)
             }
 
             const session = await stripe.checkout.sessions.create({
