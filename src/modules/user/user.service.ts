@@ -245,6 +245,8 @@ export class UserService {
             const countBrandsAnalUsed = await this.brandAnalysisRepository.countBrandAnalysisTokens(userId, true);
             const countBrandsAnalNotUsed = await this.brandAnalysisRepository.countBrandAnalysisTokens(userId, false);
 
+            const subscription = user.Subscription.find(subs => subs.status == 'active' || subs.status == 'trialing');
+
             return {
                 status: 200,
                 data: {
@@ -259,7 +261,7 @@ export class UserService {
                     maximum_queries_to_export: user.Plan.maximum_queries_to_export,
                     plan: {
                         slug: user.Plan.slug,
-                        interval: user.Subscription.find(subs => subs.status == 'active' || subs.status == 'trialing').interval
+                        interval: subscription ? subscription.interval : null
                     },
                     brand_analysis: {
                         tokens: countBrandsAnalTotal,
