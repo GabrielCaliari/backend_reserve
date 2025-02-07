@@ -40,6 +40,10 @@ model User {
   BrandAnalysis             BrandAnalysis[]
   BrandAnalysisRequest      BrandAnalysisRequest[]
   Subscription              Subscription[]
+  PibotMessages             PibotMessages?              @relation(fields: [pibotMessagesId], references: [id])
+  pibotMessagesId           Int?
+  BrandAnalysisToken        BrandAnalysisToken[]
+  Order                     Order[]
 }
 
 model Plan {
@@ -50,10 +54,26 @@ model Plan {
   maximum_queries_to_export Int              @default(0)
   maximum_brand_analysis    Int              @default(0)
   month_price_id            String?
-  annual_price_id            String?
+  annual_price_id           String?
   User                      User[]
   MonitoringPlan            MonitoringPlan[]
   Subscription              Subscription[]
+  created_at                DateTime         @default(now()) // Data de criação do registro
+  updated_at                DateTime         @default(now()) @updatedAt // Data da última atualização
+}
+
+model PibotMessages {
+  id                Int      @id @default(autoincrement())
+  chat_id           String   @db.VarChar(100)
+  choices           Json
+  completion_tokens Int
+  prompt_tokens     Int
+  total_tokens      Int
+  usage             Json
+  User              User[]
+  user_id           Int
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
 }
 
 model Subscription {
@@ -98,6 +118,26 @@ model Subscription {
   user_id Int
 
   @@index([subscription_id])
+  @@index([customer_id])
+}
+
+model Order {
+  id                   Int     @id @default(autoincrement())
+  amount               Int
+  currency             String
+  product_name         String
+  status               String
+  quantity             Int
+  created_from_webhook Boolean
+  metadata             Json?
+  customer_id          String
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  User    User @relation(fields: [user_id], references: [id])
+  user_id Int
+
   @@index([customer_id])
 }
 
@@ -356,12 +396,6 @@ model Partner {
   updated_at                   DateTime  @updatedAt
 }
 
-// Nome da marca
-// CNPJ ou CPF (OP)
-// E-mail (Notificação)
-// Telefone
-// Processo do INPI (Num)
-
 model Brand {
   id                Int                 @id @default(autoincrement())
   name              String
@@ -500,17 +534,32 @@ model BrandAnalysis {
   created_at           DateTime               @default(now())
   updated_at           DateTime               @updatedAt
   BrandAnalysisRequest BrandAnalysisRequest[]
+  BrandAnalysisToken   BrandAnalysisToken[]
 }
 
 model BrandAnalysisRequest {
-  id                Int            @id @default(autoincrement())
-  valid             Boolean
-  Brand_analysis    BrandAnalysis? @relation(fields: [brand_analysis_id], references: [id])
-  brand_analysis_id Int?
-  User              User           @relation(fields: [user_id], references: [id])
-  user_id           Int
-  created_at        DateTime       @default(now())
-  updated_at        DateTime       @updatedAt
+  id                      Int                @id @default(autoincrement())
+  valid                   Boolean
+  Brand_analysis_token    BrandAnalysisToken @relation(fields: [brand_analysis_token_id], references: [id])
+  brand_analysis_token_id Int
+  Brand_analysis          BrandAnalysis?     @relation(fields: [brand_analysis_id], references: [id])
+  brand_analysis_id       Int?
+  User                    User               @relation(fields: [user_id], references: [id])
+  user_id                 Int
+  created_at              DateTime           @default(now())
+  updated_at              DateTime           @updatedAt
+}
+
+model BrandAnalysisToken {
+  id                   Int                    @id @default(autoincrement())
+  status               Int                    @db.SmallInt
+  Brand_analysis       BrandAnalysis?         @relation(fields: [brand_analysis_id], references: [id])
+  brand_analysis_id    Int?
+  User                 User                   @relation(fields: [user_id], references: [id])
+  user_id              Int
+  created_at           DateTime               @default(now())
+  updated_at           DateTime               @updatedAt
+  BrandAnalysisRequest BrandAnalysisRequest[]
 }
 
 model BrandNotification {
@@ -536,3 +585,10 @@ model CompanyExport {
   created_at    DateTime  @default(now())
   updated_at    DateTime  @updatedAt
 }
+
+// model WebhookKeys {
+//   id         Int      @id @default(autoincrement())
+//   key 
+//   created_at DateTime @default(now())
+//   updated_at DateTime @updatedAt
+// }

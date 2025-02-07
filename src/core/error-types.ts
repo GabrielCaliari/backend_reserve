@@ -21,7 +21,8 @@ export const errorTypes = {
         user_email_nf: '401:USER_EMAIL_NOT_FOUND',
         user_email_in: '401:USER_EMAIL_IS_INVALID',
         user_password_in: '401:USER_PASSWORD_IS_INVALID',
-        user_token_in: '401:USER_TOKEN_IS_INVALID'
+        user_token_in: '401:USER_TOKEN_IS_INVALID',
+        wh_token_in: '401:WEBHOOK_TOKEN_IS_INVALID'
     },
     _500: {
         user_nc: '500:USER_NOT_CREATED',
@@ -42,5 +43,6 @@ export const errorTypes = {
         ba_find_buser: '500:ERROR_BRAND_ANALYSIS_FIND_USER',
         generate_subscription_management_link_error: 'GENERATE_SUBSCRIPTION_MANAGEMENT_LINK_ERROR',
         checkout_error: '500:CHECKOUT_ERROR',
+        generate_tokens_error: '500:GENERATE_TOKENS_ERROR'
     }
 }

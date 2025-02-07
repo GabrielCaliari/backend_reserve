@@ -11,6 +11,7 @@ import BrandRepository from '../brand/brand.repository';
 import BrandAlertRepository from '../brand/brand-alert.repository';
 import { EStatus } from 'src/@types/@plan';
 import BrandAnalysisRepository from '../brand-analysis/brand-analysis.repository';
+import { EBrandAnalysisTokenStatus } from 'src/@types/@brand-analysis-token';
 const Stripe = require('stripe');
 
 @Injectable()
@@ -100,7 +101,9 @@ export class UserService {
 
             const searcheds = await this.searchRepository.count(userId);
             const countBrands = await this.planRepository.countMonitoringPlans(userId);
-            const countBrandsAnal = await this.brandAnalysisRepository.countBrandAnalysisRequestMonth(userId);
+            const countBrandsAnalTotal = await this.brandAnalysisRepository.countBrandAnalysisTokens(userId);
+            const countBrandsAnalUsed = await this.brandAnalysisRepository.countBrandAnalysisTokens(userId, true);
+            const countBrandsAnalNotUsed = await this.brandAnalysisRepository.countBrandAnalysisTokens(userId, false);
 
             const brands = await this.brandRepository.find({
                 user_id: user.id,
@@ -135,8 +138,9 @@ export class UserService {
                     search_done: searcheds,
                     max_search: user.Plan.maximum_queries,
                     brand_analysis: {
-                        done: countBrandsAnal,
-                        max_analysis: user.Plan.maximum_brand_analysis
+                        tokens: countBrandsAnalTotal,
+                        used: countBrandsAnalUsed,
+                        not_used: countBrandsAnalNotUsed
                     },
                     brand: brandDetails,
                     brand_monitoring: {
@@ -230,7 +234,10 @@ export class UserService {
 
             const countSearches = await this.searchRepository.countUserMonth(user.id);
             const countMonitoringPlans = await this.planRepository.countMonitoringPlans(user.id);
-            const countBrandsAnal = await this.brandAnalysisRepository.countBrandAnalysisRequestMonth(userId);
+
+            const countBrandsAnalTotal = await this.brandAnalysisRepository.countBrandAnalysisTokens(userId);
+            const countBrandsAnalUsed = await this.brandAnalysisRepository.countBrandAnalysisTokens(userId, true);
+            const countBrandsAnalNotUsed = await this.brandAnalysisRepository.countBrandAnalysisTokens(userId, false);
 
             return {
                 status: 200,
@@ -245,8 +252,9 @@ export class UserService {
                     plan_expires_in: user.date_expires_in,
                     maximum_queries_to_export: user.Plan.maximum_queries_to_export,
                     brand_analysis: {
-                        done: countBrandsAnal,
-                        max_analysis: user.Plan.maximum_brand_analysis
+                        tokens: countBrandsAnalTotal,
+                        used: countBrandsAnalUsed,
+                        not_used: countBrandsAnalNotUsed
                     },
                     monitoring: {
                         used: countMonitoringPlans.used,
@@ -300,6 +308,30 @@ export class UserService {
             }
         } catch (error) {
             return errorResponse(errorTypes._500.checkout_error, 500);
+        }
+    }
+
+    async generateTokens(key: string, tokens: number, userId: number) {
+        try {
+            if (!(key === process.env.WEBHOOK_AT_KEY)) {
+                return errorResponse(errorTypes._401.wh_token_in, 401);
+            }
+
+            const tokensRaws =  Array.from({ length: tokens }, (_, i) => i + 1).map(token => {
+                return {
+                    user_id: userId,
+                    status: EBrandAnalysisTokenStatus.active
+                }
+            });
+
+            const raws = await this.brandAnalysisRepository.createBrandAnalysisTokens(tokensRaws);
+
+            return {
+                status: 200,
+                data: raws.map(raw => raw.id)
+            }
+        } catch (error) {
+            return errorResponse(errorTypes._500.generate_tokens_error, 500);
         }
     }
 }

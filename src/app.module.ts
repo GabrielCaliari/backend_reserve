@@ -33,6 +33,8 @@ import PlanRepository from './modules/user/plan.repository';
 import BrandAlertRepository from './modules/brand/brand-alert.repository';
 import BrandAnalysisRepository from './modules/brand-analysis/brand-analysis.repository';
 import { AppController } from './app.controller';
+import { PiBotController } from './modules/pi-bot/pi-bot.controller';
+import { PiBotService } from './modules/pi-bot/pi-bot.service';
 
 @Module({
   imports: [
@@ -46,7 +48,8 @@ import { AppController } from './app.controller';
     CnaeController,
     BrandController,
     BrandAnalysisController,
-    AppController
+    AppController,
+    PiBotController
   ],
   providers: [
     JournalAlertService,
@@ -74,6 +77,7 @@ import { AppController } from './app.controller';
     BrandAlertRepository,
     BrandAnalysisService,
     BrandAnalysisRepository,
+    PiBotService,
   ],
 })
 export class AppModule {}

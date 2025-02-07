@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import { EBrandAnalysisTokenStatus } from "src/@types/@brand-analysis-token";
 import RepositoryException from "src/core/exceptions/RepositoryException";
 import prismaClient from "src/core/prisma/prismaClient";
 
@@ -16,7 +17,13 @@ export interface IBrandAnalysis {
 
 export interface IBrandAnalysisRequest {
     valid: boolean;
+    brand_analysis_token_id: number;
     brand_analysis_id?: number;
+    user_id: number;
+}
+
+export interface IBrandAnalysisToken {
+    status: number;
     user_id: number;
 }
 
@@ -52,6 +59,7 @@ export default class BrandAnalysisRepository {
             const raw = await conn.brandAnalysisRequest.create({
                 data: {
                     valid: data.valid,
+                    brand_analysis_token_id: data.brand_analysis_token_id,
                     ...(data.brand_analysis_id ? { brand_analysis_id: data.brand_analysis_id } : {}),
                     user_id: data.user_id
                 }
@@ -167,6 +175,77 @@ export default class BrandAnalysisRepository {
             return raw;
         } catch (error) {
             throw new RepositoryException('Erro ao contar o número de análise de marcas por usuário.', error);
+        }
+    }
+
+    async createBrandAnalysisTokens(tokens: IBrandAnalysisToken[]) {
+        try {
+            const raws = await prismaClient.brandAnalysisToken.createManyAndReturn({
+                data: tokens
+            });
+
+            return raws;
+        } catch(error) {
+            throw new RepositoryException('Erro ao criar tokens para um usuário.', error);
+        }
+    }
+
+    async countBrandAnalysisTokens(userId: number, used?: boolean) {
+        try {
+            const count = await prismaClient.brandAnalysisToken.count({
+                where: {
+                    user_id: userId,
+                    ...(
+                        typeof used == 'boolean' ? {
+                            brand_analysis_id: used ? { not: null } : null
+                        } : {}
+                    ),
+                    status: EBrandAnalysisTokenStatus.active
+                }
+            });
+
+            return count;
+        } catch (error) {
+            throw new RepositoryException('Erro ao contar o número de token de análise de marcas por usuário.', error);
+        }
+    }
+
+    async selectBrandAnalysisToken(userId: number, used: boolean = false) {
+        try {
+            const token = await prismaClient.brandAnalysisToken.findFirst({
+                where: {
+                    user_id: userId,
+                    ...(
+                        typeof used == 'boolean' ? {
+                            brand_analysis_id: used ? { not: null } : null
+                        } : {}
+                    ),
+                    status: EBrandAnalysisTokenStatus.active
+                }
+            });
+
+            return token;
+        } catch (error) {
+            throw new RepositoryException('Erro ao selecionar um token de análise de marcas do usuário.', error);
+        }
+    }
+
+    async useBrandAnalyticsToken(brandAnalysiId: number, tokenId: number, tx?: PrismaClient) {
+        try {
+            const conn = tx ? tx : prismaClient;
+
+            const updated = await conn.brandAnalysisToken.update({
+                where: {
+                    id: tokenId
+                },
+                data: {
+                    brand_analysis_id: brandAnalysiId
+                }
+            });
+
+            return updated;
+        } catch (error) {
+            throw new RepositoryException('Erro ao atualizar um token de análise de marcas do usuário.', error);
         }
     }
 }

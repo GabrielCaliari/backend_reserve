@@ -5,6 +5,7 @@ import { Response } from 'express';
 import CreateUserValidator from 'src/common/validators/user/create-user.validator';
 import AuthUserValidator from 'src/common/validators/user/auth-user.validator';
 import { UserValidateJwtTokenGuard } from 'src/common/guards/user-validate-jwt-token/user-validate-jwt-token.guard';
+import axios from 'axios';
 
 @Controller('user')
 export class UserController {
@@ -90,7 +91,23 @@ export class UserController {
         }
 
         const result = await this.userService.checkout(slug, req.user_id, period.toLocaleLowerCase());
+        return res.status(result.status).json(result.data);
+    }
 
+    // TODO: Adicionar um guard para validar a geração de tokens por meio de chaves armazenadas no banco
+    @Post('/webhook/generate-tokens/:key/:user_id/:tokens')
+    async generateTokens(
+        @Res() res: Response,
+        @Req() req: Request,
+        @Param('key') key: string,
+        @Param('tokens') tokens: string,
+        @Param('user_id') userId: string
+    ) {
+        const result = await this.userService.generateTokens(
+            key,
+            +tokens,
+            +userId,
+        );
         return res.status(result.status).json(result.data);
     }
 }

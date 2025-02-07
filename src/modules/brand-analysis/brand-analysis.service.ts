@@ -21,10 +21,12 @@ export class BrandAnalysisService {
                 Plan: true
             });
 
-            const maxSearches = user.Plan.maximum_brand_analysis;
+            const maxSearchesPlan = user.Plan.maximum_brand_analysis;
             const countSearches = await this.brandAnalysisRepository.countBrandAnalysisRequestMonth(user.id);
 
-            if (maxSearches != 999 && countSearches >= maxSearches) {
+            const unredeemedTokens = await this.brandAnalysisRepository.countBrandAnalysisTokens(userId, false);
+
+            if (maxSearchesPlan != 9999 && unredeemedTokens == 0) {
                 return {
                     status: 403,
                     data: {
@@ -33,9 +35,12 @@ export class BrandAnalysisService {
                 }
             }
 
+            const token = await this.brandAnalysisRepository.selectBrandAnalysisToken(userId);
+
             const brandAnalysisRequest = await this.brandAnalysisRepository.brandAnalysisRequestCreate({
                 user_id: userId,
                 valid: true,
+                brand_analysis_token_id: token.id
             });
 
             const messages = [{
@@ -170,7 +175,7 @@ export class BrandAnalysisService {
                 await this.brandAnalysisRepository.invalidateBrandAnalysisRequest(
                     brandAnalysisRequest.id
                 );
-                
+
                 throw err;
             });;
 
@@ -195,9 +200,11 @@ export class BrandAnalysisService {
                     tx
                 );
 
+                await this.brandAnalysisRepository.useBrandAnalyticsToken(raw.id, token.id, tx);
+
                 return raw;
             });
-            
+
 
             return {
                 status: 200,
