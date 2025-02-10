@@ -40,10 +40,9 @@ model User {
   BrandAnalysis             BrandAnalysis[]
   BrandAnalysisRequest      BrandAnalysisRequest[]
   Subscription              Subscription[]
-  PibotMessages             PibotMessages?              @relation(fields: [pibotMessagesId], references: [id])
-  pibotMessagesId           Int?
   BrandAnalysisToken        BrandAnalysisToken[]
   Order                     Order[]
+  PibotMessages             PibotMessages[]
 }
 
 model Plan {
@@ -70,7 +69,7 @@ model PibotMessages {
   prompt_tokens     Int
   total_tokens      Int
   usage             Json
-  User              User[]
+  User              User     @relation(fields: [user_id], references: [id])
   user_id           Int
   created_at        DateTime @default(now())
   updated_at        DateTime @updatedAt

@@ -12,6 +12,7 @@ import BrandAlertRepository from '../brand/brand-alert.repository';
 import { EStatus } from 'src/@types/@plan';
 import BrandAnalysisRepository from '../brand-analysis/brand-analysis.repository';
 import { EBrandAnalysisTokenStatus } from 'src/@types/@brand-analysis-token';
+import AdditionalTokenPackRepository from './additional-token-pack.repository';
 const Stripe = require('stripe');
 
 @Injectable()
@@ -24,7 +25,8 @@ export class UserService {
         private readonly planRepository: PlanRepository,
         private readonly brandAlertRepository: BrandAlertRepository,
         private readonly brandRepository: BrandRepository,
-        private readonly brandAnalysisRepository: BrandAnalysisRepository
+        private readonly brandAnalysisRepository: BrandAnalysisRepository,
+        private readonly additionalTokenPackRepository: AdditionalTokenPackRepository
     ) { }
 
     async create({ email, name, password, cpf, phone_number }: ICreateUser) {
@@ -365,8 +367,36 @@ export class UserService {
             if (user.Plan.slug === process.env.FREE_PLAN_SLUG) {
                 return errorResponse(errorTypes._400.user_mh_plan, 400);
             }
-
             
+            const raw = await this.additionalTokenPackRepository.selectPackBySlug(slug);
+
+            if (!raw) {
+                return errorResponse(errorTypes._404.additional_token_pack_nf, 400);
+            }
+
+            const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+            const session = await stripe.checkout.sessions.create({
+                payment_method_types: ['card'],
+                line_items: [
+                    {
+                        price: raw.external_id,
+                        quantity: 1,
+                    },
+                ],
+                mode: 'payment',
+                success_url: `${process.env.STRIPE_SUCCESS_URL}?session_id={CHECKOUT_SESSION_ID}`,
+                cancel_url: process.env.STRIPE_CANCEL_URL,
+                metadata: {
+                    userId: userId
+                },
+            });
+
+            return {
+                status: 200,
+                data: {
+                    url: session.url
+                }
+            }
         } catch (error) {
             return errorResponse(errorTypes._500.checkout_order_brand_analysis, 500);
         }

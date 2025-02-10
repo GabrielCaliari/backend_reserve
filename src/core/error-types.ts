@@ -16,7 +16,8 @@ export const errorTypes = {
     _404: {
         brand_nf_user: '404:BRAND_NOT_FOUND_FOR_THIS_USER',
         ba_nf: '404:BRAND_ANALYSIS_NOT_FOUND',
-        user_nf: '404:USER_NOT_FOUND'
+        user_nf: '404:USER_NOT_FOUND',
+        additional_token_pack_nf: '404:ADDITIONAL_TOKEN_PACK_NOT_FOUND'
     },
     _401: {
         user_email_nf: '401:USER_EMAIL_NOT_FOUND',
