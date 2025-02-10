@@ -55,6 +55,97 @@ model Plan {
   User                      User[]
 }
 
+// SELECT
+//     c.id AS company_id,
+// 	a.id AS auxiliary_company_information_id,
+// 	c.cnpj,
+// 	c.branch_type,
+// 	c.business_name,
+// 	c.status,
+// 	c.date_status,
+// 	c.code_detail_status,
+// 	c.outer_city,
+// 	c.coutry_code,
+// 	c.start_date,
+// 	c.main_cnae_id,
+// 	c.type_of_place,
+// 	c.place,
+// 	c.house_number,
+// 	c.address_complement,
+// 	c.district,
+// 	c.cep,
+// 	c.uf,
+// 	c.city_code,
+// 	c.ddd_1,
+// 	c.phone_1,
+// 	c.ddd_2,
+// 	c.phone_2,
+// 	c.ddd_fax,
+// 	c.fax,
+// 	c.email,
+// 	c.special_citation,
+// 	c.special_citation_date,
+// 	c.load_update_date,
+// 	a.fantasy_name,
+// 	a.legal_nature,
+// 	a.qualification_representative_before_cnpj,
+// 	a.social_capital,
+// 	a.size,
+// 	a.federative_entity,
+// 	c.created_at AS company_created_at, 
+// 	c.updated_at AS company_updated_at
+// FROM
+//     "public"."Company" c
+// JOIN
+//     "public"."AuxiliaryCompanyInformation" a
+// ON
+//     LEFT(c.cnpj, 8) = a.cnpj
+
+view ViewCompany {
+  company_id                               Int
+  auxiliary_company_information_id         Int
+  cnpj                                     String?
+  branch_type                              Int?
+  business_name                            String?
+  status                                   String?
+  date_status                              DateTime?
+  code_detail_status                       String?
+  outer_city                               String?
+  coutry_code                              String?
+  main_cnae                                String?
+  secondary_cnae                           String?
+  start_date                               DateTime?
+  type_of_place                            String?
+  place                                    String?
+  house_number                             String?
+  address_complement                       String?
+  district                                 String?
+  cep                                      String?
+  uf                                       String?
+  city_code                                String?
+  ddd_1                                    String?
+  phone_1                                  String?
+  ddd_2                                    String?
+  phone_2                                  String?
+  ddd_fax                                  String?
+  fax                                      String?
+  email                                    String?
+  special_citation                         String?
+  special_citation_date                    DateTime?
+  load_update_date                         DateTime?
+  fantasy_name                             String?
+  legal_nature                             String?
+  qualification_representative_before_cnpj String?
+  social_capital                           Decimal?
+  size                                     String?
+  federative_entity                        String?
+  company_created_at                       DateTime
+  company_updated_at                       DateTime
+
+  @@id([company_id])
+  @@map("viewcompany")
+}
+
 model PibotMessages {
   id                Int      @id @default(autoincrement())
   chat_id           String   @db.VarChar(100)
