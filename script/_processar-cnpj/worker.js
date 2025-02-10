@@ -196,6 +196,11 @@ process.on('message', ({ datas, path, aux }) => {
     const validData = datas.reduce((acc, item) => {
         const messages = validateRow(item);
 
+        // 73114
+        // 74102
+        // 73190
+        // 73203
+
         if (_opTxT(item['uf']) == 'sp') {
             if (messages.length) {
                 failData.push({

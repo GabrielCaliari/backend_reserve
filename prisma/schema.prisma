@@ -121,6 +121,14 @@ model Subscription {
   @@index([customer_id])
 }
 
+model AdditionalTokenPack {
+  id          Int      @id @default(autoincrement())
+  slug        String
+  external_id String
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+}
+
 model Order {
   id                   Int     @id @default(autoincrement())
   amount               Int

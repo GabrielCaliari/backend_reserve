@@ -64,7 +64,7 @@ export class UserService {
 
     async generatePaymentAccountLink(vetId: number) {
         try {
-            const stripe = new Stripe(process.env.SECRET_KEY);
+            const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
             const user = await this.userRepository.selectById(vetId, {
                 Plan: true,
@@ -89,6 +89,7 @@ export class UserService {
                 }
             }
         } catch (error) {
+            console.log(error)
             return errorResponse(errorTypes._500.generate_subscription_management_link_error, 500);
         }
     }
@@ -238,6 +239,10 @@ export class UserService {
                 Subscription: true
             });
 
+            if (!user) {
+                return errorResponse(errorTypes._404.user_nf, 404);
+            }
+
             const countSearches = await this.searchRepository.countUserMonth(user.id);
             const countMonitoringPlans = await this.planRepository.countMonitoringPlans(user.id);
 
@@ -319,7 +324,7 @@ export class UserService {
                 }
             }
         } catch (error) {
-            return errorResponse(errorTypes._500.checkout_error, 500);
+            return errorResponse(errorTypes._500.checkout_error, 500, error);
         }
     }
 
@@ -329,7 +334,7 @@ export class UserService {
                 return errorResponse(errorTypes._401.wh_token_in, 401);
             }
 
-            const tokensRaws =  Array.from({ length: tokens }, (_, i) => i + 1).map(token => {
+            const tokensRaws = Array.from({ length: tokens }, (_, i) => i + 1).map(token => {
                 return {
                     user_id: userId,
                     status: EBrandAnalysisTokenStatus.active
@@ -344,6 +349,26 @@ export class UserService {
             }
         } catch (error) {
             return errorResponse(errorTypes._500.generate_tokens_error, 500);
+        }
+    }
+
+    async checkoutOrderBrandAnalysis(slug, userId) {
+        try {
+            const user = await this.userRepository.selectById(userId, {
+                Plan: true,
+            });
+
+            if (!user) {
+                return errorResponse(errorTypes._404.user_nf, 404);
+            }
+
+            if (user.Plan.slug === process.env.FREE_PLAN_SLUG) {
+                return errorResponse(errorTypes._400.user_mh_plan, 400);
+            }
+
+            
+        } catch (error) {
+            return errorResponse(errorTypes._500.checkout_order_brand_analysis, 500);
         }
     }
 }

@@ -73,7 +73,7 @@ export class UserController {
         return res.status(result.status).json(result.data);
     }
 
-    @Get('/checkout/:slug/:period')
+    @Post('/checkout/:slug/:period')
     @UseGuards(UserValidateJwtTokenGuard)
     async checkout(
         @Res() res: Response,
@@ -91,6 +91,17 @@ export class UserController {
         }
 
         const result = await this.userService.checkout(slug, req.user_id, period.toLocaleLowerCase());
+        return res.status(result.status).json(result.data);
+    }
+
+    @Post('/checkout/order-brand-analysis/:slug')
+    @UseGuards(UserValidateJwtTokenGuard)
+    async checkoutOrderBrandAnalysis(
+        @Res() res: Response,
+        @Req() req: Request & { user_id: number; },
+        @Param('slug') slug: string,
+    ) {
+        const result = await this.userService.checkoutOrderBrandAnalysis(slug, req.user_id);
         return res.status(result.status).json(result.data);
     }
 

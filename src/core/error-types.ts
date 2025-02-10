@@ -6,7 +6,8 @@ export const errorTypes = {
         search_nf: '400:SEARCH_NOT_FOUND',
         page_out_of_range: '400:PAGE_OUT_OF_RANGE',
         has_no_moni_plan: '400:USER_HAS_NO_MONITORING_PLANS',
-        plan_not_found: '400:PLAN_NOT_FOUND'
+        plan_not_found: '400:PLAN_NOT_FOUND',
+        user_mh_plan: '400:USER_MUST_HAVE_A_PLAN'
     },
     _403: {
         search_limit_reached: '403:SEARCH_LIMIT_REACHED',
@@ -43,6 +44,7 @@ export const errorTypes = {
         ba_find_buser: '500:ERROR_BRAND_ANALYSIS_FIND_USER',
         generate_subscription_management_link_error: 'GENERATE_SUBSCRIPTION_MANAGEMENT_LINK_ERROR',
         checkout_error: '500:CHECKOUT_ERROR',
-        generate_tokens_error: '500:GENERATE_TOKENS_ERROR'
+        generate_tokens_error: '500:GENERATE_TOKENS_ERROR',
+        checkout_order_brand_analysis: '500:CHECKOUT_ORDER_BRAND_ANALYSIS'
     }
 }
