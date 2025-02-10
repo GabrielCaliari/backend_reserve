@@ -94,7 +94,7 @@ export class UserController {
         return res.status(result.status).json(result.data);
     }
 
-    @Post('/checkout/order-brand-analysis/:slug')
+    @Post('/order-brand-analysis/checkout/:slug')
     @UseGuards(UserValidateJwtTokenGuard)
     async checkoutOrderBrandAnalysis(
         @Res() res: Response,

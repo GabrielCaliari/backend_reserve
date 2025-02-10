@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider        = "prisma-client-js"
   previewFeatures = ["views"]
@@ -23,26 +17,26 @@ model User {
   sex                       Int?                        @default(1) @db.SmallInt
   date_of_birth             DateTime?                   @db.Date
   date_expires_in           DateTime?                   @db.Date
-  Plan                      Plan                        @relation(fields: [plan_id], references: [id])
   plan_id                   Int
   created_at                DateTime                    @default(now())
   updated_at                DateTime                    @updatedAt
-  Credential                UserCredential?
-  UserSessionToken          UserSessionToken[]
-  UserPasswordChangeSession UserPasswordChangeSession[]
-  Search                    Search[]
-  CompanyExport             CompanyExport[]
   Brand                     Brand[]
-  BrandMonitoring           BrandMonitoring[]
-  BrandNotification         BrandNotification[]
-  MonitoringPlan            MonitoringPlan[]
   BrandAlert                BrandAlert[]
   BrandAnalysis             BrandAnalysis[]
   BrandAnalysisRequest      BrandAnalysisRequest[]
-  Subscription              Subscription[]
   BrandAnalysisToken        BrandAnalysisToken[]
+  BrandMonitoring           BrandMonitoring[]
+  BrandNotification         BrandNotification[]
+  CompanyExport             CompanyExport[]
+  MonitoringPlan            MonitoringPlan[]
   Order                     Order[]
   PibotMessages             PibotMessages[]
+  Search                    Search[]
+  Subscription              Subscription[]
+  Plan                      Plan                        @relation(fields: [plan_id], references: [id])
+  Credential                UserCredential?
+  UserPasswordChangeSession UserPasswordChangeSession[]
+  UserSessionToken          UserSessionToken[]
 }
 
 model Plan {
@@ -54,11 +48,11 @@ model Plan {
   maximum_brand_analysis    Int              @default(0)
   month_price_id            String?
   annual_price_id           String?
-  User                      User[]
+  created_at                DateTime         @default(now())
+  updated_at                DateTime         @default(now()) @updatedAt
   MonitoringPlan            MonitoringPlan[]
   Subscription              Subscription[]
-  created_at                DateTime         @default(now()) // Data de criação do registro
-  updated_at                DateTime         @default(now()) @updatedAt // Data da última atualização
+  User                      User[]
 }
 
 model PibotMessages {
@@ -69,52 +63,49 @@ model PibotMessages {
   prompt_tokens     Int
   total_tokens      Int
   usage             Json
-  User              User     @relation(fields: [user_id], references: [id])
   user_id           Int
   created_at        DateTime @default(now())
   updated_at        DateTime @updatedAt
+  User              User     @relation(fields: [user_id], references: [id])
 }
 
 model Subscription {
   id                     Int       @id @default(autoincrement())
   name                   String
-  subscription_id        String    @unique // ID da assinatura gerado pela Stripe (ex: sub_1234567890)
-  customer_id            String // ID do cliente associado (ex: cus_987654321)
-  status                 String // Status da assinatura (ex: active, canceled, trialing)
-  string_plan_id         String // ID do plano Stripe (ex: price_1234567890)
-  string_plan_nickname   String? // Nome do plano (opcional)
-  string_plan_amount     Int // Valor do plano em centavos (ex: 1999 para $19.99)
-  string_plan_currency   String // Moeda usada (ex: usd)
-  interval               String // Frequência do plano (ex: day, week, month, year)
-  start_date             DateTime // Data de início da assinatura
-  current_period_start   DateTime // Início do período de faturamento atual
-  current_period_end     DateTime // Fim do período de faturamento atual
-  trial_end              DateTime? // Data de término do período de teste, se aplicável
-  cancel_at              DateTime? // Data programada para cancelamento, se aplicável
-  canceled_at            DateTime? // Data em que a assinatura foi cancelada, se aplicável
-  ended_at               DateTime? // Data em que a assinatura terminou, se aplicável
-  billing_cycle_anchor   DateTime // Data de reinício do ciclo de cobrança
-  payment_method         String? // ID do método de pagamento (ex: pm_1234567890)
-  default_payment_method String? // Método de pagamento padrão associado
-  auto_renew             Boolean // Indica se a assinatura será renovada automaticamente
-  quantity               Int // Quantidade associada ao plano (ex: 1)
-  tax_percent            Float? // Percentual de imposto aplicado, se houver
-  discount               Json? // Detalhes de descontos aplicados
-  latest_invoice_id      String? // ID da última fatura gerada (ex: in_987654321)
-  next_invoice_date      DateTime? // Data estimada para a próxima fatura
-  cancel_at_period_end   Boolean // Se a assinatura será cancelada no fim do período atual
-  metadata               Json? // Metadados personalizados (ex: {"user_id": "1234"})
-  created_from_webhook   Boolean // Indica se foi criado a partir de um webhook
-  event_history          Json? // Histórico de eventos importantes
-
-  created_at DateTime @default(now()) // Data de criação do registro
-  updated_at DateTime @updatedAt // Data da última atualização
-
-  Plan    Plan @relation(fields: [plan_id], references: [id])
-  plan_id Int
-
-  User    User @relation(fields: [user_id], references: [id])
-  user_id Int
+  subscription_id        String    @unique
+  customer_id            String
+  status                 String
+  string_plan_id         String
+  string_plan_nickname   String?
+  string_plan_amount     Int
+  string_plan_currency   String
+  interval               String
+  start_date             DateTime
+  current_period_start   DateTime
+  current_period_end     DateTime
+  trial_end              DateTime?
+  cancel_at              DateTime?
+  canceled_at            DateTime?
+  ended_at               DateTime?
+  billing_cycle_anchor   DateTime
+  payment_method         String?
+  default_payment_method String?
+  auto_renew             Boolean
+  quantity               Int
+  tax_percent            Float?
+  discount               Json?
+  latest_invoice_id      String?
+  next_invoice_date      DateTime?
+  cancel_at_period_end   Boolean
+  metadata               Json?
+  created_from_webhook   Boolean
+  event_history          Json?
+  created_at             DateTime  @default(now())
+  updated_at             DateTime  @updatedAt
+  plan_id                Int
+  user_id                Int
+  Plan                   Plan      @relation(fields: [plan_id], references: [id])
+  User                   User      @relation(fields: [user_id], references: [id])
 
   @@index([subscription_id])
   @@index([customer_id])
@@ -129,7 +120,7 @@ model AdditionalTokenPack {
 }
 
 model Order {
-  id                   Int     @id @default(autoincrement())
+  id                   Int      @id @default(autoincrement())
   amount               Int
   currency             String
   product_name         String
@@ -138,12 +129,10 @@ model Order {
   created_from_webhook Boolean
   metadata             Json?
   customer_id          String
-
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-
-  User    User @relation(fields: [user_id], references: [id])
-  user_id Int
+  created_at           DateTime @default(now())
+  updated_at           DateTime @updatedAt
+  user_id              Int
+  User                 User     @relation(fields: [user_id], references: [id])
 
   @@index([customer_id])
 }
@@ -165,24 +154,24 @@ model MonitoringPlan {
   ended_at             DateTime?
   billing_cycle_anchor DateTime
   plan_id              Int?
-  Plan                 Plan?     @relation(fields: [plan_id], references: [id])
   brand_id             Int?
-  Brand                Brand?    @relation(fields: [brand_id], references: [id])
   subscription_id      String    @unique
-  User                 User      @relation(fields: [user_id], references: [id])
   user_id              Int
   created_at           DateTime  @default(now())
   updated_at           DateTime  @updatedAt
+  Brand                Brand?    @relation(fields: [brand_id], references: [id])
+  Plan                 Plan?     @relation(fields: [plan_id], references: [id])
+  User                 User      @relation(fields: [user_id], references: [id])
 }
 
 model UserSessionToken {
   id         Int      @id @default(autoincrement())
-  hash_token String   @db.Text
+  hash_token String
   salt       String
-  User       User     @relation(fields: [user_id], references: [id])
   user_id    Int
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
+  User       User     @relation(fields: [user_id], references: [id])
 }
 
 model UserCredential {
@@ -208,7 +197,7 @@ model UserPasswordChangeSession {
   id         Int       @id @default(autoincrement())
   slug       String    @db.VarChar(64)
   status     Int       @db.SmallInt
-  hash_token String    @db.Text
+  hash_token String
   salt       String
   lat        String?
   long       String?
@@ -216,9 +205,9 @@ model UserPasswordChangeSession {
   expires_in DateTime
   expired_at DateTime?
   user_id    Int
-  User       User      @relation(fields: [user_id], references: [id])
   created_at DateTime  @default(now())
   updated_at DateTime  @updatedAt
+  User       User      @relation(fields: [user_id], references: [id])
 }
 
 model Company {
@@ -226,7 +215,7 @@ model Company {
   cnpj                  String    @unique @db.VarChar(14)
   branch_type           Int       @db.SmallInt
   business_name         String?   @db.VarChar(255)
-  status                String    @db.VarChar(2) // 01 = nula; 02 = ativa; 03 = suspensa; 04 = inapta; 08 = baixada
+  status                String    @db.VarChar(2)
   date_status           DateTime? @db.Date
   code_detail_status    String    @db.VarChar(2)
   outer_city            String?   @db.VarChar(70)
@@ -258,97 +247,6 @@ model Company {
   @@index([uf, city_code, branch_type, business_name, status, date_status, code_detail_status, coutry_code, start_date, main_cnae, secondary_cnae, created_at(sort: Desc)])
 }
 
-// SELECT
-//     c.id AS company_id,
-// 	a.id AS auxiliary_company_information_id,
-// 	c.cnpj,
-// 	c.branch_type,
-// 	c.business_name,
-// 	c.status,
-// 	c.date_status,
-// 	c.code_detail_status,
-// 	c.outer_city,
-// 	c.coutry_code,
-// 	c.start_date,
-// 	c.main_cnae_id,
-// 	c.type_of_place,
-// 	c.place,
-// 	c.house_number,
-// 	c.address_complement,
-// 	c.district,
-// 	c.cep,
-// 	c.uf,
-// 	c.city_code,
-// 	c.ddd_1,
-// 	c.phone_1,
-// 	c.ddd_2,
-// 	c.phone_2,
-// 	c.ddd_fax,
-// 	c.fax,
-// 	c.email,
-// 	c.special_citation,
-// 	c.special_citation_date,
-// 	c.load_update_date,
-// 	a.fantasy_name,
-// 	a.legal_nature,
-// 	a.qualification_representative_before_cnpj,
-// 	a.social_capital,
-// 	a.size,
-// 	a.federative_entity,
-// 	c.created_at AS company_created_at, 
-// 	c.updated_at AS company_updated_at
-// FROM
-//     "public"."Company" c
-// JOIN
-//     "public"."AuxiliaryCompanyInformation" a
-// ON
-//     LEFT(c.cnpj, 8) = a.cnpj
-
-view ViewCompany {
-  company_id                               Int
-  auxiliary_company_information_id         Int
-  cnpj                                     String?
-  branch_type                              Int?
-  business_name                            String?
-  status                                   String?
-  date_status                              DateTime?
-  code_detail_status                       String?
-  outer_city                               String?
-  coutry_code                              String?
-  main_cnae                                String?
-  secondary_cnae                           String?
-  start_date                               DateTime?
-  type_of_place                            String?
-  place                                    String?
-  house_number                             String?
-  address_complement                       String?
-  district                                 String?
-  cep                                      String?
-  uf                                       String?
-  city_code                                String?
-  ddd_1                                    String?
-  phone_1                                  String?
-  ddd_2                                    String?
-  phone_2                                  String?
-  ddd_fax                                  String?
-  fax                                      String?
-  email                                    String?
-  special_citation                         String?
-  special_citation_date                    DateTime?
-  load_update_date                         DateTime?
-  fantasy_name                             String?
-  legal_nature                             String?
-  qualification_representative_before_cnpj String?
-  social_capital                           Decimal?
-  size                                     String?
-  federative_entity                        String?
-  company_created_at                       DateTime
-  company_updated_at                       DateTime
-
-  @@id([company_id])
-  @@map("viewcompany")
-}
-
 model AuxiliaryCompanyInformation {
   id                                       Int      @id @default(autoincrement())
   cnpj                                     String   @unique @db.VarChar(14)
@@ -356,7 +254,7 @@ model AuxiliaryCompanyInformation {
   legal_nature                             String?  @db.VarChar(4)
   qualification_representative_before_cnpj String?  @db.VarChar(2)
   social_capital                           Decimal? @db.Decimal(22, 2)
-  size                                     String?  @db.VarChar(2) // 00 - NAO INFORMADO; 01 - MICRO EMPRESA; 03 - EMPRESA DE PEQUENO PORTE; 05 - DEMAIS
+  size                                     String?  @db.VarChar(2)
   federative_entity                        String?  @db.VarChar(100)
   created_at                               DateTime @default(now())
   updated_at                               DateTime @default(now()) @updatedAt
@@ -369,9 +267,9 @@ model Search {
   hash       String   @unique @db.VarChar(100)
   filters    Json
   user_id    Int
-  User       User     @relation(fields: [user_id], references: [id])
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
+  User       User     @relation(fields: [user_id], references: [id])
 }
 
 model TaxRegime {
@@ -379,7 +277,7 @@ model TaxRegime {
   cnpj             String   @db.VarChar(14)
   year             DateTime @db.Date
   scp_cnpj         String   @db.VarChar(115)
-  type_of_taxation Int      @db.SmallInt // 1 = Imenes e isentas; 2 = Lucro arbitrado; 3 = Lucro real; 4 = Lucro presumido
+  type_of_taxation Int      @db.SmallInt
   taxation         String   @db.VarChar(115)
   company_id       Int?
   created_at       DateTime @default(now())
@@ -410,14 +308,14 @@ model Brand {
   email             String
   phone_number      String
   user_id           Int
-  User              User                @relation(fields: [user_id], references: [id])
   inpi_number       String?             @db.VarChar(30)
   created_at        DateTime            @default(now())
   updated_at        DateTime            @updatedAt
+  User              User                @relation(fields: [user_id], references: [id])
+  BrandAlert        BrandAlert[]
   BrandMonitoring   BrandMonitoring[]
   BrandNotification BrandNotification[]
   MonitoringPlan    MonitoringPlan[]
-  BrandAlert        BrandAlert[]
 }
 
 model Cnae {
@@ -445,8 +343,8 @@ model JournalToFetch {
   searched     Boolean        @default(false)
   created_at   DateTime       @default(now())
   updated_at   DateTime       @updatedAt
-  JournalAlert JournalAlert[]
   BrandAlert   BrandAlert[]
+  JournalAlert JournalAlert[]
 }
 
 model BrandAlert {
@@ -468,16 +366,16 @@ model BrandAlert {
   titular              Json
   despacho             Json
   sobrestador          Json
-  Brand                Brand           @relation(fields: [brand_id], references: [id])
   brand_id             Int
-  BrandMonitoring      BrandMonitoring @relation(fields: [brand_monitoring_id], references: [id])
   brand_monitoring_id  Int
-  User                 User            @relation(fields: [user_id], references: [id])
   user_id              Int
-  Journal_to_fetch     JournalToFetch  @relation(fields: [jornal_to_fetch_id], references: [id])
   jornal_to_fetch_id   Int
   created_at           DateTime        @default(now())
   updated_at           DateTime        @updatedAt
+  Brand                Brand           @relation(fields: [brand_id], references: [id])
+  BrandMonitoring      BrandMonitoring @relation(fields: [brand_monitoring_id], references: [id])
+  Journal_to_fetch     JournalToFetch  @relation(fields: [jornal_to_fetch_id], references: [id])
+  User                 User            @relation(fields: [user_id], references: [id])
 }
 
 model BrandMonitoring {
@@ -487,9 +385,7 @@ model BrandMonitoring {
   triggered_notifications Int                 @default(0)
   status                  Int                 @db.SmallInt
   user_id                 Int
-  User                    User                @relation(fields: [user_id], references: [id])
   brand_id                Int
-  Brand                   Brand               @relation(fields: [brand_id], references: [id])
   inpi_number             String?             @db.VarChar(30)
   last_magazine_searched  String?             @db.VarChar(20)
   last_movement           DateTime?
@@ -497,8 +393,10 @@ model BrandMonitoring {
   last_search             DateTime?
   created_at              DateTime            @default(now())
   updated_at              DateTime            @updatedAt
-  BrandNotification       BrandNotification[]
   BrandAlert              BrandAlert[]
+  Brand                   Brand               @relation(fields: [brand_id], references: [id])
+  User                    User                @relation(fields: [user_id], references: [id])
+  BrandNotification       BrandNotification[]
 }
 
 model JournalAlert {
@@ -520,10 +418,10 @@ model JournalAlert {
   titular              Json
   despacho             Json
   sobrestador          Json
-  Journal_to_fetch     JournalToFetch @relation(fields: [jornal_to_fetch_id], references: [id])
   jornal_to_fetch_id   Int
   created_at           DateTime       @default(now())
   updated_at           DateTime       @updatedAt
+  Journal_to_fetch     JournalToFetch @relation(fields: [jornal_to_fetch_id], references: [id])
 }
 
 model BrandAnalysis {
@@ -536,10 +434,10 @@ model BrandAnalysis {
   brand                String                 @db.VarChar(255)
   niche                String                 @db.VarChar(155)
   description          String                 @db.VarChar(255)
-  User                 User                   @relation(fields: [user_id], references: [id])
   user_id              Int
   created_at           DateTime               @default(now())
   updated_at           DateTime               @updatedAt
+  User                 User                   @relation(fields: [user_id], references: [id])
   BrandAnalysisRequest BrandAnalysisRequest[]
   BrandAnalysisToken   BrandAnalysisToken[]
 }
@@ -547,38 +445,38 @@ model BrandAnalysis {
 model BrandAnalysisRequest {
   id                      Int                @id @default(autoincrement())
   valid                   Boolean
-  Brand_analysis_token    BrandAnalysisToken @relation(fields: [brand_analysis_token_id], references: [id])
-  brand_analysis_token_id Int
-  Brand_analysis          BrandAnalysis?     @relation(fields: [brand_analysis_id], references: [id])
   brand_analysis_id       Int?
-  User                    User               @relation(fields: [user_id], references: [id])
   user_id                 Int
   created_at              DateTime           @default(now())
   updated_at              DateTime           @updatedAt
+  brand_analysis_token_id Int
+  Brand_analysis          BrandAnalysis?     @relation(fields: [brand_analysis_id], references: [id])
+  Brand_analysis_token    BrandAnalysisToken @relation(fields: [brand_analysis_token_id], references: [id])
+  User                    User               @relation(fields: [user_id], references: [id])
 }
 
 model BrandAnalysisToken {
   id                   Int                    @id @default(autoincrement())
   status               Int                    @db.SmallInt
-  Brand_analysis       BrandAnalysis?         @relation(fields: [brand_analysis_id], references: [id])
   brand_analysis_id    Int?
-  User                 User                   @relation(fields: [user_id], references: [id])
   user_id              Int
   created_at           DateTime               @default(now())
   updated_at           DateTime               @updatedAt
   BrandAnalysisRequest BrandAnalysisRequest[]
+  Brand_analysis       BrandAnalysis?         @relation(fields: [brand_analysis_id], references: [id])
+  User                 User                   @relation(fields: [user_id], references: [id])
 }
 
 model BrandNotification {
   id                  Int             @id @default(autoincrement())
-  Brand               Brand           @relation(fields: [brand_id], references: [id])
   brand_id            Int
-  User                User            @relation(fields: [user_id], references: [id])
   user_id             Int
-  Brand_monitoring    BrandMonitoring @relation(fields: [brand_monitoring_id], references: [id])
   brand_monitoring_id Int
   created_at          DateTime        @default(now())
   updated_at          DateTime        @updatedAt
+  Brand               Brand           @relation(fields: [brand_id], references: [id])
+  Brand_monitoring    BrandMonitoring @relation(fields: [brand_monitoring_id], references: [id])
+  User                User            @relation(fields: [user_id], references: [id])
 }
 
 model CompanyExport {
@@ -588,14 +486,7 @@ model CompanyExport {
   deletion_date DateTime?
   filters       Json
   user_id       Int
-  User          User      @relation(fields: [user_id], references: [id])
   created_at    DateTime  @default(now())
   updated_at    DateTime  @updatedAt
+  User          User      @relation(fields: [user_id], references: [id])
 }
-
-// model WebhookKeys {
-//   id         Int      @id @default(autoincrement())
-//   key 
-//   created_at DateTime @default(now())
-//   updated_at DateTime @updatedAt
-// }
