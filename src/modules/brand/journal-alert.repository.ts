@@ -2,12 +2,17 @@ import RepositoryException from "src/core/exceptions/RepositoryException";
 import prismaClient from "src/core/prisma/prismaClient";
 
 export default class JournalAlertRepository {
-    async findByBrandName(name: string, lastMagazine: string | null = null) {
+    async findByBrandName(name: string, lastMagazine: string | null = null, contains = false, select?) {
         try {
             const raws = await prismaClient.journalAlert.findMany({
+                ...(select ? {select} : {}),
                 where: {
                     brand: {
-                        equals: name,
+                        ...(contains ? {
+                            contains: name
+                        } : {
+                            equals: name
+                        }),
                         mode: 'insensitive'
                     },
                     ...(lastMagazine ? { journal_number: { gt: lastMagazine } } : {})

@@ -531,6 +531,8 @@ model BrandAnalysis {
   User                 User                   @relation(fields: [user_id], references: [id])
   BrandAnalysisRequest BrandAnalysisRequest[]
   BrandAnalysisToken   BrandAnalysisToken[]
+
+  @@index([brand])
 }
 
 model BrandAnalysisRequest {
