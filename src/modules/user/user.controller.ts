@@ -6,6 +6,7 @@ import CreateUserValidator from 'src/common/validators/user/create-user.validato
 import AuthUserValidator from 'src/common/validators/user/auth-user.validator';
 import { UserValidateJwtTokenGuard } from 'src/common/guards/user-validate-jwt-token/user-validate-jwt-token.guard';
 import axios from 'axios';
+import PreCreateUserValidator from 'src/common/validators/user/pre-create-user.validator';
 
 @Controller('user')
 export class UserController {
@@ -30,6 +31,23 @@ export class UserController {
         });
 
         return res.status(result.status).json(result.data);
+    }
+
+    @Post('/pre/create')
+    @UsePipes(ToLowercaseBodyRequestPipe)
+    async preCreate(
+        @Res() res: Response,
+        @Body() data: PreCreateUserValidator,
+    ) {
+        const result = await this.userService.preCreate({
+            email: data.email,
+            name: data.name,
+            phone_number: data.phone_number
+            // sex: +data.sex,
+            // date_of_birth: new Date(data.date_of_birth),
+        });
+
+        return res.status(result.status).json(result.data);   
     }
 
     @Post('/authenticate')

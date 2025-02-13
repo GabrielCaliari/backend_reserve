@@ -85,7 +85,7 @@ export default class UserRepository {
 
     async selectByCPF(cpf: string, include: IUserFindInclude = {}) {
         try {
-            const user = await prismaClient.user.findUnique({
+            const user = await prismaClient.user.findFirst({
                 where: { cpf },
                 include
             });

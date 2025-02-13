@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { errorTypes } from 'src/core/error-types';
-import { errorResponse } from 'src/core/functions';
+import { errorResponse, gerarSenha } from 'src/core/functions';
 import UserRepository, { ICreateUser } from './user.repository';
 import { IAuthenticateUser, IValidateUserToken } from 'src/@types/@authenticate-user';
 import UserCredentialRepository from './user-credential.repository';
@@ -57,6 +57,38 @@ export class UserService {
                 status: 201,
                 data: {
                     id: raw.id
+                }
+            }
+        } catch (error) {
+            return errorResponse(errorTypes._500.user_nc, 500, error);
+        }
+    }
+
+    async preCreate({ email, name, phone_number }) {
+        try {
+            const existingUserByEmail = await this.userRepository.selectByEmail(email);
+
+            if (existingUserByEmail) {
+                return errorResponse(errorTypes._400.user_alr_exe, 400);
+            }
+
+            const password = gerarSenha();
+
+            const raw = await this.userRepository.create({
+                email,
+                name,
+                password,
+                cpf: '0000000000',
+                phone_number
+                // date_of_birth,
+                // sex,
+            });
+
+            return {
+                status: 201,
+                data: {
+                    id: raw.id,
+                    password
                 }
             }
         } catch (error) {
@@ -367,7 +399,7 @@ export class UserService {
             if (user.Plan.slug === process.env.FREE_PLAN_SLUG) {
                 return errorResponse(errorTypes._400.user_mh_plan, 400);
             }
-            
+
             const raw = await this.additionalTokenPackRepository.selectPackBySlug(slug);
 
             if (!raw) {

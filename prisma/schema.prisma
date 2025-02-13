@@ -12,7 +12,7 @@ model User {
   id                        Int                         @id @default(autoincrement())
   email                     String                      @unique
   name                      String                      @db.VarChar(100)
-  cpf                       String                      @unique @db.VarChar(11)
+  cpf                       String                      @db.VarChar(11)
   phone_number              String                      @db.VarChar(13)
   sex                       Int?                        @default(1) @db.SmallInt
   date_of_birth             DateTime?                   @db.Date
