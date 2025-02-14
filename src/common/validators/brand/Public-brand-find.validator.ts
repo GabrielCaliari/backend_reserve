@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty, IsString, Matches } from "class-validator";
+import { IsBoolean, IsEmail, IsNotEmpty, IsString, Matches } from "class-validator";
 
 export default class PublicBrandFindValidator {
     @IsString()
@@ -8,4 +8,7 @@ export default class PublicBrandFindValidator {
 
     @IsEmail()
     email: string;
+
+    @IsBoolean()
+    radical: boolean;
 }

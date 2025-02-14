@@ -591,6 +591,7 @@ model PublicBrandSearch {
   name       String
   email      String
   brand      String
+  radical    Boolean
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 }

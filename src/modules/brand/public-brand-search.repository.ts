@@ -5,6 +5,7 @@ export interface IPublicBrandSearchFields {
     brand: string;
     name: string;
     email: string;
+    radical: boolean;
 }
 
 export default class PublicBrandSearchRepository {
@@ -15,6 +16,7 @@ export default class PublicBrandSearchRepository {
                     brand: data.brand,
                     email: data.email,
                     name: data.name,
+                    radical: data.radical
                 }
             });
 

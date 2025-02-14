@@ -234,8 +234,9 @@ export class BrandService {
     async publicBrandFind({
         brand_name,
         name,
-        email
-    }: {brand_name: string, name: string, email: string}, page: number, limit: number) {
+        email,
+        radical
+    }: {brand_name: string, name: string, email: string, radical: boolean}, page: number, limit: number) {
         try {
             const alertsCount = await this.journalAlertRepository.count({
                 brand: {
@@ -247,15 +248,16 @@ export class BrandService {
             const raw = await this.publicBrandSearchRepository.create({
                 brand: brand_name,
                 name,
-                email
-            })
+                email,
+                radical
+            });
 
             const pages =
                 Math.ceil(
                     alertsCount / limit
                 );
 
-            const alerts = await this.journalAlertRepository.findByBrandName(brand_name, null, true, {
+            const alerts = await this.journalAlertRepository.findByBrandName(brand_name, null, radical, {
                 pag: {
                     page,
                     limit,

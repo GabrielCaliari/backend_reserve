@@ -57,7 +57,8 @@ export class BrandController {
             {
                 brand_name,
                 email: row.email,
-                name: row.name
+                name: row.name,
+                radical: row.radical,
             },
             +params.page || 1,
             10,
