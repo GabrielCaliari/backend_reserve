@@ -36,6 +36,7 @@ import { AppController } from './app.controller';
 import { PiBotController } from './modules/pi-bot/pi-bot.controller';
 import { PiBotService } from './modules/pi-bot/pi-bot.service';
 import AdditionalTokenPackRepository from './modules/user/additional-token-pack.repository';
+import PublicBrandSearchRepository from './modules/brand/public-brand-search.repository';
 
 @Module({
   imports: [
@@ -79,7 +80,8 @@ import AdditionalTokenPackRepository from './modules/user/additional-token-pack.
     BrandAnalysisService,
     BrandAnalysisRepository,
     PiBotService,
-    AdditionalTokenPackRepository
+    AdditionalTokenPackRepository,
+    PublicBrandSearchRepository
   ],
 })
 export class AppModule {}

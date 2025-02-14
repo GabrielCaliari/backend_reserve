@@ -29,7 +29,7 @@ await authenticate();
 const _getPostgresConnectionAux = await getPostgresConnectionAux();
 const cnae = await _getPostgresConnectionAux.selectCNAE();
 
-const values = readFileSync('./empresas-deferidas-inpi.csv').toString().split('\n');
+const values = readFileSync('./data-1739476174193.csv').toString().split('\n');
 
 const companys = [];
 

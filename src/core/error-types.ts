@@ -46,6 +46,7 @@ export const errorTypes = {
         generate_subscription_management_link_error: 'GENERATE_SUBSCRIPTION_MANAGEMENT_LINK_ERROR',
         checkout_error: '500:CHECKOUT_ERROR',
         generate_tokens_error: '500:GENERATE_TOKENS_ERROR',
-        checkout_order_brand_analysis: '500:CHECKOUT_ORDER_BRAND_ANALYSIS'
+        checkout_order_brand_analysis: '500:CHECKOUT_ORDER_BRAND_ANALYSIS',
+        public_find_brand: '500:PUBLIC_FIND_BRAND_ERROR'
     }
 }

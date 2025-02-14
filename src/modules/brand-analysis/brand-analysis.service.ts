@@ -45,7 +45,7 @@ export class BrandAnalysisService {
                 brand_analysis_token_id: token.id
             });
 
-            const brands = await this.journalAlertRepository.findByBrandName(brand, null, true, { brand: true });
+            const brands = await this.journalAlertRepository.findByBrandName(brand, null, true, { select: { brand: true } });
 
             const brandsName = Array.from(new Set(brands.map(brand => brand.brand)));
 

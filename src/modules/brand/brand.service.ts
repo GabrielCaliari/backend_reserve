@@ -13,6 +13,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import PlanRepository from '../user/plan.repository';
 import { EStatus } from 'src/@types/@plan';
 import BrandAlertRepository from './brand-alert.repository';
+import PublicBrandSearchRepository from './public-brand-search.repository';
 
 @Injectable()
 export class BrandService {
@@ -21,7 +22,8 @@ export class BrandService {
         private readonly journalAlertRepository: JournalAlertRepository,
         private readonly planRepository: PlanRepository,
         private readonly brandMonitoringRepository: BrandMonitoringRepository,
-        private readonly brandAlertRepository: BrandAlertRepository
+        private readonly brandAlertRepository: BrandAlertRepository,
+        private readonly publicBrandSearchRepository: PublicBrandSearchRepository
     ) { }
 
     async create(data: Omit<IBrandFields, 'id'>) {
@@ -226,6 +228,55 @@ export class BrandService {
 
         } catch (error) {
             return errorResponse(errorTypes._500.brand_monitoring, 500, error);
+        }
+    }
+
+    async publicBrandFind({
+        brand_name,
+        name,
+        email
+    }: {brand_name: string, name: string, email: string}, page: number, limit: number) {
+        try {
+            const alertsCount = await this.journalAlertRepository.count({
+                brand: {
+                    contains: brand_name,
+                    mode: 'insensitive'
+                },
+            });
+
+            const raw = await this.publicBrandSearchRepository.create({
+                brand: brand_name,
+                name,
+                email
+            })
+
+            const pages =
+                Math.ceil(
+                    alertsCount / limit
+                );
+
+            const alerts = await this.journalAlertRepository.findByBrandName(brand_name, null, true, {
+                pag: {
+                    page,
+                    limit,
+                },
+                order: {
+                    journal_number: 'desc'
+                },
+                unique: true
+            });
+
+            return {
+                status: 200,
+                data: {
+                    page,
+                    limit,
+                    pages,
+                    raws: alerts
+                }
+            }
+        } catch (error) {
+            return errorResponse(errorTypes._500.public_find_brand, 500, error);
         }
     }
 }

@@ -61,6 +61,9 @@ export default class JournalToFetchRepository {
                     },
                     searched: false
                 },
+                orderBy: {
+                    zip_name: 'desc'
+                },
                 take: limit
             });
 

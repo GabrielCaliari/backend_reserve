@@ -513,6 +513,8 @@ model JournalAlert {
   created_at           DateTime       @default(now())
   updated_at           DateTime       @updatedAt
   Journal_to_fetch     JournalToFetch @relation(fields: [jornal_to_fetch_id], references: [id])
+
+  @@index([brand])
 }
 
 model BrandAnalysis {
@@ -582,4 +584,13 @@ model CompanyExport {
   created_at    DateTime  @default(now())
   updated_at    DateTime  @updatedAt
   User          User      @relation(fields: [user_id], references: [id])
+}
+
+model PublicBrandSearch {
+  id         Int      @id @default(autoincrement())
+  name       String
+  email      String
+  brand      String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 }

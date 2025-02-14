@@ -2,10 +2,11 @@ import RepositoryException from "src/core/exceptions/RepositoryException";
 import prismaClient from "src/core/prisma/prismaClient";
 
 export default class JournalAlertRepository {
-    async findByBrandName(name: string, lastMagazine: string | null = null, contains = false, select?) {
+    async findByBrandName(name: string, lastMagazine: string | null = null, contains = false, { select, pag, order, unique }: { select?, order?: {}, pag?: { page?, limit, offset?}, unique?: boolean } = {}) {
         try {
             const raws = await prismaClient.journalAlert.findMany({
-                ...(select ? {select} : {}),
+                ...(unique ? { distinct: ['process_number'] } : {}),
+                ...(select ? { select } : {}),
                 where: {
                     brand: {
                         ...(contains ? {
@@ -15,11 +16,17 @@ export default class JournalAlertRepository {
                         }),
                         mode: 'insensitive'
                     },
-                    ...(lastMagazine ? { journal_number: { gt: lastMagazine } } : {})
+                    ...(lastMagazine ? { journal_number: { gt: lastMagazine } } : {}),
                 },
-                orderBy: {
-                    journal_number: 'asc'
-                }
+                ...(pag && pag.page && !pag.offset ? { skip: (pag.page - 1) * pag.limit } : {}),
+                ...(pag && pag.offset && !pag.page ? { skip: pag.offset } : {}),
+                ...(pag && pag.limit ? { take: pag.limit } : {}),
+                ...(order ? { orderBy: order } : {
+                    orderBy: {
+                        journal_number: 'asc'
+                    }
+                })
+
             });
 
             return raws;

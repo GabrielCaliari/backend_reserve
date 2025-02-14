@@ -1,10 +1,13 @@
-import { Body, Controller, Get, Param, Post, Req, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query, Req, Res, UseGuards } from '@nestjs/common';
 import { UserValidateJwtTokenGuard } from 'src/common/guards/user-validate-jwt-token/user-validate-jwt-token.guard';
 import { BrandService } from './brand.service';
 import CreateValidator from 'src/common/validators/brand/Create.validator';
 import { Request, Response } from 'express';
 import AlertsByBrandNameValidator from 'src/common/validators/brand/Alerts-by-brand-name.validator';
 import FindBrandValidator from 'src/common/validators/company/Find-brand.validator';
+import PublicFindBrandValidator from 'src/common/validators/company/Public-find-brand.validator';
+import ListingQueryParamsValidator from 'src/common/validators/company/Listing-query-params.validator';
+import PublicBrandFindValidator from 'src/common/validators/brand/Public-brand-find.validator';
 
 @Controller('brand')
 export class BrandController {
@@ -40,6 +43,25 @@ export class BrandController {
     ) {
         const userId = req.user_id;
         const result = await this.brandService.findUserBrands(userId);
+        return res.status(result.status).json(result.data);
+    }
+
+    @Post('/public-brand-find/:brand_name')
+    async publicBrandFind(
+        @Query() params: ListingQueryParamsValidator,
+        @Body() row: PublicBrandFindValidator,
+        @Param() { brand_name }: PublicFindBrandValidator,
+        @Res() res: Response
+    ) {
+        const result = await this.brandService.publicBrandFind(
+            {
+                brand_name,
+                email: row.email,
+                name: row.name
+            },
+            +params.page || 1,
+            10,
+        );
         return res.status(result.status).json(result.data);
     }
 

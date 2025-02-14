@@ -133,7 +133,9 @@ export class JournalService {
 
     async syncJournal() {
         try {
-            const journal = await this.journalToFetchRepository.findAllNotSearchedXML(5000);
+            const journal = await this.journalToFetchRepository.findAllNotSearchedXML(2);
+
+            console.log(journal)
 
             journal.forEach((journal, index) => {
                 throttle(() => {
