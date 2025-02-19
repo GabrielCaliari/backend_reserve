@@ -5,6 +5,7 @@ import CompanyRepository, { ICompanyFields } from './company.repository';
 import SearchRepository from './search.repository';
 import { Company, Search } from '@prisma/client';
 import UserRepository from '../user/user.repository';
+import { EStatus as ECompanyExportStatus } from 'src/@types/@company-export'
 
 import { createWriteStream } from 'fs';
 import * as AWS from '@aws-sdk/client-s3';
@@ -245,7 +246,7 @@ export class CompanyService {
                 limit,
                 page
             }))
-            
+
             if (!itsPage) {
                 search = await this.searchRepository.create({
                     amount: companyCount,
@@ -265,7 +266,7 @@ export class CompanyService {
                     raws: raws.map((raw) => {
                         const cnae = cnaes.find(cnae => cnae.code === raw.main_cnae);
                         const secondaryCnae = cnaes.filter(cnae => raw.secondary_cnae ? raw.secondary_cnae.split(',').find(sub_raw => sub_raw == cnae.code) : [])
-        
+
                         return {
                             ...raw,
                             partner: [],
@@ -280,7 +281,7 @@ export class CompanyService {
                                 }
                             })
                         }
-                    })        
+                    })
                 }
             }
         } catch (error) {
@@ -338,16 +339,6 @@ export class CompanyService {
                 return errorResponse(errorTypes._400.page_out_of_range, 400);
             }
 
-            const fileName = randomBytes(32).toString('hex').slice(0, 32);
-            const filePath = path.join(__dirname, '..', '..', '..', '..', 'temp', `${fileName}.csv`)
-            const writeStream = createWriteStream(filePath);
-
-            const csvStream = format({ headers: true });
-            csvStream.pipe(writeStream);
-
-            let totalRecordsProcessed = 0;
-            let hasMoreRecords = true;
-
             const pageCount = await this.companyRepository.count(
                 JSON.parse(search.filters as string),
                 {
@@ -356,108 +347,141 @@ export class CompanyService {
                 }
             );
 
-            const company = await this.companyRepository.find(
-                JSON.parse(search.filters as string),
-                {
-                    select: {
-                        cnpj: true,
-                        business_name: true,
-                        // cep: true,
-                        // address_complement: true,
-                        // branch_type: true,
-                        // city_code: true,
-                        // code_detail_status: true,
-                        // coutry_code: true,
-                        // date_status: true,
-                        // ddd_1: true,
-                        // ddd_2: true,
-                        // ddd_fax: true,
-                        // district: true,
-                        // email: true,
-                        // fantasy_name: true,
-                        // fax: true,
-                        // federative_entity: true,
-                        // house_number: true,
-                        // id: true,
-                        // legal_nature: true,
-                        // load_update_date: true,
-                        // Main_cnae: true,
-                        // main_cnae_id: true,
-                        // mei_opting_date: true,
-                        // mei_option: true,
-                        // nacimal_simple_opting_date: true,
-                        // nacimal_simple_option: true,
-                        // outer_city: true,
-                        // phone_1: true,
-                        // phone_2: true,
-                        // place: true,
-                        // qualification_representative_before_cnpj: true,
-                        // SecondaryCnae: true,
-                        // size: true,
-                        // social_capital: true,
-                        // special_citation: true,
-                        // special_citation_date: true,
-                        // start_date: true,
-                        // status: true,
-                        // type_of_place: true,
-                        // uf: true,
-                    }
-                },
-                {
-                    offset: +offset,
-                    limit: userPlan.maximum_queries_to_export
+            const companyExport = await this.companyRepository.createCompanyExport({
+                company_count: companyCount,
+                total_exported: userPlan.maximum_queries_to_export,
+                filters: search.filters,
+                status: ECompanyExportStatus.pending,
+                user_id: userId,
+                page_count: pageCount,
+                page: start,
+            });
+
+            this.processExport(companyExport.id);
+
+            return {
+                status: 200,
+                data: {
+                    id: companyExport.id
                 }
-            );
+            }
+        } catch (error) {
+            return errorResponse(errorTypes._500.company_not_exported, 500, error);
+        }
+    }
 
-            const packages = separar(company, 1000);
+    async processExport(
+        exportId: number
+    ) {
+        const fileName = randomBytes(32).toString('hex').slice(0, 32);
+        const filePath = path.join(__dirname, '..', '..', '..', '..', 'temp', `${fileName}.csv`)
 
-            // TODO: otimizar
-            packages.forEach((_package: any[]) => {
-                let data = '';
+        try {
+            const companyExport = await this.companyRepository.findCompanyExportById(exportId);
 
-                _package.forEach(item => {
-                    data += `${[
-                        item.cnpj, // as cnpj
-                        item.business_name, // Razão social
-                        item.fantasy_name, // nome fantasia
-                        (item.start_date ? item.start_date.toLocaleDateString() : ''), // Data de inicio
-                        item.Main_cnae.code, // CNAE Principal
-                        (item.SecondaryCnae && Array.isArray(item.SecondaryCnae) ? item.SecondaryCnae.map((cnae) => cnae.Cnae.code).join(',') : ''), // Cnae secundario
-                        (item.ddd_1 ? `${item.ddd_1} ${item.phone_1}` : ''), // telefone
-                        (item.ddd_2 ? `${item.ddd_2} ${item.phone_2}` : ''), // telefone
-                        (item.ddd_fax ? `${item.ddd_fax} ${item.fax}` : ''), // fax
-                        item.email, // email
-                        item.branch_type, // Matriz/Filial
-                        item.cep, // CEP
-                        item.type_of_place, // Tipo local
-                        item.place, // local
-                        item.district, // bairro
-                        item.uf, // UF
-                        item.city_code, // código da cidade 
-                        item.qualification_representative_before_cnpj, // Qualificação do representando do CNPJ (código)
-                        item.nacimal_simple_option, // optante pelo simples nacional
-                        (item.nacimal_simple_opting_date ? item.nacimal_simple_opting_date.toLocaleDateString() : ''), // data optante pelo simples
-                        item.mei_option, // optante pelo MEI
-                        (item.mei_non_option_date ? item.mei_non_option_date.toLocaleDateString() : ''), // não optante pelo MEI data
-                        (item.mei_opting_date ? item.mei_opting_date.toLocaleDateString() : ''), // data optante pelo MEI
-                        item.federative_entity,  // entidade federativa
-                        item.size, // porte da empresa
-                        item.social_capital, // capital social
-                        item.legal_nature, // natureza legal
-                        item.status, // status da empresa
-                        (item.date_status ? item.date_status.toLocaleDateString() : ''), // data do status
-                        item.code_detail_status, // Código detalhes status
-                        item.outer_city, // Cidade do exterior
-                        item.coutry_code, // Código do pais
-                        (item.load_update_date ? item.load_update_date.toLocaleDateString() : ''),
-                        item.special_citation, // sitaucao espcial
-                        (item.special_citation_date ? item.special_citation_date.toLocaleDateString() : ''), // sitaucao espcial data
-                    ].join(";")}\n`;
+            if (!companyExport.id) {
+                throw `Empresa buscada pelo ID ${exportId} não foi encontrada pelo método findCompanyExportById`;
+            }
+
+            const writeStream = createWriteStream(filePath);
+
+            const csvStream = format({ headers: true });
+            csvStream.pipe(writeStream);
+
+            const paginationLimit = 10000;
+            const paginationOffset = companyExport.page == 1 ? 1 : (companyExport.total_exported) / ((companyExport.page) * paginationLimit) * 2;
+            const offset = paginationOffset;
+
+            const companies = await Promise.all(Array.from({ length: Math.ceil((companyExport.total_exported / paginationLimit)) }).map(async (value, index) => {
+                const companies = await this.companyRepository.find(
+                    JSON.parse(companyExport.filters as string),
+                    {
+                        select: {
+                            cnpj: true,
+                            branch_type: true,
+                            business_name: true,
+                            status: true,
+                            date_status: true,
+                            code_detail_status: true,
+                            outer_city: true,
+                            coutry_code: true,
+                            start_date: true,
+                            type_of_place: true,
+                            place: true,
+                            house_number: true,
+                            address_complement: true,
+                            district: true,
+                            cep: true,
+                            uf: true,
+                            city_code: true,
+                            ddd_1: true,
+                            phone_1: true,
+                            ddd_2: true,
+                            phone_2: true,
+                            ddd_fax: true,
+                            fax: true,
+                            email: true,
+                            special_citation: true,
+                            special_citation_date: true,
+                            load_update_date: true,
+                            main_cnae: true,
+                            secondary_cnae: true,
+                            fantasy_name: true,
+                            legal_nature: true,
+                            qualification_representative_before_cnpj: true,
+                            social_capital: true,
+                            size: true,
+                            federative_entity: true,
+                        }
+                    },
+                    {
+                        page: (+offset + index + 1),
+                        limit: paginationLimit
+                    }
+                );
+
+                return companies;
+            }));
+
+            companies.flat().forEach(company => {
+                csvStream.write({
+                    'CNPJ': company.cnpj,
+                    'Tipo de Filial': company.branch_type,
+                    'Razão Social': company.business_name,
+                    'Status': company.status,
+                    'Data do Status': company.date_status ? new Date(company.date_status).toLocaleDateString('pt-BR') : '',
+                    'Código Detalhado do Status': company.code_detail_status,
+                    'Cidade Exterior': company.outer_city,
+                    'Código do País': company.coutry_code,
+                    'Data de Início': company.start_date ? new Date(company.start_date).toLocaleDateString('pt-BR') : '',
+                    'Tipo de Logradouro': company.type_of_place,
+                    'Logradouro': company.place,
+                    'Número': company.house_number,
+                    'Complemento': company.address_complement,
+                    'Bairro': company.district,
+                    'CEP': company.cep,
+                    'UF': company.uf,
+                    'Código da Cidade': company.city_code,
+                    'DDD 1': company.ddd_1,
+                    'Telefone 1': company.phone_1,
+                    'DDD 2': company.ddd_2,
+                    'Telefone 2': company.phone_2,
+                    'DDD Fax': company.ddd_fax,
+                    'Fax': company.fax,
+                    'Email': company.email,
+                    'Citação Especial': company.special_citation,
+                    'Data da Citação Especial': company.special_citation_date ? new Date(company.special_citation_date).toLocaleDateString('pt-BR') : '',
+                    'Data de Atualização': company.load_update_date ? new Date(company.load_update_date).toLocaleDateString('pt-BR') : '',
+                    'CNAE Principal': company.main_cnae,
+                    'CNAEs Secundários': company.secondary_cnae,
+                    'Nome Fantasia': company.fantasy_name,
+                    'Natureza Jurídica': company.legal_nature,
+                    'Qualificação do Representante': company.qualification_representative_before_cnpj,
+                    'Capital Social': company.social_capital,
+                    'Porte': company.size,
+                    'Entidade Federativa': company.federative_entity,
                 });
-
-                fs.appendFileSync(filePath, data, { encoding: 'utf-8' })
-            })
-
+            });
             csvStream.end();
 
             await new Promise((resolve, reject) => {
@@ -465,16 +489,105 @@ export class CompanyService {
                 writeStream.on('error', reject);
             });
 
+            const s3FileName = `exports/${fileName}.csv`;
+            const link = `${process.env.UPLOAD_BUCKET_ENDPOINT}/${process.env.UPLOAD_BUCKET_NAME}/${s3FileName}`;
+
+            await this.s3Client.putObject({
+                Bucket: process.env.UPLOAD_BUCKET_NAME,
+                Key: s3FileName,
+                Body: fs.createReadStream(filePath)
+            });
+
+            fs.unlinkSync(filePath);
+            
+            await this.companyRepository.updateCompanyExport(exportId, {
+                status: ECompanyExportStatus.completed,
+                public_link: link,
+            });
+
             return {
                 status: 200,
                 data: {
-                    message: 'Arquivo CSV gerado com sucesso',
-                    filePath: filePath,
-                    totalRecordsProcessed: totalRecordsProcessed
+                    uri: link
+                }
+            };
+        } catch (error) {
+            // Clean up temp file if it exists
+            if (fs.existsSync(filePath)) {
+                fs.unlinkSync(filePath);
+            }
+
+            await this.companyRepository.updateCompanyExport(exportId, {
+                status: ECompanyExportStatus.failed,
+            });
+
+            return errorResponse(errorTypes._500.company_not_exported, 500, error);
+        }
+    }
+
+    async downloadExport(exportId: number, userId: number) {
+        try {
+            const companyExport = await this.companyRepository.findCompanyExportById(exportId);
+    
+            if (!companyExport || companyExport.user_id !== userId) {
+                return errorResponse(errorTypes._403.unauthorized_access, 403);
+            }
+    
+            if (!companyExport || companyExport.user_id !== userId) {
+                return errorResponse(errorTypes._403.unauthorized_access, 403);
+            }
+    
+            if (companyExport.status !== ECompanyExportStatus.completed || !companyExport.public_link) {
+                return errorResponse(errorTypes._400.export_not_ready, 400);
+            }
+    
+            const fileKey = companyExport.public_link.split('/').pop();
+            const getObjectCommand = new AWS.GetObjectCommand({
+                Bucket: process.env.UPLOAD_BUCKET_NAME,
+                Key: `exports/${fileKey}`
+            });
+
+            const item = await this.s3Client.send(getObjectCommand);
+
+            if (!item.Body) {
+                return errorResponse(errorTypes._404.file_not_found, 404);
+            }
+
+            return {
+                status: 200,
+                data: {
+                    stream: item.Body.transformToWebStream(),
+                    filename: fileKey,
+                    contentType: 'text/csv'
+                }
+            };
+        } catch (error) {
+            return errorResponse(errorTypes._500.export_download_error, 500, error);
+        }
+    }
+
+    async exportFile(exportId: number, userId: number) {
+        try {
+            const companyExport = await this.companyRepository.findCompanyExportById(exportId);
+
+            if (!companyExport || companyExport.user_id !== userId) {
+                return errorResponse(errorTypes._403.unauthorized_access, 403);
+            }
+
+            return {
+                status: 200,
+                data: {
+                    status: companyExport.status,
+                    public_link: companyExport.public_link,
+                    created_at: companyExport.created_at,
+                    company_count: companyExport.company_count,
+                    total_exported: companyExport.total_exported,
+                    page: companyExport.page,
+                    page_count: companyExport.page_count
                 }
             }
         } catch (error) {
-            return errorResponse(errorTypes._500.company_not_exported, 500, error);
+            return errorResponse(errorTypes._500.export_status_error, 500, error);
         }
     }
 }

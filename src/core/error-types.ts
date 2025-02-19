@@ -7,17 +7,20 @@ export const errorTypes = {
         page_out_of_range: '400:PAGE_OUT_OF_RANGE',
         has_no_moni_plan: '400:USER_HAS_NO_MONITORING_PLANS',
         plan_not_found: '400:PLAN_NOT_FOUND',
-        user_mh_plan: '400:USER_MUST_HAVE_A_PLAN'
+        user_mh_plan: '400:USER_MUST_HAVE_A_PLAN',
+        export_not_ready: '400:EXPORT_NOT_READY'
     },
     _403: {
         search_limit_reached: '403:SEARCH_LIMIT_REACHED',
-        analysis_limit_reached: '403:ANALYSIS_LIMIT_REACHED'
+        analysis_limit_reached: '403:ANALYSIS_LIMIT_REACHED',
+        unauthorized_access: '403:UNAUTHORIZED_ACCESS'
     },
     _404: {
         brand_nf_user: '404:BRAND_NOT_FOUND_FOR_THIS_USER',
         ba_nf: '404:BRAND_ANALYSIS_NOT_FOUND',
         user_nf: '404:USER_NOT_FOUND',
-        additional_token_pack_nf: '404:ADDITIONAL_TOKEN_PACK_NOT_FOUND'
+        additional_token_pack_nf: '404:ADDITIONAL_TOKEN_PACK_NOT_FOUND',
+        file_not_found: '404:FILE_NOT_FOUND'
     },
     _401: {
         user_email_nf: '401:USER_EMAIL_NOT_FOUND',
@@ -47,6 +50,8 @@ export const errorTypes = {
         checkout_error: '500:CHECKOUT_ERROR',
         generate_tokens_error: '500:GENERATE_TOKENS_ERROR',
         checkout_order_brand_analysis: '500:CHECKOUT_ORDER_BRAND_ANALYSIS',
-        public_find_brand: '500:PUBLIC_FIND_BRAND_ERROR'
+        public_find_brand: '500:PUBLIC_FIND_BRAND_ERROR',
+        export_status_error: '500:EXPORT_STATUS_ERROR',
+        export_download_error: '500:EXPORT_DOWNLOAD_ERROR'
     }
 }

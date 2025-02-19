@@ -131,88 +131,97 @@ export class JournalService {
         }
     }
 
+    async _syncJournal() {
+        const journal = await this.journalToFetchRepository.findAllNotSearchedXML(1);
+
+        console.log('Método chamado')
+
+        console.log(journal)
+
+        await new Promise(async resolve => {
+            console.log(`Leitura iniciada. ${journal[0].name}`)
+
+            await new Promise(async (resolve) => {
+                const xml = await this.s3Client.getObject({
+                    Bucket: process.env.JOURNAL_BUCKET_NAME,
+                    Key: `revistas-dev/${journal[0].name}`
+                });
+
+                const xmlStream = xml.Body;
+                const xmlName = `${randomUUID()}.json`;
+
+                const tempDir = path.join('./', 'temp');
+                const tempFilePath = path.join(tempDir, xmlName);
+
+                if (!fs.existsSync(tempDir)) {
+                    fs.mkdirSync(tempDir);
+                }
+
+                const xmlData = await xmlStream.transformToString();
+
+                await new Promise(resolve => {
+                    return parseString(xmlData, (err, results) => {
+                        let journalAlert: any[] = [];
+
+                        results.revista.processo.forEach(processo => {
+                            journalAlert.push({
+                                brand: processo.marca && processo.marca[0].nome ? processo.marca[0].nome.join(',') : null,
+                                nature: processo.marca && processo.marca[0].$ ? processo.marca[0].$.natureza : null,
+                                deposit_date: processo.$['data-deposito'] ? converterParaData(processo.$['data-deposito']) : null,
+                                conception_date: processo.$['data-concessao'] ? converterParaData(processo.$['data-concessao']) : null,
+                                effective_date: processo.$['data-vigencia'] ? converterParaData(processo.$['data-vigencia']) : null,
+                                presentation: processo.marca && processo.marca[0].$ ? processo.marca[0].$.apresentacao : null,
+                                classe_viena: processo['classes-vienna'] ? processo['classes-vienna'] : null,
+                                classe_nice: processo['lista-classe-nice'] ? processo['lista-classe-nice'] : null,
+                                prioridade_unionista: processo['prioridade-unionista'] ? processo['prioridade-unionista'] : null,
+                                attorney: processo.procurador && processo.procurador.length > 0 ? processo.procurador[0] : null,
+                                apostila: journal[0].name,
+                                process_number: processo.$.numero,
+                                titular: processo.titulares ? processo.titulares : {},
+                                despacho: processo.despachos ? processo.despachos : {},
+                                sobrestador: processo.sobrestadores ? processo.sobrestadores : {},
+                                jornal_to_fetch_id: journal[0].id,
+                                journal_number: results.revista.$.numero,
+                                journal_date: converterParaData(results.revista.$.data),
+                            })
+                        })
+
+                        prismaClient.journalAlert.createMany({
+                            data: journalAlert
+                        }).then(() => {
+                            console.log(`Promise resolvida. ${journal[0].name}`)
+                            resolve(true);
+                        });
+                    });
+                })
+
+                const updated = await prismaClient.journalToFetch.update({
+                    data: {
+                        searched: true
+                    },
+                    where: {
+                        id: journal[0].id
+                    }
+                })
+
+                console.log(`Leitura finalizada. ${journal[0].name}`)
+
+                await resolve(updated)
+            })
+
+            resolve(true);
+        })
+
+        const Existsjournal = await this.journalToFetchRepository.findAllNotSearchedXML(2);
+
+        if (Existsjournal.length) {
+            this._syncJournal();
+        }
+    }
+
     async syncJournal() {
         try {
-            const journal = await this.journalToFetchRepository.findAllNotSearchedXML(2);
-
-            console.log(journal)
-
-            journal.forEach((journal, index) => {
-                throttle(() => {
-                    console.log(`Fila ${index}`)
-                    return new Promise(async (resolve) => {
-                        const xml = await this.s3Client.getObject({
-                            Bucket: process.env.JOURNAL_BUCKET_NAME,
-                            Key: `revistas-dev/${journal.name}`
-                        });
-
-                        const xmlStream = xml.Body;
-                        const xmlName = `${randomUUID()}.json`;
-
-                        const tempDir = path.join('./', 'temp');
-                        const tempFilePath = path.join(tempDir, xmlName);
-
-                        if (!fs.existsSync(tempDir)) {
-                            fs.mkdirSync(tempDir);
-                        }
-
-                        const xmlData = await xmlStream.transformToString();
-
-                        console.log(`Arquivo transformado. ${index}`);
-
-                        await new Promise(resolve => {
-                            return parseString(xmlData, (err, results) => {
-                                let journalAlert: any[] = [];
-
-                                results.revista.processo.forEach(processo => {
-                                    journalAlert.push({
-                                        brand: processo.marca && processo.marca[0].nome ? processo.marca[0].nome.join(',') : null,
-                                        nature: processo.marca && processo.marca[0].$ ? processo.marca[0].$.natureza : null,
-                                        deposit_date: processo.$['data-deposito'] ? converterParaData(processo.$['data-deposito']) : null,
-                                        conception_date: processo.$['data-concessao'] ? converterParaData(processo.$['data-concessao']) : null,
-                                        effective_date: processo.$['data-vigencia'] ? converterParaData(processo.$['data-vigencia']) : null,
-                                        presentation: processo.marca && processo.marca[0].$ ? processo.marca[0].$.apresentacao : null,
-                                        classe_viena: processo['classes-vienna'] ? processo['classes-vienna'] : null,
-                                        classe_nice: processo['lista-classe-nice'] ? processo['lista-classe-nice'] : null,
-                                        prioridade_unionista: processo['prioridade-unionista'] ? processo['prioridade-unionista'] : null,
-                                        attorney: processo.procurador && processo.procurador.length > 0 ? processo.procurador[0] : null,
-                                        apostila: journal.name,
-                                        process_number: processo.$.numero,
-                                        titular: processo.titulares ? processo.titulares : {},
-                                        despacho: processo.despachos ? processo.despachos : {},
-                                        sobrestador: processo.sobrestadores ? processo.sobrestadores : {},
-                                        jornal_to_fetch_id: journal.id,
-                                        journal_number: results.revista.$.numero,
-                                        journal_date: converterParaData(results.revista.$.data),
-                                    })
-                                })
-
-                                console.log(`Linhas lidas. ${index}`)
-
-                                prismaClient.journalAlert.createMany({
-                                    data: journalAlert
-                                }).then(() => {
-                                    console.log(`Promise resolvida. ${index}`)
-                                    resolve(true);
-                                });
-                            });
-                        })
-
-                        console.log(`Leitura finalizada. ${index}`)
-
-                        const updated = await prismaClient.journalToFetch.update({
-                            data: {
-                                searched: true
-                            },
-                            where: {
-                                id: journal.id
-                            }
-                        })
-
-                        await resolve(updated)
-                    })
-                })
-            })
+            this._syncJournal();
 
             return {
                 status: 200,

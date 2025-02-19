@@ -575,15 +575,19 @@ model BrandNotification {
 }
 
 model CompanyExport {
-  id            Int       @id @default(autoincrement())
-  company_count Int
-  public_link   String
-  deletion_date DateTime?
-  filters       Json
-  user_id       Int
-  created_at    DateTime  @default(now())
-  updated_at    DateTime  @updatedAt
-  User          User      @relation(fields: [user_id], references: [id])
+  id             Int       @id @default(autoincrement())
+  total_exported Int
+  company_count  Int
+  status         Int       @db.SmallInt
+  page           Int
+  page_count     Int
+  public_link    String?
+  deletion_date  DateTime?
+  filters        Json
+  user_id        Int
+  created_at     DateTime  @default(now())
+  updated_at     DateTime  @updatedAt
+  User           User      @relation(fields: [user_id], references: [id])
 }
 
 model PublicBrandSearch {

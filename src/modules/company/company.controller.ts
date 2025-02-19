@@ -7,6 +7,8 @@ import { UserValidateJwtTokenGuard } from 'src/common/guards/user-validate-jwt-t
 import ExportValidator from 'src/common/validators/company/Export.validator';
 import ExportCountValidator from 'src/common/validators/company/Export-count.validator';
 import { ToLowercaseBodyRequestPipe } from 'src/common/pipe/to-lowercase-body-request/to-lowercase-body-request.pipe';
+import IdValidator from 'src/common/validators/id.validator';
+import { Readable } from 'stream';
 
 @Controller('company')
 export class CompanyController {
@@ -119,6 +121,47 @@ export class CompanyController {
             search_hash,
             start
         );
+        return res.status(result.status).json(result.data);
+    }
+
+    @Get('/export/file/:id')
+    @UseGuards(UserValidateJwtTokenGuard)
+    async exportFile(
+        @Param() params: IdValidator,
+        @Res() res: Response,
+        @Req() req: Request & { user_id: number }
+    ) {
+        const result = await this.companyService.exportFile(+params.id, req.user_id);
+        return res.status(result.status).json(result.data);
+    }
+    @Get('/export/download/:id')
+    @UseGuards(UserValidateJwtTokenGuard)
+    async downloadExport(
+        @Param() params: IdValidator,
+        @Res() res: Response,
+        @Req() req: Request & { user_id: number }
+    ) {
+        const result = await this.companyService.downloadExport(+params.id, req.user_id);
+        
+        if (result.status === 200 && 'filename' in result.data && 'stream' in result.data) {
+            try {
+                // Set response headers for CSV file download
+                res.setHeader('Content-Type', 'text/csv');
+                res.setHeader('Content-Disposition', `attachment; filename="${result.data.filename}"`);
+                
+                // Convert ReadableStream to Node.js Readable stream and pipe to response
+                const nodeStream = Readable.fromWeb(result.data.stream);
+                nodeStream.pipe(res);
+                return;
+            } catch (error) {
+                return res.status(500).json({ 
+                    status: 500,
+                    message: 'Error streaming file',
+                    error: error.message
+                });
+            }
+        }
+        
         return res.status(result.status).json(result.data);
     }
 }

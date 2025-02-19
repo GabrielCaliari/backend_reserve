@@ -1,5 +1,6 @@
 import { ViewCompany } from "@prisma/client";
 import { EBranchType, ESize, EStatus } from "src/@types/@company";
+import { EStatus as ECompanyExportStatus } from 'src/@types/@company-export'
 import RepositoryException from "src/core/exceptions/RepositoryException";
 import { convertSearchParamsToSQL, getKeysWithTrueValue } from "src/core/functions";
 import prismaClient from "src/core/prisma/prismaClient";
@@ -89,12 +90,27 @@ export interface ICreateCompany {
     load_update_date: Date;
 }
 
+export interface ICreateCompanyExport {
+    total_exported: number;
+    company_count: number;
+    status: ECompanyExportStatus;
+    public_link?: string;
+    deletion_date?: Date;
+    page: number;
+    page_count: number;
+    filters: {};
+    user_id: number;
+}
+
 export default class CompanyRepository {
     async count(where, pag?: { page?, limit, offset?}) {
         try {
             if (where.uf) {
+                const limitClause = `LIMIT ${pag && pag.limit ? pag.limit : 1000}`; // Usa o limite da paginação se fornecido
+                const offsetClause = pag && pag.page ? `OFFSET ${(pag.page - 1) * (pag.limit || 1000)}` : ''; // Calcula o offset com base na página
+                
                 const raws = await prismaClient.$queryRawUnsafe(
-                    `SELECT count(company_id) FROM ${`"public"."viewcompany_${where.uf.toLocaleLowerCase()}" ${convertSearchParamsToSQL(where)} LIMIT 10`}`
+                    `SELECT count(company_id) FROM ${`"public"."viewcompany_${where.uf.toLocaleLowerCase()}" ${convertSearchParamsToSQL(where)} ${limitClause} ${offsetClause}`}`
                 )
 
                 return Number(raws[0].count);
@@ -124,10 +140,13 @@ export default class CompanyRepository {
     ) {
         try {
             if (where.uf) {
-                const columns = (options.select ? getKeysWithTrueValue(options.select) : ['*']).join(',')
+                const columns = (options.select ? getKeysWithTrueValue(options.select) : ['*']).join(',');
+                const limitClause = `LIMIT ${pag && pag.limit ? pag.limit : 1000}`; // Usa o limite da paginação se fornecido
+                const offsetClause = pag && pag.page ? `OFFSET ${(pag.page - 1) * (pag.limit || 1000)}` : ''; // Calcula o offset com base na página
+
                 const raws = await prismaClient.$queryRawUnsafe(
-                    `SELECT ${columns} FROM ${`"public"."viewcompany_${where.uf.toLocaleLowerCase()}" ${convertSearchParamsToSQL(where)} LIMIT 10`}`
-                )
+                    `SELECT ${columns} FROM ${`"public"."viewcompany_${where.uf.toLocaleLowerCase()}" ${convertSearchParamsToSQL(where)} ${limitClause} ${offsetClause}`}`
+                );
 
                 return raws as ViewCompany[];
             }
@@ -343,6 +362,51 @@ export default class CompanyRepository {
             return raws;
         } catch (error) {
             throw new RepositoryException('Erro ao buscar uma empresa pelo estado.', error);
+        }
+    }
+
+    async createCompanyExport(data: ICreateCompanyExport) {
+        try {
+            const raw = await prismaClient.companyExport.create({
+                data: {
+                    ...data
+                }
+            });
+
+            return raw;
+        } catch (error) {
+            throw new RepositoryException('Erro ao cria um registro de exportação de empresas.', error);
+        }
+    }
+
+    async findCompanyExportById(id: number) {
+        try {
+            const raw = await prismaClient.companyExport.findUnique({
+                where: {
+                    id
+                }
+            });
+
+            return raw;
+        } catch (error) {
+            throw new RepositoryException('Erro ao selecionar um registro de exportação de empresas.', error);
+        }
+    }
+
+    async updateCompanyExport(id: number, data: Partial<ICreateCompanyExport>) {
+        try {
+            const raw = await prismaClient.companyExport.update({
+                where: {
+                    id
+                },
+                data: {
+                    ...data
+                }
+            });
+
+            return raw;
+        } catch (error) {
+            throw new RepositoryException('Erro ao atualizar um registro de exportação de empresas.', error);
         }
     }
 }
