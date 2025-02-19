@@ -436,7 +436,7 @@ export class CompanyService {
                     },
                     {
                         page: (+offset + index + 1),
-                        limit: paginationLimit
+                        limit: companyExport.total_exported <= paginationLimit ? companyExport.total_exported : paginationLimit
                     }
                 );
 
