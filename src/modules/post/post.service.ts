@@ -5,6 +5,13 @@ import { errorResponse } from 'src/core/functions';
 
 interface WordPressPost {
     id: number;
+    slug: string;
+    modified_gmt: string;
+    meta_tag: {
+        meta_description: string;
+        meta_title: string;
+    }
+    rttpg_featured_image_url: { full: unknown[] }
     title: {
         rendered: string;
     };
@@ -17,6 +24,63 @@ interface WordPressPost {
 
 @Injectable()
 export class PostService {
+    async getSitemap() {
+        try {
+            const response = await axios.get<string>(
+                `${process.env.WORDPRESS_POST_SITEMAP}`
+            );
+
+            if (response.status != 200) {
+                throw {
+                    message: 'Erro ao buscar sitemap',
+                    data: response.data
+                };
+            }
+
+            return {
+                status: 200,
+                data: response.data
+            };
+        } catch (error: any) {
+            return errorResponse(errorTypes._500.listing_posts_error, 500, error);
+        }
+    }
+
+    async getPostMetadata(slug: string) {
+        try {
+            const response = await axios.get<WordPressPost[]>(
+                `${process.env.WORDPRESS_API_URL}/posts`,
+                {
+                    params: {
+                        slug,
+                    }
+                }
+            );
+
+            if (response.status != 200 && response.data.length == 0) {
+                throw {
+                    message: 'Erro ao buscar posts',
+                    data: response.data
+                };
+            }
+
+            console.log(response.data)
+
+            return {
+                status: 200,
+                data: {
+                    slug: response.data[0].slug,
+                    title: response.data[0].title.rendered,
+                    description: response.data[0].meta_tag.meta_description,
+                    modified: response.data[0].modified_gmt,
+                    image: response.data[0].rttpg_featured_image_url.full[0],
+                },
+            };
+        } catch (error: any) {
+            return errorResponse(errorTypes._500.listing_posts_error, 500, error);
+        }
+    }
+
     async getAllPosts(page: number = 1, limit: number = 10) {
         try {
             const response = await axios.get<WordPressPost[]>(

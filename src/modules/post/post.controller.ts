@@ -32,4 +32,22 @@ export class PostController {
         const result = await this.postService.getPostBySlug(params.slug);
         return res.status(result.status).json(result.data);
     }
+
+    @Get('/metadata/by-slug/:slug')
+    @UsePipes(new ValidationPipe({ transform: true }))
+    async getPostMetadata(
+        @Res() res: Response,
+        @Param() params: SlugParam,
+    ) {
+        const result = await this.postService.getPostMetadata(params.slug);
+        return res.status(result.status).json(result.data);
+    }
+
+    @Get('/sitemap')
+    async getSitemap(
+        @Res() res: Response,
+    ) {
+        const result = await this.postService.getSitemap();
+        return res.status(result.status).json(result.data);
+    }
 }
