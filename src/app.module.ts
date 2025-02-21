@@ -35,6 +35,8 @@ import BrandAnalysisRepository from './modules/brand-analysis/brand-analysis.rep
 import { AppController } from './app.controller';
 import { PiBotController } from './modules/pi-bot/pi-bot.controller';
 import { PiBotService } from './modules/pi-bot/pi-bot.service';
+import { PostController } from './modules/post/post.controller';
+import { PostService } from './modules/post/post.service';
 import AdditionalTokenPackRepository from './modules/user/additional-token-pack.repository';
 import PublicBrandSearchRepository from './modules/brand/public-brand-search.repository';
 
@@ -51,7 +53,8 @@ import PublicBrandSearchRepository from './modules/brand/public-brand-search.rep
     BrandController,
     BrandAnalysisController,
     AppController,
-    PiBotController
+    PiBotController,
+    PostController
   ],
   providers: [
     JournalAlertService,
@@ -81,7 +84,8 @@ import PublicBrandSearchRepository from './modules/brand/public-brand-search.rep
     BrandAnalysisRepository,
     PiBotService,
     AdditionalTokenPackRepository,
-    PublicBrandSearchRepository
+    PublicBrandSearchRepository,
+    PostService
   ],
 })
 export class AppModule {}

@@ -3,7 +3,7 @@ import { IsEmail, IsNotEmpty, IsString, Matches } from "class-validator";
 export default class PreCreateUserValidator {
     @IsString()
     @IsNotEmpty()
-    @Matches(/^[A-Za-zÀ-ÖØ-öø-ÿÁ-úçÇ]{2,}(?: [A-Za-zÀ-ÖØ-öø-ÿÁ-úçÇ]{2,})*$/)
+    // @Matches(/^[A-Za-zÀ-ÖØ-öø-ÿÁ-úçÇ]{2,}(?: [A-Za-zÀ-ÖØ-öø-ÿÁ-úçÇ]{2,})*$/)
     name: string;
 
     @IsEmail()

@@ -52,6 +52,7 @@ export const errorTypes = {
         checkout_order_brand_analysis: '500:CHECKOUT_ORDER_BRAND_ANALYSIS',
         public_find_brand: '500:PUBLIC_FIND_BRAND_ERROR',
         export_status_error: '500:EXPORT_STATUS_ERROR',
-        export_download_error: '500:EXPORT_DOWNLOAD_ERROR'
+        export_download_error: '500:EXPORT_DOWNLOAD_ERROR',
+        listing_posts_error: '500:LISTING_POSTS_ERROR'
     }
 }
