@@ -12,6 +12,7 @@ interface WordPressPost {
         meta_title: string;
     }
     rttpg_featured_image_url: { full: unknown[] }
+    rttpg_excerpt: string;
     title: {
         rendered: string;
     };
@@ -57,23 +58,21 @@ export class PostService {
                 }
             );
 
-            if (response.status != 200 && response.data.length == 0) {
+            if (response.status != 200 || !response.data || response.data.length == 0) {
                 throw {
                     message: 'Erro ao buscar posts',
                     data: response.data
                 };
             }
 
-            console.log(response.data)
-
             return {
                 status: 200,
                 data: {
                     slug: response.data[0].slug,
                     title: response.data[0].title.rendered,
-                    description: response.data[0].meta_tag.meta_description,
+                    description: response.data[0].rttpg_excerpt,
                     modified: response.data[0].modified_gmt,
-                    image: response.data[0].rttpg_featured_image_url.full[0],
+                    image: response.data[0].rttpg_featured_image_url ? response.data[0].rttpg_featured_image_url.full[0] : '',
                 },
             };
         } catch (error: any) {
@@ -131,7 +130,7 @@ export class PostService {
                 }
             );
 
-            if (response.status != 200) {
+            if (response.status != 200 || !response.data || response.data.length == 0) {
                 throw {
                     message: 'Erro ao buscar post',
                     data: response.data

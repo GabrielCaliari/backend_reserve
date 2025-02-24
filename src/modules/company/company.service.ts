@@ -302,8 +302,6 @@ export class CompanyService {
 
             const userPlan = (await this.userRepository.selectById(user_id, { Plan: true })).Plan
 
-            console.log(Math.ceil(+companyCount / +userPlan.maximum_queries_to_export))
-
             return {
                 status: 200,
                 data: {

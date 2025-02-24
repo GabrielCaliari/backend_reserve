@@ -84,9 +84,6 @@ export class PiBotController {
             }
         })
 
-        console.log(result)
-        console.log(result.data.choices)
-
         // const result = await this.piBotServicer.me(userId);
         // return res.status(result.status).json(result.data)
     }

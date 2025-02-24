@@ -134,13 +134,7 @@ export class JournalService {
     async _syncJournal() {
         const journal = await this.journalToFetchRepository.findAllNotSearchedXML(1);
 
-        console.log('Método chamado')
-
-        console.log(journal)
-
         await new Promise(async resolve => {
-            console.log(`Leitura iniciada. ${journal[0].name}`)
-
             await new Promise(async (resolve) => {
                 const xml = await this.s3Client.getObject({
                     Bucket: process.env.JOURNAL_BUCKET_NAME,
@@ -203,8 +197,6 @@ export class JournalService {
                         id: journal[0].id
                     }
                 })
-
-                console.log(`Leitura finalizada. ${journal[0].name}`)
 
                 await resolve(updated)
             })
