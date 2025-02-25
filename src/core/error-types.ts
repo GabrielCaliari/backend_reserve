@@ -54,6 +54,7 @@ export const errorTypes = {
         export_status_error: '500:EXPORT_STATUS_ERROR',
         export_download_error: '500:EXPORT_DOWNLOAD_ERROR',
         listing_posts_error: '500:LISTING_POSTS_ERROR',
-        message_error: '500:MESSAGE_ERROR'
+        message_error: '500:MESSAGE_ERROR',
+        public_message_error: '500:PUBLIC_MESSAGE_ERROR'
     }
 }

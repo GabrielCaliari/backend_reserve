@@ -26,4 +26,17 @@ export class PiBotController {
 
         return res.status(result.status).json(result.data);
     }
+
+    @Post('/public-message')
+    async publicMessage(
+        @Res() res: Response,
+        @Body() data: PiBotMessageValidator
+    ) {
+        const result = await this.piBotServicer.publicMessage({
+            history: data.history,
+            message: data.message
+        });
+
+        return res.status(result.status).json(result.data);
+    }
 }
