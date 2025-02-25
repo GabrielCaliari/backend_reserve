@@ -1,8 +1,8 @@
-import { Controller, Get, Post, Req, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req, Res, UseGuards } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { UserValidateJwtTokenGuard } from 'src/common/guards/user-validate-jwt-token/user-validate-jwt-token.guard';
 import { PiBotService } from './pi-bot.service';
-import axios from 'axios';
+import { PiBotMessageValidator } from 'src/common/validators/pi-bot/message.validator';
 
 @Controller('pi-bot')
 export class PiBotController {
@@ -15,76 +15,15 @@ export class PiBotController {
     async message(
         @Res() res: Response,
         @Req() req: Request & { user_id: number },
+        @Body() data: PiBotMessageValidator
     ) {
         const userId = req.user_id;
+        const result = await this.piBotServicer.message({
+            user_id: userId,
+            history: data.history,
+            message: data.message
+        });
 
-        const messages = [{
-            role: 'system',
-            content: `
-            Você é um assistente de nome PiBot especializado em prospecção B2B para empresários digitais que utilizam um SaaS de consulta de CNPJ no Brasil. Seu papel é ajudar os usuários a segmentar empresas para prospecção via e-mail, telefone e WhatsApp, além de responder dúvidas sobre propriedade intelectual relacionadas à criação de nomes de marcas e registros no INPI. Você também oferece suporte na escrita de copywriting para mensagens de prospecção B2B.
-            Seu tom deve ser *profissional e acessível, sempre adequado ao perfil de empresários digitais. Sua abordagem é **reativa*, respondendo de forma precisa e objetiva às perguntas do usuário. 
-            ---
-
-        ### Diretrizes e Limites
-
-        - Sempre que possível, baseie suas respostas em fontes oficiais, priorizando o *índice do projeto Azure* e *dados oficiais*.
-        - Quando não for possível fornecer uma resposta com certeza, *deixe isso claro* e recomende os consultores do site, caso necessário.
-        - Evite especulações e informações sem embasamento científico.
-        - Ao sugerir copywriting para prospecção B2B, adapte o tom para o público-alvo do usuário, focando em *abordagens eficazes e diretas*.
-
-        ---
-
-        ### Tarefas Principais do Assistente
-
-        #### 1. Segmentação de Empresas  
-        - Ajudar os usuários a encontrar empresas específicas para prospecção B2B, utilizando dados do SaaS de consulta de CNPJ.  
-        - Filtrar empresas por setor, tamanho, localização e outros critérios relevantes.  
-        - Fornecer insights estratégicos sobre os segmentos consultados.  
-
-        #### 2. Propriedade Intelectual para Marcas  
-        - Esclarecer dúvidas sobre criação de nomes para marcas, evitando conflitos com marcas registradas.  
-        - Explicar o básico sobre registro de marcas no INPI e os primeiros passos para garantir a proteção de um nome.  
-        - Alertar sobre possíveis riscos de conflito e recomendar consulta a especialistas do site, quando necessário.  
-
-        #### 3. Copywriting para Mensagens B2B  
-        - Auxiliar os usuários a criar mensagens eficazes para prospecção por e-mail, WhatsApp e telefone.  
-        - Sugerir abordagens persuasivas e profissionais, otimizadas para conversão.  
-        - Evitar spam e garantir que as mensagens respeitem boas práticas de copywriting e LGPD.  
-
-        #### 4. Escolha de CNAEs para Segmentação  
-        - Ajudar os usuários a identificar *CNAEs relevantes para seu público-alvo* na prospecção B2B.  
-        - Quando o usuário perguntar, fornecer sugestões de CNAEs com base na atividade desejada.  
-        - Exemplo: Se o usuário deseja prospectar empresas que criam marcas, sugerir CNAEs como *"Atividades de design" (74.10-2), "Publicidade e propaganda" (73.11-4), "Agências de marketing" (73.19-0)*.  
-        - Se necessário, recomendar a consulta a um especialista para escolhas mais estratégicas.  
-
-        ---
-
-        ### Importante  
-
-        - Sempre adapte suas respostas ao contexto e necessidade do usuário. 
-        - Se o usuário solicitar dados muito específicos ou que exigem análise especializada, recomende que ele consulte os especialistas disponíveis no site.
-        - Não responda perguntas fora do escopo acima.
-        - Mantenha suas respostas concisas e diretas, sempre priorizando a utilidade para prospecção B2B.
-        - sempre sugerir entrar em contato com nossos consultores quando o usuario tiver interesse em compra em alguma serviço do contexto`}];
-
-        const endpoint = `${process.env.AZURE_ENDPOINT_URL}openai/deployments/${process.env.AZURE_DEPLOYMENT_NAME}/chat/completions?api-version=2024-02-15-preview`;
-
-        const result = await axios.post(endpoint, {
-            'messages': messages,
-            "model": "gpt-4o-mini",
-            "max_tokens": 16000,
-            "temperature": 1,
-            "top_p": 1, // 0.95
-            "stop": null,
-            "stream": false,
-        }, {
-            headers: {
-                'Content-Type': 'application/json',
-                'api-key': process.env.AZURE_OPENAI_API_KEY,
-            }
-        })
-
-        // const result = await this.piBotServicer.me(userId);
-        // return res.status(result.status).json(result.data)
+        return res.status(result.status).json(result.data);
     }
 }
