@@ -245,12 +245,12 @@ export class BrandService {
             //     },
             // });
 
-            // const raw = await this.publicBrandSearchRepository.create({
-            //     brand: brand_name,
-            //     name,
-            //     email,
-            //     radical
-            // });
+            const raw = await this.publicBrandSearchRepository.create({
+                brand: brand_name,
+                name,
+                email,
+                radical
+            });
 
             // const pages =
             //     Math.ceil(
