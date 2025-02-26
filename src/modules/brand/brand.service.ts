@@ -238,29 +238,29 @@ export class BrandService {
         radical
     }: {brand_name: string, name: string, email: string, radical: boolean}, page: number, limit: number) {
         try {
-            const alertsCount = await this.journalAlertRepository.count({
-                brand: {
-                    contains: brand_name,
-                    mode: 'insensitive'
-                },
-            });
+            // const alertsCount = await this.journalAlertRepository.count({
+            //     brand: {
+            //         contains: brand_name,
+            //         mode: 'insensitive'
+            //     },
+            // });
 
-            const raw = await this.publicBrandSearchRepository.create({
-                brand: brand_name,
-                name,
-                email,
-                radical
-            });
+            // const raw = await this.publicBrandSearchRepository.create({
+            //     brand: brand_name,
+            //     name,
+            //     email,
+            //     radical
+            // });
 
-            const pages =
-                Math.ceil(
-                    alertsCount / limit
-                );
+            // const pages =
+            //     Math.ceil(
+            //         alertsCount / limit
+            //     );
 
             const alerts = await this.journalAlertRepository.findByBrandName(brand_name, null, radical, {
                 pag: {
-                    page,
-                    limit,
+                    // page,
+                    limit: 1000,
                 },
                 order: {
                     journal_number: 'desc'
@@ -272,8 +272,8 @@ export class BrandService {
                 status: 200,
                 data: {
                     page,
-                    limit,
-                    pages,
+                    // limit,
+                    // pages,
                     raws: alerts
                 }
             }
