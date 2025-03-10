@@ -628,3 +628,18 @@ model TrademarkRegistrationLead {
   created_at        DateTime @default(now())
   updated_at        DateTime @updatedAt
 }
+
+model LeadQualificationMessage {
+  id               Int      @id @default(autoincrement())
+  prompt_token     Int
+  completion_token Int
+  json             Json
+  profile_name     String   @db.VarChar(100)
+  phone_number_id  String   @db.VarChar(100)
+  phone_number     String   @db.VarChar(80)
+  type             String   @db.VarChar(30)
+  message          String
+  message_date     DateTime
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+}
