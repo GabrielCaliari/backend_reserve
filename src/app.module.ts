@@ -42,6 +42,7 @@ import PublicBrandSearchRepository from './core/database/repository/public-brand
 import EuipoAPIToken from './core/providers/implementations/Euipo.apitoken';
 import APITokenRepository from './core/database/repository/api-token.repository';
 import AESEncrypt from './core/providers/AESEncrypt';
+import TrademarkRegistrationLeadRepository from './core/database/repository/trademark-registration-lead.repository';
 
 @Module({
   imports: [
@@ -91,7 +92,8 @@ import AESEncrypt from './core/providers/AESEncrypt';
     PostService,
     EuipoAPIToken,
     APITokenRepository,
-    AESEncrypt
+    AESEncrypt,
+    TrademarkRegistrationLeadRepository
   ],
 })
 export class AppModule {}
