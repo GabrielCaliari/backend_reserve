@@ -2,10 +2,10 @@ import { Injectable } from '@nestjs/common';
 import axios from 'axios';
 import { errorTypes } from 'src/core/error-types';
 import { errorResponse } from 'src/core/functions';
-import BrandAnalysisRepository from 'src/modules/brand-analysis/brand-analysis.repository';
-import UserRepository from '../user/user.repository';
+import BrandAnalysisRepository from 'src/core/database/repository/brand-analysis.repository';
+import UserRepository from '../../core/database/repository/user.repository';
 import prismaClient from 'src/core/prisma/prismaClient';
-import JournalAlertRepository from '../brand/journal-alert.repository';
+import JournalAlertRepository from '../../core/database/repository/journal-alert.repository';
 const marked = require('marked');
 
 @Injectable()

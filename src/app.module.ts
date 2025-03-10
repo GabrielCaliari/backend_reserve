@@ -4,9 +4,9 @@ import { JournalAlertService } from './modules/journal-alert/journal-alert.servi
 import { UserService } from './modules/user/user.service';
 import { UserValidateJwtTokenGuard } from './common/guards/user-validate-jwt-token/user-validate-jwt-token.guard';
 import { UserController } from './modules/user/user.controller';
-import UserCredentialRepository from './modules/user/user-credential.repository';
-import UserRepository from './modules/user/user.repository';
-import UserSessionTokenRepository from './modules/user/user-session-token.repository';
+import UserCredentialRepository from './core/database/repository/user-credential.repository';
+import UserRepository from './core/database/repository/user.repository';
+import UserSessionTokenRepository from './core/database/repository/user-session-token.repository';
 import { ToLowercaseQueryParamsPipe } from './common/pipe/to-lowercase-query-params/to-lowercase-query-params.pipe';
 import { ToLowercaseBodyRequestPipe } from './common/pipe/to-lowercase-body-request/to-lowercase-body-request.pipe';
 import { CompanyController } from './modules/company/company.controller';
@@ -17,28 +17,31 @@ import { CnaeController } from './modules/cnae/cnae.controller';
 import { CnaeService } from './modules/cnae/cnae.service';
 import { BrandController } from './modules/brand/brand.controller';
 import { BrandService } from './modules/brand/brand.service';
-import CompanyRepository from './modules/company/company.repository';
-import JournalRepository from './modules/journal/journal.repository';
-import JournalToFetchRepository from './modules/journal/journal-to-fetch.repository';
-import SearchRepository from './modules/company/search.repository';
-import CnaeRepository from './modules/cnae/cnae.repository';
-import BrandRepository from './modules/brand/brand.repository';
-import JournalAlertRepository from './modules/brand/journal-alert.repository';
-import BrandMonitoringRepository from './modules/brand/brand-monitoring.repository';
-import BrandNotificationRepository from './modules/brand/brand-notification.repository';
+import CompanyRepository from './core/database/repository/company.repository';
+import JournalRepository from './core/database/repository/journal.repository';
+import JournalToFetchRepository from './core/database/repository/journal-to-fetch.repository';
+import SearchRepository from './core/database/repository/search.repository';
+import CnaeRepository from './core/database/repository/cnae.repository';
+import BrandRepository from './core/database/repository/brand.repository';
+import JournalAlertRepository from './core/database/repository/journal-alert.repository';
+import BrandMonitoringRepository from './core/database/repository/brand-monitoring.repository';
+import BrandNotificationRepository from './core/database/repository/brand-notification.repository';
 import { ScheduleModule } from '@nestjs/schedule';
 import { BrandAnalysisController } from './modules/brand-analysis/brand-analysis.controller';
 import { BrandAnalysisService } from './modules/brand-analysis/brand-analysis.service';
-import PlanRepository from './modules/user/plan.repository';
-import BrandAlertRepository from './modules/brand/brand-alert.repository';
-import BrandAnalysisRepository from './modules/brand-analysis/brand-analysis.repository';
+import PlanRepository from './core/database/repository/plan.repository';
+import BrandAlertRepository from './core/database/repository/brand-alert.repository';
+import BrandAnalysisRepository from './core/database/repository/brand-analysis.repository';
 import { AppController } from './app.controller';
 import { PiBotController } from './modules/pi-bot/pi-bot.controller';
 import { PiBotService } from './modules/pi-bot/pi-bot.service';
 import { PostController } from './modules/post/post.controller';
 import { PostService } from './modules/post/post.service';
-import AdditionalTokenPackRepository from './modules/user/additional-token-pack.repository';
-import PublicBrandSearchRepository from './modules/brand/public-brand-search.repository';
+import AdditionalTokenPackRepository from './core/database/repository/additional-token-pack.repository';
+import PublicBrandSearchRepository from './core/database/repository/public-brand-search.repository';
+import EuipoAPIToken from './core/providers/implementations/Euipo.apitoken';
+import APITokenRepository from './core/database/repository/api-token.repository';
+import AESEncrypt from './core/providers/AESEncrypt';
 
 @Module({
   imports: [
@@ -85,7 +88,10 @@ import PublicBrandSearchRepository from './modules/brand/public-brand-search.rep
     PiBotService,
     AdditionalTokenPackRepository,
     PublicBrandSearchRepository,
-    PostService
+    PostService,
+    EuipoAPIToken,
+    APITokenRepository,
+    AESEncrypt
   ],
 })
 export class AppModule {}

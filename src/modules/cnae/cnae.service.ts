@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import CnaeRepository from './cnae.repository';
+import CnaeRepository from '../../core/database/repository/cnae.repository';
 import { errorResponse } from 'src/core/functions';
 import { errorTypes } from 'src/core/error-types';
 

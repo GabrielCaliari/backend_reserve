@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { errorTypes } from 'src/core/error-types';
 import { errorResponse, inverterObjeto, separar } from 'src/core/functions';
-import CompanyRepository, { ICompanyFields } from './company.repository';
-import SearchRepository from './search.repository';
+import CompanyRepository, { ICompanyFields } from '../../core/database/repository/company.repository';
+import SearchRepository from '../../core/database/repository/search.repository';
 import { Company, Search } from '@prisma/client';
-import UserRepository from '../user/user.repository';
+import UserRepository from '../../core/database/repository/user.repository';
 import { EStatus as ECompanyExportStatus } from 'src/@types/@company-export'
 
 import { createWriteStream } from 'fs';
@@ -16,7 +16,7 @@ import { format } from 'fast-csv';
 import { municipios } from 'src/core/json/municipios';
 import prismaClient from 'src/core/prisma/prismaClient';
 import { EStatus } from 'src/@types/@company';
-import CnaeRepository from '../cnae/cnae.repository';
+import CnaeRepository from '../../core/database/repository/cnae.repository';
 
 export interface ISearchParams {
     cnae?: string[]; // TODO: ADICIONAR PARA FILTRAR POR CNAES SECUNDARIOS TAMBEM
@@ -189,19 +189,20 @@ export class CompanyService {
                 )
             };
 
-            const companyCount = await this.companyRepository.count(where);
+            const companyCount = 1000;
+            // const companyCount = await this.companyRepository.count(where);
 
-            if (companyCount == 0) {
-                return {
-                    status: 200,
-                    data: {
-                        page,
-                        limit,
-                        pages: 0,
-                        raws: []
-                    }
-                }
-            }
+            // if (companyCount == 0) {
+            //     return {
+            //         status: 200,
+            //         data: {
+            //             page,
+            //             limit,
+            //             pages: 0,
+            //             raws: []
+            //         }
+            //     }
+            // }
 
             let search!: Search;
             let itsPage = false;

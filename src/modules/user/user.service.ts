@@ -1,18 +1,18 @@
 import { Injectable } from '@nestjs/common';
 import { errorTypes } from 'src/core/error-types';
 import { errorResponse, gerarSenha } from 'src/core/functions';
-import UserRepository, { ICreateUser } from './user.repository';
+import UserRepository, { ICreateUser } from '../../core/database/repository/user.repository';
 import { IAuthenticateUser, IValidateUserToken } from 'src/@types/@authenticate-user';
-import UserCredentialRepository from './user-credential.repository';
-import UserSessionTokenRepository from './user-session-token.repository';
-import SearchRepository from '../company/search.repository';
-import PlanRepository from './plan.repository';
-import BrandRepository from '../brand/brand.repository';
-import BrandAlertRepository from '../brand/brand-alert.repository';
+import UserCredentialRepository from '../../core/database/repository/user-credential.repository';
+import UserSessionTokenRepository from '../../core/database/repository/user-session-token.repository';
+import SearchRepository from '../../core/database/repository/search.repository';
+import PlanRepository from '../../core/database/repository/plan.repository';
+import BrandRepository from '../../core/database/repository/brand.repository';
+import BrandAlertRepository from '../../core/database/repository/brand-alert.repository';
 import { EStatus } from 'src/@types/@plan';
-import BrandAnalysisRepository from '../brand-analysis/brand-analysis.repository';
+import BrandAnalysisRepository from '../../core/database/repository/brand-analysis.repository';
 import { EBrandAnalysisTokenStatus } from 'src/@types/@brand-analysis-token';
-import AdditionalTokenPackRepository from './additional-token-pack.repository';
+import AdditionalTokenPackRepository from '../../core/database/repository/additional-token-pack.repository';
 const Stripe = require('stripe');
 
 @Injectable()

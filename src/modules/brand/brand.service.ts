@@ -1,19 +1,23 @@
 import { errorTypes } from 'src/core/error-types';
 import { errorResponse, separarPorPropriedade } from 'src/core/functions';
-import BrandRepository, { IBrandFields } from './brand.repository';
+import BrandRepository, { IBrandFields } from '../../core/database/repository/brand.repository';
 import prismaClient from 'src/core/prisma/prismaClient';
 
 import { Injectable } from '@nestjs/common';
-import JournalAlertRepository from './journal-alert.repository';
-import BrandMonitoringRepository from './brand-monitoring.repository';
-import BrandNotificationRepository from './brand-notification.repository';
+import JournalAlertRepository from '../../core/database/repository/journal-alert.repository';
+import BrandMonitoringRepository from '../../core/database/repository/brand-monitoring.repository';
+import BrandNotificationRepository from '../../core/database/repository/brand-notification.repository';
 import { EBrandMonitoring } from 'src/@types/@brand-monitoring';
 import { JournalAlert, PrismaClient } from '@prisma/client';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import PlanRepository from '../user/plan.repository';
+import PlanRepository from '../../core/database/repository/plan.repository';
 import { EStatus } from 'src/@types/@plan';
-import BrandAlertRepository from './brand-alert.repository';
-import PublicBrandSearchRepository from './public-brand-search.repository';
+import BrandAlertRepository from '../../core/database/repository/brand-alert.repository';
+import PublicBrandSearchRepository from '../../core/database/repository/public-brand-search.repository';
+import EuipoAPIToken from 'src/core/providers/implementations/Euipo.apitoken';
+import axios from 'axios';
+import TrademarkRegistrationLeadRepository from 'src/core/database/repository/trademark-registration-lead.repository';
+import { ICreateTrademarkRegistrionLead } from 'src/@types/@trademark-registration-lead';
 
 @Injectable()
 export class BrandService {
@@ -23,7 +27,9 @@ export class BrandService {
         private readonly planRepository: PlanRepository,
         private readonly brandMonitoringRepository: BrandMonitoringRepository,
         private readonly brandAlertRepository: BrandAlertRepository,
-        private readonly publicBrandSearchRepository: PublicBrandSearchRepository
+        private readonly publicBrandSearchRepository: PublicBrandSearchRepository,
+        private readonly euipoAPIToken: EuipoAPIToken,
+        private readonly trademarkRegistrationLeadRepository: TrademarkRegistrationLeadRepository,
     ) { }
 
     async create(data: Omit<IBrandFields, 'id'>) {
@@ -66,6 +72,23 @@ export class BrandService {
             }
         } catch (error) {
             return errorResponse(errorTypes._500.brand_not_created, 500);
+        }
+    }
+
+    async createLead(data: ICreateTrademarkRegistrionLead) {
+        try {
+            const result = await this.trademarkRegistrationLeadRepository.create({
+                ...data
+            })
+
+            return {
+                status: 200,
+                data: {
+                    id: result.id,
+                }
+            }
+        } catch (error) {
+            return errorResponse(errorTypes._500.trademark_registration_lead, 500, error);
         }
     }
 
@@ -198,7 +221,7 @@ export class BrandService {
                 const result = await prismaClient.$transaction(async (tx: PrismaClient) => {
                     if (brand.data.alerts.length > 0) {
                         const lastMov = brand.data.alerts[brand.data.alerts.length - 1] as JournalAlert;
-                        
+
                         await this.brandAlertRepository.createMany(
                             brand.data.alerts.map(b => {
                                 delete b.id;
@@ -235,15 +258,31 @@ export class BrandService {
         brand_name,
         name,
         email,
-        radical
-    }: {brand_name: string, name: string, email: string, radical: boolean}, page: number, limit: number) {
+        radical,
+        international
+    }: { brand_name: string, name: string, email: string, radical: boolean, international: boolean }, page: number, limit: number) {
         try {
-            // const alertsCount = await this.journalAlertRepository.count({
-            //     brand: {
-            //         contains: brand_name,
-            //         mode: 'insensitive'
-            //     },
-            // });
+
+            if (international) {
+                const credential = await this.euipoAPIToken.get();
+                const clientId = process.env.CLIENT_ID_EUIPO;
+
+                const results = await axios({
+                    method: 'get',
+                    url: process.env.TRADEMARK_SEARCH_URL_EUIPO,
+                    headers: {
+                        'Authorization': `Bearer ${credential.access_token}`,
+                        'X-IBM-Client-Id': clientId,
+                    },
+                });
+
+                console.log(results)
+
+                return {
+                    status: 200,
+                    data: results.data
+                }
+            }
 
             const raw = await this.publicBrandSearchRepository.create({
                 brand: brand_name,
@@ -251,11 +290,6 @@ export class BrandService {
                 email,
                 radical
             });
-
-            // const pages =
-            //     Math.ceil(
-            //         alertsCount / limit
-            //     );
 
             const alerts = await this.journalAlertRepository.findByBrandName(brand_name, null, radical, {
                 pag: {

@@ -55,6 +55,7 @@ export const errorTypes = {
         export_download_error: '500:EXPORT_DOWNLOAD_ERROR',
         listing_posts_error: '500:LISTING_POSTS_ERROR',
         message_error: '500:MESSAGE_ERROR',
-        public_message_error: '500:PUBLIC_MESSAGE_ERROR'
+        public_message_error: '500:PUBLIC_MESSAGE_ERROR',
+        trademark_registration_lead: '500:TRADMARK_REGISTRATION_LEAD_ERROR'
     }
 }

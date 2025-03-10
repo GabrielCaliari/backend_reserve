@@ -8,8 +8,8 @@ import * as unzipper from 'unzipper';
 import * as AWS from '@aws-sdk/client-s3';
 
 import axios from 'axios';
-import JournalRepository from './journal.repository';
-import JournalToFetchRepository from './journal-to-fetch.repository';
+import JournalRepository from '../../core/database/repository/journal.repository';
+import JournalToFetchRepository from '../../core/database/repository/journal-to-fetch.repository';
 import { randomUUID } from 'crypto';
 import { parseString } from "xml2js";
 import { JournalAlert } from '@prisma/client';

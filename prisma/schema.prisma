@@ -599,3 +599,32 @@ model PublicBrandSearch {
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 }
+
+model APIToken {
+  id                 Int      @id @default(autoincrement())
+  api_identifier     String   @unique @db.VarChar(25)
+  hash_id_token      String
+  hash_acess_token   String
+  hash_refresh_token String
+  salt               String
+  last_refresh       Int?
+  expires_in         DateTime
+  active             Boolean  @default(false)
+  created_at         DateTime @default(now())
+  updated_at         DateTime @updatedAt
+}
+
+model TrademarkRegistrationLead {
+  id                Int      @id @default(autoincrement())
+  name              String   @db.VarChar(255)
+  email             String
+  phone_number      String   @db.VarChar(14)
+  brand             String   @db.VarChar(255)
+  description       String
+  company_size      Int      @db.SmallInt
+  company_segment   String   @db.VarChar(50)
+  company_on_market String   @db.VarChar(50)
+  website           String?
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
+}

@@ -8,6 +8,7 @@ import FindBrandValidator from 'src/common/validators/company/Find-brand.validat
 import PublicFindBrandValidator from 'src/common/validators/company/Public-find-brand.validator';
 import ListingQueryParamsValidator from 'src/common/validators/company/Listing-query-params.validator';
 import PublicBrandFindValidator from 'src/common/validators/brand/Public-brand-find.validator';
+import CreateTrademarkRegistrationLeadValidator from 'src/common/validators/brand/Create-trademark-registration-lead.validator';
 
 @Controller('brand')
 export class BrandController {
@@ -30,6 +31,27 @@ export class BrandController {
             user_id: userId,
             ...(body.identifier ? { identifier: body.identifier } : {}),
             ...(body.inpi_number ? { inpi_number: body.inpi_number } : {})
+        });
+
+        return res.status(result.status).json(result.data);
+    }
+
+    @Post('/trademark-registration-lead')
+    async createLead(
+        @Body() body: CreateTrademarkRegistrationLeadValidator,
+        @Res() res: Response,
+        @Req() req: Request
+    ) {
+        const result = await this.brandService.createLead({
+            name: body.name,
+            brand: body.brand,
+            company_on_market: body.company_on_market,
+            company_segment: body.company_segment,
+            company_size: body.company_size,
+            description: body.description,
+            email: body.email,
+            phone_number:  body.phone_number,
+            ...(body.website ? { website: body.website } : {})
         });
 
         return res.status(result.status).json(result.data);
@@ -59,6 +81,7 @@ export class BrandController {
                 email: row.email,
                 name: row.name,
                 radical: row.radical,
+                international: true
             },
             +params.page || 1,
             10,
