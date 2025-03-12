@@ -37,12 +37,21 @@ import { PiBotController } from './modules/pi-bot/pi-bot.controller';
 import { PiBotService } from './modules/pi-bot/pi-bot.service';
 import { PostController } from './modules/post/post.controller';
 import { PostService } from './modules/post/post.service';
+import { AdminController } from './modules/admin/admin.controller';
+import { AdminService } from './modules/admin/admin.service';
 import AdditionalTokenPackRepository from './core/database/repository/additional-token-pack.repository';
 import PublicBrandSearchRepository from './core/database/repository/public-brand-search.repository';
 import EuipoAPIToken from './core/providers/implementations/Euipo.apitoken';
 import APITokenRepository from './core/database/repository/api-token.repository';
 import AESEncrypt from './core/providers/AESEncrypt';
 import TrademarkRegistrationLeadRepository from './core/database/repository/trademark-registration-lead.repository';
+import AdminSessionTokenRepository from './core/database/repository/admin-session-token.repository';
+import AdminCredentialRepository from './core/database/repository/admin-credential.repository';
+import AdminRepository from './core/database/repository/admin.repository';
+import { AdminValidateJwtTokenGuard } from './common/guards/admin-validate-jwt-token/admin-validate-jwt-token.guard';
+import { LeadController } from './modules/admin/lead/lead.controller';
+import { LeadService } from './modules/admin/lead/lead.service';
+import LeadQualificationMessageRepository from './core/database/repository/lead-qualification-message.repository';
 
 @Module({
   imports: [
@@ -58,7 +67,9 @@ import TrademarkRegistrationLeadRepository from './core/database/repository/trad
     BrandAnalysisController,
     AppController,
     PiBotController,
-    PostController
+    PostController,
+    AdminController,
+    LeadController
   ],
   providers: [
     JournalAlertService,
@@ -93,7 +104,15 @@ import TrademarkRegistrationLeadRepository from './core/database/repository/trad
     EuipoAPIToken,
     APITokenRepository,
     AESEncrypt,
-    TrademarkRegistrationLeadRepository
+    TrademarkRegistrationLeadRepository,
+    AdminService,
+    AdminSessionTokenRepository,
+    AdminCredentialRepository,
+    AdminRepository,
+    AdminValidateJwtTokenGuard,
+    LeadService,
+    TrademarkRegistrationLeadRepository,
+    LeadQualificationMessageRepository
   ],
 })
 export class AppModule {}

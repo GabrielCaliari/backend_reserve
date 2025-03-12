@@ -14,4 +14,14 @@ export default class TrademarkRegistrationLeadRepository {
             throw new RepositoryException('Erro ao criar o lead', error);
         }
     }
+
+    async listAll() {
+        try {
+            const raws = await prismaClient.trademarkRegistrationLead.findMany();
+
+            return raws;
+        } catch (error) {
+            throw new RepositoryException('Erro ao listar os leads', error);
+        }
+    }
 }

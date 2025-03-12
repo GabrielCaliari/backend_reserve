@@ -3,6 +3,7 @@ import { PrismaClient } from '@prisma/client';
 import { seedCnae } from "./seed/seed-cnae";
 import { seedCNPJ } from "./seed/seed-company";
 import { seedPlan } from "./seed/seed-plan";
+import { seedAdmin } from './seed/seed-admin';
 
 (async function main() {
 
@@ -99,7 +100,9 @@ import { seedPlan } from "./seed/seed-plan";
 
     ensureViewExists();
 
-    await seedCnae();
-    await seedPlan();
+    // await seedCnae();
+    // await seedPlan();
+    await seedAdmin();
+
     // await seedCNPJ();
 })()

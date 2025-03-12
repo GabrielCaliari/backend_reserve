@@ -630,16 +630,50 @@ model TrademarkRegistrationLead {
 }
 
 model LeadQualificationMessage {
-  id               Int      @id @default(autoincrement())
-  prompt_token     Int
-  completion_token Int
-  json             Json
-  profile_name     String   @db.VarChar(100)
-  phone_number_id  String   @db.VarChar(100)
-  phone_number     String   @db.VarChar(80)
-  type             String   @db.VarChar(30)
-  message          String
-  message_date     DateTime
-  created_at       DateTime @default(now())
-  updated_at       DateTime @updatedAt
+  id                 Int      @id @default(autoincrement())
+  analyzed           Boolean  @default(false)
+  temperature        Int?     @db.SmallInt
+  prompt_token       Int
+  completion_token   Int
+  json               Json
+  profile_name       String   @db.VarChar(100)
+  phone_number_id    String   @db.VarChar(100)
+  phone_number       String   @db.VarChar(80)
+  type               String   @db.VarChar(30)
+  kb_card            String   @default("sem-contato")
+  screening_complete Boolean  @default(false)
+  message            String
+  message_date       DateTime
+  created_at         DateTime @default(now())
+  updated_at         DateTime @updatedAt
+}
+
+model Admin {
+  id                Int                 @id @default(autoincrement())
+  name              String              @db.VarChar(25)
+  email             String              @unique
+  created_at        DateTime            @default(now())
+  updated_at        DateTime            @updatedAt
+  AdminSessionToken AdminSessionToken[]
+  AdminCredential   AdminCredential?
+}
+
+model AdminSessionToken {
+  id         Int      @id @default(autoincrement())
+  hash_token String
+  salt       String
+  admin_id   Int
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  Admin      Admin    @relation(fields: [admin_id], references: [id])
+}
+
+model AdminCredential {
+  id         Int      @id @default(autoincrement())
+  admin_id   Int      @unique
+  hash       String
+  salt       String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  Admin      Admin    @relation(fields: [admin_id], references: [id])
 }

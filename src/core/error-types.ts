@@ -20,19 +20,24 @@ export const errorTypes = {
         ba_nf: '404:BRAND_ANALYSIS_NOT_FOUND',
         user_nf: '404:USER_NOT_FOUND',
         additional_token_pack_nf: '404:ADDITIONAL_TOKEN_PACK_NOT_FOUND',
-        file_not_found: '404:FILE_NOT_FOUND'
+        file_not_found: '404:FILE_NOT_FOUND',
+        admin_nf: '404:ADMIN_NOT_FOUND',
     },
     _401: {
         user_email_nf: '401:USER_EMAIL_NOT_FOUND',
         user_email_in: '401:USER_EMAIL_IS_INVALID',
         user_password_in: '401:USER_PASSWORD_IS_INVALID',
         user_token_in: '401:USER_TOKEN_IS_INVALID',
-        wh_token_in: '401:WEBHOOK_TOKEN_IS_INVALID'
+        wh_token_in: '401:WEBHOOK_TOKEN_IS_INVALID',
+        admin_email_nf: '401:ADMIN_EMAIL_NOT_FOUND',
+        admin_password_in: '401:ADMIN_PASSWORD_IS_INVALID',
+        admin_token_in: '401:ADMIN_TOKEN_IS_INVALID',
     },
     _500: {
         user_nc: '500:USER_NOT_CREATED',
         user_una: '500:UNAUTHENTICATED_USER',
         unable_vausertoken: '500:UNABLE_TO_VALIDATE_USER_TOKEN',
+        unable_vadmintoken: '500:UNABLE_TO_VALIDATE_ADMIN_TOKEN',
         company_not_listed: '500:COMPANY_NOT_LISTED',
         journal_sync: '500:JOURNAL_NOT_SYNC',
         locating_user_val_credits: '500:ERROR_LOCATING_USER_WHEN_VALIDATING_CREDITS',
@@ -56,6 +61,11 @@ export const errorTypes = {
         listing_posts_error: '500:LISTING_POSTS_ERROR',
         message_error: '500:MESSAGE_ERROR',
         public_message_error: '500:PUBLIC_MESSAGE_ERROR',
-        trademark_registration_lead: '500:TRADMARK_REGISTRATION_LEAD_ERROR'
+        trademark_registration_lead: '500:TRADMARK_REGISTRATION_LEAD_ERROR',
+        admin_una: '500:ADMIN_UNAUTHENTICATED',
+        listing_admin_data: '500:LISTING_ADMIN_DATA',
+        list_trademark_registration_leads: '500:LIST_TRADEMARK_REGISTRATION_LEADS',
+        update_lead: '500:UPDATE_LEAD_ERROR',
+        temperature_analysis: '500:TEMPERATURE_ANALYSIS_ERROR'
     }
 }
