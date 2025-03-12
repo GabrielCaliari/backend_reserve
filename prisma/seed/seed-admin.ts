@@ -5,9 +5,14 @@ const prisma = new PrismaClient();
 
 export async function seedAdmin() {
     const admin = [
+        // { // Login de admin para o local do Rodrigo
+        //     name: 'rodrigo da silva',
+        //     email: 'rodrigo.bs.548@gmail.com',
+        //     password: 'S&nh@D&Admin692178'
+        // },
         {
-            name: 'rodrigo da silva',
-            email: 'rodrigo.bs.548@gmail.com',
+            name: 'rodrigo da silva producao',
+            email: 'rodrigo.contato.548@gmail.com',
             password: 'S&nh@D&Admin692178'
         }
     ]
