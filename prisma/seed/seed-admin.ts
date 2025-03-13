@@ -14,6 +14,26 @@ export async function seedAdmin() {
             name: 'rodrigo da silva producao',
             email: 'rodrigo.contato.548@gmail.com',
             password: 'S&nh@D&Admin692178'
+        },
+        {
+            name: 'diego kelme',
+            email: 'kelme.dev@pm.me',
+            password: 'S&43289dmin692178'
+        },
+        {
+            name: 'eduardo',
+            email: 'eduardorsn.contato@gmail.com',
+            password: 'S&n3240234n692178'
+        },
+        {
+            name: 'will',
+            email: 'wydemairomsilva@gmail.com',
+            password: 'S&n33123134n692178'
+        },
+        {
+            name: 'bruno jungers',
+            email: 'contato@pppi.com.br',
+            password: 'S&asdad134n692178'
         }
     ]
 
