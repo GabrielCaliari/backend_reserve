@@ -104,8 +104,6 @@ export class LeadService {
 
             const keys = Object.keys(groupedLeads);
 
-            const dialogs = [];
-
             keys.forEach(async key => {
                 try {
                     const group = groupedLeads[key];
@@ -187,7 +185,7 @@ export class LeadService {
     }
 
     async temperatureAnalysisByMessageId({
-        phone_number_id
+        phone_number_id,
     }: { phone_number_id: string }) {
         try {
             const leads = await this.leadQualificationMessageRepository.listByPhoneNumberId(phone_number_id);

@@ -13,7 +13,6 @@ export class LeadController {
     @UseGuards(AdminValidateJwtTokenGuard)
     async listTrademarkRegistrationLead(
         @Res() res: Response,
-        @Req() req: Request & { admin_id: number },
     ) {
         const result = await this.leadService.listTrademarkRegistrationLead();
         return res.status(result.status).json(result.data);
@@ -46,14 +45,16 @@ export class LeadController {
         const result = await this.leadService.screeningComplete({ phone_number_id: params.phone_number_id });
         return res.status(result.status).json(result.data);
     }
-
-    @Get('/temperature-analysis/lead-qualification/')
-    // @UseGuards(AdminValidateJwtTokenGuard)
-    async temperatureAnalysis(
+    
+    // TODO: Adicionar validação
+    @Post('/temperature-analysis/lead-qualification/:phone_number_id')
+    @UseGuards(AdminValidateJwtTokenGuard)
+    async temperatureAnalysisByMessageId(
         @Res() res: Response,
         @Req() req: Request & { admin_id: number },
+        @Param() params: { phone_number_id: string },
     ) {
-        const result = await this.leadService.temperatureAnalysis();
+        const result = await this.leadService.temperatureAnalysisByMessageId({ phone_number_id: params.phone_number_id });
         return res.status(result.status).json(result.data);
     }
 }
