@@ -614,19 +614,21 @@ model APIToken {
   updated_at         DateTime @updatedAt
 }
 
-model TrademarkRegistrationLead {
-  id                Int      @id @default(autoincrement())
-  name              String   @db.VarChar(255)
-  email             String
-  phone_number      String   @db.VarChar(14)
-  brand             String   @db.VarChar(255)
-  description       String
-  company_size      Int      @db.SmallInt
-  company_segment   String   @db.VarChar(50)
-  company_on_market String   @db.VarChar(50)
-  website           String?
-  created_at        DateTime @default(now())
-  updated_at        DateTime @updatedAt
+model Lead {
+  id                   Int      @id @default(autoincrement())
+  name                 String   @db.VarChar(255)
+  email                String?
+  phone_number         String   @db.VarChar(14)
+  origin               Int?     @db.SmallInt
+  origin_font          String?  @db.VarChar(50)
+  description          String
+  brand                String?  @db.VarChar(255)
+  ad_company_size      Int?     @db.SmallInt
+  ad_company_segment   String?  @db.VarChar(50)
+  ad_company_on_market String?  @db.VarChar(50)
+  ad_website           String?
+  created_at           DateTime @default(now())
+  updated_at           DateTime @updatedAt
 }
 
 model LeadQualificationMessage {

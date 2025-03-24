@@ -16,8 +16,8 @@ import BrandAlertRepository from '../../core/database/repository/brand-alert.rep
 import PublicBrandSearchRepository from '../../core/database/repository/public-brand-search.repository';
 import EuipoAPIToken from 'src/core/providers/implementations/Euipo.apitoken';
 import axios from 'axios';
-import TrademarkRegistrationLeadRepository from 'src/core/database/repository/trademark-registration-lead.repository';
-import { ICreateTrademarkRegistrionLead } from 'src/@types/@trademark-registration-lead';
+import LeadRepository from 'src/core/database/repository/lead.repository';
+import { ICreateLead } from 'src/@types/@lead';
 
 @Injectable()
 export class BrandService {
@@ -29,7 +29,7 @@ export class BrandService {
         private readonly brandAlertRepository: BrandAlertRepository,
         private readonly publicBrandSearchRepository: PublicBrandSearchRepository,
         private readonly euipoAPIToken: EuipoAPIToken,
-        private readonly trademarkRegistrationLeadRepository: TrademarkRegistrationLeadRepository,
+        private readonly leadRepository: LeadRepository,
     ) { }
 
     async create(data: Omit<IBrandFields, 'id'>) {
@@ -75,9 +75,9 @@ export class BrandService {
         }
     }
 
-    async createLead(data: ICreateTrademarkRegistrionLead) {
+    async createLead(data: ICreateLead) {
         try {
-            const result = await this.trademarkRegistrationLeadRepository.create({
+            const result = await this.leadRepository.create({
                 ...data
             })
 
@@ -88,7 +88,7 @@ export class BrandService {
                 }
             }
         } catch (error) {
-            return errorResponse(errorTypes._500.trademark_registration_lead, 500, error);
+            return errorResponse(errorTypes._500.registration_lead, 500, error);
         }
     }
 

@@ -2,15 +2,15 @@ import { Injectable } from '@nestjs/common';
 import axios from 'axios';
 import { ETemperature } from 'src/@types/@lead-qualification-message';
 import LeadQualificationMessageRepository from 'src/core/database/repository/lead-qualification-message.repository';
-import TrademarkRegistrationLeadRepository from 'src/core/database/repository/trademark-registration-lead.repository';
+import LeadRepository from 'src/core/database/repository/lead.repository';
 import { errorTypes } from 'src/core/error-types';
 import { errorResponse } from 'src/core/functions';
 
 @Injectable()
 export class LeadService {
     constructor(
-        private readonly trademarkRegistrationLeadRepository: TrademarkRegistrationLeadRepository,
         private readonly leadQualificationMessageRepository: LeadQualificationMessageRepository,
+        private readonly leadRepository: LeadRepository,
     ) { }
 
     async listTrademarkRegistrationLead() {
@@ -35,7 +35,28 @@ export class LeadService {
             };
         } catch (error) {
             console.log(error)
-            return errorResponse(errorTypes._500.list_trademark_registration_leads, 500, error);
+            return errorResponse(errorTypes._500.list_leads, 500, error);
+        }
+    }
+
+    async listLead({ page = 1, limit = 10 }) {
+        try {
+            const { data: leads, total } = await this.leadRepository.listAll({ page, limit });
+
+            const totalPages = Math.ceil(total / limit);
+
+            return {
+                status: 200,
+                data: {
+                    raws: leads,
+                    total_leads: total,
+                    total_pages: totalPages,
+                    current_page: page
+                },
+            };
+        } catch (error) {
+            console.log(error)
+            return errorResponse(errorTypes._500.list_leads, 500, error);
         }
     }
 

@@ -63,6 +63,7 @@ export class AdminService {
                 }
             }
         } catch (error) {
+            console.log(error)
             return errorResponse(errorTypes._500.admin_una, 500, error);
         }
     }

@@ -61,10 +61,10 @@ export const errorTypes = {
         listing_posts_error: '500:LISTING_POSTS_ERROR',
         message_error: '500:MESSAGE_ERROR',
         public_message_error: '500:PUBLIC_MESSAGE_ERROR',
-        trademark_registration_lead: '500:TRADMARK_REGISTRATION_LEAD_ERROR',
+        registration_lead: '500:REGISTRATION_LEAD_ERROR',
         admin_una: '500:ADMIN_UNAUTHENTICATED',
         listing_admin_data: '500:LISTING_ADMIN_DATA',
-        list_trademark_registration_leads: '500:LIST_TRADEMARK_REGISTRATION_LEADS',
+        list_leads: '500:LIST_LEADS',
         update_lead: '500:UPDATE_LEAD_ERROR',
         temperature_analysis: '500:TEMPERATURE_ANALYSIS_ERROR',
         temperature_analysis_by_message: '500:TEMPERATURE_ANALYSIS_BY_MESSAGE_ERROR'

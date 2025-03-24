@@ -44,7 +44,7 @@ import PublicBrandSearchRepository from './core/database/repository/public-brand
 import EuipoAPIToken from './core/providers/implementations/Euipo.apitoken';
 import APITokenRepository from './core/database/repository/api-token.repository';
 import AESEncrypt from './core/providers/AESEncrypt';
-import TrademarkRegistrationLeadRepository from './core/database/repository/trademark-registration-lead.repository';
+import LeadRepository from './core/database/repository/lead.repository';
 import AdminSessionTokenRepository from './core/database/repository/admin-session-token.repository';
 import AdminCredentialRepository from './core/database/repository/admin-credential.repository';
 import AdminRepository from './core/database/repository/admin.repository';
@@ -104,14 +104,13 @@ import LeadQualificationMessageRepository from './core/database/repository/lead-
     EuipoAPIToken,
     APITokenRepository,
     AESEncrypt,
-    TrademarkRegistrationLeadRepository,
     AdminService,
     AdminSessionTokenRepository,
     AdminCredentialRepository,
     AdminRepository,
     AdminValidateJwtTokenGuard,
     LeadService,
-    TrademarkRegistrationLeadRepository,
+    LeadRepository,
     LeadQualificationMessageRepository
   ],
 })

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Req, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query, Req, Res, UseGuards } from '@nestjs/common';
 import { LeadService } from './lead.service';
 import { Request, Response } from 'express';
 import { AdminValidateJwtTokenGuard } from 'src/common/guards/admin-validate-jwt-token/admin-validate-jwt-token.guard';
@@ -17,6 +17,18 @@ export class LeadController {
         const result = await this.leadService.listTrademarkRegistrationLead();
         return res.status(result.status).json(result.data);
     }
+
+    @Get('/list') 
+    @UseGuards(AdminValidateJwtTokenGuard)
+    async listLead(
+        @Res() res: Response,
+        @Query() query: { page?: number; limit?: number }
+    ) {
+        const page = Number(query.page) || 1;
+        const limit = Number(query.limit) || 10;
+        const result = await this.leadService.listLead({ page, limit });
+        return res.status(result.status).json(result.data);
+    }   
 
     // TODO: Adicionar validação
     @Post('/update/trademark-registration/:phone_number_id')

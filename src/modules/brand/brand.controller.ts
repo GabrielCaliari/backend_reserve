@@ -8,7 +8,7 @@ import FindBrandValidator from 'src/common/validators/company/Find-brand.validat
 import PublicFindBrandValidator from 'src/common/validators/company/Public-find-brand.validator';
 import ListingQueryParamsValidator from 'src/common/validators/company/Listing-query-params.validator';
 import PublicBrandFindValidator from 'src/common/validators/brand/Public-brand-find.validator';
-import CreateTrademarkRegistrationLeadValidator from 'src/common/validators/brand/Create-trademark-registration-lead.validator';
+import CreateLeadValidator from 'src/common/validators/brand/Create-lead.validator';
 
 @Controller('brand')
 export class BrandController {
@@ -36,21 +36,22 @@ export class BrandController {
         return res.status(result.status).json(result.data);
     }
 
-    @Post('/trademark-registration-lead')
+    @Post('/lead')
     async createLead(
-        @Body() body: CreateTrademarkRegistrationLeadValidator,
+        @Body() body: CreateLeadValidator,
         @Res() res: Response,
         @Req() req: Request
     ) {
         const result = await this.brandService.createLead({
             name: body.name,
-            brand: body.brand,
-            company_on_market: body.company_on_market,
-            company_segment: body.company_segment,
-            company_size: body.company_size,
+            ...(body.brand ? { brand: body.brand } : {}),
+            ...(body.company_on_market ? { ad_company_on_market: body.company_on_market } : {}),
+            ...(body.company_segment ? { ad_company_segment: body.company_segment } : {}),
+            ...(body.company_size ? { ad_company_size: body.company_size } : {}),
+            origin: body.origin,
             description: body.description,
-            email: body.email,
-            phone_number:  body.phone_number,
+            phone_number: body.phone_number,
+            ...(body.origin_font ? { origin_font: body.origin_font } : {}),
             ...(body.website ? { website: body.website } : {})
         });
 
