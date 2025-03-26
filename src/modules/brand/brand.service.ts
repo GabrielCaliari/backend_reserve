@@ -262,6 +262,12 @@ export class BrandService {
         international
     }: { brand_name: string, name: string, email: string, radical: boolean, international: boolean }, page: number, limit: number) {
         try {
+            this.publicBrandSearchRepository.create({
+                brand: brand_name,
+                name,
+                email,
+                radical
+            });
 
             if (international) {
                 const credential = await this.euipoAPIToken.get();
@@ -269,27 +275,68 @@ export class BrandService {
 
                 const results = await axios({
                     method: 'get',
-                    url: process.env.TRADEMARK_SEARCH_URL_EUIPO,
+                    url: `${process.env.TRADEMARK_SEARCH_URL_EUIPO}`,
+                    params: {
+                        query: `wordMarkSpecification.verbalElement==${brand_name}`,
+                        sort: 'applicationDate:desc',
+                        size: 50
+                    },
                     headers: {
                         'Authorization': `Bearer ${credential.access_token}`,
                         'X-IBM-Client-Id': clientId,
                     },
                 });
 
-                console.log(results)
-
                 return {
                     status: 200,
-                    data: results.data
+                    data: {
+                        raws: results.data.trademarks.map(data => ({
+                            id: parseInt(data.applicationNumber),
+                            brand: data.wordMarkSpecification.verbalElement,
+                            deposit_date: new Date(data.applicationDate),
+                            conception_date: null,
+                            effective_date: null,
+                            nature: data.markKind,
+                            presentation: data.markFeature,
+                            classe_nice: [
+                                {
+                                    'classe-nice': [
+                                        ...(
+                                            data.niceClasses.map(c => ({
+                                                '$': {
+                                                    'codigo': c
+                                                }
+                                            }))
+                                        )
+                                    ]
+                                }
+                            ],
+                            prioridade_unionista: null,
+                            apostila: null,
+                            classe_viena: null,
+                            journal_number: data.applicationNumber,
+                            journal_date: new Date(data.applicationDate),
+                            process_number: data.applicationNumber,
+                            attorney: data.representatives?.[0]?.name,
+                            titular: [{
+                                'titular': [{
+                                    '$': {
+                                        'nome-razao-social': data.representatives?.[0]?.name,
+                                    }
+                                }]
+                            }],
+                            despacho: {
+                                codigo: null,
+                                status: data.status
+                            },
+                            sobrestador: null,
+                            jornal_to_fetch_id: parseInt(data.applicationNumber),
+                            created_at: new Date(),
+                            updated_at: new Date()
+                        }))
+                    }
                 }
             }
-
-            const raw = await this.publicBrandSearchRepository.create({
-                brand: brand_name,
-                name,
-                email,
-                radical
-            });
 
             const alerts = await this.journalAlertRepository.findByBrandName(brand_name, null, radical, {
                 pag: {

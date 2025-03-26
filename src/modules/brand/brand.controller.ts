@@ -82,7 +82,7 @@ export class BrandController {
                 email: row.email,
                 name: row.name,
                 radical: row.radical,
-                international: false
+                international: row.international
             },
             +params.page || 1,
             10,

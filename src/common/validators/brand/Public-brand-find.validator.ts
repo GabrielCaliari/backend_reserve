@@ -11,4 +11,7 @@ export default class PublicBrandFindValidator {
 
     @IsBoolean()
     radical: boolean;
+
+    @IsBoolean()
+    international: boolean;
 }

@@ -99,12 +99,14 @@ export default class EuipoAPIToken implements IAPIToken {
                 const idToken = this.AESEncrypt.encrypt(result.id_token, pv);
                 const refreshToken = this.AESEncrypt.encrypt(result.refresh_token, pv);
 
+                const expiresIn = new Date(new Date().getTime() + (30 * 60 * 1000));
+
                 if (!raw) {
                     await this.APITokenRepository.create({
                         api_identifier: idAPI,
                         hash_acess_token: acessToken.hash,
                         hash_id_token: idToken.hash,
-                        expires_in: new Date(new Date().getTime() + (result.expires_in * 1000)),
+                        expires_in: expiresIn,
                         hash_refresh_token: refreshToken.hash,
                         active: true,
                         salt: '',
@@ -113,7 +115,7 @@ export default class EuipoAPIToken implements IAPIToken {
                     await this.APITokenRepository.update(raw.id, {
                         hash_acess_token: acessToken.hash,
                         hash_id_token: idToken.hash,
-                        expires_in: new Date(new Date().getTime() + (result.expires_in * 1000)),
+                        expires_in: expiresIn,
                         hash_refresh_token: refreshToken.hash,
                         active: true,
                         salt: '',
@@ -124,7 +126,7 @@ export default class EuipoAPIToken implements IAPIToken {
                     access_token: result.access_token,
                     token_id: result.id_token,
                     refresh_token: result.refresh_token,
-                    expires_in: new Date(new Date().getTime() + (result.expires_in * 1000)),
+                    expires_in: expiresIn,
                 }
             }
 
