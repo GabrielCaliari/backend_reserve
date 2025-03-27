@@ -341,11 +341,11 @@ export class BrandService {
             const alerts = await this.journalAlertRepository.findByBrandName(brand_name, null, radical, {
                 pag: {
                     // page,
-                    limit: 1000,
+                    limit: 100,
                 },
-                order: {
-                    journal_number: 'desc'
-                },
+                // order: {
+                //     journal_number: 'desc'
+                // },
                 unique: true
             });
 

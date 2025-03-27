@@ -144,6 +144,7 @@ view ViewCompany {
 
   @@id([company_id])
   @@map("viewcompany")
+  // @@index([business_name, cnpj], type: )
 }
 
 model PibotMessages {
@@ -514,7 +515,7 @@ model JournalAlert {
   updated_at           DateTime       @updatedAt
   Journal_to_fetch     JournalToFetch @relation(fields: [jornal_to_fetch_id], references: [id])
 
-  @@index([brand])
+  @@index([brand], type: SpGist)
 }
 
 model BrandAnalysis {

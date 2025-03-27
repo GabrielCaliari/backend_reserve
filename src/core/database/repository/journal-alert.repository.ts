@@ -14,7 +14,6 @@ export default class JournalAlertRepository {
                         } : {
                             equals: name
                         }),
-                        mode: 'insensitive'
                     },
                     ...(lastMagazine ? { journal_number: { gt: lastMagazine } } : {}),
                 },

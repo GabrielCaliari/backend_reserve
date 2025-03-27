@@ -142,13 +142,11 @@ export class CompanyService {
                         {
                             fantasy_name: {
                                 contains: searchParams.name,
-                                mode: 'insensitive'
                             }
                         },
                         {
                             business_name: {
                                 contains: searchParams.name,
-                                mode: 'insensitive'
                             }
                         }
                     ]
