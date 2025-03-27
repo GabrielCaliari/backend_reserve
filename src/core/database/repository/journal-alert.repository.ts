@@ -10,7 +10,7 @@ export default class JournalAlertRepository {
                 where: {
                     brand: {
                         ...(contains ? {
-                            contains: name
+                            startsWith: name
                         } : {
                             equals: name
                         }),

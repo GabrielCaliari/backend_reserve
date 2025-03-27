@@ -141,10 +141,10 @@ view ViewCompany {
   federative_entity                        String?
   company_created_at                       DateTime
   company_updated_at                       DateTime
+  // @@index([business_name, cnpj], type: )
 
   @@id([company_id])
   @@map("viewcompany")
-  // @@index([business_name, cnpj], type: )
 }
 
 model PibotMessages {
