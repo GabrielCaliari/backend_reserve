@@ -15,8 +15,14 @@ export interface ILead {
     company_segment: string;
     company_on_market: string;
     website?: string;
+    status?: ELeadStatus;
     create_at: string;
     updated_at: string;
+}
+
+export enum ELeadStatus {
+    new = 1,
+    archived = 8,
 }
 
 export interface ICreateLead {

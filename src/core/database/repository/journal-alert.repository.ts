@@ -1,5 +1,5 @@
 import RepositoryException from "src/core/exceptions/RepositoryException";
-import prismaClient from "src/core/prisma/prismaClient";
+import prismaClient from "src/core/database/prisma/prismaClient";
 
 export default class JournalAlertRepository {
     async findByBrandName(name: string, lastMagazine: string | null = null, contains = false, { select, pag, order, unique }: { select?, order?: {}, pag?: { page?, limit, offset?}, unique?: boolean } = {}) {
@@ -10,7 +10,7 @@ export default class JournalAlertRepository {
                 where: {
                     brand: {
                         ...(contains ? {
-                            startsWith: name
+                            startsWith: name // TODO: Corrigir essa busca, só tá procurando por LIKE "TEXTO%" ao INVÈS DE "%TEXTO%" POR CONTA DA FORMA QUE O INDEX SE COMPORTA
                         } : {
                             equals: name
                         }),

@@ -1,3 +1,8 @@
+import parsePhoneNumberLib, { parsePhoneNumberFromString } from 'libphonenumber-js';
+
+import * as fs from 'fs';
+import * as path from 'path';
+
 export function isValidCPF(cpf: string): boolean {
     if (!cpf) {
         return false;
@@ -38,7 +43,7 @@ export function errorResponse(code, status, err: any = 'erro não informado.') {
     }
 }
 
-export function successResponse(data, status = 200) {
+export function successResponse(data: unknown, status = 200) {
     return {
         data: data,
         status,
@@ -234,4 +239,56 @@ export function isValidString(value: unknown) {
         typeof value === 'string' &&
         (value as string).length > 0
     )
+}
+
+export function env(key: string) {
+    const value = process.env[key];
+    if (!value) {
+        throw new Error(`Environment variable ${key} is not set.`);
+    }
+    return value;
+}
+
+export function escapeHtml(str) {
+    return String(str).replace(/[&<>"'`=\/]/g, (char) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;',
+        '`': '&#x60;',
+        '=': '&#x3D;',
+        '/': '&#x2F;',
+    }[char]));
+}
+
+export function renderTemplate(template, data): string {
+    return template.replace(/{{\s*([\w.]+)\s*}}/g, (_, key) => {
+        const value = key.split('.').reduce((obj, prop) => obj?.[prop], data);
+        return value !== undefined ? escapeHtml(String(value)) : '';
+    })
+}
+
+export function getCountryCodeFromPhoneNumber(phone: string) {
+    const phoneNumber = parsePhoneNumberFromString(phone);
+
+    if (phoneNumber && phoneNumber.isValid()) {
+        return phoneNumber.country;
+    }
+
+    return null;
+}
+
+export function normalizePhoneNumber(phone: string) {
+    const phoneNumber = parsePhoneNumberLib(phone);
+    if (phoneNumber && phoneNumber.isValid()) {
+        return phoneNumber.number.toString();
+    }
+
+    return null;
+}
+
+export async function loadFile(...props) {
+    const filePath = path.join(...props);
+    return await fs.promises.readFile(filePath, 'utf-8');
 }

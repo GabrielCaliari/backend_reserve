@@ -1,7 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import { EBrandMonitoring } from "src/@types/@brand-monitoring";
 import RepositoryException from "src/core/exceptions/RepositoryException";
-import prismaClient from "src/core/prisma/prismaClient";
+import prismaClient from "src/core/database/prisma/prismaClient";
 
 export interface IBrandMonitoring {
     id?: number;

@@ -23,3 +23,15 @@ export interface IAPITokenGet {
     expires_in?: Date;
     access_token: string;
 }
+
+export interface IAPITokenCreate {
+    api_identifier: string;
+    id_token: string;
+    acess_token: string;
+    refresh_token: string;
+    salt: string;
+}
+
+export interface IAPITokenCreateReturn {
+    id: number;
+}

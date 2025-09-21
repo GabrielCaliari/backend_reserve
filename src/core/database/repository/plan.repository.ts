@@ -1,7 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import { EStatus } from "src/@types/@plan";
 import RepositoryException from "src/core/exceptions/RepositoryException";
-import prismaClient from "src/core/prisma/prismaClient";
+import prismaClient from "src/core/database/prisma/prismaClient";
 
 export default class PlanRepository {
     async linkMonitoringPlanWithBrand(monitoringPlanId: number, brandId: number, tx: PrismaClient) {

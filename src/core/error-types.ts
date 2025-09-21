@@ -8,7 +8,10 @@ export const errorTypes = {
         has_no_moni_plan: '400:USER_HAS_NO_MONITORING_PLANS',
         plan_not_found: '400:PLAN_NOT_FOUND',
         user_mh_plan: '400:USER_MUST_HAVE_A_PLAN',
-        export_not_ready: '400:EXPORT_NOT_READY'
+        export_not_ready: '400:EXPORT_NOT_READY',
+        generate_post_image: '400:GENERATE_POST_IMAGE_ERROR',
+        fx_token_already_exists: '400:FX_TOKEN_ALREADY_EXISTS',
+        abandoned_cart_sms_not_pending: '400:ABANDONED_CART_SMS_NOT_PENDING'
     },
     _403: {
         search_limit_reached: '403:SEARCH_LIMIT_REACHED',
@@ -22,6 +25,8 @@ export const errorTypes = {
         additional_token_pack_nf: '404:ADDITIONAL_TOKEN_PACK_NOT_FOUND',
         file_not_found: '404:FILE_NOT_FOUND',
         admin_nf: '404:ADMIN_NOT_FOUND',
+        lead_not_found: '404:LEAD_NOT_FOUND',
+        abandoned_cart_not_found: '404:ABANDONED_CART_NOT_FOUND'
     },
     _401: {
         user_email_nf: '401:USER_EMAIL_NOT_FOUND',
@@ -60,6 +65,7 @@ export const errorTypes = {
         export_download_error: '500:EXPORT_DOWNLOAD_ERROR',
         listing_posts_error: '500:LISTING_POSTS_ERROR',
         message_error: '500:MESSAGE_ERROR',
+        create_abandoned_cart: '500:CREATE_ABANDONED_CART_ERROR',
         public_message_error: '500:PUBLIC_MESSAGE_ERROR',
         registration_lead: '500:REGISTRATION_LEAD_ERROR',
         admin_una: '500:ADMIN_UNAUTHENTICATED',
@@ -67,6 +73,10 @@ export const errorTypes = {
         list_leads: '500:LIST_LEADS',
         update_lead: '500:UPDATE_LEAD_ERROR',
         temperature_analysis: '500:TEMPERATURE_ANALYSIS_ERROR',
-        temperature_analysis_by_message: '500:TEMPERATURE_ANALYSIS_BY_MESSAGE_ERROR'
+        temperature_analysis_by_message: '500:TEMPERATURE_ANALYSIS_BY_MESSAGE_ERROR',
+        generate_post_image: '500:GENERATE_POST_IMAGE_ERROR',
+        generate_post: '500:GENERATE_POST_ERROR',
+        fx_token_not_created: '500:FX_TOKEN_NOT_CREATED',
+        create_abandoned_cart_sms: '500:CREATE_ABANDONED_CART_SMS_ERROR'
     }
 }

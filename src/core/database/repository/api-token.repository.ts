@@ -1,6 +1,6 @@
 import { ICreateAPIToken, IUpdateAPIToken } from "src/@types/@api-token";
 import RepositoryException from "../../exceptions/RepositoryException";
-import prismaClient from "../../prisma/prismaClient";
+import prismaClient from "../prisma/prismaClient";
 import { isApiTokenDataValidToCreate, isApiTokenDataValidToUpdate } from "../validator/api-token.validator";
 
 export default class APITokenRepository {

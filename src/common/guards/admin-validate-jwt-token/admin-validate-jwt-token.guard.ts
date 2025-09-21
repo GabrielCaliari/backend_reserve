@@ -1,8 +1,10 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { errorTypes } from 'src/core/error-types';
 import CustomHttpException from 'src/core/exceptions/CustomHttpException';
-import { AdminService } from 'src/modules/admin/admin.service';
+import { AdminService } from 'src/modules/v1/admin/admin.service';
 
+
+// TODO: isolar a verificação do token, remover a dependencia de um service
 @Injectable()
 export class AdminValidateJwtTokenGuard implements CanActivate {
 	constructor(

@@ -3,7 +3,7 @@ import { EBranchType, ESize, EStatus } from "src/@types/@company";
 import { EStatus as ECompanyExportStatus } from 'src/@types/@company-export'
 import RepositoryException from "src/core/exceptions/RepositoryException";
 import { convertSearchParamsToSQL, getKeysWithTrueValue } from "src/core/functions";
-import prismaClient from "src/core/prisma/prismaClient";
+import prismaClient from "src/core/database/prisma/prismaClient";
 
 export interface ICompanyFields {
     id?: boolean;

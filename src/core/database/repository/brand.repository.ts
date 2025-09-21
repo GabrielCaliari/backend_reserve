@@ -2,7 +2,7 @@ import { PrismaClient } from "@prisma/client";
 import { EBrandMonitoring } from "src/@types/@brand-monitoring";
 import { EStatus } from "src/@types/@plan";
 import RepositoryException from "src/core/exceptions/RepositoryException";
-import prismaClient from "src/core/prisma/prismaClient";
+import prismaClient from "src/core/database/prisma/prismaClient";
 
 export interface IBrandFields {
     id?: number;

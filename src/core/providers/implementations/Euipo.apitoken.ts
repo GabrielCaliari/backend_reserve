@@ -1,4 +1,3 @@
-import { IAPITokenGet } from "src/@types/@api-token";
 import { IAPIToken } from "../IAPIToken";
 import ProviderException from "src/core/exceptions/ProviderException";
 import { isValidString } from "src/core/functions";

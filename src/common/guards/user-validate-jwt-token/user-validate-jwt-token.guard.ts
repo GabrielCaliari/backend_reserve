@@ -1,7 +1,7 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { errorTypes } from 'src/core/error-types';
 import CustomHttpException from 'src/core/exceptions/CustomHttpException';
-import { UserService } from 'src/modules/user/user.service';
+import { UserService } from 'src/modules/v1/user/user.service';
 
 @Injectable()
 export class UserValidateJwtTokenGuard implements CanActivate {
