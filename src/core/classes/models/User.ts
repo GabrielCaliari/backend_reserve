@@ -1,13 +1,9 @@
-import CPF from "../obj-types/Cpf";
-import Email from "../obj-types/Email";
-import PhoneNumber from "../obj-types/Phone-number";
-
 export default class User {
     public id?: number;
-    public email: Email;
+    public email: any;
     public name: string;
-    public cpf: CPF;
-    public phone_number: PhoneNumber;
+    public cpf: any;
+    public phone_number: any;
     public sex: number;
     public date_of_birth: Date;
     public date_expires_in: Date;
