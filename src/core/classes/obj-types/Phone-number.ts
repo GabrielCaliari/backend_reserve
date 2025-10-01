@@ -4,9 +4,9 @@ export default class PhoneNumber {
     private phone_number: string;
 
     constructor(phoneNumber: string) {
-        if (!normalizePhoneNumber(phoneNumber)) {
-            throw new Error('Invalid phone number');
-        }
+        // if (!normalizePhoneNumber(phoneNumber)) {
+        //     throw new Error('Invalid phone number');
+        // }
         
         this.phone_number = phoneNumber;
     }
