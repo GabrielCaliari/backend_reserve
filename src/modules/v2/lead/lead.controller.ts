@@ -11,7 +11,7 @@ export class LeadController {
     ) { }
 
     @Get('/')
-    @UseGuards(AdminValidateJwtTokenGuard)
+    // @UseGuards(AdminValidateJwtTokenGuard)
     async findLead(
         @Res() res: Response,
         @Query() query: LeadQuery
@@ -24,7 +24,7 @@ export class LeadController {
     }
 
     @Post('/')
-    @UseGuards(AdminValidateJwtTokenGuard)
+    // @UseGuards(AdminValidateJwtTokenGuard)
     async createLead(
         @Res() res: Response,
         @Body() data: CreateLead
