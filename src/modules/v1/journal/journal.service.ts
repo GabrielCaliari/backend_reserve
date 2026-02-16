@@ -95,7 +95,7 @@ export class JournalService {
                     // Fazer upload para o S3 da DigitalOcean
                     const fileStream = fs.createReadStream(extractedFilePath);
                     const uploadParams = {
-                        Bucket: 'bucket-pppi',
+                        Bucket: 'bucket-zarp',
                         Key: `revistas-dev/${path.basename(extractedFilePath)}`,
                         Body: fileStream,
                     };

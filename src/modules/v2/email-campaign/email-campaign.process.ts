@@ -131,10 +131,10 @@ export class EmailCampaignProcess {
                         //     messageSize: 4386,
                         //     response: '250 Ok 010001973e15c73e-312b183a-1bef-4e4e-a868-1af89b5ae6c6-000000',
                         //     envelope: {
-                        //       from: 'contato@e-02.pppi.com.br',
+                        //       from: 'contato@e-02.zarp.com.br',
                         //       to: [ 'rodrigo.bs.548@gmail.com' ]
                         //     },
-                        //     messageId: '<ef7ee53c-9c96-b9ec-a1b6-d7c59cae92a0@e-02.pppi.com.br>'
+                        //     messageId: '<ef7ee53c-9c96-b9ec-a1b6-d7c59cae92a0@e-02.zarp.com.br>'
                         //   }
                         const info = await transporter.sendMail(mailOptions).catch((err) => {
                             return err;
