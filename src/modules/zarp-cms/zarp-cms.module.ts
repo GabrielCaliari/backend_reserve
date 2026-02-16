@@ -18,6 +18,7 @@ import { ARTICLE_IMAGE_REPOSITORY } from '@/modules/zarp-cms/domain/interfaces/a
 import { STORAGE_PROVIDER } from '@/modules/zarp-cms/domain/interfaces/storage.interface';
 import { IMAGE_PROCESSOR } from '@/modules/zarp-cms/domain/interfaces/image-processor.interface';
 import { BlogSecretKeyGuard } from './infrastructure/guards/blog-secret-key.guard';
+import { ZarpAuthModule } from '@/modules/zarp-auth/zarp-auth.module';
 
 /**
  * Zarp CMS Module
@@ -31,6 +32,9 @@ import { BlogSecretKeyGuard } from './infrastructure/guards/blog-secret-key.guar
  * To switch storage providers, change the useClass in STORAGE_PROVIDER below.
  */
 @Module({
+  imports: [
+    ZarpAuthModule, // Required for AdminJwtGuard, TenantGuard, RolesGuard
+  ],
   controllers: [
     BlogController,
     ArticleController,

@@ -178,7 +178,7 @@ export class CompanyController {
                 res.setHeader('Content-Disposition', `attachment; filename="${result.data.filename}"`);
                 
                 // Convert ReadableStream to Node.js Readable stream and pipe to response
-                const nodeStream = Readable.fromWeb(result.data.stream);
+                const nodeStream = Readable.fromWeb(result.data.stream as any);
                 nodeStream.pipe(res);
                 return;
             } catch (error) {

@@ -18,6 +18,8 @@ export default class AdminCredentialRepository implements IAdminCredentialReposi
                 }
             })
 
+            if (!credential) return false;
+
             const compare = this.hashProvider.compare(value, credential.salt, credential.hash);
             if (typeof compare !== 'boolean') return false;
 

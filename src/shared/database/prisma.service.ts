@@ -9,7 +9,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
     
     super({
       adapter,
-      log: process.env.AMBIENT === 'DEV' && process.env.ORM_LOGS === 'ON' 
+      log: process.env.AMBIENT === 'DEV'
         ? ['error', 'info', 'query', 'warn'] 
         : ['error', 'warn'],
     });

@@ -37,10 +37,7 @@ import { ToLowercaseQueryParamsPipe, ToLowercaseBodyRequestPipe } from './shared
 
     // Route prefixes per bounded context
     RouterModule.register([
-      {
-        path: 'auth',
-        module: ZarpAuthModule,
-      },
+
       {
         path: 'brands',
         module: ZarpBrandsModule,
