@@ -9,14 +9,39 @@ import { Reflector } from '@nestjs/core';
 import { ROLES_KEY } from '@/shared/auth/decorators/roles.decorator';
 import { EAdminRole } from '@/modules/zarp-auth/domain/enums/admin-role.enum';
 import { ADMIN_REPOSITORY, IAdminRepository } from '@/modules/zarp-auth/domain/interfaces';
+import {
+  ADMIN_TENANT_REPOSITORY,
+  IAdminTenantRepository,
+} from '@/modules/zarp-auth/domain/interfaces/admin-tenant.repository.interface';
+
+/**
+ * Role hierarchy from highest to lowest privilege.
+ * Higher-indexed roles include all permissions of lower-indexed roles.
+ */
+const ROLE_HIERARCHY: EAdminRole[] = [
+  EAdminRole.viewer,
+  EAdminRole.editor,
+  EAdminRole.manager,
+  EAdminRole.owner,
+  EAdminRole.super_admin,
+];
 
 /**
  * Guard that checks if the authenticated admin has the required role(s).
+ *
+ * Role resolution strategy:
+ * 1. super_admin on Admin.role bypasses all checks (full platform access)
+ * 2. If `request.tenant_id` is present, uses per-tenant role from AdminTenant.role
+ * 3. Otherwise falls back to Admin.role (global role)
+ *
+ * The guard uses hierarchy-based comparison: if the admin's role is >= the
+ * minimum required role in the hierarchy, access is granted.
+ *
  * Must be used AFTER AdminJwtGuard so that `request.admin_id` is available.
  *
  * Usage:
- * @Roles(EAdminRole.super_admin)
- * @UseGuards(AdminJwtGuard, RolesGuard)
+ * @Roles(EAdminRole.editor)
+ * @UseGuards(AdminJwtGuard, TenantGuard, RolesGuard)
  */
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -24,6 +49,8 @@ export class RolesGuard implements CanActivate {
     private readonly reflector: Reflector,
     @Inject(ADMIN_REPOSITORY)
     private readonly adminRepository: IAdminRepository,
+    @Inject(ADMIN_TENANT_REPOSITORY)
+    private readonly adminTenantRepository: IAdminTenantRepository,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -50,11 +77,44 @@ export class RolesGuard implements CanActivate {
       throw new ForbiddenException('Admin account is inactive or not found');
     }
 
-    if (!requiredRoles.includes(admin.role as EAdminRole)) {
+    // super_admin bypasses all role checks
+    if (admin.role === EAdminRole.super_admin) {
+      request.admin_role = admin.role;
+      request.tenant_role = admin.role;
+      return true;
+    }
+
+    // Resolve the effective role
+    let effectiveRole: EAdminRole = admin.role as EAdminRole;
+
+    // If tenant_id is present, use per-tenant role
+    const tenantId: number | undefined = request.tenant_id;
+    if (tenantId) {
+      const tenantRole = await this.adminTenantRepository.findRoleInTenant(adminId, tenantId);
+
+      if (!tenantRole) {
+        throw new ForbiddenException('You do not have a role in this tenant');
+      }
+
+      effectiveRole = tenantRole;
+      request.tenant_role = tenantRole;
+    }
+
+    // Check if effective role satisfies any of the required roles using hierarchy
+    const effectiveLevel = ROLE_HIERARCHY.indexOf(effectiveRole);
+    const hasPermission = requiredRoles.some((required) => {
+      // Handle deprecated company_admin as equivalent to manager
+      const normalizedRequired =
+        required === EAdminRole.company_admin ? EAdminRole.manager : required;
+      const requiredLevel = ROLE_HIERARCHY.indexOf(normalizedRequired);
+      return effectiveLevel >= requiredLevel;
+    });
+
+    if (!hasPermission) {
       throw new ForbiddenException('Insufficient permissions for this operation');
     }
 
-    // Attach role to request for downstream use
+    // Attach roles to request for downstream use
     request.admin_role = admin.role;
 
     return true;

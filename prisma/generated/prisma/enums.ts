@@ -11,7 +11,20 @@
 
 export const EAdminRole = {
   super_admin: 'super_admin',
+  owner: 'owner',
+  manager: 'manager',
+  editor: 'editor',
+  viewer: 'viewer',
   company_admin: 'company_admin'
 } as const
 
 export type EAdminRole = (typeof EAdminRole)[keyof typeof EAdminRole]
+
+
+export const EArticleStatus = {
+  draft: 'draft',
+  published: 'published',
+  archived: 'archived'
+} as const
+
+export type EArticleStatus = (typeof EArticleStatus)[keyof typeof EArticleStatus]

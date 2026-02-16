@@ -1,0 +1,78 @@
+import { Module } from '@nestjs/common';
+import { BlogController } from './infrastructure/controllers/blog.controller';
+import { ArticleController } from './infrastructure/controllers/article.controller';
+import { ArticleImageController } from './infrastructure/controllers/article-image.controller';
+import { PublicBlogController } from './infrastructure/controllers/public-blog.controller';
+import { BlogService } from './application/services/blog.service';
+import { ArticleService } from './application/services/article.service';
+import { ArticleImageService } from './application/services/article-image.service';
+import { PrismaBlogRepository } from './infrastructure/repositories/prisma-blog.repository';
+import { PrismaArticleRepository } from './infrastructure/repositories/prisma-article.repository';
+import { PrismaArticleImageRepository } from './infrastructure/repositories/prisma-article-image.repository';
+import { S3StorageProvider } from './infrastructure/providers/s3-storage.provider';
+import { VercelBlobStorageProvider } from './infrastructure/providers/vercel-blob-storage.provider';
+import { SharpImageProcessorProvider } from './infrastructure/providers/sharp-image-processor.provider';
+import { BLOG_REPOSITORY } from '@/modules/zarp-cms/domain/interfaces/blog.repository.interface';
+import { ARTICLE_REPOSITORY } from '@/modules/zarp-cms/domain/interfaces/article.repository.interface';
+import { ARTICLE_IMAGE_REPOSITORY } from '@/modules/zarp-cms/domain/interfaces/article-image.repository.interface';
+import { STORAGE_PROVIDER } from '@/modules/zarp-cms/domain/interfaces/storage.interface';
+import { IMAGE_PROCESSOR } from '@/modules/zarp-cms/domain/interfaces/image-processor.interface';
+import { BlogSecretKeyGuard } from './infrastructure/guards/blog-secret-key.guard';
+
+/**
+ * Zarp CMS Module
+ * Bounded context: Blog management, article lifecycle, image handling, public API
+ * Route prefix: /api/cms
+ *
+ * Storage Provider Configuration:
+ * - Default: VercelBlobStorageProvider (uses Vercel Blob Storage)
+ * - Alternative: S3StorageProvider (for AWS S3 or S3-compatible services)
+ * 
+ * To switch storage providers, change the useClass in STORAGE_PROVIDER below.
+ */
+@Module({
+  controllers: [
+    BlogController,
+    ArticleController,
+    ArticleImageController,
+    PublicBlogController,
+  ],
+  providers: [
+    BlogService,
+    ArticleService,
+    ArticleImageService,
+    BlogSecretKeyGuard,
+    {
+      provide: BLOG_REPOSITORY,
+      useClass: PrismaBlogRepository,
+    },
+    {
+      provide: ARTICLE_REPOSITORY,
+      useClass: PrismaArticleRepository,
+    },
+    {
+      provide: ARTICLE_IMAGE_REPOSITORY,
+      useClass: PrismaArticleImageRepository,
+    },
+    {
+      provide: STORAGE_PROVIDER,
+      useClass: VercelBlobStorageProvider, // Change to S3StorageProvider if needed
+    },
+    {
+      provide: IMAGE_PROCESSOR,
+      useClass: SharpImageProcessorProvider,
+    },
+  ],
+  exports: [
+    BlogService,
+    ArticleService,
+    ArticleImageService,
+    BLOG_REPOSITORY,
+    ARTICLE_REPOSITORY,
+    ARTICLE_IMAGE_REPOSITORY,
+    STORAGE_PROVIDER,
+    IMAGE_PROCESSOR,
+    BlogSecretKeyGuard,
+  ],
+})
+export class ZarpCmsModule {}

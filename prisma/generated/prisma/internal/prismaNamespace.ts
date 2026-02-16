@@ -419,6 +419,9 @@ export const ModelName = {
   Admin: 'Admin',
   Tenant: 'Tenant',
   AdminTenant: 'AdminTenant',
+  Blog: 'Blog',
+  Article: 'Article',
+  ArticleImage: 'ArticleImage',
   AdminSessionToken: 'AdminSessionToken',
   AdminCredential: 'AdminCredential',
   SMSNotification: 'SMSNotification',
@@ -448,7 +451,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "plan" | "pibotMessages" | "subscription" | "additionalTokenPack" | "order" | "monitoringPlan" | "userSessionToken" | "userCredential" | "userCredentialHistory" | "userPasswordChangeSession" | "company" | "auxiliaryCompanyInformation" | "search" | "taxRegime" | "partner" | "brand" | "cnae" | "journal" | "journalToFetch" | "brandAlert" | "brandMonitoring" | "journalAlert" | "brandAnalysis" | "brandAnalysisRequest" | "brandAnalysisToken" | "brandNotification" | "companyExport" | "publicBrandSearch" | "aPIToken" | "lead" | "leadQualificationMessage" | "admin" | "tenant" | "adminTenant" | "adminSessionToken" | "adminCredential" | "sMSNotification" | "sMSNotificationEvent" | "config" | "emailCampaign" | "email" | "delivery" | "openTracking" | "clickTracking" | "emailLead" | "campaignBatch" | "sMTPServer" | "viewCompany"
+    modelProps: "user" | "plan" | "pibotMessages" | "subscription" | "additionalTokenPack" | "order" | "monitoringPlan" | "userSessionToken" | "userCredential" | "userCredentialHistory" | "userPasswordChangeSession" | "company" | "auxiliaryCompanyInformation" | "search" | "taxRegime" | "partner" | "brand" | "cnae" | "journal" | "journalToFetch" | "brandAlert" | "brandMonitoring" | "journalAlert" | "brandAnalysis" | "brandAnalysisRequest" | "brandAnalysisToken" | "brandNotification" | "companyExport" | "publicBrandSearch" | "aPIToken" | "lead" | "leadQualificationMessage" | "admin" | "tenant" | "adminTenant" | "blog" | "article" | "articleImage" | "adminSessionToken" | "adminCredential" | "sMSNotification" | "sMSNotificationEvent" | "config" | "emailCampaign" | "email" | "delivery" | "openTracking" | "clickTracking" | "emailLead" | "campaignBatch" | "sMTPServer" | "viewCompany"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -3042,6 +3045,228 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    Blog: {
+      payload: Prisma.$BlogPayload<ExtArgs>
+      fields: Prisma.BlogFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.BlogFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BlogPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.BlogFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BlogPayload>
+        }
+        findFirst: {
+          args: Prisma.BlogFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BlogPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.BlogFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BlogPayload>
+        }
+        findMany: {
+          args: Prisma.BlogFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BlogPayload>[]
+        }
+        create: {
+          args: Prisma.BlogCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BlogPayload>
+        }
+        createMany: {
+          args: Prisma.BlogCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.BlogCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BlogPayload>[]
+        }
+        delete: {
+          args: Prisma.BlogDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BlogPayload>
+        }
+        update: {
+          args: Prisma.BlogUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BlogPayload>
+        }
+        deleteMany: {
+          args: Prisma.BlogDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.BlogUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.BlogUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BlogPayload>[]
+        }
+        upsert: {
+          args: Prisma.BlogUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BlogPayload>
+        }
+        aggregate: {
+          args: Prisma.BlogAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateBlog>
+        }
+        groupBy: {
+          args: Prisma.BlogGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.BlogGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.BlogCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.BlogCountAggregateOutputType> | number
+        }
+      }
+    }
+    Article: {
+      payload: Prisma.$ArticlePayload<ExtArgs>
+      fields: Prisma.ArticleFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.ArticleFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ArticlePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.ArticleFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ArticlePayload>
+        }
+        findFirst: {
+          args: Prisma.ArticleFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ArticlePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.ArticleFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ArticlePayload>
+        }
+        findMany: {
+          args: Prisma.ArticleFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ArticlePayload>[]
+        }
+        create: {
+          args: Prisma.ArticleCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ArticlePayload>
+        }
+        createMany: {
+          args: Prisma.ArticleCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.ArticleCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ArticlePayload>[]
+        }
+        delete: {
+          args: Prisma.ArticleDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ArticlePayload>
+        }
+        update: {
+          args: Prisma.ArticleUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ArticlePayload>
+        }
+        deleteMany: {
+          args: Prisma.ArticleDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.ArticleUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.ArticleUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ArticlePayload>[]
+        }
+        upsert: {
+          args: Prisma.ArticleUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ArticlePayload>
+        }
+        aggregate: {
+          args: Prisma.ArticleAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateArticle>
+        }
+        groupBy: {
+          args: Prisma.ArticleGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ArticleGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.ArticleCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ArticleCountAggregateOutputType> | number
+        }
+      }
+    }
+    ArticleImage: {
+      payload: Prisma.$ArticleImagePayload<ExtArgs>
+      fields: Prisma.ArticleImageFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.ArticleImageFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ArticleImagePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.ArticleImageFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ArticleImagePayload>
+        }
+        findFirst: {
+          args: Prisma.ArticleImageFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ArticleImagePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.ArticleImageFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ArticleImagePayload>
+        }
+        findMany: {
+          args: Prisma.ArticleImageFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ArticleImagePayload>[]
+        }
+        create: {
+          args: Prisma.ArticleImageCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ArticleImagePayload>
+        }
+        createMany: {
+          args: Prisma.ArticleImageCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.ArticleImageCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ArticleImagePayload>[]
+        }
+        delete: {
+          args: Prisma.ArticleImageDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ArticleImagePayload>
+        }
+        update: {
+          args: Prisma.ArticleImageUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ArticleImagePayload>
+        }
+        deleteMany: {
+          args: Prisma.ArticleImageDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.ArticleImageUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.ArticleImageUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ArticleImagePayload>[]
+        }
+        upsert: {
+          args: Prisma.ArticleImageUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ArticleImagePayload>
+        }
+        aggregate: {
+          args: Prisma.ArticleImageAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateArticleImage>
+        }
+        groupBy: {
+          args: Prisma.ArticleImageGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ArticleImageGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.ArticleImageCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ArticleImageCountAggregateOutputType> | number
+        }
+      }
+    }
     AdminSessionToken: {
       payload: Prisma.$AdminSessionTokenPayload<ExtArgs>
       fields: Prisma.AdminSessionTokenFieldRefs
@@ -4684,12 +4909,61 @@ export const AdminTenantScalarFieldEnum = {
   id: 'id',
   admin_id: 'admin_id',
   tenant_id: 'tenant_id',
+  role: 'role',
   active: 'active',
   created_at: 'created_at',
   updated_at: 'updated_at'
 } as const
 
 export type AdminTenantScalarFieldEnum = (typeof AdminTenantScalarFieldEnum)[keyof typeof AdminTenantScalarFieldEnum]
+
+
+export const BlogScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  description: 'description',
+  slug: 'slug',
+  secret_key_hash: 'secret_key_hash',
+  secret_key_salt: 'secret_key_salt',
+  tenant_id: 'tenant_id',
+  active: 'active',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+} as const
+
+export type BlogScalarFieldEnum = (typeof BlogScalarFieldEnum)[keyof typeof BlogScalarFieldEnum]
+
+
+export const ArticleScalarFieldEnum = {
+  id: 'id',
+  title: 'title',
+  content: 'content',
+  slug: 'slug',
+  status: 'status',
+  display_order: 'display_order',
+  published_at: 'published_at',
+  blog_id: 'blog_id',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+} as const
+
+export type ArticleScalarFieldEnum = (typeof ArticleScalarFieldEnum)[keyof typeof ArticleScalarFieldEnum]
+
+
+export const ArticleImageScalarFieldEnum = {
+  id: 'id',
+  url: 'url',
+  storage_key: 'storage_key',
+  alt_text: 'alt_text',
+  display_order: 'display_order',
+  file_size: 'file_size',
+  original_format: 'original_format',
+  article_id: 'article_id',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+} as const
+
+export type ArticleImageScalarFieldEnum = (typeof ArticleImageScalarFieldEnum)[keyof typeof ArticleImageScalarFieldEnum]
 
 
 export const AdminSessionTokenScalarFieldEnum = {
@@ -5111,6 +5385,20 @@ export type EnumEAdminRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$Prism
 export type ListEnumEAdminRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'EAdminRole[]'>
     
 
+
+/**
+ * Reference to a field of type 'EArticleStatus'
+ */
+export type EnumEArticleStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'EArticleStatus'>
+    
+
+
+/**
+ * Reference to a field of type 'EArticleStatus[]'
+ */
+export type ListEnumEArticleStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'EArticleStatus[]'>
+    
+
 /**
  * Batch Payload for updateMany & deleteMany & createMany
  */
@@ -5241,6 +5529,9 @@ export type GlobalOmitConfig = {
   admin?: Prisma.AdminOmit
   tenant?: Prisma.TenantOmit
   adminTenant?: Prisma.AdminTenantOmit
+  blog?: Prisma.BlogOmit
+  article?: Prisma.ArticleOmit
+  articleImage?: Prisma.ArticleImageOmit
   adminSessionToken?: Prisma.AdminSessionTokenOmit
   adminCredential?: Prisma.AdminCredentialOmit
   sMSNotification?: Prisma.SMSNotificationOmit

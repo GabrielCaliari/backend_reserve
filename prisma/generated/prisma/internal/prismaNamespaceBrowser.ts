@@ -86,6 +86,9 @@ export const ModelName = {
   Admin: 'Admin',
   Tenant: 'Tenant',
   AdminTenant: 'AdminTenant',
+  Blog: 'Blog',
+  Article: 'Article',
+  ArticleImage: 'ArticleImage',
   AdminSessionToken: 'AdminSessionToken',
   AdminCredential: 'AdminCredential',
   SMSNotification: 'SMSNotification',
@@ -721,12 +724,61 @@ export const AdminTenantScalarFieldEnum = {
   id: 'id',
   admin_id: 'admin_id',
   tenant_id: 'tenant_id',
+  role: 'role',
   active: 'active',
   created_at: 'created_at',
   updated_at: 'updated_at'
 } as const
 
 export type AdminTenantScalarFieldEnum = (typeof AdminTenantScalarFieldEnum)[keyof typeof AdminTenantScalarFieldEnum]
+
+
+export const BlogScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  description: 'description',
+  slug: 'slug',
+  secret_key_hash: 'secret_key_hash',
+  secret_key_salt: 'secret_key_salt',
+  tenant_id: 'tenant_id',
+  active: 'active',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+} as const
+
+export type BlogScalarFieldEnum = (typeof BlogScalarFieldEnum)[keyof typeof BlogScalarFieldEnum]
+
+
+export const ArticleScalarFieldEnum = {
+  id: 'id',
+  title: 'title',
+  content: 'content',
+  slug: 'slug',
+  status: 'status',
+  display_order: 'display_order',
+  published_at: 'published_at',
+  blog_id: 'blog_id',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+} as const
+
+export type ArticleScalarFieldEnum = (typeof ArticleScalarFieldEnum)[keyof typeof ArticleScalarFieldEnum]
+
+
+export const ArticleImageScalarFieldEnum = {
+  id: 'id',
+  url: 'url',
+  storage_key: 'storage_key',
+  alt_text: 'alt_text',
+  display_order: 'display_order',
+  file_size: 'file_size',
+  original_format: 'original_format',
+  article_id: 'article_id',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+} as const
+
+export type ArticleImageScalarFieldEnum = (typeof ArticleImageScalarFieldEnum)[keyof typeof ArticleImageScalarFieldEnum]
 
 
 export const AdminSessionTokenScalarFieldEnum = {

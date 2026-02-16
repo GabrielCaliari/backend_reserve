@@ -19,17 +19,13 @@ async function bootstrap() {
     .setDescription(`
       API de gerenciamento e administração do sistema Zarp
       
-      ## API Versões
-      - **v1**: API legada (endpoints em /api/v1)
-      - **v2**: API atual com funcionalidades de SMS, Leads e Email Marketing (endpoints em /v2)
-      
-      ## Módulos API v2
+      ## Módulos API
       - **Event Notification (SMS)**: Gestão de notificações SMS com webhooks
       - **Lead Management**: Gerenciamento de leads e prospects
       - **Email Campaign**: Campanhas de email marketing com segmentação
       - **Config**: Configuração de servidores SMTP
     `)
-    .setVersion('2.0')
+    .setVersion('1.0')
     .addBearerAuth({
       type: 'http',
       scheme: 'bearer',

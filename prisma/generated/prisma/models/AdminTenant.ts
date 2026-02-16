@@ -42,6 +42,7 @@ export type AdminTenantMinAggregateOutputType = {
   id: number | null
   admin_id: number | null
   tenant_id: number | null
+  role: $Enums.EAdminRole | null
   active: boolean | null
   created_at: Date | null
   updated_at: Date | null
@@ -51,6 +52,7 @@ export type AdminTenantMaxAggregateOutputType = {
   id: number | null
   admin_id: number | null
   tenant_id: number | null
+  role: $Enums.EAdminRole | null
   active: boolean | null
   created_at: Date | null
   updated_at: Date | null
@@ -60,6 +62,7 @@ export type AdminTenantCountAggregateOutputType = {
   id: number
   admin_id: number
   tenant_id: number
+  role: number
   active: number
   created_at: number
   updated_at: number
@@ -83,6 +86,7 @@ export type AdminTenantMinAggregateInputType = {
   id?: true
   admin_id?: true
   tenant_id?: true
+  role?: true
   active?: true
   created_at?: true
   updated_at?: true
@@ -92,6 +96,7 @@ export type AdminTenantMaxAggregateInputType = {
   id?: true
   admin_id?: true
   tenant_id?: true
+  role?: true
   active?: true
   created_at?: true
   updated_at?: true
@@ -101,6 +106,7 @@ export type AdminTenantCountAggregateInputType = {
   id?: true
   admin_id?: true
   tenant_id?: true
+  role?: true
   active?: true
   created_at?: true
   updated_at?: true
@@ -197,6 +203,7 @@ export type AdminTenantGroupByOutputType = {
   id: number
   admin_id: number
   tenant_id: number
+  role: $Enums.EAdminRole
   active: boolean
   created_at: Date
   updated_at: Date
@@ -229,6 +236,7 @@ export type AdminTenantWhereInput = {
   id?: Prisma.IntFilter<"AdminTenant"> | number
   admin_id?: Prisma.IntFilter<"AdminTenant"> | number
   tenant_id?: Prisma.IntFilter<"AdminTenant"> | number
+  role?: Prisma.EnumEAdminRoleFilter<"AdminTenant"> | $Enums.EAdminRole
   active?: Prisma.BoolFilter<"AdminTenant"> | boolean
   created_at?: Prisma.DateTimeFilter<"AdminTenant"> | Date | string
   updated_at?: Prisma.DateTimeFilter<"AdminTenant"> | Date | string
@@ -240,6 +248,7 @@ export type AdminTenantOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   admin_id?: Prisma.SortOrder
   tenant_id?: Prisma.SortOrder
+  role?: Prisma.SortOrder
   active?: Prisma.SortOrder
   created_at?: Prisma.SortOrder
   updated_at?: Prisma.SortOrder
@@ -255,6 +264,7 @@ export type AdminTenantWhereUniqueInput = Prisma.AtLeast<{
   NOT?: Prisma.AdminTenantWhereInput | Prisma.AdminTenantWhereInput[]
   admin_id?: Prisma.IntFilter<"AdminTenant"> | number
   tenant_id?: Prisma.IntFilter<"AdminTenant"> | number
+  role?: Prisma.EnumEAdminRoleFilter<"AdminTenant"> | $Enums.EAdminRole
   active?: Prisma.BoolFilter<"AdminTenant"> | boolean
   created_at?: Prisma.DateTimeFilter<"AdminTenant"> | Date | string
   updated_at?: Prisma.DateTimeFilter<"AdminTenant"> | Date | string
@@ -266,6 +276,7 @@ export type AdminTenantOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   admin_id?: Prisma.SortOrder
   tenant_id?: Prisma.SortOrder
+  role?: Prisma.SortOrder
   active?: Prisma.SortOrder
   created_at?: Prisma.SortOrder
   updated_at?: Prisma.SortOrder
@@ -283,12 +294,14 @@ export type AdminTenantScalarWhereWithAggregatesInput = {
   id?: Prisma.IntWithAggregatesFilter<"AdminTenant"> | number
   admin_id?: Prisma.IntWithAggregatesFilter<"AdminTenant"> | number
   tenant_id?: Prisma.IntWithAggregatesFilter<"AdminTenant"> | number
+  role?: Prisma.EnumEAdminRoleWithAggregatesFilter<"AdminTenant"> | $Enums.EAdminRole
   active?: Prisma.BoolWithAggregatesFilter<"AdminTenant"> | boolean
   created_at?: Prisma.DateTimeWithAggregatesFilter<"AdminTenant"> | Date | string
   updated_at?: Prisma.DateTimeWithAggregatesFilter<"AdminTenant"> | Date | string
 }
 
 export type AdminTenantCreateInput = {
+  role?: $Enums.EAdminRole
   active?: boolean
   created_at?: Date | string
   updated_at?: Date | string
@@ -300,12 +313,14 @@ export type AdminTenantUncheckedCreateInput = {
   id?: number
   admin_id: number
   tenant_id: number
+  role?: $Enums.EAdminRole
   active?: boolean
   created_at?: Date | string
   updated_at?: Date | string
 }
 
 export type AdminTenantUpdateInput = {
+  role?: Prisma.EnumEAdminRoleFieldUpdateOperationsInput | $Enums.EAdminRole
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -317,6 +332,7 @@ export type AdminTenantUncheckedUpdateInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   admin_id?: Prisma.IntFieldUpdateOperationsInput | number
   tenant_id?: Prisma.IntFieldUpdateOperationsInput | number
+  role?: Prisma.EnumEAdminRoleFieldUpdateOperationsInput | $Enums.EAdminRole
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -326,12 +342,14 @@ export type AdminTenantCreateManyInput = {
   id?: number
   admin_id: number
   tenant_id: number
+  role?: $Enums.EAdminRole
   active?: boolean
   created_at?: Date | string
   updated_at?: Date | string
 }
 
 export type AdminTenantUpdateManyMutationInput = {
+  role?: Prisma.EnumEAdminRoleFieldUpdateOperationsInput | $Enums.EAdminRole
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -341,6 +359,7 @@ export type AdminTenantUncheckedUpdateManyInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   admin_id?: Prisma.IntFieldUpdateOperationsInput | number
   tenant_id?: Prisma.IntFieldUpdateOperationsInput | number
+  role?: Prisma.EnumEAdminRoleFieldUpdateOperationsInput | $Enums.EAdminRole
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -365,6 +384,7 @@ export type AdminTenantCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   admin_id?: Prisma.SortOrder
   tenant_id?: Prisma.SortOrder
+  role?: Prisma.SortOrder
   active?: Prisma.SortOrder
   created_at?: Prisma.SortOrder
   updated_at?: Prisma.SortOrder
@@ -380,6 +400,7 @@ export type AdminTenantMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   admin_id?: Prisma.SortOrder
   tenant_id?: Prisma.SortOrder
+  role?: Prisma.SortOrder
   active?: Prisma.SortOrder
   created_at?: Prisma.SortOrder
   updated_at?: Prisma.SortOrder
@@ -389,6 +410,7 @@ export type AdminTenantMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   admin_id?: Prisma.SortOrder
   tenant_id?: Prisma.SortOrder
+  role?: Prisma.SortOrder
   active?: Prisma.SortOrder
   created_at?: Prisma.SortOrder
   updated_at?: Prisma.SortOrder
@@ -485,6 +507,7 @@ export type AdminTenantUncheckedUpdateManyWithoutTenantNestedInput = {
 }
 
 export type AdminTenantCreateWithoutAdminInput = {
+  role?: $Enums.EAdminRole
   active?: boolean
   created_at?: Date | string
   updated_at?: Date | string
@@ -494,6 +517,7 @@ export type AdminTenantCreateWithoutAdminInput = {
 export type AdminTenantUncheckedCreateWithoutAdminInput = {
   id?: number
   tenant_id: number
+  role?: $Enums.EAdminRole
   active?: boolean
   created_at?: Date | string
   updated_at?: Date | string
@@ -532,12 +556,14 @@ export type AdminTenantScalarWhereInput = {
   id?: Prisma.IntFilter<"AdminTenant"> | number
   admin_id?: Prisma.IntFilter<"AdminTenant"> | number
   tenant_id?: Prisma.IntFilter<"AdminTenant"> | number
+  role?: Prisma.EnumEAdminRoleFilter<"AdminTenant"> | $Enums.EAdminRole
   active?: Prisma.BoolFilter<"AdminTenant"> | boolean
   created_at?: Prisma.DateTimeFilter<"AdminTenant"> | Date | string
   updated_at?: Prisma.DateTimeFilter<"AdminTenant"> | Date | string
 }
 
 export type AdminTenantCreateWithoutTenantInput = {
+  role?: $Enums.EAdminRole
   active?: boolean
   created_at?: Date | string
   updated_at?: Date | string
@@ -547,6 +573,7 @@ export type AdminTenantCreateWithoutTenantInput = {
 export type AdminTenantUncheckedCreateWithoutTenantInput = {
   id?: number
   admin_id: number
+  role?: $Enums.EAdminRole
   active?: boolean
   created_at?: Date | string
   updated_at?: Date | string
@@ -581,12 +608,14 @@ export type AdminTenantUpdateManyWithWhereWithoutTenantInput = {
 export type AdminTenantCreateManyAdminInput = {
   id?: number
   tenant_id: number
+  role?: $Enums.EAdminRole
   active?: boolean
   created_at?: Date | string
   updated_at?: Date | string
 }
 
 export type AdminTenantUpdateWithoutAdminInput = {
+  role?: Prisma.EnumEAdminRoleFieldUpdateOperationsInput | $Enums.EAdminRole
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -596,6 +625,7 @@ export type AdminTenantUpdateWithoutAdminInput = {
 export type AdminTenantUncheckedUpdateWithoutAdminInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   tenant_id?: Prisma.IntFieldUpdateOperationsInput | number
+  role?: Prisma.EnumEAdminRoleFieldUpdateOperationsInput | $Enums.EAdminRole
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -604,6 +634,7 @@ export type AdminTenantUncheckedUpdateWithoutAdminInput = {
 export type AdminTenantUncheckedUpdateManyWithoutAdminInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   tenant_id?: Prisma.IntFieldUpdateOperationsInput | number
+  role?: Prisma.EnumEAdminRoleFieldUpdateOperationsInput | $Enums.EAdminRole
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -612,12 +643,14 @@ export type AdminTenantUncheckedUpdateManyWithoutAdminInput = {
 export type AdminTenantCreateManyTenantInput = {
   id?: number
   admin_id: number
+  role?: $Enums.EAdminRole
   active?: boolean
   created_at?: Date | string
   updated_at?: Date | string
 }
 
 export type AdminTenantUpdateWithoutTenantInput = {
+  role?: Prisma.EnumEAdminRoleFieldUpdateOperationsInput | $Enums.EAdminRole
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -627,6 +660,7 @@ export type AdminTenantUpdateWithoutTenantInput = {
 export type AdminTenantUncheckedUpdateWithoutTenantInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   admin_id?: Prisma.IntFieldUpdateOperationsInput | number
+  role?: Prisma.EnumEAdminRoleFieldUpdateOperationsInput | $Enums.EAdminRole
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -635,6 +669,7 @@ export type AdminTenantUncheckedUpdateWithoutTenantInput = {
 export type AdminTenantUncheckedUpdateManyWithoutTenantInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   admin_id?: Prisma.IntFieldUpdateOperationsInput | number
+  role?: Prisma.EnumEAdminRoleFieldUpdateOperationsInput | $Enums.EAdminRole
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -646,6 +681,7 @@ export type AdminTenantSelect<ExtArgs extends runtime.Types.Extensions.InternalA
   id?: boolean
   admin_id?: boolean
   tenant_id?: boolean
+  role?: boolean
   active?: boolean
   created_at?: boolean
   updated_at?: boolean
@@ -657,6 +693,7 @@ export type AdminTenantSelectCreateManyAndReturn<ExtArgs extends runtime.Types.E
   id?: boolean
   admin_id?: boolean
   tenant_id?: boolean
+  role?: boolean
   active?: boolean
   created_at?: boolean
   updated_at?: boolean
@@ -668,6 +705,7 @@ export type AdminTenantSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.E
   id?: boolean
   admin_id?: boolean
   tenant_id?: boolean
+  role?: boolean
   active?: boolean
   created_at?: boolean
   updated_at?: boolean
@@ -679,12 +717,13 @@ export type AdminTenantSelectScalar = {
   id?: boolean
   admin_id?: boolean
   tenant_id?: boolean
+  role?: boolean
   active?: boolean
   created_at?: boolean
   updated_at?: boolean
 }
 
-export type AdminTenantOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "admin_id" | "tenant_id" | "active" | "created_at" | "updated_at", ExtArgs["result"]["adminTenant"]>
+export type AdminTenantOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "admin_id" | "tenant_id" | "role" | "active" | "created_at" | "updated_at", ExtArgs["result"]["adminTenant"]>
 export type AdminTenantInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   Admin?: boolean | Prisma.AdminDefaultArgs<ExtArgs>
   Tenant?: boolean | Prisma.TenantDefaultArgs<ExtArgs>
@@ -708,6 +747,7 @@ export type $AdminTenantPayload<ExtArgs extends runtime.Types.Extensions.Interna
     id: number
     admin_id: number
     tenant_id: number
+    role: $Enums.EAdminRole
     active: boolean
     created_at: Date
     updated_at: Date
@@ -1139,6 +1179,7 @@ export interface AdminTenantFieldRefs {
   readonly id: Prisma.FieldRef<"AdminTenant", 'Int'>
   readonly admin_id: Prisma.FieldRef<"AdminTenant", 'Int'>
   readonly tenant_id: Prisma.FieldRef<"AdminTenant", 'Int'>
+  readonly role: Prisma.FieldRef<"AdminTenant", 'EAdminRole'>
   readonly active: Prisma.FieldRef<"AdminTenant", 'Boolean'>
   readonly created_at: Prisma.FieldRef<"AdminTenant", 'DateTime'>
   readonly updated_at: Prisma.FieldRef<"AdminTenant", 'DateTime'>

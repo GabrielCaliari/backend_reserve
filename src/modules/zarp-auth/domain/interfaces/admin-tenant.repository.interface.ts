@@ -1,6 +1,9 @@
+import { EAdminRole } from '@/modules/zarp-auth/domain/enums/admin-role.enum';
+
 export interface IAssignAdminTenant {
   admin_id: number;
   tenant_id: number;
+  role?: EAdminRole;
 }
 
 export interface IAdminTenantRepository {
@@ -9,6 +12,7 @@ export interface IAdminTenantRepository {
   findTenantsByAdminId(adminId: number): Promise<any[]>;
   findAdminsByTenantId(tenantId: number): Promise<any[]>;
   isAdminInTenant(adminId: number, tenantId: number): Promise<boolean>;
+  findRoleInTenant(adminId: number, tenantId: number): Promise<EAdminRole | null>;
 }
 
 export const ADMIN_TENANT_REPOSITORY = Symbol('ADMIN_TENANT_REPOSITORY');

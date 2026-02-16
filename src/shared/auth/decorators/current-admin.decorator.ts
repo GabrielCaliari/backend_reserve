@@ -7,12 +7,14 @@ export interface CurrentAdminPayload {
   'session-id': number;
   admin_role?: EAdminRole;
   tenant_id?: number;
+  /** Per-tenant role resolved by RolesGuard (from AdminTenant.role) */
+  tenant_role?: EAdminRole;
 }
 
 /**
  * Decorator to extract current admin from request.
  * Used with @UseGuards(AdminJwtGuard).
- * When used with RolesGuard, `admin_role` is also available.
+ * When used with RolesGuard, `admin_role` and `tenant_role` are also available.
  * When used with TenantGuard, `tenant_id` is also available.
  */
 export const CurrentAdmin = createParamDecorator(
@@ -24,6 +26,7 @@ export const CurrentAdmin = createParamDecorator(
       'session-id': request['session-id'],
       admin_role: request.admin_role,
       tenant_id: request.tenant_id,
+      tenant_role: request.tenant_role,
     };
 
     return data ? admin[data] : admin;

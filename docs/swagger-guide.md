@@ -1,4 +1,4 @@
-# Guia Swagger - API v2
+# Guia Swagger - API
 
 ## Acesso à Documentação
 
@@ -52,7 +52,7 @@ Muitos endpoints requerem autenticação JWT:
 
 ---
 
-## Módulos da API v2
+## Módulos da API
 
 ### 🔔 Event Notification (SMS)
 
@@ -63,9 +63,9 @@ Muitos endpoints requerem autenticação JWT:
 - Rastrear eventos de envio
 
 **Endpoints principais:**
-- `POST /v2/sms/create` - Criar notificação
-- `GET /v2/sms` - Listar notificações
-- `POST /v2/sms/webhook/:uuid` - Enviar SMS
+- `POST /sms/create` - Criar notificação
+- `GET /sms` - Listar notificações
+- `POST /sms/webhook/:uuid` - Enviar SMS
 
 ### 👥 Lead Management
 
@@ -75,8 +75,8 @@ Muitos endpoints requerem autenticação JWT:
 - Gerenciar origem e dados dos leads
 
 **Endpoints principais:**
-- `POST /v2/lead/` - Criar lead
-- `GET /v2/lead/` - Listar leads
+- `POST /lead/` - Criar lead
+- `GET /lead/` - Listar leads
 
 ### 📧 Email Campaign
 
@@ -88,10 +88,10 @@ Muitos endpoints requerem autenticação JWT:
 - Finalizar setup de campanha
 
 **Endpoints principais:**
-- `POST /v2/email-campaign/` - Criar campanha
-- `GET /v2/email-campaign/` - Listar campanhas
-- `POST /v2/email-campaign/upload-leads/:id` - Upload CSV
-- `POST /v2/email-campaign/primary-copy-variant/create/:id` - Criar copy
+- `POST /email-campaign/` - Criar campanha
+- `GET /email-campaign/` - Listar campanhas
+- `POST /email-campaign/upload-leads/:id` - Upload CSV
+- `POST /email-campaign/primary-copy-variant/create/:id` - Criar copy
 
 ### ⚙️ Config (SMTP Server)
 
@@ -101,8 +101,8 @@ Muitos endpoints requerem autenticação JWT:
 - Definir servidor padrão
 
 **Endpoints principais:**
-- `POST /v2/config/smtp-server` - Criar servidor SMTP
-- `GET /v2/config/smtp-server` - Listar servidores
+- `POST /config/smtp-server` - Criar servidor SMTP
+- `GET /config/smtp-server` - Listar servidores
 
 ---
 
@@ -111,7 +111,7 @@ Muitos endpoints requerem autenticação JWT:
 ### Criar Lead
 
 ```json
-POST /v2/lead/
+POST /lead/
 {
   "name": "João Silva",
   "email": "joao@email.com",
@@ -127,7 +127,7 @@ POST /v2/lead/
 ### Enviar SMS via Webhook
 
 ```json
-POST /v2/sms/webhook/{uuid}
+POST /sms/webhook/{uuid}
 {
   "message": "Olá {{name}}, seu código é {{code}}",
   "destination_number": "5511999999999",
@@ -142,7 +142,7 @@ POST /v2/sms/webhook/{uuid}
 ### Criar Campanha de Email
 
 ```json
-POST /v2/email-campaign/
+POST /email-campaign/
 {
   "name": "Campanha Black Friday 2026"
 }
@@ -151,7 +151,7 @@ POST /v2/email-campaign/
 ### Upload de Leads (CSV)
 
 ```
-POST /v2/email-campaign/upload-leads/{id}
+POST /email-campaign/upload-leads/{id}
 Content-Type: multipart/form-data
 
 file: [arquivo.csv]
@@ -206,7 +206,7 @@ Endpoints de listagem suportam paginação:
 
 **Exemplo:**
 ```
-GET /v2/lead/?page=2&limit=50
+GET /lead/?page=2&limit=50
 ```
 
 **Resposta:**
@@ -334,7 +334,7 @@ Baixe a especificação OpenAPI clicando no link no topo da página.
 
 ## Recursos Adicionais
 
-- **Documentação Markdown**: [/docs/api-v2.md](./api-v2.md)
+- **Documentação Markdown**: [/docs/api.md](./api.md)
 - **Módulos**: [/docs/modules/](./modules/)
 - **Dependências**: [/docs/dependencies.md](./dependencies.md)
 
@@ -347,4 +347,4 @@ Para questões técnicas ou bugs, consulte a documentação no repositório ou e
 ---
 
 **Última atualização:** 15 de fevereiro de 2026
-**Versão da API:** v2.0.0
+**Versão da API:** v1.0.0

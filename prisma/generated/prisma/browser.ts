@@ -193,6 +193,21 @@ export type Tenant = Prisma.TenantModel
  */
 export type AdminTenant = Prisma.AdminTenantModel
 /**
+ * Model Blog
+ * 
+ */
+export type Blog = Prisma.BlogModel
+/**
+ * Model Article
+ * 
+ */
+export type Article = Prisma.ArticleModel
+/**
+ * Model ArticleImage
+ * 
+ */
+export type ArticleImage = Prisma.ArticleImageModel
+/**
  * Model AdminSessionToken
  * 
  */

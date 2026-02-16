@@ -1,10 +1,10 @@
-# API v2 - Documentação Completa
+# API - Documentação Completa
 
 ## Visão Geral
 
-A API v2 do backend ZARP Admin é uma evolução da versão anterior, focada em funcionalidades de notificações por SMS, gestão de leads e campanhas de email marketing.
+A API do backend ZARP Admin é uma evolução, focada em funcionalidades de notificações por SMS, gestão de leads e campanhas de email marketing.
 
-**Base URL:** `/v2`
+**Base URL:** `/`
 
 **Autenticação:** A maioria dos endpoints requer autenticação via JWT usando o guard `AdminValidateJwtTokenGuard`.
 
@@ -26,7 +26,7 @@ Módulo responsável pela gestão de notificações SMS e eventos relacionados.
 
 ### 1.1 Criar Notificação SMS
 
-**Endpoint:** `POST /v2/sms/create`
+**Endpoint:** `POST /sms/create`
 
 **Autenticação:** Requerida
 
@@ -55,7 +55,7 @@ Módulo responsável pela gestão de notificações SMS e eventos relacionados.
 
 ### 1.2 Listar Notificações SMS
 
-**Endpoint:** `GET /v2/sms`
+**Endpoint:** `GET /sms`
 
 **Autenticação:** Requerida
 
@@ -77,7 +77,7 @@ Módulo responsável pela gestão de notificações SMS e eventos relacionados.
 
 ### 1.3 Buscar Notificação SMS por ID
 
-**Endpoint:** `GET /v2/sms/:id`
+**Endpoint:** `GET /sms/:id`
 
 **Autenticação:** Requerida
 
@@ -102,7 +102,7 @@ Módulo responsável pela gestão de notificações SMS e eventos relacionados.
 
 ### 1.4 Enviar Evento SMS (Webhook)
 
-**Endpoint:** `POST /v2/sms/webhook/:uuid`
+**Endpoint:** `POST /sms/webhook/:uuid`
 
 **Autenticação:** Requerida
 
@@ -152,7 +152,7 @@ Módulo responsável pela gestão de notificações SMS e eventos relacionados.
 
 ### 1.5 Listar Eventos por Notificação
 
-**Endpoint:** `GET /v2/sms/webhook/:id_notification`
+**Endpoint:** `GET /sms/webhook/:id_notification`
 
 **Autenticação:** Requerida
 
@@ -182,7 +182,7 @@ Módulo para gestão de leads e prospects.
 
 ### 2.1 Listar Leads
 
-**Endpoint:** `GET /v2/lead/`
+**Endpoint:** `GET /lead/`
 
 **Autenticação:** Não requerida (comentada)
 
@@ -220,7 +220,7 @@ Módulo para gestão de leads e prospects.
 
 ### 2.2 Criar Lead
 
-**Endpoint:** `POST /v2/lead/`
+**Endpoint:** `POST /lead/`
 
 **Autenticação:** Não requerida (comentada)
 
@@ -258,7 +258,7 @@ Módulo completo para gestão de campanhas de email marketing com suporte a segm
 
 ### 3.1 Criar Campanha
 
-**Endpoint:** `POST /v2/email-campaign/`
+**Endpoint:** `POST /email-campaign/`
 
 **Autenticação:** Não especificada
 
@@ -283,7 +283,7 @@ Módulo completo para gestão de campanhas de email marketing com suporte a segm
 
 ### 3.2 Listar Campanhas
 
-**Endpoint:** `GET /v2/email-campaign/`
+**Endpoint:** `GET /email-campaign/`
 
 **Autenticação:** Não especificada
 
@@ -321,7 +321,7 @@ Módulo completo para gestão de campanhas de email marketing com suporte a segm
 
 ### 3.3 Buscar Campanha por ID
 
-**Endpoint:** `GET /v2/email-campaign/:id`
+**Endpoint:** `GET /email-campaign/:id`
 
 **Parâmetros de URL:**
 - `id` (string): ID da campanha
@@ -350,7 +350,7 @@ Módulo completo para gestão de campanhas de email marketing com suporte a segm
 
 ### 3.4 Buscar Batches da Campanha
 
-**Endpoint:** `GET /v2/email-campaign/segment-group/:id`
+**Endpoint:** `GET /email-campaign/segment-group/:id`
 
 **Parâmetros de URL:**
 - `id` (string): ID da campanha
@@ -372,7 +372,7 @@ Módulo completo para gestão de campanhas de email marketing com suporte a segm
 
 ### 3.5 Upload de Leads (CSV)
 
-**Endpoint:** `POST /v2/email-campaign/upload-leads/:id`
+**Endpoint:** `POST /email-campaign/upload-leads/:id`
 
 **Autenticação:** Não especificada
 
@@ -406,7 +406,7 @@ Módulo completo para gestão de campanhas de email marketing com suporte a segm
 
 ### 3.6 Criar Variação Principal de Copy
 
-**Endpoint:** `POST /v2/email-campaign/primary-copy-variant/create/:id`
+**Endpoint:** `POST /email-campaign/primary-copy-variant/create/:id`
 
 **Parâmetros de URL:**
 - `id` (string): ID da campanha
@@ -445,7 +445,7 @@ Módulo completo para gestão de campanhas de email marketing com suporte a segm
 
 ### 3.7 Buscar Variação Principal de Copy
 
-**Endpoint:** `GET /v2/email-campaign/primary-copy-variant/:id`
+**Endpoint:** `GET /email-campaign/primary-copy-variant/:id`
 
 **Parâmetros de URL:**
 - `id` (string): ID da campanha
@@ -469,7 +469,7 @@ Módulo completo para gestão de campanhas de email marketing com suporte a segm
 
 ### 3.8 Atualizar Tipo de Variação de Copy
 
-**Endpoint:** `PUT /v2/email-campaign/update/copy-variant/:id`
+**Endpoint:** `PUT /email-campaign/update/copy-variant/:id`
 
 **Parâmetros de URL:**
 - `id` (string): ID da campanha
@@ -496,7 +496,7 @@ Módulo completo para gestão de campanhas de email marketing com suporte a segm
 
 ### 3.9 Atualizar Tamanho do Batch
 
-**Endpoint:** `PUT /v2/email-campaign/update/campaign-batch-size/:id`
+**Endpoint:** `PUT /email-campaign/update/campaign-batch-size/:id`
 
 **Parâmetros de URL:**
 - `id` (string): ID da campanha
@@ -524,7 +524,7 @@ Módulo completo para gestão de campanhas de email marketing com suporte a segm
 
 ### 3.10 Finalizar Setup da Campanha
 
-**Endpoint:** `POST /v2/email-campaign/close-setup/:id`
+**Endpoint:** `POST /email-campaign/close-setup/:id`
 
 **Parâmetros de URL:**
 - `id` (string): ID da campanha
@@ -548,7 +548,7 @@ Módulo de configuração para servidores SMTP e provedores de email.
 
 ### 4.1 Criar Servidor SMTP
 
-**Endpoint:** `POST /v2/config/smtp-server`
+**Endpoint:** `POST /config/smtp-server`
 
 **Autenticação:** Não especificada
 
@@ -596,7 +596,7 @@ Módulo de configuração para servidores SMTP e provedores de email.
 
 ### 4.2 Listar Servidores SMTP
 
-**Endpoint:** `GET /v2/config/smtp-server`
+**Endpoint:** `GET /config/smtp-server`
 
 **Autenticação:** Não especificada
 

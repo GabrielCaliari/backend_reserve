@@ -650,7 +650,17 @@ model LeadQualificationMessage {
 
 enum EAdminRole {
   super_admin
-  company_admin
+  owner
+  manager
+  editor
+  viewer
+  company_admin // DEPRECATED: retained for backward compatibility
+}
+
+enum EArticleStatus {
+  draft
+  published
+  archived
 }
 
 model Admin {
@@ -675,19 +685,73 @@ model Tenant {
   created_at  DateTime      @default(now())
   updated_at  DateTime      @updatedAt
   AdminTenant AdminTenant[]
+  Blog        Blog[]
 }
 
 model AdminTenant {
-  id         Int      @id @default(autoincrement())
+  id         Int        @id @default(autoincrement())
   admin_id   Int
   tenant_id  Int
-  active     Boolean  @default(true)
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-  Admin      Admin    @relation(fields: [admin_id], references: [id])
-  Tenant     Tenant   @relation(fields: [tenant_id], references: [id])
+  role       EAdminRole @default(manager)
+  active     Boolean    @default(true)
+  created_at DateTime   @default(now())
+  updated_at DateTime   @updatedAt
+  Admin      Admin      @relation(fields: [admin_id], references: [id])
+  Tenant     Tenant     @relation(fields: [tenant_id], references: [id])
 
   @@unique([admin_id, tenant_id])
+}
+
+model Blog {
+  id              Int       @id @default(autoincrement())
+  name            String    @db.VarChar(150)
+  description     String?
+  slug            String    @db.VarChar(100)
+  secret_key_hash String
+  secret_key_salt String
+  tenant_id       Int
+  active          Boolean   @default(true)
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @updatedAt
+  Tenant          Tenant    @relation(fields: [tenant_id], references: [id])
+  Article         Article[]
+
+  @@unique([slug, tenant_id])
+  @@index([tenant_id])
+}
+
+model Article {
+  id            Int            @id @default(autoincrement())
+  title         String         @db.VarChar(255)
+  content       String
+  slug          String         @db.VarChar(255)
+  status        EArticleStatus @default(draft)
+  display_order Int            @default(0)
+  published_at  DateTime?
+  blog_id       Int
+  created_at    DateTime       @default(now())
+  updated_at    DateTime       @updatedAt
+  Blog          Blog           @relation(fields: [blog_id], references: [id], onDelete: Cascade)
+  ArticleImage  ArticleImage[]
+
+  @@unique([slug, blog_id])
+  @@index([blog_id, status, display_order])
+}
+
+model ArticleImage {
+  id              Int      @id @default(autoincrement())
+  url             String
+  storage_key     String
+  alt_text        String?  @db.VarChar(255)
+  display_order   Int      @default(0)
+  file_size       Int
+  original_format String   @db.VarChar(10)
+  article_id      Int
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+  Article         Article  @relation(fields: [article_id], references: [id], onDelete: Cascade)
+
+  @@index([article_id, display_order])
 }
 
 model AdminSessionToken {

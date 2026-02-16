@@ -5,6 +5,7 @@ import {
   IAdminTenantRepository,
   IAssignAdminTenant,
 } from '@/modules/zarp-auth/domain/interfaces/admin-tenant.repository.interface';
+import { EAdminRole } from '@/modules/zarp-auth/domain/enums/admin-role.enum';
 
 @Injectable()
 export default class AdminTenantRepository implements IAdminTenantRepository {
@@ -19,10 +20,11 @@ export default class AdminTenantRepository implements IAdminTenantRepository {
             tenant_id: data.tenant_id,
           },
         },
-        update: { active: true },
+        update: { active: true, ...(data.role ? { role: data.role } : {}) },
         create: {
           admin_id: data.admin_id,
           tenant_id: data.tenant_id,
+          ...(data.role ? { role: data.role } : {}),
         },
       });
     } catch (error) {
@@ -82,6 +84,28 @@ export default class AdminTenantRepository implements IAdminTenantRepository {
       return record !== null && record.active;
     } catch (error) {
       throw new RepositoryException('Erro ao verificar associacao admin-tenant.', error);
+    }
+  }
+
+  async findRoleInTenant(adminId: number, tenantId: number): Promise<EAdminRole | null> {
+    try {
+      const record = await this.prisma.adminTenant.findUnique({
+        where: {
+          admin_id_tenant_id: {
+            admin_id: adminId,
+            tenant_id: tenantId,
+          },
+        },
+        select: { role: true, active: true },
+      });
+
+      if (!record || !record.active) {
+        return null;
+      }
+
+      return record.role as EAdminRole;
+    } catch (error) {
+      throw new RepositoryException('Erro ao buscar role do admin no tenant.', error);
     }
   }
 }

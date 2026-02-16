@@ -31,7 +31,7 @@ export class UpdateTenantDTO {
   @MaxLength(100)
   name?: string;
 
-  @ApiPropertyOptional({ description: 'Unique URL-friendly slug', example: 'acme-corp-v2' })
+  @ApiPropertyOptional({ description: 'Unique URL-friendly slug', example: 'acme-corp-new' })
   @IsString()
   @IsOptional()
   @MaxLength(50)

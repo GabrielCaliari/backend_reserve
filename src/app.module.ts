@@ -14,6 +14,7 @@ import { ZarpCnpjsModule } from './modules/zarp-cnpjs/zarp-cnpjs.module';
 import { ZarpJournalsModule } from './modules/zarp-journals/zarp-journals.module';
 import { ZarpMailerModule } from './modules/zarp-mailer/zarp-mailer.module';
 import { ZarpPiBotModule } from './modules/zarp-pi-bot/zarp-pi-bot.module';
+import { ZarpCmsModule } from './modules/zarp-cms/zarp-cms.module';
 
 // Shared pipes
 import { ToLowercaseQueryParamsPipe, ToLowercaseBodyRequestPipe } from './shared/pipes';
@@ -32,6 +33,7 @@ import { ToLowercaseQueryParamsPipe, ToLowercaseBodyRequestPipe } from './shared
     ZarpJournalsModule,
     ZarpMailerModule,
     ZarpPiBotModule,
+    ZarpCmsModule,
 
     // Route prefixes per bounded context
     RouterModule.register([
@@ -58,6 +60,10 @@ import { ToLowercaseQueryParamsPipe, ToLowercaseBodyRequestPipe } from './shared
       {
         path: 'pi-bot',
         module: ZarpPiBotModule,
+      },
+      {
+        path: 'cms',
+        module: ZarpCmsModule,
       },
     ]),
   ],
