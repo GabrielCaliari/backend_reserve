@@ -5,8 +5,6 @@ import { UserService } from './application/services/user.service';
 import { UserController } from './infrastructure/controllers/user.controller';
 import { EmailService } from './application/services/admin-email.service';
 import { EmailController } from './infrastructure/controllers/admin-email.controller';
-import { LeadService } from './application/services/admin-lead.service';
-import { LeadController } from './infrastructure/controllers/admin-lead.controller';
 import { PostService as AdminPostService } from './application/services/admin-post.service';
 import { PostController as AdminPostController } from './infrastructure/controllers/admin-post.controller';
 import { TenantService } from './application/services/tenant.service';
@@ -19,8 +17,6 @@ import AdminSessionTokenRepository from './infrastructure/repositories/admin-ses
 import UserRepository from './infrastructure/repositories/user.repository';
 import UserCredentialRepository from './infrastructure/repositories/user-credential.repository';
 import UserSessionTokenRepository from './infrastructure/repositories/user-session-token.repository';
-import LeadRepository from './infrastructure/repositories/lead.repository';
-import LeadQualificationMessageRepository from './infrastructure/repositories/lead-qualification-message.repository';
 import PlanRepository from './infrastructure/repositories/plan.repository';
 import TenantRepository from './infrastructure/repositories/tenant.repository';
 import AdminTenantRepository from './infrastructure/repositories/admin-tenant.repository';
@@ -33,7 +29,6 @@ import {
   USER_REPOSITORY,
   USER_CREDENTIAL_REPOSITORY,
   USER_SESSION_TOKEN_REPOSITORY,
-  LEAD_REPOSITORY,
   PLAN_REPOSITORY,
   TENANT_REPOSITORY,
   ADMIN_TENANT_REPOSITORY,
@@ -68,7 +63,6 @@ import { FXGoogleAPITokenProvider } from '@/modules/zarp-auth/infrastructure/pro
     AdminController,
     UserController,
     EmailController,
-    LeadController,
     AdminPostController,
     TenantController,
   ],
@@ -77,7 +71,6 @@ import { FXGoogleAPITokenProvider } from '@/modules/zarp-auth/infrastructure/pro
     AdminService,
     UserService,
     EmailService,
-    LeadService,
     AdminPostService,
     TenantService,
 
@@ -100,8 +93,6 @@ import { FXGoogleAPITokenProvider } from '@/modules/zarp-auth/infrastructure/pro
     UserRepository,
     UserCredentialRepository,
     UserSessionTokenRepository,
-    LeadRepository,
-    LeadQualificationMessageRepository,
     PlanRepository,
     TenantRepository,
     AdminTenantRepository,
@@ -113,7 +104,6 @@ import { FXGoogleAPITokenProvider } from '@/modules/zarp-auth/infrastructure/pro
     { provide: USER_REPOSITORY, useExisting: UserRepository },
     { provide: USER_CREDENTIAL_REPOSITORY, useExisting: UserCredentialRepository },
     { provide: USER_SESSION_TOKEN_REPOSITORY, useExisting: UserSessionTokenRepository },
-    { provide: LEAD_REPOSITORY, useExisting: LeadRepository },
     { provide: PLAN_REPOSITORY, useExisting: PlanRepository },
     { provide: TENANT_REPOSITORY, useExisting: TenantRepository },
     { provide: ADMIN_TENANT_REPOSITORY, useExisting: AdminTenantRepository },
@@ -145,7 +135,6 @@ import { FXGoogleAPITokenProvider } from '@/modules/zarp-auth/infrastructure/pro
     UserRepository,
     UserCredentialRepository,
     UserSessionTokenRepository,
-    LeadRepository,
     PlanRepository,
     TenantRepository,
     AdminTenantRepository,
@@ -156,7 +145,6 @@ import { FXGoogleAPITokenProvider } from '@/modules/zarp-auth/infrastructure/pro
     USER_REPOSITORY,
     USER_CREDENTIAL_REPOSITORY,
     USER_SESSION_TOKEN_REPOSITORY,
-    LEAD_REPOSITORY,
     PLAN_REPOSITORY,
     TENANT_REPOSITORY,
     ADMIN_TENANT_REPOSITORY,

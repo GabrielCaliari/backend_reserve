@@ -22,8 +22,6 @@ import { EStatus } from '@/modules/zarp-auth/domain/enums/plan-status.enum';
 import PublicBrandSearchRepository from '../../infrastructure/repositories/public-brand-search.repository';
 import { EuipoAPITokenProvider } from '@/modules/zarp-brands/infrastructure/providers/euipo-api-token.provider';
 import axios from 'axios';
-import LeadRepository from '@/modules/zarp-auth/infrastructure/repositories/lead.repository';
-import { ICreateLead } from '@/modules/zarp-auth/domain/enums/lead.enum';
 import { PrismaService } from '@/shared/database/prisma.service';
 
 @Injectable()

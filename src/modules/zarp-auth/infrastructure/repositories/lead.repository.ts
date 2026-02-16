@@ -6,7 +6,7 @@ import { RepositoryException } from '@/shared/exceptions';
 import { Lead } from "@/modules/zarp-auth/domain/entities/lead.entity";
 import PhoneNumber from "@/shared/domain/value-objects/phone-number.vo";
 import Email from "@/shared/domain/value-objects/email.vo";
-import { ILeadRepository } from '@/modules/zarp-auth/domain/interfaces';
+import { ILeadRepository } from '@/modules/zarp-leads/domain/interfaces';
 
 @Injectable()
 export default class LeadRepository implements ILeadRepository {

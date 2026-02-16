@@ -27,7 +27,6 @@ import {
 import JournalAlertRepository from '@/modules/zarp-journals/infrastructure/repositories/journal-alert.repository';
 import PlanRepository from '@/modules/zarp-auth/infrastructure/repositories/plan.repository';
 import UserRepository from '@/modules/zarp-auth/infrastructure/repositories/user.repository';
-import LeadRepository from '@/modules/zarp-auth/infrastructure/repositories/lead.repository';
 
 // Providers
 import { EuipoAPITokenProvider } from '@/modules/zarp-brands/infrastructure/providers/euipo-api-token.provider';
@@ -68,7 +67,6 @@ import { EuipoAPITokenProvider } from '@/modules/zarp-brands/infrastructure/prov
     JournalAlertRepository,
     PlanRepository,
     UserRepository,
-    LeadRepository,
 
     // Providers
     EuipoAPITokenProvider,

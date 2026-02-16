@@ -1,6 +1,6 @@
 import { IsString, IsNotEmpty, IsEnum, IsOptional, Matches } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { ECompanySize, EOriginLead } from '@/modules/zarp-auth/domain/enums/lead.enum';
+import { ECompanySize, EOriginLead } from '@/modules/zarp-leads/domain/enums/lead.enum';
 
 export default class CreateLeadDTO {
     @ApiProperty({ description: 'Lead full name', example: 'John Doe' })

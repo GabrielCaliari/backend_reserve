@@ -14,14 +14,12 @@ import {
 import { EmailCampaignService } from './application/services/email-campaign.service';
 import { ConfigService } from './application/services/config.service';
 import { EventNotificationService } from './application/services/event-notification.service';
-import { LeadService } from './application/services/lead.service';
 import { EmailCampaignBatchService } from './application/services/email-campaign-batch.service';
 
 // Controllers
 import { EmailCampaignController } from './infrastructure/controllers/email-campaign.controller';
 import { ConfigController } from './infrastructure/controllers/config.controller';
 import { EventNotificationController } from './infrastructure/controllers/event-notification.controller';
-import { LeadController } from './infrastructure/controllers/lead.controller';
 
 // Processor (BullMQ)
 import { EmailCampaignProcess } from './infrastructure/processors/email-campaign.processor';
@@ -37,22 +35,21 @@ import SMSNotificationRepository from './infrastructure/repositories/sms-notific
 import SMSNotificationEventRepository from './infrastructure/repositories/sms-notification-event.repository';
 import ConfigRepository from './infrastructure/repositories/config.repository';
 
-// Cross-context (temporary coupling)
-import LeadRepository from '@/modules/zarp-auth/infrastructure/repositories/lead.repository';
+// Cross-context
 import { AWSSMSProvider } from '@/modules/zarp-mailer/infrastructure/providers/aws-sms.provider';
-import { EncryptProvider } from '@/shared/providers/encrypt.provider';
 
 /**
  * Zarp Mailer Module
  * Bounded context for email campaign management, SMS notifications,
- * lead management, and SMTP configuration
+ * and SMTP configuration
  *
  * Implements:
  * - Email campaign CRUD & batch processing
  * - Campaign delivery tracking
  * - SMTP server configuration
  * - SMS event notifications (AWS SNS)
- * - Lead management
+ *
+ * Note: Lead management has been migrated to ZarpLeadsModule
  */
 @Module({
   imports: [
@@ -65,14 +62,12 @@ import { EncryptProvider } from '@/shared/providers/encrypt.provider';
     EmailCampaignController,
     ConfigController,
     EventNotificationController,
-    LeadController,
   ],
   providers: [
     // Application Services
     EmailCampaignService,
     ConfigService,
     EventNotificationService,
-    LeadService,
     EmailCampaignBatchService,
 
     // Processor (BullMQ)
@@ -99,8 +94,7 @@ import { EncryptProvider } from '@/shared/providers/encrypt.provider';
     SMSNotificationEventRepository,
     ConfigRepository,
 
-    // Cross-context (temporary coupling)
-    LeadRepository,
+    // Cross-context
     AWSSMSProvider,
   ],
   exports: [
