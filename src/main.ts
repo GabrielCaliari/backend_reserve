@@ -16,9 +16,30 @@ async function bootstrap() {
   // Configuração do Swagger
   const config = new DocumentBuilder()
     .setTitle('Zarp Admin API')
-    .setDescription('API de gerenciamento e administração do sistema Zarp')
-    .setVersion('1.0')
-    .addBearerAuth()
+    .setDescription(`
+      API de gerenciamento e administração do sistema Zarp
+      
+      ## API Versões
+      - **v1**: API legada (endpoints em /api/v1)
+      - **v2**: API atual com funcionalidades de SMS, Leads e Email Marketing (endpoints em /v2)
+      
+      ## Módulos API v2
+      - **Event Notification (SMS)**: Gestão de notificações SMS com webhooks
+      - **Lead Management**: Gerenciamento de leads e prospects
+      - **Email Campaign**: Campanhas de email marketing com segmentação
+      - **Config**: Configuração de servidores SMTP
+    `)
+    .setVersion('2.0')
+    .addBearerAuth({
+      type: 'http',
+      scheme: 'bearer',
+      bearerFormat: 'JWT',
+      description: 'Token JWT para autenticação admin'
+    })
+    .addTag('Event Notification (SMS)', 'API para gerenciamento de notificações SMS e webhooks')
+    .addTag('Lead Management', 'API para gerenciamento de leads')
+    .addTag('Email Campaign', 'API para campanhas de email marketing')
+    .addTag('Config (SMTP Server)', 'API para configuração de servidores SMTP')
     .build();
   
   const document = SwaggerModule.createDocument(app, config);

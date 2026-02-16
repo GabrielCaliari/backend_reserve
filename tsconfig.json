@@ -16,6 +16,12 @@
     "noImplicitAny": false,
     "strictBindCallApply": false,
     "forceConsistentCasingInFileNames": false,
-    "noFallthroughCasesInSwitch": false
-  }
+    "noFallthroughCasesInSwitch": false,
+    "paths": {
+      "@/*": ["src/*"],
+      "@/shared/*": ["src/shared/*"],
+      "@/modules/*": ["src/modules/*"]
+    }
+  },
+  "exclude": ["node_modules", "dist", "src/modules/zarp-mailer/_legacy"]
 }

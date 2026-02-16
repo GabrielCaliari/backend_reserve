@@ -4,7 +4,7 @@ import {
     ValidationOptions,
     registerDecorator,
 } from 'class-validator';
-import { isValidCPF } from 'src/core/functions';
+import { isValidCPF } from '@/shared/helpers';
 
 @ValidatorConstraint({ async: false })
 export class IsCPFConstraint implements ValidatorConstraintInterface {

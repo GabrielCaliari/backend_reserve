@@ -1,7 +1,16 @@
-import 'dotenv/config';
+﻿import 'dotenv/config';
 import { PrismaClient } from "../../src/generated/prisma/client";
 import { PrismaPg } from '@prisma/adapter-pg';
-import Encrypt from "../../src/core/providers/Encrypt";
+import * as crypto from 'crypto';
+
+/** Standalone PBKDF2 hash for seed scripts (mirrors HashProvider) */
+function hashPassword(value: string): { salt: string; hash: string } {
+    const pk = process.env.ENCRYPT_PRIVATE_KEY;
+    if (!pk) throw new Error('ENCRYPT_PRIVATE_KEY env var not set');
+    const salt = crypto.randomBytes(16).toString('hex');
+    const hash = crypto.pbkdf2Sync(value, salt + pk, 856, 64, 'sha512').toString('hex');
+    return { salt, hash };
+}
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
@@ -27,7 +36,7 @@ export async function seedAdmin() {
         // Emails permitidos na seed
         const allowedEmails = admins.map(a => a.email);
         
-        // Admins a serem deletados (que não estão na lista)
+        // Admins a serem deletados (que nÃ£o estÃ£o na lista)
         const adminsToDelete = allAdmins.filter(admin => !allowedEmails.includes(admin.email));
         
         let deletados = 0;
@@ -70,7 +79,7 @@ export async function seedAdmin() {
             if (adminExists) {
                 // Atualizar admin existente (sobrescrever dados)
                 await prisma.$transaction(async (tx) => {
-                    // Atualizar informações do admin
+                    // Atualizar informaÃ§Ãµes do admin
                     await tx.admin.update({
                         where: {
                             id: adminExists.id
@@ -81,7 +90,7 @@ export async function seedAdmin() {
                         }
                     });
     
-                    const { hash, salt } = Encrypt.encrypt(admin.password);
+                    const { hash, salt } = hashPassword(admin.password);
     
                     // Atualizar ou criar credenciais
                     await tx.adminCredential.upsert({
@@ -111,7 +120,7 @@ export async function seedAdmin() {
                         }
                     });
     
-                    const { hash, salt } = Encrypt.encrypt(admin.password);
+                    const { hash, salt } = hashPassword(admin.password);
     
                     await tx.adminCredential.create({
                         data: {
@@ -132,7 +141,7 @@ export async function seedAdmin() {
         return { inseridos, atualizados };
     }
 
-    // Primeiro deletar admins antigos que não estão na lista
+    // Primeiro deletar admins antigos que nÃ£o estÃ£o na lista
     const deletados = await deleteOldAdmins(admin);
 
     // Depois criar/atualizar os admins da lista
