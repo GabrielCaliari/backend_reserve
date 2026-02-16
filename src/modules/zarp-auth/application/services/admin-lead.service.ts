@@ -1,7 +1,7 @@
 ﻿import { Injectable } from '@nestjs/common';
 import axios from 'axios';
-import { ELeadStatus } from '@/@types/@lead';
-import { ETemperature } from '@/@types/@lead-qualification-message';
+import { ELeadStatus } from '@/modules/zarp-auth/domain/enums/lead.enum';
+import { ETemperature } from '@/modules/zarp-auth/domain/enums/temperature.enum';
 import LeadQualificationMessageRepository from '../../infrastructure/repositories/lead-qualification-message.repository';
 import LeadRepository from '../../infrastructure/repositories/lead.repository';
 import { errorTypes } from '@/shared/constants/error-types';

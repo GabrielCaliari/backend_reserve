@@ -4,16 +4,16 @@ import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 
 export class CreateLead {
     @ApiPropertyOptional({
-        description: 'Nome do lead',
-        example: 'JoÃ£o Silva'
+        description: 'Lead name',
+        example: 'John Smith'
     })
     @IsString()
     @IsOptional()
     name?: string;
     
     @ApiPropertyOptional({
-        description: 'Email do lead',
-        example: 'joao.silva@email.com'
+        description: 'Lead email address',
+        example: 'john.smith@email.com'
     })
     @IsString()
     @IsEmail()
@@ -21,7 +21,7 @@ export class CreateLead {
     email?: string;
     
     @ApiPropertyOptional({
-        description: 'NÃºmero de telefone do lead',
+        description: 'Lead phone number',
         example: '11999999999'
     })
     @IsString()
@@ -29,7 +29,7 @@ export class CreateLead {
     phone_number?: string;
     
     @ApiPropertyOptional({
-        description: 'Origem do lead',
+        description: 'Lead origin',
         enum: EOriginLead,
         example: EOriginLead.page
     })
@@ -38,7 +38,7 @@ export class CreateLead {
     origin?: EOriginLead;
     
     @ApiPropertyOptional({
-        description: 'Fonte de origem do lead',
+        description: 'Lead origin source',
         example: 'Google Ads'
     })
     @IsString()
@@ -46,16 +46,16 @@ export class CreateLead {
     origin_font?: string;
     
     @ApiPropertyOptional({
-        description: 'DescriÃ§Ã£o ou observaÃ§Ãµes sobre o lead',
-        example: 'Lead interessado em planos empresariais'
+        description: 'Description or notes about the lead',
+        example: 'Lead interested in enterprise plans'
     })
     @IsString()
     @IsOptional()
     description: string;
     
     @ApiProperty({
-        description: 'Dados adicionais do lead em formato JSON',
-        example: { interesse: 'plano-premium', origem_campanha: 'black-friday' }
+        description: 'Additional lead data in JSON format',
+        example: { interest: 'premium-plan', campaign_source: 'black-friday' }
     })
     @IsObject()
     data: {};
@@ -63,7 +63,7 @@ export class CreateLead {
 
 export class LeadQuery {
     @ApiPropertyOptional({
-        description: 'NÃºmero da pÃ¡gina',
+        description: 'Page number',
         example: '1',
         default: '1'
     })
@@ -72,7 +72,7 @@ export class LeadQuery {
     page: string;
 
     @ApiPropertyOptional({
-        description: 'Limite de itens por pÃ¡gina',
+        description: 'Items per page',
         example: '30',
         default: '30'
     })

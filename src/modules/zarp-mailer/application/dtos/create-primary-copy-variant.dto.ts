@@ -10,11 +10,11 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 function hasXSS(value: string): boolean {
   if (typeof value !== 'string') return false;
-  // Detecta <script>...</script>
+  // Detects <script>...</script>
   const scriptTag = /<script[\s\S]*?>[\s\S]*?<\/script>/i;
-  // Detecta atributos on* dentro de tags HTML
+  // Detects on* event attributes inside HTML tags
   const onAttr = /<[^>]+\s(on\w+)\s*=\s*['"][^'"]*['"]/i;
-  // Detecta javascript: em atributos href ou src
+  // Detects javascript: in href or src attributes
   const jsProtocol = /<[^>]+(href|src)\s*=\s*['"]javascript:[^'"]*['"]/i;
   return scriptTag.test(value) || onAttr.test(value) || jsProtocol.test(value);
 }
@@ -32,7 +32,7 @@ export function NoXSS(validationOptions?: ValidationOptions) {
           return !hasXSS(value);
         },
         defaultMessage(args: ValidationArguments) {
-          return `${args.property} contém possíveis scripts maliciosos (XSS)`;
+          return `${args.property} contains potential malicious scripts (XSS)`;
         },
       },
     });
@@ -41,52 +41,52 @@ export function NoXSS(validationOptions?: ValidationOptions) {
 
 export class CreatePrimaryCopyVariantDto {
   @ApiProperty({
-    description: 'Conteúdo HTML do email (validado contra XSS)',
-    example: '<h1>Promoção {{discount}}% OFF</h1><p>Olá {{name}}, aproveite!</p>',
+    description: 'Email HTML content (validated against XSS)',
+    example: '<h1>Sale {{discount}}% OFF</h1><p>Hello {{name}}, enjoy!</p>',
   })
   @IsString()
-  @NoXSS({ message: 'HTML contém possíveis scripts maliciosos (XSS)' })
+  @NoXSS({ message: 'HTML contains potential malicious scripts (XSS)' })
   html: string;
 
   @ApiProperty({
-    description: 'Conteúdo Markdown do email (validado contra XSS)',
-    example: '# Promoção {{discount}}% OFF\n\nOlá {{name}}, aproveite!',
+    description: 'Email Markdown content (validated against XSS)',
+    example: '# Sale {{discount}}% OFF\n\nHello {{name}}, enjoy!',
   })
   @IsString()
-  @NoXSS({ message: 'Markdown contém possíveis scripts maliciosos (XSS)' })
+  @NoXSS({ message: 'Markdown contains potential malicious scripts (XSS)' })
   md: string;
 
   @ApiProperty({
-    description: 'Assunto do email',
-    example: 'Black Friday: 50% OFF em todos os planos!',
+    description: 'Email subject line',
+    example: 'Black Friday: 50% OFF on all plans!',
   })
   @IsString()
   subject: string;
 
   @ApiProperty({
-    description: 'Nome do remetente',
-    example: 'Equipe Zarp',
+    description: 'Sender display name',
+    example: 'Zarp Team',
   })
   @IsString()
   from_name: string;
 
   @ApiPropertyOptional({
-    description: 'Pré-header do email (texto visível na prévia)',
-    example: 'Não perca essa oportunidade!',
+    description: 'Email pre-header text (visible in inbox preview)',
+    example: 'Do not miss this opportunity!',
   })
   @IsString()
   @IsOptional()
   pre_header?: string;
 
   @ApiProperty({
-    description: 'Usar header padrão do template',
+    description: 'Use default template header',
     example: true,
   })
   @IsBoolean()
   use_header: boolean;
 
   @ApiProperty({
-    description: 'Usar footer padrão do template',
+    description: 'Use default template footer',
     example: true,
   })
   @IsBoolean()

@@ -1,11 +1,12 @@
-﻿import { ICreateAPIToken, IUpdateAPIToken } from "@/@types/@api-token";
+﻿import { ICreateAPIToken, IUpdateAPIToken } from '@/modules/zarp-brands/domain/interfaces/api-token.repository.interface';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@/shared/database/prisma.service';
 import { RepositoryException } from '@/shared/exceptions';
 import { isApiTokenDataValidToCreate, isApiTokenDataValidToUpdate } from "@/modules/zarp-brands/domain/validators/api-token.validator";
+import { IAPITokenRepository } from '@/modules/zarp-brands/domain/interfaces';
 
 @Injectable()
-export default class APITokenRepository {
+export default class APITokenRepository implements IAPITokenRepository {
     constructor(private readonly prisma: PrismaService) {}
     async create(data: ICreateAPIToken) {
         try {

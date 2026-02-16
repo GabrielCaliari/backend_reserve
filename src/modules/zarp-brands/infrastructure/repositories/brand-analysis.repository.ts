@@ -1,35 +1,14 @@
 ﻿import { PrismaClient } from "@/generated/prisma/client";
-import { EBrandAnalysisTokenStatus } from "@/@types/@brand-analysis-token";
+import { EBrandAnalysisTokenStatus } from '@/modules/zarp-brands/domain/enums/brand-analysis-token-status.enum';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@/shared/database/prisma.service';
 import { RepositoryException } from '@/shared/exceptions';
+import { IBrandAnalysisRepository, IBrandAnalysis, IBrandAnalysisRequest, IBrandAnalysisToken } from '@/modules/zarp-brands/domain/interfaces';
 
-export interface IBrandAnalysis {
-    html_data_response: object;
-    json_data_response: object;
-    md_data_reposnse: object;
-    response: object;
-    user_message: object;
-    brand: string;
-    niche: string;
-    description: string;
-    user_id: number;
-}
-
-export interface IBrandAnalysisRequest {
-    valid: boolean;
-    brand_analysis_token_id: number;
-    brand_analysis_id?: number;
-    user_id: number;
-}
-
-export interface IBrandAnalysisToken {
-    status: number;
-    user_id: number;
-}
+export { IBrandAnalysis, IBrandAnalysisRequest, IBrandAnalysisToken };
 
 @Injectable()
-export default class BrandAnalysisRepository {
+export default class BrandAnalysisRepository implements IBrandAnalysisRepository {
     constructor(private readonly prisma: PrismaService) {}
     async create(data: IBrandAnalysis, tx?: PrismaClient) {
         try {

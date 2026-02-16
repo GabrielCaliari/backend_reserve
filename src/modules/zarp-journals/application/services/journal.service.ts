@@ -1,4 +1,4 @@
-﻿import { Injectable } from '@nestjs/common';
+﻿import { Inject, Injectable } from '@nestjs/common';
 import { errorTypes } from '@/shared/constants/error-types';
 import { converterParaData, errorResponse } from '@/shared/helpers';
 
@@ -8,8 +8,12 @@ import * as unzipper from 'unzipper';
 import * as AWS from '@aws-sdk/client-s3';
 
 import axios from 'axios';
-import JournalRepository from '../../infrastructure/repositories/journal.repository';
-import JournalToFetchRepository from '../../infrastructure/repositories/journal-to-fetch.repository';
+import {
+    IJournalRepository,
+    JOURNAL_REPOSITORY,
+    IJournalToFetchRepository,
+    JOURNAL_TO_FETCH_REPOSITORY,
+} from '../../domain/interfaces';
 import { randomUUID } from 'crypto';
 import { parseString } from "xml2js";
 import { JournalAlert } from '@/generated/prisma/client';
@@ -20,8 +24,10 @@ import { PrismaService } from '@/shared/database/prisma.service';
 @Injectable()
 export class JournalService {
     constructor(
-        private readonly journalRepository: JournalRepository,
-        private readonly journalToFetchRepository: JournalToFetchRepository,
+        @Inject(JOURNAL_REPOSITORY)
+        private readonly journalRepository: IJournalRepository,
+        @Inject(JOURNAL_TO_FETCH_REPOSITORY)
+        private readonly journalToFetchRepository: IJournalToFetchRepository,
         private readonly prisma: PrismaService,
     ) { }
 

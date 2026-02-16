@@ -3,16 +3,16 @@ import { Process, Processor } from "@nestjs/bull";
 import { Job } from "bull";
 import { ProviderException } from '@/shared/exceptions';
 import EmailCampaignRepository from '@/modules/zarp-mailer/infrastructure/repositories/email-campaign-legacy.repository';
-import { EEmailCampaignStatus } from "@/@types/@Email-campaign";
+import { EEmailCampaignStatus } from '@/modules/zarp-mailer/domain/enums/email-campaign.enum';
 import CampaignBatchRepository from '@/modules/zarp-mailer/infrastructure/repositories/campaign-batch.repository';
-import { ECampaignBatchStatus } from "@/@types/@campaign-batch";
+import { ECampaignBatchStatus } from '@/modules/zarp-mailer/domain/enums/campaign-batch-status.enum';
 
 import { DeliveryRepository } from '@/modules/zarp-mailer/infrastructure/repositories/delivery.repository';
-import { ESMTPProvider } from "@/@types/@smtp-server";
+import { ESMTPProvider } from '@/modules/zarp-mailer/domain/enums/smtp-provider.enum';
 import SMTPServerRepository from '@/modules/zarp-mailer/infrastructure/repositories/smtp-server-legacy.repository';
 import { EncryptProvider } from '@/shared/providers/encrypt.provider';
 import { env } from '@/shared/helpers';
-import { EDeliveryStatus } from "@/@types/@delivery";
+import { EDeliveryStatus } from '@/modules/zarp-mailer/domain/enums/delivery-status.enum';
 const { JSDOM } = require('jsdom');
 
 const nodemailer = require('nodemailer');

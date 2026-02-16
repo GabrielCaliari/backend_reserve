@@ -1,26 +1,14 @@
-﻿import { EUserSex } from "@/@types/@user-sex";
+﻿import { EUserSex } from '@/modules/zarp-auth/domain/enums/user-sex.enum';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@/shared/database/prisma.service';
 import { RepositoryException } from '@/shared/exceptions';
 import { HashProvider } from '@/shared/providers/hash.provider';
+import { IUserRepository, ICreateUser, IUserFindInclude } from '@/modules/zarp-auth/domain/interfaces';
 
-export interface ICreateUser {
-    email: string;
-    name: string;
-    password: string;
-    phone_number: string;
-    // sex: EUserSex;
-    cpf: string;
-    // date_of_birth: Date;
-}
-
-export interface IUserFindInclude {
-    Plan?: boolean,
-    Subscription?: boolean
-}
+export { ICreateUser, IUserFindInclude };
 
 @Injectable()
-export default class UserRepository {
+export default class UserRepository implements IUserRepository {
     constructor(
         private readonly prisma: PrismaService,
         private readonly hashProvider: HashProvider,

@@ -1,14 +1,15 @@
 ﻿import { Prisma } from "@/generated/prisma/client";
-import { ICreateLead, ILead } from "@/@types/@lead";
+import { ICreateLead, ILead } from '@/modules/zarp-auth/domain/enums/lead.enum';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@/shared/database/prisma.service';
 import { RepositoryException } from '@/shared/exceptions';
 import { Lead } from "@/modules/zarp-auth/domain/entities/lead.entity";
 import PhoneNumber from "@/shared/domain/value-objects/phone-number.vo";
 import Email from "@/shared/domain/value-objects/email.vo";
+import { ILeadRepository } from '@/modules/zarp-auth/domain/interfaces';
 
 @Injectable()
-export default class LeadRepository {
+export default class LeadRepository implements ILeadRepository {
     constructor(private readonly prisma: PrismaService) {}
     async create(data: Lead) {
         try {

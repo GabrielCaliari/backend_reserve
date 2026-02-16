@@ -6,6 +6,9 @@ import { PiBotController } from './infrastructure/controllers/pi-bot.controller'
 // Local repositories
 import AdditionalTokenPackRepository from './infrastructure/repositories/additional-token-pack.repository';
 
+// DIP tokens
+import { ADDITIONAL_TOKEN_PACK_REPOSITORY } from './domain/interfaces';
+
 /**
  * Zarp PI Bot Module
  * Bounded context: AI-powered brand analysis bot
@@ -20,7 +23,16 @@ import AdditionalTokenPackRepository from './infrastructure/repositories/additio
 
     // Local repositories
     AdditionalTokenPackRepository,
+
+    // DIP repository tokens
+    { provide: ADDITIONAL_TOKEN_PACK_REPOSITORY, useExisting: AdditionalTokenPackRepository },
   ],
-  exports: [PiBotService],
+  exports: [
+    PiBotService,
+    // Concrete repos (backward compat)
+    AdditionalTokenPackRepository,
+    // DIP tokens
+    ADDITIONAL_TOKEN_PACK_REPOSITORY,
+  ],
 })
 export class ZarpPiBotModule {}

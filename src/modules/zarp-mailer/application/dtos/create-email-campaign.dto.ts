@@ -3,8 +3,8 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateEmailCampaignDto {
   @ApiProperty({
-    description: 'Nome da campanha de email',
-    example: 'Campanha Black Friday 2026',
+    description: 'Email campaign name',
+    example: 'Black Friday Campaign 2026',
   })
   @IsString()
   @IsNotEmpty()
@@ -13,7 +13,7 @@ export class CreateEmailCampaignDto {
 
 export class EmailCampaignQueryDto {
   @ApiPropertyOptional({
-    description: 'Número da página',
+    description: 'Page number',
     example: '1',
     default: '1',
   })
@@ -22,7 +22,7 @@ export class EmailCampaignQueryDto {
   page?: string;
 
   @ApiPropertyOptional({
-    description: 'Limite de itens por página',
+    description: 'Items per page',
     example: '30',
     default: '30',
   })

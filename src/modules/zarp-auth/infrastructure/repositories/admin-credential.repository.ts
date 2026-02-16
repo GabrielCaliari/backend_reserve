@@ -2,9 +2,10 @@
 import { PrismaService } from '@/shared/database/prisma.service';
 import { RepositoryException } from '@/shared/exceptions';
 import { HashProvider } from '@/shared/providers/hash.provider';
+import { IAdminCredentialRepository } from '@/modules/zarp-auth/domain/interfaces';
 
 @Injectable()
-export default class AdminCredentialRepository {
+export default class AdminCredentialRepository implements IAdminCredentialRepository {
     constructor(
         private readonly prisma: PrismaService,
         private readonly hashProvider: HashProvider,

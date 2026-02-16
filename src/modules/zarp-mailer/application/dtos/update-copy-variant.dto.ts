@@ -4,7 +4,7 @@ import { CopyVariationType } from '@/modules/zarp-mailer/domain/enums';
 
 export class UpdateCopyVariantDto {
   @ApiProperty({
-    description: 'Tipo de variação de copy',
+    description: 'Copy variation type',
     enum: CopyVariationType,
     example: CopyVariationType.AI,
   })

@@ -3,8 +3,8 @@ import { ApiProperty } from "@nestjs/swagger";
 
 export class CreateEventNotificationDTO {
     @ApiProperty({
-        description: 'Nome da notificação SMS',
-        example: 'Notificação de Boas-vindas'
+        description: 'SMS notification name',
+        example: 'Welcome Notification'
     })
     @IsString()
     @IsNotEmpty()
@@ -13,15 +13,15 @@ export class CreateEventNotificationDTO {
 
 export class CreateEventNotificationEventDTO {
     @ApiProperty({
-        description: 'Mensagem template com parâmetros dinâmicos (ex: Olá {{name}})',
-        example: 'Olá {{name}}, seu código de verificação é {{code}}'
+        description: 'Message template with dynamic parameters (e.g., Hello {{name}})',
+        example: 'Hello {{name}}, your verification code is {{code}}'
     })
     @IsString()
     @IsNotEmpty()
     message: string;
 
     @ApiProperty({
-        description: 'Número de telefone de destino (formato internacional)',
+        description: 'Destination phone number (international format)',
         example: '5511999999999'
     })
     @IsNotEmpty()
@@ -29,7 +29,7 @@ export class CreateEventNotificationEventDTO {
     destination_number: string;
 
     @ApiProperty({
-        description: 'Número de telefone remetente (formato internacional)',
+        description: 'Sender phone number (international format)',
         example: '5511888888888'
     })
     @IsNotEmpty()
@@ -37,8 +37,8 @@ export class CreateEventNotificationEventDTO {
     sender_number: string;
 
     @ApiProperty({
-        description: 'Parâmetros para substituir no template da mensagem',
-        example: { name: 'João', code: '1234' }
+        description: 'Parameters to replace in the message template',
+        example: { name: 'John', code: '1234' }
     })
     @IsObject()
     message_params: unknown;
@@ -46,7 +46,7 @@ export class CreateEventNotificationEventDTO {
 
 export class CreateEventNotificationEventParam {
     @ApiProperty({
-        description: 'UUID do webhook da notificação SMS',
+        description: 'SMS notification webhook UUID',
         example: '550e8400-e29b-41d4-a716-446655440000'
     })
     @IsString()
@@ -57,7 +57,7 @@ export class CreateEventNotificationEventParam {
 
 export class IdEventNotificationEventParam {
     @ApiProperty({
-        description: 'ID da notificação SMS',
+        description: 'SMS notification ID',
         example: '1'
     })
     @IsNumberString()
@@ -67,7 +67,7 @@ export class IdEventNotificationEventParam {
 
 export class IdNotificationEventNotificationEventParam {
     @ApiProperty({
-        description: 'ID da notificação SMS',
+        description: 'SMS notification ID',
         example: '1'
     })
     @IsNumberString()

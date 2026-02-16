@@ -1,26 +1,15 @@
 ﻿import { PrismaClient } from "@/generated/prisma/client";
-import { EBrandMonitoring } from "@/@types/@brand-monitoring";
-import { EStatus } from "@/@types/@plan";
+import { EBrandMonitoring } from '@/modules/zarp-brands/domain/enums/brand-monitoring-status.enum';
+import { EStatus } from '@/modules/zarp-auth/domain/enums/plan-status.enum';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@/shared/database/prisma.service';
 import { RepositoryException } from '@/shared/exceptions';
+import { IBrandRepository, IBrandFields, IBrandInclude } from '@/modules/zarp-brands/domain/interfaces';
 
-export interface IBrandFields {
-    id?: number;
-    name: string;
-    identifier?: string;
-    email: string;
-    phone_number: string;
-    inpi_number?: string;
-    user_id: number;
-}
-
-export interface IBrandInclude {
-    BrandAlert: boolean;
-}
+export { IBrandFields, IBrandInclude };
 
 @Injectable()
-export default class BrandRepository {
+export default class BrandRepository implements IBrandRepository {
     constructor(private readonly prisma: PrismaService) {}
     async create(data: Omit<IBrandFields, 'id'>, rx?: PrismaClient) {
         try {

@@ -3,15 +3,12 @@ import { PrismaService } from '@/shared/database/prisma.service';
 import { RepositoryException } from '@/shared/exceptions';
 import { HashProvider } from '@/shared/providers/hash.provider';
 import { JwtProvider } from '@/shared/providers/jwt.provider';
+import { IAdminSessionTokenRepository, ICreateAdminSessionToken } from '@/modules/zarp-auth/domain/interfaces';
 
-export interface ICreateAdminSessionToken {
-    password: string,
-    admin_id: number;
-    payload: {}
-}
+export { ICreateAdminSessionToken };
 
 @Injectable()
-export default class AdminSessionTokenRepository {
+export default class AdminSessionTokenRepository implements IAdminSessionTokenRepository {
     constructor(
         private readonly prisma: PrismaService,
         private readonly hashProvider: HashProvider,

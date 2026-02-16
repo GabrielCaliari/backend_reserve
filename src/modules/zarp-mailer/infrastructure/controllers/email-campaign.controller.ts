@@ -16,22 +16,22 @@ export class EmailCampaignController {
   @Post('/')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({
-    summary: 'Criar campanha de email',
-    description: 'Cria uma nova campanha de email marketing em status draft',
+    summary: 'Create email campaign',
+    description: 'Creates a new email marketing campaign in draft status',
   })
-  @ApiResponse({ status: 201, description: 'Campanha criada com sucesso' })
-  @ApiResponse({ status: 400, description: 'Dados inválidos' })
-  @ApiResponse({ status: 404, description: 'SMTP server padrão não encontrado' })
+  @ApiResponse({ status: 201, description: 'Campaign created successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid data' })
+  @ApiResponse({ status: 404, description: 'Default SMTP server not found' })
   async createEmailCampaign(@Body() dto: CreateEmailCampaignDto) {
     return this.emailCampaignService.createEmailCampaign(dto.name);
   }
 
   @Get('/')
   @ApiOperation({
-    summary: 'Listar campanhas',
-    description: 'Retorna uma lista paginada de campanhas de email',
+    summary: 'List campaigns',
+    description: 'Returns a paginated list of email campaigns',
   })
-  @ApiResponse({ status: 200, description: 'Lista de campanhas com paginação' })
+  @ApiResponse({ status: 200, description: 'Paginated campaign list' })
   async getAllEmailCampaigns(@Query() query: EmailCampaignQueryDto) {
     const page = query.page ? parseInt(query.page, 10) : 1;
     const limit = query.limit ? parseInt(query.limit, 10) : 30;
@@ -41,25 +41,25 @@ export class EmailCampaignController {
 
   @Get('/:id')
   @ApiOperation({
-    summary: 'Buscar campanha por ID',
-    description: 'Retorna os detalhes de uma campanha específica',
+    summary: 'Get campaign by ID',
+    description: 'Returns details of a specific campaign',
   })
-  @ApiParam({ name: 'id', description: 'ID da campanha', type: 'number' })
-  @ApiResponse({ status: 200, description: 'Detalhes da campanha' })
-  @ApiResponse({ status: 404, description: 'Campanha não encontrada' })
+  @ApiParam({ name: 'id', description: 'Campaign ID', type: 'number' })
+  @ApiResponse({ status: 200, description: 'Campaign details' })
+  @ApiResponse({ status: 404, description: 'Campaign not found' })
   async getEmailCampaignById(@Param('id') id: string) {
     return this.emailCampaignService.getEmailCampaignById(parseInt(id, 10));
   }
 
   @Put('/:id/copy-variant')
   @ApiOperation({
-    summary: 'Atualizar tipo de variação de copy',
-    description: 'Atualiza o tipo de variação de copy de uma campanha (AI ou manual)',
+    summary: 'Update copy variation type',
+    description: 'Updates the copy variation type of a campaign (AI or manual)',
   })
-  @ApiParam({ name: 'id', description: 'ID da campanha', type: 'number' })
-  @ApiResponse({ status: 200, description: 'Tipo de variação atualizado com sucesso' })
-  @ApiResponse({ status: 400, description: 'Operação inválida ou campanha não está em draft' })
-  @ApiResponse({ status: 404, description: 'Campanha não encontrada' })
+  @ApiParam({ name: 'id', description: 'Campaign ID', type: 'number' })
+  @ApiResponse({ status: 200, description: 'Copy variation type updated successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid operation or campaign not in draft' })
+  @ApiResponse({ status: 404, description: 'Campaign not found' })
   async updateCopyVariant(@Param('id') id: string, @Body() dto: UpdateCopyVariantDto) {
     return this.emailCampaignService.updateCopyVariationType(
       parseInt(id, 10),
@@ -69,13 +69,13 @@ export class EmailCampaignController {
 
   @Put('/:id/batch-size')
   @ApiOperation({
-    summary: 'Atualizar tamanho do batch',
-    description: 'Atualiza o tamanho do batch de envios da campanha (mínimo 100)',
+    summary: 'Update batch size',
+    description: 'Updates the campaign sending batch size (minimum 100)',
   })
-  @ApiParam({ name: 'id', description: 'ID da campanha', type: 'number' })
-  @ApiResponse({ status: 200, description: 'Tamanho do batch atualizado com sucesso' })
-  @ApiResponse({ status: 400, description: 'Valor inválido ou campanha não está em draft' })
-  @ApiResponse({ status: 404, description: 'Campanha não encontrada' })
+  @ApiParam({ name: 'id', description: 'Campaign ID', type: 'number' })
+  @ApiResponse({ status: 200, description: 'Batch size updated successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid value or campaign not in draft' })
+  @ApiResponse({ status: 404, description: 'Campaign not found' })
   async updateCampaignBatchSize(
     @Param('id') id: string,
     @Body() dto: UpdateCampaignBatchSizeDto,
@@ -89,13 +89,13 @@ export class EmailCampaignController {
   @Post('/:id/close-setup')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
-    summary: 'Fechar setup da campanha',
-    description: 'Finaliza a configuração da campanha e move para status pending',
+    summary: 'Close campaign setup',
+    description: 'Finalizes the campaign configuration and moves to pending status',
   })
-  @ApiParam({ name: 'id', description: 'ID da campanha', type: 'number' })
-  @ApiResponse({ status: 200, description: 'Setup fechado com sucesso' })
-  @ApiResponse({ status: 400, description: 'Campanha não está em draft' })
-  @ApiResponse({ status: 404, description: 'Campanha não encontrada' })
+  @ApiParam({ name: 'id', description: 'Campaign ID', type: 'number' })
+  @ApiResponse({ status: 200, description: 'Setup closed successfully' })
+  @ApiResponse({ status: 400, description: 'Campaign is not in draft' })
+  @ApiResponse({ status: 404, description: 'Campaign not found' })
   async closeSetup(@Param('id') id: string) {
     return this.emailCampaignService.closeSetup(parseInt(id, 10));
   }
@@ -103,13 +103,13 @@ export class EmailCampaignController {
   @Post('/:id/pause')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
-    summary: 'Pausar campanha',
-    description: 'Pausa uma campanha em execução ou agendada',
+    summary: 'Pause campaign',
+    description: 'Pauses a running or scheduled campaign',
   })
-  @ApiParam({ name: 'id', description: 'ID da campanha', type: 'number' })
-  @ApiResponse({ status: 200, description: 'Campanha pausada com sucesso' })
-  @ApiResponse({ status: 400, description: 'Status inválido para pausar' })
-  @ApiResponse({ status: 404, description: 'Campanha não encontrada' })
+  @ApiParam({ name: 'id', description: 'Campaign ID', type: 'number' })
+  @ApiResponse({ status: 200, description: 'Campaign paused successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid status for pausing' })
+  @ApiResponse({ status: 404, description: 'Campaign not found' })
   async pauseCampaign(@Param('id') id: string) {
     return this.emailCampaignService.pauseCampaign(parseInt(id, 10));
   }
@@ -117,13 +117,13 @@ export class EmailCampaignController {
   @Post('/:id/resume')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
-    summary: 'Retomar campanha',
-    description: 'Retoma uma campanha pausada',
+    summary: 'Resume campaign',
+    description: 'Resumes a paused campaign',
   })
-  @ApiParam({ name: 'id', description: 'ID da campanha', type: 'number' })
-  @ApiResponse({ status: 200, description: 'Campanha retomada com sucesso' })
-  @ApiResponse({ status: 400, description: 'Campanha não está pausada' })
-  @ApiResponse({ status: 404, description: 'Campanha não encontrada' })
+  @ApiParam({ name: 'id', description: 'Campaign ID', type: 'number' })
+  @ApiResponse({ status: 200, description: 'Campaign resumed successfully' })
+  @ApiResponse({ status: 400, description: 'Campaign is not paused' })
+  @ApiResponse({ status: 404, description: 'Campaign not found' })
   async resumeCampaign(@Param('id') id: string) {
     return this.emailCampaignService.resumeCampaign(parseInt(id, 10));
   }

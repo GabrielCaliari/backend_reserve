@@ -3,15 +3,12 @@ import { PrismaService } from '@/shared/database/prisma.service';
 import { RepositoryException } from '@/shared/exceptions';
 import { HashProvider } from '@/shared/providers/hash.provider';
 import { JwtProvider } from '@/shared/providers/jwt.provider';
+import { IUserSessionTokenRepository, ICreateUserSessionToken } from '@/modules/zarp-auth/domain/interfaces';
 
-export interface ICreateUserSessionToken {
-    password: string,
-    userId: number;
-    payload: {}
-}
+export { ICreateUserSessionToken };
 
 @Injectable()
-export default class UserSessionTokenRepository {
+export default class UserSessionTokenRepository implements IUserSessionTokenRepository {
     constructor(
         private readonly prisma: PrismaService,
         private readonly hashProvider: HashProvider,

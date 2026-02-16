@@ -12,10 +12,10 @@ export class ConfigController {
     ) { }
 
     @Post('/smtp-server')
-    @ApiOperation({ summary: 'Criar servidor SMTP', description: 'Cria uma nova configuração de servidor SMTP ou provedor de email' })
-    @ApiResponse({ status: 201, description: 'Servidor SMTP criado com sucesso' })
-    @ApiResponse({ status: 400, description: 'Dados inválidos' })
-    @ApiResponse({ status: 500, description: 'Erro ao criar servidor SMTP' })
+    @ApiOperation({ summary: 'Create SMTP server', description: 'Creates a new SMTP server or email provider configuration' })
+    @ApiResponse({ status: 201, description: 'SMTP server created successfully' })
+    @ApiResponse({ status: 400, description: 'Invalid data' })
+    @ApiResponse({ status: 500, description: 'Failed to create SMTP server' })
     async createSmtpServer(
         @Body() body: CreateSmtpServerDTO,
         @Req() req: Request,
@@ -33,9 +33,9 @@ export class ConfigController {
     }
 
     @Get('/smtp-server')
-    @ApiOperation({ summary: 'Listar servidores SMTP', description: 'Retorna todos os servidores SMTP configurados' })
-    @ApiResponse({ status: 200, description: 'Lista de servidores SMTP' })
-    @ApiResponse({ status: 500, description: 'Erro ao buscar servidores SMTP' })
+    @ApiOperation({ summary: 'List SMTP servers', description: 'Returns all configured SMTP servers' })
+    @ApiResponse({ status: 200, description: 'SMTP server list' })
+    @ApiResponse({ status: 500, description: 'Failed to fetch SMTP servers' })
     async findSmtpServers(
         @Req() req: Request,
         @Res() res: Response

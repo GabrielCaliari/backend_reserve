@@ -1,9 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@/shared/database/prisma.service';
 import { RepositoryException } from '@/shared/exceptions';
+import { ICnaeRepository } from '@/modules/zarp-cnpjs/domain/interfaces';
 
 @Injectable()
-export default class CnaeRepository {
+export default class CnaeRepository implements ICnaeRepository {
     constructor(private readonly prisma: PrismaService) {}
 
     async find() {

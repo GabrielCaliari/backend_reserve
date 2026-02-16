@@ -2,7 +2,7 @@
 import { PrismaService } from '@/shared/database/prisma.service';
 import { RepositoryException } from '@/shared/exceptions';
 import { CampaignBatch, PrismaClient } from "@/generated/prisma/client";
-import { ECampaignBatchStatus } from "@/@types/@campaign-batch";
+import { ECampaignBatchStatus } from '@/modules/zarp-mailer/domain/enums/campaign-batch-status.enum';
 
 @Injectable()
 export default class CampaignBatchRepository {

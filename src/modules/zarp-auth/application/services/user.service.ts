@@ -1,28 +1,36 @@
-﻿import { Injectable } from '@nestjs/common';
+﻿import { Inject, Injectable } from '@nestjs/common';
 import { errorTypes } from '@/shared/constants/error-types';
 import { errorResponse, gerarSenha } from '@/shared/helpers';
-import UserRepository, { ICreateUser } from '../../infrastructure/repositories/user.repository';
-import { IAuthenticateUser, IValidateUserToken } from '@/@types/@authenticate-user';
-import UserCredentialRepository from '../../infrastructure/repositories/user-credential.repository';
-import UserSessionTokenRepository from '../../infrastructure/repositories/user-session-token.repository';
+import { IAuthenticateUser, IValidateUserToken } from '@/modules/zarp-auth/domain/interfaces/authenticate-user.interface';
+import {
+    IUserRepository,
+    IUserCredentialRepository,
+    IUserSessionTokenRepository,
+    IPlanRepository,
+    ICreateUser,
+    USER_REPOSITORY,
+    USER_CREDENTIAL_REPOSITORY,
+    USER_SESSION_TOKEN_REPOSITORY,
+    PLAN_REPOSITORY,
+} from '@/modules/zarp-auth/domain/interfaces';
+// Cross-context repositories (temporary, to be replaced by module imports)
 import SearchRepository from '@/modules/zarp-cnpjs/infrastructure/repositories/search.repository';
-import PlanRepository from '../../infrastructure/repositories/plan.repository';
 import BrandRepository from '@/modules/zarp-brands/infrastructure/repositories/brand.repository';
 import BrandAlertRepository from '@/modules/zarp-brands/infrastructure/repositories/brand-alert.repository';
-import { EStatus } from '@/@types/@plan';
+import { EStatus } from '@/modules/zarp-auth/domain/enums/plan-status.enum';
 import BrandAnalysisRepository from '@/modules/zarp-brands/infrastructure/repositories/brand-analysis.repository';
-import { EBrandAnalysisTokenStatus } from '@/@types/@brand-analysis-token';
+import { EBrandAnalysisTokenStatus } from '@/modules/zarp-brands/domain/enums/brand-analysis-token-status.enum';
 import AdditionalTokenPackRepository from '@/modules/zarp-pi-bot/infrastructure/repositories/additional-token-pack.repository';
 const Stripe = require('stripe');
 
 @Injectable()
 export class UserService {
     constructor(
-        private readonly userRepository: UserRepository,
-        private readonly userCredentialRepository: UserCredentialRepository,
-        private readonly userSessionTokenRepository: UserSessionTokenRepository,
+        @Inject(USER_REPOSITORY) private readonly userRepository: IUserRepository,
+        @Inject(USER_CREDENTIAL_REPOSITORY) private readonly userCredentialRepository: IUserCredentialRepository,
+        @Inject(USER_SESSION_TOKEN_REPOSITORY) private readonly userSessionTokenRepository: IUserSessionTokenRepository,
         private readonly searchRepository: SearchRepository,
-        private readonly planRepository: PlanRepository,
+        @Inject(PLAN_REPOSITORY) private readonly planRepository: IPlanRepository,
         private readonly brandAlertRepository: BrandAlertRepository,
         private readonly brandRepository: BrandRepository,
         private readonly brandAnalysisRepository: BrandAnalysisRepository,

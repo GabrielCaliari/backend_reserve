@@ -21,6 +21,18 @@ import LeadRepository from './infrastructure/repositories/lead.repository';
 import LeadQualificationMessageRepository from './infrastructure/repositories/lead-qualification-message.repository';
 import PlanRepository from './infrastructure/repositories/plan.repository';
 
+// DIP tokens
+import {
+  ADMIN_REPOSITORY,
+  ADMIN_CREDENTIAL_REPOSITORY,
+  ADMIN_SESSION_TOKEN_REPOSITORY,
+  USER_REPOSITORY,
+  USER_CREDENTIAL_REPOSITORY,
+  USER_SESSION_TOKEN_REPOSITORY,
+  LEAD_REPOSITORY,
+  PLAN_REPOSITORY,
+} from './domain/interfaces';
+
 // Cross-context repositories (temporary, to be replaced by module imports)
 import SearchRepository from '@/modules/zarp-cnpjs/infrastructure/repositories/search.repository';
 import BrandRepository from '@/modules/zarp-brands/infrastructure/repositories/brand.repository';
@@ -82,6 +94,16 @@ import { FXGoogleAPITokenProvider } from '@/modules/zarp-auth/infrastructure/pro
     LeadQualificationMessageRepository,
     PlanRepository,
 
+    // DIP repository tokens (alias to concrete repos)
+    { provide: ADMIN_REPOSITORY, useExisting: AdminRepository },
+    { provide: ADMIN_CREDENTIAL_REPOSITORY, useExisting: AdminCredentialRepository },
+    { provide: ADMIN_SESSION_TOKEN_REPOSITORY, useExisting: AdminSessionTokenRepository },
+    { provide: USER_REPOSITORY, useExisting: UserRepository },
+    { provide: USER_CREDENTIAL_REPOSITORY, useExisting: UserCredentialRepository },
+    { provide: USER_SESSION_TOKEN_REPOSITORY, useExisting: UserSessionTokenRepository },
+    { provide: LEAD_REPOSITORY, useExisting: LeadRepository },
+    { provide: PLAN_REPOSITORY, useExisting: PlanRepository },
+
     // Cross-context repositories (temporary coupling)
     SearchRepository,
     BrandRepository,
@@ -99,9 +121,24 @@ import { FXGoogleAPITokenProvider } from '@/modules/zarp-auth/infrastructure/pro
     UserJwtGuard,
     ADMIN_TOKEN_VALIDATOR,
     USER_TOKEN_VALIDATOR,
+    // Concrete repos (backward compat for cross-context consumers)
     AdminRepository,
     AdminCredentialRepository,
     AdminSessionTokenRepository,
+    UserRepository,
+    UserCredentialRepository,
+    UserSessionTokenRepository,
+    LeadRepository,
+    PlanRepository,
+    // DIP tokens
+    ADMIN_REPOSITORY,
+    ADMIN_CREDENTIAL_REPOSITORY,
+    ADMIN_SESSION_TOKEN_REPOSITORY,
+    USER_REPOSITORY,
+    USER_CREDENTIAL_REPOSITORY,
+    USER_SESSION_TOKEN_REPOSITORY,
+    LEAD_REPOSITORY,
+    PLAN_REPOSITORY,
     UserService,
   ],
 })

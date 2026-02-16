@@ -1,6 +1,6 @@
 ﻿import { Injectable } from '@nestjs/common';
 import axios from 'axios';
-import { MessageHistory } from '@/common/interfaces/message-history.interface';
+import { MessageHistory } from '@/modules/zarp-pi-bot/domain/interfaces/message-history.interface';
 import { errorTypes } from '@/shared/constants/error-types';
 import { errorResponse } from '@/shared/helpers';
 

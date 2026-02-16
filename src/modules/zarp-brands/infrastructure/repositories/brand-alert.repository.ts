@@ -1,35 +1,14 @@
 ﻿import { PrismaClient } from "@/generated/prisma/client";
-import { EBrandMonitoring } from "@/@types/@brand-monitoring";
+import { EBrandMonitoring } from '@/modules/zarp-brands/domain/enums/brand-monitoring-status.enum';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@/shared/database/prisma.service';
 import { RepositoryException } from '@/shared/exceptions';
+import { IBrandAlertRepository, IBrandAlert } from '@/modules/zarp-brands/domain/interfaces';
 
-export interface IBrandAlert {
-    brand?: string
-    deposit_date?: Date
-    conception_date?: Date
-    effective_date?: Date
-    nature?: string
-    presentation?: string
-    classe_nice?: object
-    prioridade_unionista?: object
-    apostila?: string
-    classe_viena: object
-    journal_number: string
-    journal_date: Date
-    process_number: string
-    attorney?: string
-    titular: object
-    despacho: object
-    sobrestador: object
-    brand_id: number
-    brand_monitoring_id: number
-    user_id: number
-    jornal_to_fetch_id: number
-}
+export { IBrandAlert };
 
 @Injectable()
-export default class BrandAlertRepository {
+export default class BrandAlertRepository implements IBrandAlertRepository {
     constructor(private readonly prisma: PrismaService) {}
     async createMany(data: IBrandAlert[], tx?: PrismaClient) {
         try {

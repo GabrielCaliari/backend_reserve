@@ -4,7 +4,6 @@
     "node_modules",
     "test",
     "dist",
-    "**/*spec.ts",
-    "src/modules/zarp-mailer/_legacy"
+    "**/*spec.ts"
   ]
 }

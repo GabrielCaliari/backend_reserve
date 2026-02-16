@@ -18,10 +18,11 @@
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false,
     "paths": {
+      "@/generated/*": ["prisma/generated/*"],
       "@/*": ["src/*"],
       "@/shared/*": ["src/shared/*"],
       "@/modules/*": ["src/modules/*"]
     }
   },
-  "exclude": ["node_modules", "dist", "src/modules/zarp-mailer/_legacy"]
+  "exclude": ["node_modules", "dist"]
 }

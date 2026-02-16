@@ -1,8 +1,11 @@
-﻿import { Injectable } from '@nestjs/common';
+﻿import { Inject, Injectable } from '@nestjs/common';
 import axios from 'axios';
 import { errorTypes } from '@/shared/constants/error-types';
 import { errorResponse } from '@/shared/helpers';
-import BrandAnalysisRepository from '../../infrastructure/repositories/brand-analysis.repository';
+import {
+    IBrandAnalysisRepository,
+    BRAND_ANALYSIS_REPOSITORY,
+} from '../../domain/interfaces';
 import UserRepository from '@/modules/zarp-auth/infrastructure/repositories/user.repository';
 
 import JournalAlertRepository from '@/modules/zarp-journals/infrastructure/repositories/journal-alert.repository';
@@ -12,7 +15,8 @@ const marked = require('marked');
 @Injectable()
 export class BrandAnalysisService {
     constructor(
-        private readonly brandAnalysisRepository: BrandAnalysisRepository,
+        @Inject(BRAND_ANALYSIS_REPOSITORY)
+        private readonly brandAnalysisRepository: IBrandAnalysisRepository,
         private readonly userRepository: UserRepository,
         private readonly journalAlertRepository: JournalAlertRepository,
         private readonly prisma: PrismaService,

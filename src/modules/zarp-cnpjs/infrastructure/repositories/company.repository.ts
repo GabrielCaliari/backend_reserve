@@ -1,54 +1,14 @@
 ﻿import { ViewCompany } from "@/generated/prisma/client";
-import { EBranchType, ESize, EStatus } from "@/@types/@company";
-import { EStatus as ECompanyExportStatus } from '@/@types/@company-export';
+import { EBranchType, ESize, EStatus } from '@/modules/zarp-cnpjs/domain/enums/company.enum';
+import { EStatus as ECompanyExportStatus } from '@/modules/zarp-cnpjs/domain/enums/company-export-status.enum';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@/shared/database/prisma.service';
 import { RepositoryException } from '@/shared/exceptions';
 import { convertSearchParamsToSQL } from '@/modules/zarp-cnpjs/infrastructure/helpers/sql-builder.helper';
 import { getKeysWithTrueValue } from '@/shared/helpers/array.helper';
+import { ICompanyRepository, ICompanyFields, ICreateCompanyExport } from '@/modules/zarp-cnpjs/domain/interfaces';
 
-export interface ICompanyFields {
-    id?: boolean;
-    cnpj: boolean;
-    branch_type?: boolean;
-    business_name?: boolean;
-    qualification_representative_before_cnpj?: boolean;
-    nacimal_simple_option?: boolean;
-    nacimal_simple_opting_date?: boolean;
-    mei_option?: boolean;
-    mei_opting_date?: boolean;
-    federative_entity?: boolean;
-    size?: boolean;
-    fantasy_name?: boolean;
-    social_capital?: boolean;
-    legal_nature?: boolean;
-    status?: boolean;
-    date_status?: boolean;
-    code_detail_status?: boolean;
-    outer_city?: boolean;
-    coutry_code?: boolean;
-    start_date?: boolean;
-    main_cnae?: boolean;
-    secondary_cnae?: boolean;
-    type_of_place?: boolean;
-    place?: boolean;
-    house_number?: boolean;
-    address_complement?: boolean;
-    district?: boolean;
-    cep?: boolean;
-    uf?: boolean;
-    city_code?: boolean;
-    ddd_1?: boolean;
-    phone_1?: boolean;
-    ddd_2?: boolean;
-    phone_2?: boolean;
-    ddd_fax?: boolean;
-    fax?: boolean;
-    email?: boolean;
-    special_citation?: boolean;
-    special_citation_date?: boolean;
-    load_update_date?: boolean;
-}
+export { ICompanyFields, ICreateCompanyExport };
 
 export interface ICreateCompany {
     cnpj: string;
@@ -92,20 +52,8 @@ export interface ICreateCompany {
     load_update_date: Date;
 }
 
-export interface ICreateCompanyExport {
-    total_exported: number;
-    company_count: number;
-    status: ECompanyExportStatus;
-    public_link?: string;
-    deletion_date?: Date;
-    page: number;
-    page_count: number;
-    filters: {};
-    user_id: number;
-}
-
 @Injectable()
-export default class CompanyRepository {
+export default class CompanyRepository implements ICompanyRepository {
     constructor(private readonly prisma: PrismaService) {}
 
     async count(where, pag?: { page?, limit, offset?}) {

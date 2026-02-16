@@ -15,9 +15,9 @@ export class EventNotificationController {
 
     @Post('/sms/create')
     @UseGuards(AdminJwtGuard)
-    @ApiOperation({ summary: 'Criar notificação SMS', description: 'Cria uma nova notificação SMS e retorna um webhook UUID único' })
-    @ApiResponse({ status: 200, description: 'Notificação SMS criada com sucesso' })
-    @ApiResponse({ status: 500, description: 'Erro ao criar notificação SMS' })
+    @ApiOperation({ summary: 'Create SMS notification', description: 'Creates a new SMS notification and returns a unique webhook UUID' })
+    @ApiResponse({ status: 200, description: 'SMS notification created successfully' })
+    @ApiResponse({ status: 500, description: 'Failed to create SMS notification' })
     async createSMSNotification(
         @Req() req: Request,
         @Res() res: Response,
@@ -32,9 +32,9 @@ export class EventNotificationController {
 
     @Get('/sms')
     @UseGuards(AdminJwtGuard)
-    @ApiOperation({ summary: 'Listar notificações SMS', description: 'Retorna todas as notificações SMS cadastradas' })
-    @ApiResponse({ status: 200, description: 'Lista de notificações SMS' })
-    @ApiResponse({ status: 500, description: 'Erro ao buscar notificações' })
+    @ApiOperation({ summary: 'List SMS notifications', description: 'Returns all registered SMS notifications' })
+    @ApiResponse({ status: 200, description: 'SMS notification list' })
+    @ApiResponse({ status: 500, description: 'Failed to fetch notifications' })
     async findSMSNotification(
         @Req() req: Request,
         @Res() res: Response,
@@ -46,11 +46,11 @@ export class EventNotificationController {
 
     @Post('/sms/webhook/:uuid')
     @UseGuards(AdminJwtGuard)
-    @ApiOperation({ summary: 'Enviar SMS via webhook', description: 'Envia um SMS através do webhook da notificação. Suporta templates com parâmetros dinâmicos.' })
-    @ApiParam({ name: 'uuid', description: 'UUID do webhook da notificação', type: 'string' })
-    @ApiResponse({ status: 200, description: 'SMS enviado com sucesso' })
-    @ApiResponse({ status: 404, description: 'Webhook não encontrado' })
-    @ApiResponse({ status: 500, description: 'Erro ao enviar SMS' })
+    @ApiOperation({ summary: 'Send SMS via webhook', description: 'Sends an SMS through the notification webhook. Supports templates with dynamic parameters.' })
+    @ApiParam({ name: 'uuid', description: 'Notification webhook UUID', type: 'string' })
+    @ApiResponse({ status: 200, description: 'SMS sent successfully' })
+    @ApiResponse({ status: 404, description: 'Webhook not found' })
+    @ApiResponse({ status: 500, description: 'Failed to send SMS' })
     async createSMSNotificationEvent(
         @Res() res: Response,
         @Body() data: CreateEventNotificationEventDTO,
@@ -69,10 +69,10 @@ export class EventNotificationController {
 
     @Get('/sms/webhook/:id_notification')
     @UseGuards(AdminJwtGuard)
-    @ApiOperation({ summary: 'Listar eventos por notificação', description: 'Retorna todos os eventos SMS de uma notificação específica' })
-    @ApiParam({ name: 'id_notification', description: 'ID da notificação SMS', type: 'string' })
-    @ApiResponse({ status: 200, description: 'Lista de eventos SMS' })
-    @ApiResponse({ status: 500, description: 'Erro ao buscar eventos' })
+    @ApiOperation({ summary: 'List events by notification', description: 'Returns all SMS events for a specific notification' })
+    @ApiParam({ name: 'id_notification', description: 'SMS notification ID', type: 'string' })
+    @ApiResponse({ status: 200, description: 'SMS event list' })
+    @ApiResponse({ status: 500, description: 'Failed to fetch events' })
     async findByIdNotificationSMSNotificationEvent(
         @Res() res: Response,
         @Param() { id_notification }: IdNotificationEventNotificationEventParam
@@ -84,11 +84,11 @@ export class EventNotificationController {
 
     @Get('/sms/:id')
     @UseGuards(AdminJwtGuard)
-    @ApiOperation({ summary: 'Buscar notificação SMS por ID', description: 'Retorna uma notificação SMS específica pelo ID' })
-    @ApiParam({ name: 'id', description: 'ID da notificação SMS', type: 'string' })
-    @ApiResponse({ status: 200, description: 'Notificação SMS encontrada' })
-    @ApiResponse({ status: 404, description: 'Notificação SMS não encontrada' })
-    @ApiResponse({ status: 500, description: 'Erro ao buscar notificação' })
+    @ApiOperation({ summary: 'Get SMS notification by ID', description: 'Returns a specific SMS notification by ID' })
+    @ApiParam({ name: 'id', description: 'SMS notification ID', type: 'string' })
+    @ApiResponse({ status: 200, description: 'SMS notification found' })
+    @ApiResponse({ status: 404, description: 'SMS notification not found' })
+    @ApiResponse({ status: 500, description: 'Failed to fetch notification' })
     async findByIdSMSNotification(
         @Req() req: Request,
         @Res() res: Response,

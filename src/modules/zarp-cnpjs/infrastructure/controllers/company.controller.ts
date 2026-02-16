@@ -1,15 +1,17 @@
 import { Body, Controller, Get, Param, Post, Query, Req, Res, UseGuards, UsePipes } from '@nestjs/common';
-import ListingParamsValidator from '@/common/validators/company/Listing-params.validator';
-import ListingQueryParamsValidator from '@/common/validators/company/Listing-query-params.validator';
+import ListingParamsDTO from '@/modules/zarp-cnpjs/application/dtos/listing-params.dto';
+import ListingQueryParamsValidator from '@/shared/validators/listing-query-params.dto';
 import { CompanyService } from '../../application/services/company.service';
 import { Request, Response } from 'express';
 import { UserJwtGuard } from '@/shared/auth/guards';
-import ExportValidator from '@/common/validators/company/Export.validator';
-import ExportCountValidator from '@/common/validators/company/Export-count.validator';
-import { ToLowercaseBodyRequestPipe } from '@/common/pipe/to-lowercase-body-request/to-lowercase-body-request.pipe';
-import IdValidator from '@/common/validators/id.validator';
+import ExportDTO from '@/modules/zarp-cnpjs/application/dtos/export.dto';
+import ExportCountDTO from '@/modules/zarp-cnpjs/application/dtos/export-count.dto';
+import { ToLowercaseBodyRequestPipe } from '@/shared/pipes';
+import IdValidator from '@/shared/validators/id.dto';
 import { Readable } from 'stream';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody, ApiParam, ApiQuery } from '@nestjs/swagger';
 
+@ApiTags('Company')
 @Controller('company')
 export class CompanyController {
     constructor(
@@ -18,9 +20,14 @@ export class CompanyController {
 
     @Post('/')
     @UseGuards(UserJwtGuard)
+    @ApiBearerAuth()
+    @ApiOperation({ summary: 'List companies with selected columns and filters' })
+    @ApiBody({ type: ListingParamsDTO })
+    @ApiResponse({ status: 200, description: 'Company listing returned' })
+    @ApiResponse({ status: 401, description: 'Invalid or expired token' })
     async list(
         @Query() params: ListingQueryParamsValidator,
-        @Body() rows: ListingParamsValidator,
+        @Body() rows: ListingParamsDTO,
         @Res() res: Response,
         @Req() req: Request & { user_id: number }
     ) {
@@ -93,8 +100,13 @@ export class CompanyController {
 
     @Get('/export/count/:search_hash')
     @UseGuards(UserJwtGuard)
+    @ApiBearerAuth()
+    @ApiOperation({ summary: 'Get total count for an export search' })
+    @ApiParam({ name: 'search_hash', description: 'Search hash identifier' })
+    @ApiResponse({ status: 200, description: 'Export count returned' })
+    @ApiResponse({ status: 401, description: 'Invalid or expired token' })
     async count(
-        @Param() params: ExportCountValidator,
+        @Param() params: ExportCountDTO,
         @Res() res: Response,
         @Req() req: Request & { user_id: number }
     ) {
@@ -108,9 +120,15 @@ export class CompanyController {
 
     @Post('/export/file/:search_hash')
     @UseGuards(UserJwtGuard)
+    @ApiBearerAuth()
+    @ApiOperation({ summary: 'Create an export file for the search' })
+    @ApiParam({ name: 'search_hash', description: 'Search hash identifier' })
+    @ApiBody({ type: ExportDTO })
+    @ApiResponse({ status: 200, description: 'Export file created' })
+    @ApiResponse({ status: 401, description: 'Invalid or expired token' })
     async export(
-        @Param() { search_hash }: ExportCountValidator,
-        @Body() { start }: ExportValidator,
+        @Param() { search_hash }: ExportCountDTO,
+        @Body() { start }: ExportDTO,
         @Res() res: Response,
         @Req() req: Request & { user_id: number }
     ) {
@@ -126,6 +144,11 @@ export class CompanyController {
 
     @Get('/export/file/:id')
     @UseGuards(UserJwtGuard)
+    @ApiBearerAuth()
+    @ApiOperation({ summary: 'Get export file status by ID' })
+    @ApiParam({ name: 'id', description: 'Export file ID' })
+    @ApiResponse({ status: 200, description: 'Export file status returned' })
+    @ApiResponse({ status: 404, description: 'Export file not found' })
     async exportFile(
         @Param() params: IdValidator,
         @Res() res: Response,
@@ -136,6 +159,11 @@ export class CompanyController {
     }
     @Get('/export/download/:id')
     @UseGuards(UserJwtGuard)
+    @ApiBearerAuth()
+    @ApiOperation({ summary: 'Download an export file as CSV' })
+    @ApiParam({ name: 'id', description: 'Export file ID' })
+    @ApiResponse({ status: 200, description: 'CSV file stream returned' })
+    @ApiResponse({ status: 404, description: 'Export file not found' })
     async downloadExport(
         @Param() params: IdValidator,
         @Res() res: Response,

@@ -1,20 +1,25 @@
-﻿import { Injectable } from '@nestjs/common';
-import IAuthAdminValidator, { IValidateAdminToken } from '@/common/validators/admin/auth-admin.validator';
-import AdminCredentialRepository from '../../infrastructure/repositories/admin-credential.repository';
-import AdminSessionTokenRepository from '../../infrastructure/repositories/admin-session-token.repository';
-import AdminRepository from '../../infrastructure/repositories/admin.repository';
+﻿import { Inject, Injectable } from '@nestjs/common';
+import AuthAdminDTO, { IValidateAdminToken } from '@/modules/zarp-auth/application/dtos/auth-admin.dto';
+import {
+    IAdminRepository,
+    IAdminCredentialRepository,
+    IAdminSessionTokenRepository,
+    ADMIN_REPOSITORY,
+    ADMIN_CREDENTIAL_REPOSITORY,
+    ADMIN_SESSION_TOKEN_REPOSITORY,
+} from '@/modules/zarp-auth/domain/interfaces';
 import { errorTypes } from '@/shared/constants/error-types';
 import { errorResponse } from '@/shared/helpers';
 
 @Injectable()
 export class AdminService {
     constructor(
-        private readonly adminRepository: AdminRepository,
-        private readonly adminCredentialRepository: AdminCredentialRepository,
-        private readonly adminSessionTokenRepository: AdminSessionTokenRepository,
+        @Inject(ADMIN_REPOSITORY) private readonly adminRepository: IAdminRepository,
+        @Inject(ADMIN_CREDENTIAL_REPOSITORY) private readonly adminCredentialRepository: IAdminCredentialRepository,
+        @Inject(ADMIN_SESSION_TOKEN_REPOSITORY) private readonly adminSessionTokenRepository: IAdminSessionTokenRepository,
     ) { }
 
-    async authenticate(data: IAuthAdminValidator) {
+    async authenticate(data: AuthAdminDTO) {
         try {
             const admin = await this.adminRepository.selectByEmail(data.email);
 

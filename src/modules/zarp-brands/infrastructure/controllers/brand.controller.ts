@@ -1,15 +1,17 @@
 import { Body, Controller, Get, Param, Post, Query, Req, Res, UseGuards } from '@nestjs/common';
 import { UserJwtGuard } from '@/shared/auth/guards';
 import { BrandService } from '../../application/services/brand.service';
-import CreateValidator from '@/common/validators/brand/Create.validator';
+import CreateBrandDTO from '@/modules/zarp-brands/application/dtos/create-brand.dto';
 import { Request, Response } from 'express';
-import AlertsByBrandNameValidator from '@/common/validators/brand/Alerts-by-brand-name.validator';
-import FindBrandValidator from '@/common/validators/company/Find-brand.validator';
-import PublicFindBrandValidator from '@/common/validators/company/Public-find-brand.validator';
-import ListingQueryParamsValidator from '@/common/validators/company/Listing-query-params.validator';
-import PublicBrandFindValidator from '@/common/validators/brand/Public-brand-find.validator';
-import CreateLeadValidator from '@/common/validators/brand/Create-lead.validator';
+import AlertsByBrandNameDTO from '@/modules/zarp-brands/application/dtos/alerts-by-brand-name.dto';
+import FindBrandDTO from '@/modules/zarp-brands/application/dtos/find-brand.dto';
+import PublicFindBrandDTO from '@/modules/zarp-brands/application/dtos/public-find-brand.dto';
+import ListingQueryParamsValidator from '@/shared/validators/listing-query-params.dto';
+import PublicBrandFindDTO from '@/modules/zarp-brands/application/dtos/public-brand-find.dto';
+import CreateLeadDTO from '@/modules/zarp-brands/application/dtos/create-lead.dto';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody, ApiParam, ApiQuery } from '@nestjs/swagger';
 
+@ApiTags('Brand')
 @Controller('brand')
 export class BrandController {
     constructor(
@@ -18,8 +20,13 @@ export class BrandController {
 
     @Post('/')
     @UseGuards(UserJwtGuard)
+    @ApiBearerAuth()
+    @ApiOperation({ summary: 'Create a new brand' })
+    @ApiBody({ type: CreateBrandDTO })
+    @ApiResponse({ status: 201, description: 'Brand created successfully' })
+    @ApiResponse({ status: 401, description: 'Invalid or expired token' })
     async create(
-        @Body() body: CreateValidator,
+        @Body() body: CreateBrandDTO,
         @Res() res: Response,
         @Req() req: Request & { user_id: number }
     ) {
@@ -38,7 +45,7 @@ export class BrandController {
 
     // @Post('/lead')
     // async createLead(
-    //     @Body() body: CreateLeadValidator,
+    //     @Body() body: CreateLeadDTO,
     //     @Res() res: Response,
     //     @Req() req: Request
     // ) {
@@ -60,6 +67,10 @@ export class BrandController {
 
     @Get('/')
     @UseGuards(UserJwtGuard)
+    @ApiBearerAuth()
+    @ApiOperation({ summary: 'List all brands for the authenticated user' })
+    @ApiResponse({ status: 200, description: 'User brands returned' })
+    @ApiResponse({ status: 401, description: 'Invalid or expired token' })
     async findUserBrands(
         @Res() res: Response,
         @Req() req: Request & { user_id: number }
@@ -70,10 +81,15 @@ export class BrandController {
     }
 
     @Post('/public-brand-find/:brand_name')
+    @ApiOperation({ summary: 'Public search for a brand by name' })
+    @ApiParam({ name: 'brand_name', description: 'Brand name to search for' })
+    @ApiQuery({ name: 'page', required: false, description: 'Page number', example: 1 })
+    @ApiBody({ type: PublicBrandFindDTO })
+    @ApiResponse({ status: 200, description: 'Brand search results returned' })
     async publicBrandFind(
         @Query() params: ListingQueryParamsValidator,
-        @Body() row: PublicBrandFindValidator,
-        @Param() { brand_name }: PublicFindBrandValidator,
+        @Body() row: PublicBrandFindDTO,
+        @Param() { brand_name }: PublicFindBrandDTO,
         @Res() res: Response
     ) {
         const result = await this.brandService.publicBrandFind(
@@ -92,8 +108,13 @@ export class BrandController {
 
     @Get('/:brand_id')
     @UseGuards(UserJwtGuard)
+    @ApiBearerAuth()
+    @ApiOperation({ summary: 'Get brand details by ID' })
+    @ApiParam({ name: 'brand_id', description: 'Brand ID' })
+    @ApiResponse({ status: 200, description: 'Brand details returned' })
+    @ApiResponse({ status: 404, description: 'Brand not found' })
     async findBrand(
-        @Param() { brand_id }: FindBrandValidator,
+        @Param() { brand_id }: FindBrandDTO,
         @Res() res: Response,
         @Req() req: Request & { user_id: number }
     ) {
@@ -102,11 +123,16 @@ export class BrandController {
         return res.status(result.status).json(result.data);
     }
 
-    // TODO: adicionar validator no parametro :brand_id
+    // TODO: add validator for :brand_id param
     @Get('/alerts-by-brand-name/:brand_id')
     @UseGuards(UserJwtGuard)
+    @ApiBearerAuth()
+    @ApiOperation({ summary: 'Get journal alerts for a brand' })
+    @ApiParam({ name: 'brand_id', description: 'Brand ID' })
+    @ApiResponse({ status: 200, description: 'Brand alerts returned' })
+    @ApiResponse({ status: 404, description: 'Brand not found' })
     async findAlertsByBrandName(
-        @Param() { brand_id }: AlertsByBrandNameValidator,
+        @Param() { brand_id }: AlertsByBrandNameDTO,
         @Res() res: Response,
         @Req() req: Request & { user_id: number }
     ) {

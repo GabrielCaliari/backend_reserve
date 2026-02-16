@@ -1,9 +1,10 @@
 ﻿import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@/shared/database/prisma.service';
 import { RepositoryException } from '@/shared/exceptions';
+import { IJournalAlertRepository } from '@/modules/zarp-journals/domain/interfaces';
 
 @Injectable()
-export default class JournalAlertRepository {
+export default class JournalAlertRepository implements IJournalAlertRepository {
     constructor(private readonly prisma: PrismaService) {}
     async findByBrandName(name: string, lastMagazine: string | null = null, contains = false, { select, pag, order, unique }: { select?, order?: {}, pag?: { page?, limit, offset?}, unique?: boolean } = {}) {
         try {

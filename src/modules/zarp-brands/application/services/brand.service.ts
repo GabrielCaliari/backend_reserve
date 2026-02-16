@@ -1,33 +1,39 @@
 ﻿import { errorTypes } from '@/shared/constants/error-types';
 import { errorResponse, separarPorPropriedade } from '@/shared/helpers';
-import BrandRepository, { IBrandFields } from '../../infrastructure/repositories/brand.repository';
+import {
+    IBrandRepository,
+    IBrandAlertRepository,
+    IBrandMonitoringRepository,
+    IBrandFields,
+    BRAND_REPOSITORY,
+    BRAND_ALERT_REPOSITORY,
+    BRAND_MONITORING_REPOSITORY,
+} from '@/modules/zarp-brands/domain/interfaces';
 
-
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+// Cross-context repositories (temporary)
 import JournalAlertRepository from '@/modules/zarp-journals/infrastructure/repositories/journal-alert.repository';
-import BrandMonitoringRepository from '../../infrastructure/repositories/brand-monitoring.repository';
 import BrandNotificationRepository from '../../infrastructure/repositories/brand-notification.repository';
-import { EBrandMonitoring } from '@/@types/@brand-monitoring';
+import { EBrandMonitoring } from '@/modules/zarp-brands/domain/enums/brand-monitoring-status.enum';
 import { JournalAlert, PrismaClient } from '@/generated/prisma/client';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import PlanRepository from '@/modules/zarp-auth/infrastructure/repositories/plan.repository';
-import { EStatus } from '@/@types/@plan';
-import BrandAlertRepository from '../../infrastructure/repositories/brand-alert.repository';
+import { EStatus } from '@/modules/zarp-auth/domain/enums/plan-status.enum';
 import PublicBrandSearchRepository from '../../infrastructure/repositories/public-brand-search.repository';
 import { EuipoAPITokenProvider } from '@/modules/zarp-brands/infrastructure/providers/euipo-api-token.provider';
 import axios from 'axios';
 import LeadRepository from '@/modules/zarp-auth/infrastructure/repositories/lead.repository';
-import { ICreateLead } from '@/@types/@lead';
+import { ICreateLead } from '@/modules/zarp-auth/domain/enums/lead.enum';
 import { PrismaService } from '@/shared/database/prisma.service';
 
 @Injectable()
 export class BrandService {
     constructor(
-        private readonly brandRepository: BrandRepository,
+        @Inject(BRAND_REPOSITORY) private readonly brandRepository: IBrandRepository,
         private readonly journalAlertRepository: JournalAlertRepository,
         private readonly planRepository: PlanRepository,
-        private readonly brandMonitoringRepository: BrandMonitoringRepository,
-        private readonly brandAlertRepository: BrandAlertRepository,
+        @Inject(BRAND_MONITORING_REPOSITORY) private readonly brandMonitoringRepository: IBrandMonitoringRepository,
+        @Inject(BRAND_ALERT_REPOSITORY) private readonly brandAlertRepository: IBrandAlertRepository,
         private readonly publicBrandSearchRepository: PublicBrandSearchRepository,
         private readonly euipoAPIToken: EuipoAPITokenProvider,
         private readonly prisma: PrismaService,

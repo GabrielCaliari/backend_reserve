@@ -1,12 +1,16 @@
-﻿import { Injectable } from '@nestjs/common';
-import CnaeRepository from '../../infrastructure/repositories/cnae.repository';
+﻿import { Inject, Injectable } from '@nestjs/common';
+import {
+    ICnaeRepository,
+    CNAE_REPOSITORY,
+} from '../../domain/interfaces';
 import { errorResponse } from '@/shared/helpers';
 import { errorTypes } from '@/shared/constants/error-types';
 
 @Injectable()
 export class CnaeService {
     constructor(
-        private readonly cnaeRepository: CnaeRepository
+        @Inject(CNAE_REPOSITORY)
+        private readonly cnaeRepository: ICnaeRepository,
     ) { }
 
     async list() {

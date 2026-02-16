@@ -1,7 +1,7 @@
 ﻿import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@/shared/database/prisma.service';
 import { RepositoryException } from '@/shared/exceptions';
-import { ICreateSmtpServer } from "@/@types/@smtp-server";
+import { ICreateSmtpServer } from '@/modules/zarp-mailer/domain/enums/smtp-provider.enum';
 import { isSmtpServerDataValidToCreate } from "@/modules/zarp-mailer/domain/validators/smtp-server.validator";
 
 @Injectable()

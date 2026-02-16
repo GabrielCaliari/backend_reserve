@@ -1,11 +1,12 @@
 ﻿import { PrismaClient } from "@/generated/prisma/client";
-import { EStatus } from "@/@types/@plan";
+import { EStatus } from '@/modules/zarp-auth/domain/enums/plan-status.enum';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@/shared/database/prisma.service';
 import { RepositoryException } from '@/shared/exceptions';
+import { IPlanRepository } from '@/modules/zarp-auth/domain/interfaces';
 
 @Injectable()
-export default class PlanRepository {
+export default class PlanRepository implements IPlanRepository {
     constructor(private readonly prisma: PrismaService) {}
     async linkMonitoringPlanWithBrand(monitoringPlanId: number, brandId: number, tx: PrismaClient) {
         try {

@@ -1,11 +1,18 @@
-﻿import { Injectable } from '@nestjs/common';
+﻿import { Inject, Injectable } from '@nestjs/common';
 import { errorTypes } from '@/shared/constants/error-types';
 import { errorResponse, inverterObjeto, separar } from '@/shared/helpers';
-import CompanyRepository, { ICompanyFields } from '../../infrastructure/repositories/company.repository';
-import SearchRepository from '../../infrastructure/repositories/search.repository';
+import {
+    ICompanyRepository,
+    ICompanyFields,
+    COMPANY_REPOSITORY,
+    ISearchRepository,
+    SEARCH_REPOSITORY,
+    ICnaeRepository,
+    CNAE_REPOSITORY,
+} from '../../domain/interfaces';
 import { Company, Search } from '@/generated/prisma/client';
 import UserRepository from '@/modules/zarp-auth/infrastructure/repositories/user.repository';
-import { EStatus as ECompanyExportStatus } from '@/@types/@company-export'
+import { EStatus as ECompanyExportStatus } from '@/modules/zarp-cnpjs/domain/enums/company-export-status.enum'
 
 import { createWriteStream } from 'fs';
 import * as AWS from '@aws-sdk/client-s3';
@@ -15,8 +22,7 @@ import { randomBytes } from 'crypto';
 import { format } from 'fast-csv';
 import { municipios } from '@/shared/data/municipios';
 
-import { EStatus } from '@/@types/@company';
-import CnaeRepository from '../../infrastructure/repositories/cnae.repository';
+import { EStatus } from '@/modules/zarp-cnpjs/domain/enums/company.enum';
 
 export interface ISearchParams {
     cnae?: string[]; // TODO: ADICIONAR PARA FILTRAR POR CNAES SECUNDARIOS TAMBEM
@@ -38,10 +44,13 @@ export interface ISearchParams {
 @Injectable()
 export class CompanyService {
     constructor(
-        private readonly companyRepository: CompanyRepository,
-        private readonly searchRepository: SearchRepository,
+        @Inject(COMPANY_REPOSITORY)
+        private readonly companyRepository: ICompanyRepository,
+        @Inject(SEARCH_REPOSITORY)
+        private readonly searchRepository: ISearchRepository,
         private readonly userRepository: UserRepository,
-        private readonly cnaeRepository: CnaeRepository
+        @Inject(CNAE_REPOSITORY)
+        private readonly cnaeRepository: ICnaeRepository,
     ) { }
 
     private readonly s3Client = new AWS.S3({

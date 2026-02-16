@@ -1,3 +1,10 @@
+export * from './campaign-batch-status.enum';
+export * from './delivery-status.enum';
+export * from './email-type.enum';
+export * from './email-campaign.enum';
+export * from './smtp-provider.enum';
+export * from './event-notification.type';
+
 /**
  * Email Campaign Status Enum
  * Represents the lifecycle states of an email campaign

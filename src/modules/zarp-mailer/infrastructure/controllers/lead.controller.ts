@@ -14,9 +14,9 @@ export class LeadController {
 
     @Get('/')
     // @UseGuards(AdminJwtGuard)
-    @ApiOperation({ summary: 'Listar leads', description: 'Retorna uma lista paginada de leads' })
-    @ApiResponse({ status: 200, description: 'Lista de leads com paginação' })
-    @ApiResponse({ status: 500, description: 'Erro ao buscar leads' })
+    @ApiOperation({ summary: 'List leads', description: 'Returns a paginated list of leads' })
+    @ApiResponse({ status: 200, description: 'Paginated lead list' })
+    @ApiResponse({ status: 500, description: 'Failed to fetch leads' })
     async findLead(
         @Res() res: Response,
         @Query() query: LeadQuery
@@ -30,10 +30,10 @@ export class LeadController {
 
     @Post('/')
     // @UseGuards(AdminJwtGuard)
-    @ApiOperation({ summary: 'Criar lead', description: 'Cria um novo lead no sistema' })
-    @ApiResponse({ status: 201, description: 'Lead criado com sucesso' })
-    @ApiResponse({ status: 400, description: 'Dados inválidos' })
-    @ApiResponse({ status: 500, description: 'Erro ao criar lead' })
+    @ApiOperation({ summary: 'Create lead', description: 'Creates a new lead in the system' })
+    @ApiResponse({ status: 201, description: 'Lead created successfully' })
+    @ApiResponse({ status: 400, description: 'Invalid data' })
+    @ApiResponse({ status: 500, description: 'Failed to create lead' })
     async createLead(
         @Res() res: Response,
         @Body() data: CreateLead

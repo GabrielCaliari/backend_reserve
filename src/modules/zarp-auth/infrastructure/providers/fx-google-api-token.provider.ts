@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { IAPIToken } from '@/shared/interfaces/api-token.interface';
-import { IAPITokenCreate } from '@/@types/@api-token';
+import { IAPITokenCreate } from '@/modules/zarp-brands/domain/interfaces/api-token.repository.interface';
 import { RepositoryException } from '@/shared/exceptions';
 import { EncryptProvider } from '@/shared/providers/encrypt.provider';
 import { isValidString } from '@/shared/helpers/string.helper';

@@ -1,5 +1,5 @@
 ﻿import { PrismaClient } from "@/generated/prisma/client";
-import { EEmailType } from "@/@types/@email";
+import { EEmailType } from '@/modules/zarp-mailer/domain/enums/email-type.enum';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@/shared/database/prisma.service';
 import { RepositoryException } from '@/shared/exceptions';

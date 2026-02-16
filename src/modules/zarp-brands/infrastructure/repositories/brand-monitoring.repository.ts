@@ -1,26 +1,14 @@
 ﻿import { PrismaClient } from "@/generated/prisma/client";
-import { EBrandMonitoring } from "@/@types/@brand-monitoring";
+import { EBrandMonitoring } from '@/modules/zarp-brands/domain/enums/brand-monitoring-status.enum';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@/shared/database/prisma.service';
 import { RepositoryException } from '@/shared/exceptions';
+import { IBrandMonitoringRepository, IBrandMonitoring } from '@/modules/zarp-brands/domain/interfaces';
 
-export interface IBrandMonitoring {
-    id?: number;
-    processed_last_analysis?: number;
-    total_processed?: number;
-    triggered_notifications?: number;
-    status: EBrandMonitoring;
-    user_id?: number;
-    brand_id?: number;
-    inpi_number?: string;
-    last_magazine_searched?: string;
-    last_movement?: Date;
-    last_search?: Date;
-    deposit?: Date;
-}
+export { IBrandMonitoring };
 
 @Injectable()
-export default class BrandMonitoringRepository {
+export default class BrandMonitoringRepository implements IBrandMonitoringRepository {
     constructor(private readonly prisma: PrismaService) {}
     async create(data: Omit<IBrandMonitoring, 'id'>, rx?: PrismaClient) {
         try {

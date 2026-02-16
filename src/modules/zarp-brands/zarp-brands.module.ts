@@ -14,6 +14,15 @@ import BrandNotificationRepository from './infrastructure/repositories/brand-not
 import PublicBrandSearchRepository from './infrastructure/repositories/public-brand-search.repository';
 import APITokenRepository from './infrastructure/repositories/api-token.repository';
 
+// DIP tokens
+import {
+  BRAND_REPOSITORY,
+  BRAND_ALERT_REPOSITORY,
+  BRAND_ANALYSIS_REPOSITORY,
+  BRAND_MONITORING_REPOSITORY,
+  API_TOKEN_REPOSITORY,
+} from './domain/interfaces';
+
 // Cross-context repositories (temporary, will be replaced by module imports)
 import JournalAlertRepository from '@/modules/zarp-journals/infrastructure/repositories/journal-alert.repository';
 import PlanRepository from '@/modules/zarp-auth/infrastructure/repositories/plan.repository';
@@ -48,6 +57,13 @@ import { EuipoAPITokenProvider } from '@/modules/zarp-brands/infrastructure/prov
     PublicBrandSearchRepository,
     APITokenRepository,
 
+    // DIP repository tokens
+    { provide: BRAND_REPOSITORY, useExisting: BrandRepository },
+    { provide: BRAND_ALERT_REPOSITORY, useExisting: BrandAlertRepository },
+    { provide: BRAND_ANALYSIS_REPOSITORY, useExisting: BrandAnalysisRepository },
+    { provide: BRAND_MONITORING_REPOSITORY, useExisting: BrandMonitoringRepository },
+    { provide: API_TOKEN_REPOSITORY, useExisting: APITokenRepository },
+
     // Cross-context repositories (temporary coupling)
     JournalAlertRepository,
     PlanRepository,
@@ -60,9 +76,16 @@ import { EuipoAPITokenProvider } from '@/modules/zarp-brands/infrastructure/prov
   exports: [
     BrandService,
     BrandAnalysisService,
+    // Concrete repos (backward compat)
     BrandRepository,
     BrandAlertRepository,
     BrandAnalysisRepository,
+    // DIP tokens
+    BRAND_REPOSITORY,
+    BRAND_ALERT_REPOSITORY,
+    BRAND_ANALYSIS_REPOSITORY,
+    BRAND_MONITORING_REPOSITORY,
+    API_TOKEN_REPOSITORY,
   ],
 })
 export class ZarpBrandsModule {}

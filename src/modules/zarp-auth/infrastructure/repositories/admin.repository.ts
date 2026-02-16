@@ -2,15 +2,12 @@
 import { PrismaService } from '@/shared/database/prisma.service';
 import { RepositoryException } from '@/shared/exceptions';
 import { HashProvider } from '@/shared/providers/hash.provider';
+import { IAdminRepository, ICreateAdmin } from '@/modules/zarp-auth/domain/interfaces';
 
-export interface ICreateAdmin {
-    name: string;
-    email: string;
-    password: string;
-}
+export { ICreateAdmin };
 
 @Injectable()
-export default class AdminRepository {
+export default class AdminRepository implements IAdminRepository {
     constructor(
         private readonly prisma: PrismaService,
         private readonly hashProvider: HashProvider,

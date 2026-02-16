@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Post, Req, Res, UseGuards } from '@nestjs/common';
 import { AdminService } from '../../application/services/admin.service';
 import { Request, Response } from 'express';
-import AuthAdminValidator from '@/common/validators/admin/auth-admin.validator';
+import AuthAdminDTO from '@/modules/zarp-auth/application/dtos/auth-admin.dto';
 import { AdminJwtGuard } from '@/shared/auth/guards';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody } from '@nestjs/swagger';
 
@@ -13,11 +13,11 @@ export class AdminController {
     ) { }
 
     @Post('/authenticate')
-    @ApiOperation({ summary: 'Autenticar administrador' })
-    @ApiBody({ type: AuthAdminValidator })
-    @ApiResponse({ status: 200, description: 'Autenticação realizada com sucesso' })
-    @ApiResponse({ status: 401, description: 'Credenciais inválidas' })
-    async authenticateAdmin(@Res() res: Response, @Body() data: AuthAdminValidator) {
+    @ApiOperation({ summary: 'Authenticate administrator' })
+    @ApiBody({ type: AuthAdminDTO })
+    @ApiResponse({ status: 200, description: 'Authentication successful' })
+    @ApiResponse({ status: 401, description: 'Invalid credentials' })
+    async authenticateAdmin(@Res() res: Response, @Body() data: AuthAdminDTO) {
         const result = await this.adminService.authenticate(data);
         return res.status(result.status).json(result.data)
     }
@@ -25,9 +25,9 @@ export class AdminController {
     @Get('/me')
     @UseGuards(AdminJwtGuard)
     @ApiBearerAuth()
-    @ApiOperation({ summary: 'Obter dados do administrador autenticado' })
-    @ApiResponse({ status: 200, description: 'Dados do administrador retornados' })
-    @ApiResponse({ status: 401, description: 'Token inválido ou expirado' })
+    @ApiOperation({ summary: 'Get authenticated administrator data' })
+    @ApiResponse({ status: 200, description: 'Administrator data returned' })
+    @ApiResponse({ status: 401, description: 'Invalid or expired token' })
     async me(
         @Res() res: Response,
         @Req() req: Request & { admin_id: number },

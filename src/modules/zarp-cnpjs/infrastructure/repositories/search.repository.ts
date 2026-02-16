@@ -2,16 +2,12 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@/shared/database/prisma.service';
 import { RepositoryException } from '@/shared/exceptions';
 import { randomBytes } from 'crypto';
+import { ISearchRepository, ISearchCreate } from '@/modules/zarp-cnpjs/domain/interfaces';
 
-export interface ISearchCreate {
-    amount: number,
-    filters: string,
-    limit: number,
-    user_id: number
-}
+export { ISearchCreate };
 
 @Injectable()
-export default class SearchRepository {
+export default class SearchRepository implements ISearchRepository {
     constructor(private readonly prisma: PrismaService) {}
 
     async findByHash(hash: string) {

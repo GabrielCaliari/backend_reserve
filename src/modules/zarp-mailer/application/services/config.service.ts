@@ -1,5 +1,5 @@
 ﻿import { Injectable } from '@nestjs/common';
-import { ESMTPProvider, ICreateSmtpServer } from '@/@types/@smtp-server';
+import { ESMTPProvider, ICreateSmtpServer } from '@/modules/zarp-mailer/domain/enums/smtp-provider.enum';
 import { ERROR_CREATE_SMTP_SERVER, ERROR_FIND_SMTP_SERVER } from '@/modules/zarp-mailer/domain/constants';
 import SMTPServerRepository from '@/modules/zarp-mailer/infrastructure/repositories/smtp-server-legacy.repository';
 import { env, errorResponse, successResponse } from '@/shared/helpers';

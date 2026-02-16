@@ -3,7 +3,7 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class UpdateCampaignBatchSizeDto {
   @ApiProperty({
-    description: 'Tamanho do batch da campanha (mínimo 100)',
+    description: 'Campaign batch size (minimum 100)',
     example: 500,
     minimum: 100,
   })

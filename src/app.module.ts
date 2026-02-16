@@ -15,9 +15,8 @@ import { ZarpJournalsModule } from './modules/zarp-journals/zarp-journals.module
 import { ZarpMailerModule } from './modules/zarp-mailer/zarp-mailer.module';
 import { ZarpPiBotModule } from './modules/zarp-pi-bot/zarp-pi-bot.module';
 
-// Common pipes
-import { ToLowercaseQueryParamsPipe } from './common/pipe/to-lowercase-query-params/to-lowercase-query-params.pipe';
-import { ToLowercaseBodyRequestPipe } from './common/pipe/to-lowercase-body-request/to-lowercase-body-request.pipe';
+// Shared pipes
+import { ToLowercaseQueryParamsPipe, ToLowercaseBodyRequestPipe } from './shared/pipes';
 
 @Module({
   imports: [

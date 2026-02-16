@@ -1,15 +1,12 @@
 ﻿import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@/shared/database/prisma.service';
 import { RepositoryException } from '@/shared/exceptions';
+import { IJournalRepository, ICreateJournal } from '@/modules/zarp-journals/domain/interfaces';
 
-export interface ICreateJournal {
-    name: string;
-    extension: string;
-    size: string;
-}
+export { ICreateJournal };
 
 @Injectable()
-export default class JournalRepository {
+export default class JournalRepository implements IJournalRepository {
     constructor(private readonly prisma: PrismaService) {}
     async create(data: ICreateJournal) {
         try {
