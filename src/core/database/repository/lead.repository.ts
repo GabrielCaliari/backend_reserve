@@ -1,4 +1,4 @@
-import { Prisma } from "@prisma/client";
+import { Prisma } from "src/generated/prisma/client";
 import { ICreateLead, ILead } from "src/@types/@lead";
 import RepositoryException from "src/core/exceptions/RepositoryException";
 import prismaClient from "src/core/database/prisma/prismaClient";

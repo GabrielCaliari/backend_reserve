@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "src/generated/prisma/client";
 import { EBrandAnalysisTokenStatus } from "src/@types/@brand-analysis-token";
 import RepositoryException from "src/core/exceptions/RepositoryException";
 import prismaClient from "src/core/database/prisma/prismaClient";

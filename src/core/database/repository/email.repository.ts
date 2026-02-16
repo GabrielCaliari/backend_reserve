@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "src/generated/prisma/client";
 import { EEmailType } from "src/@types/@email";
 import RepositoryException from "src/core/exceptions/RepositoryException";
 import prismaClient from "../prisma/prismaClient";

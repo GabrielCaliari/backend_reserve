@@ -1,4 +1,6 @@
-import { PrismaClient } from '@prisma/client';
+import 'dotenv/config';
+import { PrismaClient } from '../src/generated/prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
 
 import { seedCnae } from "./seed/seed-cnae";
 import { seedCNPJ } from "./seed/seed-company";
@@ -7,7 +9,8 @@ import { seedAdmin } from './seed/seed-admin';
 
 (async function main() {
 
-    const prisma = new PrismaClient();
+    const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
+    const prisma = new PrismaClient({ adapter });
 
     async function ensureViewExists() {
         const viewName = [

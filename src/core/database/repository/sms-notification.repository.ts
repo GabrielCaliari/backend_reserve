@@ -3,7 +3,7 @@ import prismaClient from "../prisma/prismaClient";
 import { REPOSITORY_CREATE_SMS_NOTIFICATION_ERROR, REPOSITORY_SELECT_ALL_SMS_NOTIFICATION_ERROR, REPOSITORY_SELECT_BY_ID_SMS_NOTIFICATION_ERROR, REPOSITORY_SELECT_BY_WEBHOOK_SMS_NOTIFICATION_ERROR } from "src/core/constants";
 import { randomUUID } from "crypto";
 import { SMSNotification } from "src/core/classes/models/SMS-notification";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "src/generated/prisma/client";
 
 export default class SMSNotificationRepository {
     async create(data: SMSNotification, tx?: PrismaClient) {

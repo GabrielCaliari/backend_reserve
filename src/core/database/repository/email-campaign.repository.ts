@@ -1,4 +1,4 @@
-import { Prisma, PrismaClient } from "@prisma/client";
+import { Prisma, PrismaClient } from "src/generated/prisma/client";
 import RepositoryException from "src/core/exceptions/RepositoryException";
 import prismaClient from "../prisma/prismaClient";
 import { ECopyVariationType, EEmailCampaignStatus } from "src/@types/@Email-campaign";

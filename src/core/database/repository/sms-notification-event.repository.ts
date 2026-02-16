@@ -7,7 +7,7 @@ import {
 import RepositoryException from "src/core/exceptions/RepositoryException";
 import prismaClient from "../prisma/prismaClient";
 import PhoneNumber from "src/core/classes/obj-types/Phone-number";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "src/generated/prisma/client";
 
 export default class SMSNotificationEventRepository {
     async create(data: SMSNotificationEvent, tx?: PrismaClient) {

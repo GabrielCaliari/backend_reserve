@@ -1,6 +1,6 @@
 import RepositoryException from "src/core/exceptions/RepositoryException";
 import prismaClient from "../prisma/prismaClient";
-import { CampaignBatch, PrismaClient } from "@prisma/client";
+import { CampaignBatch, PrismaClient } from "src/generated/prisma/client";
 import { ECampaignBatchStatus } from "src/@types/@campaign-batch";
 
 export default class CampaignBatchRepository {

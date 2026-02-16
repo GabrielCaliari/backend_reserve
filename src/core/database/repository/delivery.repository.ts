@@ -1,4 +1,4 @@
-import { Delivery, OpenTracking, PrismaClient } from "@prisma/client";
+import { Delivery, OpenTracking, PrismaClient } from "src/generated/prisma/client";
 import prismaClient from "../prisma/prismaClient";
 import RepositoryException from "src/core/exceptions/RepositoryException";
 

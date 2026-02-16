@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "src/generated/prisma/client";
 import { EBrandMonitoring } from "src/@types/@brand-monitoring";
 import { EStatus } from "src/@types/@plan";
 import RepositoryException from "src/core/exceptions/RepositoryException";

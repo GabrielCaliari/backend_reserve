@@ -1,7 +1,10 @@
-import { PrismaClient } from "@prisma/client";
+import 'dotenv/config';
+import { PrismaClient } from "../../src/generated/prisma/client";
+import { PrismaPg } from '@prisma/adapter-pg';
 import Encrypt from "../../src/core/providers/Encrypt";
 
-const prisma = new PrismaClient();
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
+const prisma = new PrismaClient({ adapter });
 
 export async function seedAdmin() {
     const admin = [
@@ -20,21 +23,6 @@ export async function seedAdmin() {
             email: 'kelme.dev@pm.me',
             password: 'S&43289dmin692178'
         },
-        {
-            name: 'eduardo',
-            email: 'eduardorsn.contato@gmail.com',
-            password: 'S&n3240234n692178'
-        },
-        {
-            name: 'will',
-            email: 'wydemairomsilva@gmail.com',
-            password: 'S&n33123134n692178'
-        },
-        {
-            name: 'bruno jungers',
-            email: 'contato@pppi.com.br',
-            password: 'S&asdad134n692178'
-        }
     ]
 
     async function createAdmin(admins) {

@@ -8,7 +8,7 @@ import JournalAlertRepository from '../../../core/database/repository/journal-al
 import BrandMonitoringRepository from '../../../core/database/repository/brand-monitoring.repository';
 import BrandNotificationRepository from '../../../core/database/repository/brand-notification.repository';
 import { EBrandMonitoring } from 'src/@types/@brand-monitoring';
-import { JournalAlert, PrismaClient } from '@prisma/client';
+import { JournalAlert, PrismaClient } from 'src/generated/prisma/client';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import PlanRepository from '../../../core/database/repository/plan.repository';
 import { EStatus } from 'src/@types/@plan';

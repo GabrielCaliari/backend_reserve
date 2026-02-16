@@ -78,7 +78,7 @@ export class EmailCampaignController {
         limits: { fileSize: 20 * 1024 * 1024 }, // 20MB
     }))
     async uploadLeadsCSV(
-        @UploadedFile() file: import("multer").File,
+        @UploadedFile() file: Express.Multer.File,
         @Req() req: Request,
         @Res() res: Response
     ) {

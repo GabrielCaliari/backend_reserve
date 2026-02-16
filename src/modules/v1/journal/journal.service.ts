@@ -12,7 +12,7 @@ import JournalRepository from '../../../core/database/repository/journal.reposit
 import JournalToFetchRepository from '../../../core/database/repository/journal-to-fetch.repository';
 import { randomUUID } from 'crypto';
 import { parseString } from "xml2js";
-import { JournalAlert } from '@prisma/client';
+import { JournalAlert } from 'src/generated/prisma/client';
 import prismaClient from 'src/core/database/prisma/prismaClient';
 import throttle from 'src/core/providers/Queue';
 
@@ -70,8 +70,8 @@ export class JournalService {
                 const writer = fs.createWriteStream(localZipPath);
                 response.data.pipe(writer);
 
-                await new Promise((resolve, reject) => {
-                    writer.on('finish', resolve);
+                await new Promise<void>((resolve, reject) => {
+                    writer.on('finish', () => resolve());
                     writer.on('error', reject);
                 });
 

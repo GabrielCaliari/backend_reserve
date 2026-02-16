@@ -9,7 +9,7 @@ import PhoneNumber from 'src/core/classes/obj-types/Phone-number';
 import countryCode from 'src/core/json/country-code';
 import prismaClient from 'src/core/database/prisma/prismaClient';
 import SMSNotificationEventRepository from 'src/core/database/repository/sms-notification-event.repository';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from 'src/generated/prisma/client';
 import AWSSMSProvider from 'src/core/providers/aws-sns/aws-sms.provider';
 
 @Injectable()

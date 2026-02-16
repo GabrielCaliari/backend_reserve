@@ -1,4 +1,4 @@
-import { ViewCompany } from "@prisma/client";
+import { ViewCompany } from "src/generated/prisma/client";
 import { EBranchType, ESize, EStatus } from "src/@types/@company";
 import { EStatus as ECompanyExportStatus } from 'src/@types/@company-export'
 import RepositoryException from "src/core/exceptions/RepositoryException";

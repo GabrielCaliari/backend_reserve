@@ -4,10 +4,8 @@ import ProviderException from 'src/core/exceptions/ProviderException';
 import { PROVIDER_AWS_SMS_ERROR } from 'src/core/constants';
 
 export default class AWSSMSProvider {
-    constructor(
-        private snsClient: SNSClient,
-    ) {
-        this.snsClient = SNSClientLib;
+    private get snsClient(): SNSClient {
+        return SNSClientLib.client;
     }
 
     async execute({ phone_number, message }) {

@@ -14,7 +14,7 @@ import prismaClient from 'src/core/database/prisma/prismaClient';
 import * as fs from 'fs';
 import * as csvParser from 'csv-parser';
 import { ELeadStatus } from 'src/@types/@lead';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from 'src/generated/prisma/client';
 import { generateObject } from 'ai';
 import { EEmailType } from 'src/@types/@email';
 import { azure } from 'src/core/providers/ai/ai-zure.lib';

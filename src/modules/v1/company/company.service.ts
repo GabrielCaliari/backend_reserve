@@ -3,7 +3,7 @@ import { errorTypes } from 'src/core/error-types';
 import { errorResponse, inverterObjeto, separar } from 'src/core/functions';
 import CompanyRepository, { ICompanyFields } from '../../../core/database/repository/company.repository';
 import SearchRepository from '../../../core/database/repository/search.repository';
-import { Company, Search } from '@prisma/client';
+import { Company, Search } from 'src/generated/prisma/client';
 import UserRepository from '../../../core/database/repository/user.repository';
 import { EStatus as ECompanyExportStatus } from 'src/@types/@company-export'
 
@@ -481,8 +481,8 @@ export class CompanyService {
             });
             csvStream.end();
 
-            await new Promise((resolve, reject) => {
-                writeStream.on('finish', resolve);
+            await new Promise<void>((resolve, reject) => {
+                writeStream.on('finish', () => resolve());
                 writeStream.on('error', reject);
             });
 
