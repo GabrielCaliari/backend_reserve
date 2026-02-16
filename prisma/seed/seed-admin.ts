@@ -17,16 +17,38 @@ const prisma = new PrismaClient({ adapter });
 
 export async function seedAdmin() {
     const admin = [
-        // { // Login de admin para o local do Rodrigo
-        //     name: 'rodrigo da silva',
-        //     email: 'rodrigo.bs.548@gmail.com',
-        //     password: 'S&nh@D&Admin692178'
-        // },
         {
             name: 'diego kelme superadmin',
             email: 'kelme.dev@pm.me',
-            password: 'Vamos@Inovar@26'
+            password: 'Vamos@Inovar@26',
+            role: 'super_admin' as const,
         },
+        {
+            name: 'Admin Empresa Teste',
+            email: 'admin@empresa-teste.com',
+            password: 'Teste@123456',
+            role: 'company_admin' as const,
+        },
+    ]
+
+    /** Default tenants to seed */
+    const tenants = [
+        {
+            name: 'Zarp Studio',
+            slug: 'zarp-studio',
+            domain: null,
+        },
+        {
+            name: 'Empresa Teste',
+            slug: 'empresa-teste',
+            domain: 'teste.com.br',
+        },
+    ]
+
+    /** Admin-tenant assignments: maps admin email -> tenant slugs */
+    const adminTenantAssignments = [
+        { adminEmail: 'kelme.dev@pm.me', tenantSlug: 'zarp-studio' },
+        { adminEmail: 'admin@empresa-teste.com', tenantSlug: 'empresa-teste' },
     ]
 
     async function deleteOldAdmins(admins) {
@@ -43,7 +65,21 @@ export async function seedAdmin() {
         
         for (const admin of adminsToDelete) {
             await prisma.$transaction(async (tx) => {
-                // Deletar credenciais primeiro (chave estrangeira)
+                // Deletar associacoes com tenants primeiro
+                await tx.adminTenant.deleteMany({
+                    where: {
+                        admin_id: admin.id
+                    }
+                });
+                
+                // Deletar sessoes
+                await tx.adminSessionToken.deleteMany({
+                    where: {
+                        admin_id: admin.id
+                    }
+                });
+                
+                // Deletar credenciais (chave estrangeira)
                 await tx.adminCredential.deleteMany({
                     where: {
                         admin_id: admin.id
@@ -79,7 +115,7 @@ export async function seedAdmin() {
             if (adminExists) {
                 // Atualizar admin existente (sobrescrever dados)
                 await prisma.$transaction(async (tx) => {
-                    // Atualizar informaÃ§Ãµes do admin
+                    // Atualizar informacoes do admin
                     await tx.admin.update({
                         where: {
                             id: adminExists.id
@@ -87,6 +123,7 @@ export async function seedAdmin() {
                         data: {
                             name: admin.name,
                             email: admin.email,
+                            role: admin.role ?? 'company_admin',
                         }
                     });
     
@@ -117,6 +154,7 @@ export async function seedAdmin() {
                         data: {
                             name: admin.name,
                             email: admin.email,
+                            role: admin.role ?? 'company_admin',
                         }
                     });
     
@@ -141,13 +179,88 @@ export async function seedAdmin() {
         return { inseridos, atualizados };
     }
 
-    // Primeiro deletar admins antigos que nÃ£o estÃ£o na lista
+    async function seedTenants(tenantsList) {
+        let inseridos = 0;
+        let atualizados = 0;
+
+        for (const tenant of tenantsList) {
+            const existing = await prisma.tenant.findUnique({
+                where: { slug: tenant.slug },
+            });
+
+            if (existing) {
+                await prisma.tenant.update({
+                    where: { id: existing.id },
+                    data: { name: tenant.name, domain: tenant.domain },
+                });
+                atualizados++;
+            } else {
+                await prisma.tenant.create({
+                    data: {
+                        name: tenant.name,
+                        slug: tenant.slug,
+                        domain: tenant.domain,
+                    },
+                });
+                inseridos++;
+            }
+        }
+
+        return { inseridos, atualizados };
+    }
+
+    async function seedAdminTenantAssignments(assignments: { adminEmail: string; tenantSlug: string }[]) {
+        let criados = 0;
+        let existentes = 0;
+
+        for (const assignment of assignments) {
+            const admin = await prisma.admin.findUnique({ where: { email: assignment.adminEmail } });
+            const tenant = await prisma.tenant.findUnique({ where: { slug: assignment.tenantSlug } });
+
+            if (!admin || !tenant) {
+                console.log(`[SKIP] Admin "${assignment.adminEmail}" ou Tenant "${assignment.tenantSlug}" nao encontrado.`);
+                continue;
+            }
+
+            const existing = await prisma.adminTenant.findUnique({
+                where: { admin_id_tenant_id: { admin_id: admin.id, tenant_id: tenant.id } },
+            });
+
+            if (existing) {
+                // Garantir que esta ativo
+                if (!existing.active) {
+                    await prisma.adminTenant.update({
+                        where: { id: existing.id },
+                        data: { active: true },
+                    });
+                }
+                existentes++;
+            } else {
+                await prisma.adminTenant.create({
+                    data: { admin_id: admin.id, tenant_id: tenant.id, active: true },
+                });
+                criados++;
+            }
+        }
+
+        return { criados, existentes };
+    }
+
+    // Primeiro deletar admins antigos que nao estao na lista
     const deletados = await deleteOldAdmins(admin);
 
     // Depois criar/atualizar os admins da lista
     const resultado = await createAdmin(admin);
 
+    // Seed tenants
+    const tenantResult = await seedTenants(tenants);
+
+    // Seed admin-tenant assignments
+    const assignmentResult = await seedAdminTenantAssignments(adminTenantAssignments);
+
     console.log(`\n----------------------------------------------------------------------------------\n`);
     console.log(`Admins deletados: ${deletados}, inseridos: ${resultado.inseridos}, atualizados: ${resultado.atualizados}`);
+    console.log(`Tenants inseridos: ${tenantResult.inseridos}, atualizados: ${tenantResult.atualizados}`);
+    console.log(`Admin-Tenant vinculos criados: ${assignmentResult.criados}, ja existentes: ${assignmentResult.existentes}`);
     console.log(`\n----------------------------------------------------------------------------------\n`);
 }

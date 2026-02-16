@@ -84,6 +84,8 @@ export const ModelName = {
   Lead: 'Lead',
   LeadQualificationMessage: 'LeadQualificationMessage',
   Admin: 'Admin',
+  Tenant: 'Tenant',
+  AdminTenant: 'AdminTenant',
   AdminSessionToken: 'AdminSessionToken',
   AdminCredential: 'AdminCredential',
   SMSNotification: 'SMSNotification',
@@ -693,11 +695,38 @@ export const AdminScalarFieldEnum = {
   id: 'id',
   name: 'name',
   email: 'email',
+  role: 'role',
+  active: 'active',
   created_at: 'created_at',
   updated_at: 'updated_at'
 } as const
 
 export type AdminScalarFieldEnum = (typeof AdminScalarFieldEnum)[keyof typeof AdminScalarFieldEnum]
+
+
+export const TenantScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  slug: 'slug',
+  domain: 'domain',
+  active: 'active',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+} as const
+
+export type TenantScalarFieldEnum = (typeof TenantScalarFieldEnum)[keyof typeof TenantScalarFieldEnum]
+
+
+export const AdminTenantScalarFieldEnum = {
+  id: 'id',
+  admin_id: 'admin_id',
+  tenant_id: 'tenant_id',
+  active: 'active',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+} as const
+
+export type AdminTenantScalarFieldEnum = (typeof AdminTenantScalarFieldEnum)[keyof typeof AdminTenantScalarFieldEnum]
 
 
 export const AdminSessionTokenScalarFieldEnum = {

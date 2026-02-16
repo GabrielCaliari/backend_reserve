@@ -183,6 +183,16 @@ export type LeadQualificationMessage = Prisma.LeadQualificationMessageModel
  */
 export type Admin = Prisma.AdminModel
 /**
+ * Model Tenant
+ * 
+ */
+export type Tenant = Prisma.TenantModel
+/**
+ * Model AdminTenant
+ * 
+ */
+export type AdminTenant = Prisma.AdminTenantModel
+/**
  * Model AdminSessionToken
  * 
  */

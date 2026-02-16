@@ -3,8 +3,10 @@
  * @deprecated Use NestJS HttpException/HttpStatus or structured responses instead
  */
 
-export function errorResponse(code: string, status: number, err: unknown = 'erro nao informado.') {
-  console.log(err);
+export function errorResponse(code: string, status: number, err?: unknown) {
+  if (err) {
+    console.error('[ErrorResponse]', err);
+  }
 
   return {
     status,

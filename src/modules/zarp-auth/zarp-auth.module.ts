@@ -9,6 +9,8 @@ import { LeadService } from './application/services/admin-lead.service';
 import { LeadController } from './infrastructure/controllers/admin-lead.controller';
 import { PostService as AdminPostService } from './application/services/admin-post.service';
 import { PostController as AdminPostController } from './infrastructure/controllers/admin-post.controller';
+import { TenantService } from './application/services/tenant.service';
+import { TenantController } from './infrastructure/controllers/tenant.controller';
 
 // Legacy repositories (will be replaced by DIP interfaces incrementally)
 import AdminRepository from './infrastructure/repositories/admin.repository';
@@ -20,6 +22,8 @@ import UserSessionTokenRepository from './infrastructure/repositories/user-sessi
 import LeadRepository from './infrastructure/repositories/lead.repository';
 import LeadQualificationMessageRepository from './infrastructure/repositories/lead-qualification-message.repository';
 import PlanRepository from './infrastructure/repositories/plan.repository';
+import TenantRepository from './infrastructure/repositories/tenant.repository';
+import AdminTenantRepository from './infrastructure/repositories/admin-tenant.repository';
 
 // DIP tokens
 import {
@@ -31,6 +35,8 @@ import {
   USER_SESSION_TOKEN_REPOSITORY,
   LEAD_REPOSITORY,
   PLAN_REPOSITORY,
+  TENANT_REPOSITORY,
+  ADMIN_TENANT_REPOSITORY,
 } from './domain/interfaces';
 
 // Cross-context repositories (temporary, to be replaced by module imports)
@@ -42,7 +48,7 @@ import AdditionalTokenPackRepository from '@/modules/zarp-pi-bot/infrastructure/
 import APITokenRepository from '@/modules/zarp-brands/infrastructure/repositories/api-token.repository';
 
 // DIP Guards
-import { AdminJwtGuard, UserJwtGuard } from '@/shared/auth/guards';
+import { AdminJwtGuard, UserJwtGuard, RolesGuard, TenantGuard } from '@/shared/auth/guards';
 import { ADMIN_TOKEN_VALIDATOR, USER_TOKEN_VALIDATOR } from '@/shared/auth/interfaces/token-validator.interface';
 
 // Token Validators (ITokenValidator implementations)
@@ -54,7 +60,7 @@ import { FXGoogleAPITokenProvider } from '@/modules/zarp-auth/infrastructure/pro
 
 /**
  * Zarp Auth Module
- * Bounded context: Admin & User authentication, sessions, JWT
+ * Bounded context: Admin & User authentication, sessions, JWT, RBAC, multi-tenant
  * Route prefix: /api/auth
  */
 @Module({
@@ -64,6 +70,7 @@ import { FXGoogleAPITokenProvider } from '@/modules/zarp-auth/infrastructure/pro
     EmailController,
     LeadController,
     AdminPostController,
+    TenantController,
   ],
   providers: [
     // Application services
@@ -72,6 +79,7 @@ import { FXGoogleAPITokenProvider } from '@/modules/zarp-auth/infrastructure/pro
     EmailService,
     LeadService,
     AdminPostService,
+    TenantService,
 
     // Token Validators (DIP implementations)
     AdminTokenValidator,
@@ -82,6 +90,8 @@ import { FXGoogleAPITokenProvider } from '@/modules/zarp-auth/infrastructure/pro
     // DIP Guards
     AdminJwtGuard,
     UserJwtGuard,
+    RolesGuard,
+    TenantGuard,
 
     // Local repositories
     AdminRepository,
@@ -93,6 +103,8 @@ import { FXGoogleAPITokenProvider } from '@/modules/zarp-auth/infrastructure/pro
     LeadRepository,
     LeadQualificationMessageRepository,
     PlanRepository,
+    TenantRepository,
+    AdminTenantRepository,
 
     // DIP repository tokens (alias to concrete repos)
     { provide: ADMIN_REPOSITORY, useExisting: AdminRepository },
@@ -103,6 +115,8 @@ import { FXGoogleAPITokenProvider } from '@/modules/zarp-auth/infrastructure/pro
     { provide: USER_SESSION_TOKEN_REPOSITORY, useExisting: UserSessionTokenRepository },
     { provide: LEAD_REPOSITORY, useExisting: LeadRepository },
     { provide: PLAN_REPOSITORY, useExisting: PlanRepository },
+    { provide: TENANT_REPOSITORY, useExisting: TenantRepository },
+    { provide: ADMIN_TENANT_REPOSITORY, useExisting: AdminTenantRepository },
 
     // Cross-context repositories (temporary coupling)
     SearchRepository,
@@ -117,8 +131,11 @@ import { FXGoogleAPITokenProvider } from '@/modules/zarp-auth/infrastructure/pro
   ],
   exports: [
     AdminService,
+    TenantService,
     AdminJwtGuard,
     UserJwtGuard,
+    RolesGuard,
+    TenantGuard,
     ADMIN_TOKEN_VALIDATOR,
     USER_TOKEN_VALIDATOR,
     // Concrete repos (backward compat for cross-context consumers)
@@ -130,6 +147,8 @@ import { FXGoogleAPITokenProvider } from '@/modules/zarp-auth/infrastructure/pro
     UserSessionTokenRepository,
     LeadRepository,
     PlanRepository,
+    TenantRepository,
+    AdminTenantRepository,
     // DIP tokens
     ADMIN_REPOSITORY,
     ADMIN_CREDENTIAL_REPOSITORY,
@@ -139,6 +158,8 @@ import { FXGoogleAPITokenProvider } from '@/modules/zarp-auth/infrastructure/pro
     USER_SESSION_TOKEN_REPOSITORY,
     LEAD_REPOSITORY,
     PLAN_REPOSITORY,
+    TENANT_REPOSITORY,
+    ADMIN_TENANT_REPOSITORY,
     UserService,
   ],
 })

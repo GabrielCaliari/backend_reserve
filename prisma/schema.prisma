@@ -648,14 +648,46 @@ model LeadQualificationMessage {
   updated_at         DateTime @updatedAt
 }
 
+enum EAdminRole {
+  super_admin
+  company_admin
+}
+
 model Admin {
   id                Int                 @id @default(autoincrement())
-  name              String              @db.VarChar(25)
+  name              String              @db.VarChar(100)
   email             String              @unique
+  role              EAdminRole          @default(company_admin)
+  active            Boolean             @default(true)
   created_at        DateTime            @default(now())
   updated_at        DateTime            @updatedAt
   AdminSessionToken AdminSessionToken[]
   AdminCredential   AdminCredential?
+  AdminTenant       AdminTenant[]
+}
+
+model Tenant {
+  id          Int           @id @default(autoincrement())
+  name        String        @db.VarChar(100)
+  slug        String        @unique @db.VarChar(50)
+  domain      String?       @db.VarChar(255)
+  active      Boolean       @default(true)
+  created_at  DateTime      @default(now())
+  updated_at  DateTime      @updatedAt
+  AdminTenant AdminTenant[]
+}
+
+model AdminTenant {
+  id         Int      @id @default(autoincrement())
+  admin_id   Int
+  tenant_id  Int
+  active     Boolean  @default(true)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  Admin      Admin    @relation(fields: [admin_id], references: [id])
+  Tenant     Tenant   @relation(fields: [tenant_id], references: [id])
+
+  @@unique([admin_id, tenant_id])
 }
 
 model AdminSessionToken {

@@ -385,6 +385,23 @@ export type DecimalNullableWithAggregatesFilter<$PrismaModel = never> = {
   _max?: Prisma.NestedDecimalNullableFilter<$PrismaModel>
 }
 
+export type EnumEAdminRoleFilter<$PrismaModel = never> = {
+  equals?: $Enums.EAdminRole | Prisma.EnumEAdminRoleFieldRefInput<$PrismaModel>
+  in?: $Enums.EAdminRole[] | Prisma.ListEnumEAdminRoleFieldRefInput<$PrismaModel>
+  notIn?: $Enums.EAdminRole[] | Prisma.ListEnumEAdminRoleFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumEAdminRoleFilter<$PrismaModel> | $Enums.EAdminRole
+}
+
+export type EnumEAdminRoleWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.EAdminRole | Prisma.EnumEAdminRoleFieldRefInput<$PrismaModel>
+  in?: $Enums.EAdminRole[] | Prisma.ListEnumEAdminRoleFieldRefInput<$PrismaModel>
+  notIn?: $Enums.EAdminRole[] | Prisma.ListEnumEAdminRoleFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumEAdminRoleWithAggregatesFilter<$PrismaModel> | $Enums.EAdminRole
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumEAdminRoleFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumEAdminRoleFilter<$PrismaModel>
+}
+
 export type NestedIntFilter<$PrismaModel = never> = {
   equals?: number | Prisma.IntFieldRefInput<$PrismaModel>
   in?: number[] | Prisma.ListIntFieldRefInput<$PrismaModel>
@@ -702,6 +719,23 @@ export type NestedDecimalNullableWithAggregatesFilter<$PrismaModel = never> = {
   _sum?: Prisma.NestedDecimalNullableFilter<$PrismaModel>
   _min?: Prisma.NestedDecimalNullableFilter<$PrismaModel>
   _max?: Prisma.NestedDecimalNullableFilter<$PrismaModel>
+}
+
+export type NestedEnumEAdminRoleFilter<$PrismaModel = never> = {
+  equals?: $Enums.EAdminRole | Prisma.EnumEAdminRoleFieldRefInput<$PrismaModel>
+  in?: $Enums.EAdminRole[] | Prisma.ListEnumEAdminRoleFieldRefInput<$PrismaModel>
+  notIn?: $Enums.EAdminRole[] | Prisma.ListEnumEAdminRoleFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumEAdminRoleFilter<$PrismaModel> | $Enums.EAdminRole
+}
+
+export type NestedEnumEAdminRoleWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.EAdminRole | Prisma.EnumEAdminRoleFieldRefInput<$PrismaModel>
+  in?: $Enums.EAdminRole[] | Prisma.ListEnumEAdminRoleFieldRefInput<$PrismaModel>
+  notIn?: $Enums.EAdminRole[] | Prisma.ListEnumEAdminRoleFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumEAdminRoleWithAggregatesFilter<$PrismaModel> | $Enums.EAdminRole
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumEAdminRoleFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumEAdminRoleFilter<$PrismaModel>
 }
 
 

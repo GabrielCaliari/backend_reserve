@@ -417,6 +417,8 @@ export const ModelName = {
   Lead: 'Lead',
   LeadQualificationMessage: 'LeadQualificationMessage',
   Admin: 'Admin',
+  Tenant: 'Tenant',
+  AdminTenant: 'AdminTenant',
   AdminSessionToken: 'AdminSessionToken',
   AdminCredential: 'AdminCredential',
   SMSNotification: 'SMSNotification',
@@ -446,7 +448,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "plan" | "pibotMessages" | "subscription" | "additionalTokenPack" | "order" | "monitoringPlan" | "userSessionToken" | "userCredential" | "userCredentialHistory" | "userPasswordChangeSession" | "company" | "auxiliaryCompanyInformation" | "search" | "taxRegime" | "partner" | "brand" | "cnae" | "journal" | "journalToFetch" | "brandAlert" | "brandMonitoring" | "journalAlert" | "brandAnalysis" | "brandAnalysisRequest" | "brandAnalysisToken" | "brandNotification" | "companyExport" | "publicBrandSearch" | "aPIToken" | "lead" | "leadQualificationMessage" | "admin" | "adminSessionToken" | "adminCredential" | "sMSNotification" | "sMSNotificationEvent" | "config" | "emailCampaign" | "email" | "delivery" | "openTracking" | "clickTracking" | "emailLead" | "campaignBatch" | "sMTPServer" | "viewCompany"
+    modelProps: "user" | "plan" | "pibotMessages" | "subscription" | "additionalTokenPack" | "order" | "monitoringPlan" | "userSessionToken" | "userCredential" | "userCredentialHistory" | "userPasswordChangeSession" | "company" | "auxiliaryCompanyInformation" | "search" | "taxRegime" | "partner" | "brand" | "cnae" | "journal" | "journalToFetch" | "brandAlert" | "brandMonitoring" | "journalAlert" | "brandAnalysis" | "brandAnalysisRequest" | "brandAnalysisToken" | "brandNotification" | "companyExport" | "publicBrandSearch" | "aPIToken" | "lead" | "leadQualificationMessage" | "admin" | "tenant" | "adminTenant" | "adminSessionToken" | "adminCredential" | "sMSNotification" | "sMSNotificationEvent" | "config" | "emailCampaign" | "email" | "delivery" | "openTracking" | "clickTracking" | "emailLead" | "campaignBatch" | "sMTPServer" | "viewCompany"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -2892,6 +2894,154 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    Tenant: {
+      payload: Prisma.$TenantPayload<ExtArgs>
+      fields: Prisma.TenantFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.TenantFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TenantPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.TenantFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TenantPayload>
+        }
+        findFirst: {
+          args: Prisma.TenantFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TenantPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.TenantFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TenantPayload>
+        }
+        findMany: {
+          args: Prisma.TenantFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TenantPayload>[]
+        }
+        create: {
+          args: Prisma.TenantCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TenantPayload>
+        }
+        createMany: {
+          args: Prisma.TenantCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.TenantCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TenantPayload>[]
+        }
+        delete: {
+          args: Prisma.TenantDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TenantPayload>
+        }
+        update: {
+          args: Prisma.TenantUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TenantPayload>
+        }
+        deleteMany: {
+          args: Prisma.TenantDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.TenantUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.TenantUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TenantPayload>[]
+        }
+        upsert: {
+          args: Prisma.TenantUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TenantPayload>
+        }
+        aggregate: {
+          args: Prisma.TenantAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateTenant>
+        }
+        groupBy: {
+          args: Prisma.TenantGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.TenantGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.TenantCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.TenantCountAggregateOutputType> | number
+        }
+      }
+    }
+    AdminTenant: {
+      payload: Prisma.$AdminTenantPayload<ExtArgs>
+      fields: Prisma.AdminTenantFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.AdminTenantFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AdminTenantPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.AdminTenantFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AdminTenantPayload>
+        }
+        findFirst: {
+          args: Prisma.AdminTenantFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AdminTenantPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.AdminTenantFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AdminTenantPayload>
+        }
+        findMany: {
+          args: Prisma.AdminTenantFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AdminTenantPayload>[]
+        }
+        create: {
+          args: Prisma.AdminTenantCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AdminTenantPayload>
+        }
+        createMany: {
+          args: Prisma.AdminTenantCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.AdminTenantCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AdminTenantPayload>[]
+        }
+        delete: {
+          args: Prisma.AdminTenantDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AdminTenantPayload>
+        }
+        update: {
+          args: Prisma.AdminTenantUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AdminTenantPayload>
+        }
+        deleteMany: {
+          args: Prisma.AdminTenantDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.AdminTenantUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.AdminTenantUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AdminTenantPayload>[]
+        }
+        upsert: {
+          args: Prisma.AdminTenantUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AdminTenantPayload>
+        }
+        aggregate: {
+          args: Prisma.AdminTenantAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateAdminTenant>
+        }
+        groupBy: {
+          args: Prisma.AdminTenantGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AdminTenantGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.AdminTenantCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AdminTenantCountAggregateOutputType> | number
+        }
+      }
+    }
     AdminSessionToken: {
       payload: Prisma.$AdminSessionTokenPayload<ExtArgs>
       fields: Prisma.AdminSessionTokenFieldRefs
@@ -4508,11 +4658,38 @@ export const AdminScalarFieldEnum = {
   id: 'id',
   name: 'name',
   email: 'email',
+  role: 'role',
+  active: 'active',
   created_at: 'created_at',
   updated_at: 'updated_at'
 } as const
 
 export type AdminScalarFieldEnum = (typeof AdminScalarFieldEnum)[keyof typeof AdminScalarFieldEnum]
+
+
+export const TenantScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  slug: 'slug',
+  domain: 'domain',
+  active: 'active',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+} as const
+
+export type TenantScalarFieldEnum = (typeof TenantScalarFieldEnum)[keyof typeof TenantScalarFieldEnum]
+
+
+export const AdminTenantScalarFieldEnum = {
+  id: 'id',
+  admin_id: 'admin_id',
+  tenant_id: 'tenant_id',
+  active: 'active',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+} as const
+
+export type AdminTenantScalarFieldEnum = (typeof AdminTenantScalarFieldEnum)[keyof typeof AdminTenantScalarFieldEnum]
 
 
 export const AdminSessionTokenScalarFieldEnum = {
@@ -4920,6 +5097,20 @@ export type DecimalFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel,
 export type ListDecimalFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Decimal[]'>
     
 
+
+/**
+ * Reference to a field of type 'EAdminRole'
+ */
+export type EnumEAdminRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'EAdminRole'>
+    
+
+
+/**
+ * Reference to a field of type 'EAdminRole[]'
+ */
+export type ListEnumEAdminRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'EAdminRole[]'>
+    
+
 /**
  * Batch Payload for updateMany & deleteMany & createMany
  */
@@ -5048,6 +5239,8 @@ export type GlobalOmitConfig = {
   lead?: Prisma.LeadOmit
   leadQualificationMessage?: Prisma.LeadQualificationMessageOmit
   admin?: Prisma.AdminOmit
+  tenant?: Prisma.TenantOmit
+  adminTenant?: Prisma.AdminTenantOmit
   adminSessionToken?: Prisma.AdminSessionTokenOmit
   adminCredential?: Prisma.AdminCredentialOmit
   sMSNotification?: Prisma.SMSNotificationOmit
