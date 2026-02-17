@@ -6,6 +6,10 @@ import { seedCnae } from "./seed/seed-cnae";
 import { seedCNPJ } from "./seed/seed-company";
 import { seedPlan } from "./seed/seed-plan";
 import { seedAdmin } from './seed/seed-admin';
+import { seedSMTPServer } from './seed/seed-smtp-server';
+import { seedTokenPack } from './seed/seed-token-pack';
+import { seedLeadCollection } from './seed/seed-lead-collection';
+import { seedCMS } from './seed/seed-cms';
 
 (async function main() {
 
@@ -101,11 +105,15 @@ import { seedAdmin } from './seed/seed-admin';
         }
     }
 
-    ensureViewExists();
+    await ensureViewExists();
 
     // await seedCnae();
-    // await seedPlan();
+    await seedPlan();
     await seedAdmin();
+    await seedSMTPServer();
+    await seedTokenPack();
+    await seedLeadCollection();
+    await seedCMS();
 
     // await seedCNPJ();
 })()

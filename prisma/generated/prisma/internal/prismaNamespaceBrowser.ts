@@ -85,6 +85,7 @@ export const ModelName = {
   LeadQualificationMessage: 'LeadQualificationMessage',
   Admin: 'Admin',
   Tenant: 'Tenant',
+  LeadCollection: 'LeadCollection',
   AdminTenant: 'AdminTenant',
   Blog: 'Blog',
   Article: 'Article',
@@ -665,6 +666,8 @@ export const LeadScalarFieldEnum = {
   description: 'description',
   data: 'data',
   status: 'status',
+  collection_id: 'collection_id',
+  tenant_id: 'tenant_id',
   created_at: 'created_at',
   updated_at: 'updated_at'
 } as const
@@ -718,6 +721,24 @@ export const TenantScalarFieldEnum = {
 } as const
 
 export type TenantScalarFieldEnum = (typeof TenantScalarFieldEnum)[keyof typeof TenantScalarFieldEnum]
+
+
+export const LeadCollectionScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  slug: 'slug',
+  source: 'source',
+  access_mode: 'access_mode',
+  allowed_domains: 'allowed_domains',
+  secret_key_hash: 'secret_key_hash',
+  secret_key_salt: 'secret_key_salt',
+  active: 'active',
+  tenant_id: 'tenant_id',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+} as const
+
+export type LeadCollectionScalarFieldEnum = (typeof LeadCollectionScalarFieldEnum)[keyof typeof LeadCollectionScalarFieldEnum]
 
 
 export const AdminTenantScalarFieldEnum = {

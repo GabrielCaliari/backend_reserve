@@ -1,0 +1,246 @@
+# API Contract: Admin Collection Management
+
+**Base Path**: `/api/leads/collections`
+**Auth**: `AdminJwtGuard` + `TenantGuard` + `RolesGuard`
+**Tags**: `Lead Collections`
+
+---
+
+## POST /collections
+
+**Summary**: Create a new lead collection
+**Minimum Role**: `manager`
+**Guards**: `AdminJwtGuard`, `TenantGuard`, `RolesGuard`
+
+### Request Headers
+
+| Header | Type | Required | Description |
+|--------|------|----------|-------------|
+| `Authorization` | string | Yes | Bearer JWT token |
+| `x-tenant-id` | number | Yes* | Tenant ID (*optional for super admin if passed in body) |
+
+### Request Body
+
+```json
+{
+  "name": "Landing Page Home",
+  "source": "landing-page-home",
+  "access_mode": "public",
+  "allowed_domains": []
+}
+```
+
+| Field | Type | Required | Validation | Description |
+|-------|------|----------|------------|-------------|
+| `name` | string | Yes | Max 150 chars | Human-friendly collection name |
+| `source` | string | Yes | Max 100 chars | Descriptive source label |
+| `access_mode` | enum | No | `public`, `private`, `restricted` | Default: `public` |
+| `allowed_domains` | string[] | Conditional | Required if `access_mode=private` | CORS whitelisted domains |
+
+### Response 201 Created
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "name": "Landing Page Home",
+    "slug": "landing-page-home",
+    "source": "landing-page-home",
+    "access_mode": "public",
+    "allowed_domains": [],
+    "active": true,
+    "tenant_id": 1,
+    "created_at": "2026-02-16T23:00:00.000Z",
+    "secret_key": null
+  }
+}
+```
+
+> **Note**: `secret_key` is returned in plaintext ONLY on creation when `access_mode=restricted`. It is never stored or returned again.
+
+### Response 409 Conflict
+
+```json
+{
+  "success": false,
+  "error": "Collection slug already exists for this tenant"
+}
+```
+
+---
+
+## GET /collections
+
+**Summary**: List collections for the current tenant
+**Minimum Role**: `viewer`
+**Guards**: `AdminJwtGuard`, `TenantGuard`, `RolesGuard`
+
+### Request Headers
+
+| Header | Type | Required | Description |
+|--------|------|----------|-------------|
+| `Authorization` | string | Yes | Bearer JWT token |
+| `x-tenant-id` | number | Yes* | *Super admin can omit to see all tenants |
+
+### Query Parameters
+
+| Param | Type | Default | Description |
+|-------|------|---------|-------------|
+| `page` | number | 1 | Page number |
+| `limit` | number | 30 | Items per page |
+| `active` | boolean | - | Filter by active status |
+| `access_mode` | enum | - | Filter by access mode |
+
+### Response 200 OK
+
+```json
+{
+  "success": true,
+  "data": {
+    "collections": [
+      {
+        "id": 1,
+        "name": "Landing Page Home",
+        "slug": "landing-page-home",
+        "source": "landing-page-home",
+        "access_mode": "public",
+        "allowed_domains": [],
+        "active": true,
+        "tenant_id": 1,
+        "created_at": "2026-02-16T23:00:00.000Z",
+        "updated_at": "2026-02-16T23:00:00.000Z",
+        "_count": { "Lead": 42 }
+      }
+    ],
+    "page": {
+      "count": 1,
+      "count_pages": 1,
+      "current_page": 1,
+      "limit": 30
+    }
+  }
+}
+```
+
+> **Note**: Super admins without `x-tenant-id` header receive collections from ALL tenants. Each collection includes its `tenant_id` for identification.
+
+---
+
+## GET /collections/:id
+
+**Summary**: Get collection by ID
+**Minimum Role**: `viewer`
+**Guards**: `AdminJwtGuard`, `TenantGuard`, `RolesGuard`
+
+### Path Parameters
+
+| Param | Type | Description |
+|-------|------|-------------|
+| `id` | number | Collection ID |
+
+### Response 200 OK
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "name": "Landing Page Home",
+    "slug": "landing-page-home",
+    "source": "landing-page-home",
+    "access_mode": "public",
+    "allowed_domains": [],
+    "active": true,
+    "tenant_id": 1,
+    "created_at": "2026-02-16T23:00:00.000Z",
+    "updated_at": "2026-02-16T23:00:00.000Z",
+    "_count": { "Lead": 42 }
+  }
+}
+```
+
+### Response 404 Not Found
+
+```json
+{
+  "success": false,
+  "error": "Collection not found"
+}
+```
+
+---
+
+## PUT /collections/:id
+
+**Summary**: Update collection metadata
+**Minimum Role**: `manager`
+**Guards**: `AdminJwtGuard`, `TenantGuard`, `RolesGuard`
+
+### Request Body
+
+```json
+{
+  "name": "Landing Page V2",
+  "source": "landing-page-v2",
+  "access_mode": "private",
+  "allowed_domains": ["example.com", "www.example.com"],
+  "active": true
+}
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `name` | string | No | Update name |
+| `source` | string | No | Update source label |
+| `access_mode` | enum | No | Change access mode |
+| `allowed_domains` | string[] | Conditional | Required when changing to `private` |
+| `active` | boolean | No | Activate/deactivate |
+
+### Response 200 OK
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "secret_key": "ck_live_abc123..."
+  }
+}
+```
+
+> **Note**: `secret_key` is returned ONLY when `access_mode` changes to `restricted`. Otherwise `null`.
+
+### Response 404 Not Found / 403 Forbidden
+
+Standard error responses.
+
+---
+
+## POST /collections/:id/regenerate-key
+
+**Summary**: Regenerate the secret key for a restricted collection
+**Minimum Role**: `manager`
+**Guards**: `AdminJwtGuard`, `TenantGuard`, `RolesGuard`
+
+### Response 200 OK
+
+```json
+{
+  "success": true,
+  "data": {
+    "secret_key": "ck_live_newkey456..."
+  }
+}
+```
+
+> The old key is immediately invalidated. The new key is returned in plaintext only once.
+
+### Response 400 Bad Request
+
+```json
+{
+  "success": false,
+  "error": "Collection is not in restricted mode"
+}
+```

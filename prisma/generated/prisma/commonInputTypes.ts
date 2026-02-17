@@ -402,6 +402,23 @@ export type EnumEAdminRoleWithAggregatesFilter<$PrismaModel = never> = {
   _max?: Prisma.NestedEnumEAdminRoleFilter<$PrismaModel>
 }
 
+export type EnumECollectionAccessModeFilter<$PrismaModel = never> = {
+  equals?: $Enums.ECollectionAccessMode | Prisma.EnumECollectionAccessModeFieldRefInput<$PrismaModel>
+  in?: $Enums.ECollectionAccessMode[] | Prisma.ListEnumECollectionAccessModeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.ECollectionAccessMode[] | Prisma.ListEnumECollectionAccessModeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumECollectionAccessModeFilter<$PrismaModel> | $Enums.ECollectionAccessMode
+}
+
+export type EnumECollectionAccessModeWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.ECollectionAccessMode | Prisma.EnumECollectionAccessModeFieldRefInput<$PrismaModel>
+  in?: $Enums.ECollectionAccessMode[] | Prisma.ListEnumECollectionAccessModeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.ECollectionAccessMode[] | Prisma.ListEnumECollectionAccessModeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumECollectionAccessModeWithAggregatesFilter<$PrismaModel> | $Enums.ECollectionAccessMode
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumECollectionAccessModeFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumECollectionAccessModeFilter<$PrismaModel>
+}
+
 export type EnumEArticleStatusFilter<$PrismaModel = never> = {
   equals?: $Enums.EArticleStatus | Prisma.EnumEArticleStatusFieldRefInput<$PrismaModel>
   in?: $Enums.EArticleStatus[] | Prisma.ListEnumEArticleStatusFieldRefInput<$PrismaModel>
@@ -753,6 +770,23 @@ export type NestedEnumEAdminRoleWithAggregatesFilter<$PrismaModel = never> = {
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedEnumEAdminRoleFilter<$PrismaModel>
   _max?: Prisma.NestedEnumEAdminRoleFilter<$PrismaModel>
+}
+
+export type NestedEnumECollectionAccessModeFilter<$PrismaModel = never> = {
+  equals?: $Enums.ECollectionAccessMode | Prisma.EnumECollectionAccessModeFieldRefInput<$PrismaModel>
+  in?: $Enums.ECollectionAccessMode[] | Prisma.ListEnumECollectionAccessModeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.ECollectionAccessMode[] | Prisma.ListEnumECollectionAccessModeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumECollectionAccessModeFilter<$PrismaModel> | $Enums.ECollectionAccessMode
+}
+
+export type NestedEnumECollectionAccessModeWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.ECollectionAccessMode | Prisma.EnumECollectionAccessModeFieldRefInput<$PrismaModel>
+  in?: $Enums.ECollectionAccessMode[] | Prisma.ListEnumECollectionAccessModeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.ECollectionAccessMode[] | Prisma.ListEnumECollectionAccessModeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumECollectionAccessModeWithAggregatesFilter<$PrismaModel> | $Enums.ECollectionAccessMode
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumECollectionAccessModeFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumECollectionAccessModeFilter<$PrismaModel>
 }
 
 export type NestedEnumEArticleStatusFilter<$PrismaModel = never> = {

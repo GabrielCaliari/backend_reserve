@@ -418,6 +418,7 @@ export const ModelName = {
   LeadQualificationMessage: 'LeadQualificationMessage',
   Admin: 'Admin',
   Tenant: 'Tenant',
+  LeadCollection: 'LeadCollection',
   AdminTenant: 'AdminTenant',
   Blog: 'Blog',
   Article: 'Article',
@@ -451,7 +452,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "plan" | "pibotMessages" | "subscription" | "additionalTokenPack" | "order" | "monitoringPlan" | "userSessionToken" | "userCredential" | "userCredentialHistory" | "userPasswordChangeSession" | "company" | "auxiliaryCompanyInformation" | "search" | "taxRegime" | "partner" | "brand" | "cnae" | "journal" | "journalToFetch" | "brandAlert" | "brandMonitoring" | "journalAlert" | "brandAnalysis" | "brandAnalysisRequest" | "brandAnalysisToken" | "brandNotification" | "companyExport" | "publicBrandSearch" | "aPIToken" | "lead" | "leadQualificationMessage" | "admin" | "tenant" | "adminTenant" | "blog" | "article" | "articleImage" | "adminSessionToken" | "adminCredential" | "sMSNotification" | "sMSNotificationEvent" | "config" | "emailCampaign" | "email" | "delivery" | "openTracking" | "clickTracking" | "emailLead" | "campaignBatch" | "sMTPServer" | "viewCompany"
+    modelProps: "user" | "plan" | "pibotMessages" | "subscription" | "additionalTokenPack" | "order" | "monitoringPlan" | "userSessionToken" | "userCredential" | "userCredentialHistory" | "userPasswordChangeSession" | "company" | "auxiliaryCompanyInformation" | "search" | "taxRegime" | "partner" | "brand" | "cnae" | "journal" | "journalToFetch" | "brandAlert" | "brandMonitoring" | "journalAlert" | "brandAnalysis" | "brandAnalysisRequest" | "brandAnalysisToken" | "brandNotification" | "companyExport" | "publicBrandSearch" | "aPIToken" | "lead" | "leadQualificationMessage" | "admin" | "tenant" | "leadCollection" | "adminTenant" | "blog" | "article" | "articleImage" | "adminSessionToken" | "adminCredential" | "sMSNotification" | "sMSNotificationEvent" | "config" | "emailCampaign" | "email" | "delivery" | "openTracking" | "clickTracking" | "emailLead" | "campaignBatch" | "sMTPServer" | "viewCompany"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -2971,6 +2972,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    LeadCollection: {
+      payload: Prisma.$LeadCollectionPayload<ExtArgs>
+      fields: Prisma.LeadCollectionFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.LeadCollectionFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LeadCollectionPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.LeadCollectionFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LeadCollectionPayload>
+        }
+        findFirst: {
+          args: Prisma.LeadCollectionFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LeadCollectionPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.LeadCollectionFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LeadCollectionPayload>
+        }
+        findMany: {
+          args: Prisma.LeadCollectionFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LeadCollectionPayload>[]
+        }
+        create: {
+          args: Prisma.LeadCollectionCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LeadCollectionPayload>
+        }
+        createMany: {
+          args: Prisma.LeadCollectionCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.LeadCollectionCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LeadCollectionPayload>[]
+        }
+        delete: {
+          args: Prisma.LeadCollectionDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LeadCollectionPayload>
+        }
+        update: {
+          args: Prisma.LeadCollectionUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LeadCollectionPayload>
+        }
+        deleteMany: {
+          args: Prisma.LeadCollectionDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.LeadCollectionUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.LeadCollectionUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LeadCollectionPayload>[]
+        }
+        upsert: {
+          args: Prisma.LeadCollectionUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LeadCollectionPayload>
+        }
+        aggregate: {
+          args: Prisma.LeadCollectionAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateLeadCollection>
+        }
+        groupBy: {
+          args: Prisma.LeadCollectionGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.LeadCollectionGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.LeadCollectionCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.LeadCollectionCountAggregateOutputType> | number
+        }
+      }
+    }
     AdminTenant: {
       payload: Prisma.$AdminTenantPayload<ExtArgs>
       fields: Prisma.AdminTenantFieldRefs
@@ -4850,6 +4925,8 @@ export const LeadScalarFieldEnum = {
   description: 'description',
   data: 'data',
   status: 'status',
+  collection_id: 'collection_id',
+  tenant_id: 'tenant_id',
   created_at: 'created_at',
   updated_at: 'updated_at'
 } as const
@@ -4903,6 +4980,24 @@ export const TenantScalarFieldEnum = {
 } as const
 
 export type TenantScalarFieldEnum = (typeof TenantScalarFieldEnum)[keyof typeof TenantScalarFieldEnum]
+
+
+export const LeadCollectionScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  slug: 'slug',
+  source: 'source',
+  access_mode: 'access_mode',
+  allowed_domains: 'allowed_domains',
+  secret_key_hash: 'secret_key_hash',
+  secret_key_salt: 'secret_key_salt',
+  active: 'active',
+  tenant_id: 'tenant_id',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+} as const
+
+export type LeadCollectionScalarFieldEnum = (typeof LeadCollectionScalarFieldEnum)[keyof typeof LeadCollectionScalarFieldEnum]
 
 
 export const AdminTenantScalarFieldEnum = {
@@ -5387,6 +5482,20 @@ export type ListEnumEAdminRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$P
 
 
 /**
+ * Reference to a field of type 'ECollectionAccessMode'
+ */
+export type EnumECollectionAccessModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ECollectionAccessMode'>
+    
+
+
+/**
+ * Reference to a field of type 'ECollectionAccessMode[]'
+ */
+export type ListEnumECollectionAccessModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ECollectionAccessMode[]'>
+    
+
+
+/**
  * Reference to a field of type 'EArticleStatus'
  */
 export type EnumEArticleStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'EArticleStatus'>
@@ -5528,6 +5637,7 @@ export type GlobalOmitConfig = {
   leadQualificationMessage?: Prisma.LeadQualificationMessageOmit
   admin?: Prisma.AdminOmit
   tenant?: Prisma.TenantOmit
+  leadCollection?: Prisma.LeadCollectionOmit
   adminTenant?: Prisma.AdminTenantOmit
   blog?: Prisma.BlogOmit
   article?: Prisma.ArticleOmit

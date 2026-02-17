@@ -234,6 +234,8 @@ export type TenantWhereInput = {
   updated_at?: Prisma.DateTimeFilter<"Tenant"> | Date | string
   AdminTenant?: Prisma.AdminTenantListRelationFilter
   Blog?: Prisma.BlogListRelationFilter
+  LeadCollection?: Prisma.LeadCollectionListRelationFilter
+  leads?: Prisma.LeadListRelationFilter
 }
 
 export type TenantOrderByWithRelationInput = {
@@ -246,6 +248,8 @@ export type TenantOrderByWithRelationInput = {
   updated_at?: Prisma.SortOrder
   AdminTenant?: Prisma.AdminTenantOrderByRelationAggregateInput
   Blog?: Prisma.BlogOrderByRelationAggregateInput
+  LeadCollection?: Prisma.LeadCollectionOrderByRelationAggregateInput
+  leads?: Prisma.LeadOrderByRelationAggregateInput
 }
 
 export type TenantWhereUniqueInput = Prisma.AtLeast<{
@@ -261,6 +265,8 @@ export type TenantWhereUniqueInput = Prisma.AtLeast<{
   updated_at?: Prisma.DateTimeFilter<"Tenant"> | Date | string
   AdminTenant?: Prisma.AdminTenantListRelationFilter
   Blog?: Prisma.BlogListRelationFilter
+  LeadCollection?: Prisma.LeadCollectionListRelationFilter
+  leads?: Prisma.LeadListRelationFilter
 }, "id" | "slug">
 
 export type TenantOrderByWithAggregationInput = {
@@ -300,6 +306,8 @@ export type TenantCreateInput = {
   updated_at?: Date | string
   AdminTenant?: Prisma.AdminTenantCreateNestedManyWithoutTenantInput
   Blog?: Prisma.BlogCreateNestedManyWithoutTenantInput
+  LeadCollection?: Prisma.LeadCollectionCreateNestedManyWithoutTenantInput
+  leads?: Prisma.LeadCreateNestedManyWithoutTenantInput
 }
 
 export type TenantUncheckedCreateInput = {
@@ -312,6 +320,8 @@ export type TenantUncheckedCreateInput = {
   updated_at?: Date | string
   AdminTenant?: Prisma.AdminTenantUncheckedCreateNestedManyWithoutTenantInput
   Blog?: Prisma.BlogUncheckedCreateNestedManyWithoutTenantInput
+  LeadCollection?: Prisma.LeadCollectionUncheckedCreateNestedManyWithoutTenantInput
+  leads?: Prisma.LeadUncheckedCreateNestedManyWithoutTenantInput
 }
 
 export type TenantUpdateInput = {
@@ -323,6 +333,8 @@ export type TenantUpdateInput = {
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   AdminTenant?: Prisma.AdminTenantUpdateManyWithoutTenantNestedInput
   Blog?: Prisma.BlogUpdateManyWithoutTenantNestedInput
+  LeadCollection?: Prisma.LeadCollectionUpdateManyWithoutTenantNestedInput
+  leads?: Prisma.LeadUpdateManyWithoutTenantNestedInput
 }
 
 export type TenantUncheckedUpdateInput = {
@@ -335,6 +347,8 @@ export type TenantUncheckedUpdateInput = {
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   AdminTenant?: Prisma.AdminTenantUncheckedUpdateManyWithoutTenantNestedInput
   Blog?: Prisma.BlogUncheckedUpdateManyWithoutTenantNestedInput
+  LeadCollection?: Prisma.LeadCollectionUncheckedUpdateManyWithoutTenantNestedInput
+  leads?: Prisma.LeadUncheckedUpdateManyWithoutTenantNestedInput
 }
 
 export type TenantCreateManyInput = {
@@ -364,6 +378,11 @@ export type TenantUncheckedUpdateManyInput = {
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type TenantNullableScalarRelationFilter = {
+  is?: Prisma.TenantWhereInput | null
+  isNot?: Prisma.TenantWhereInput | null
 }
 
 export type TenantCountOrderByAggregateInput = {
@@ -409,6 +428,36 @@ export type TenantScalarRelationFilter = {
   isNot?: Prisma.TenantWhereInput
 }
 
+export type TenantCreateNestedOneWithoutLeadsInput = {
+  create?: Prisma.XOR<Prisma.TenantCreateWithoutLeadsInput, Prisma.TenantUncheckedCreateWithoutLeadsInput>
+  connectOrCreate?: Prisma.TenantCreateOrConnectWithoutLeadsInput
+  connect?: Prisma.TenantWhereUniqueInput
+}
+
+export type TenantUpdateOneWithoutLeadsNestedInput = {
+  create?: Prisma.XOR<Prisma.TenantCreateWithoutLeadsInput, Prisma.TenantUncheckedCreateWithoutLeadsInput>
+  connectOrCreate?: Prisma.TenantCreateOrConnectWithoutLeadsInput
+  upsert?: Prisma.TenantUpsertWithoutLeadsInput
+  disconnect?: Prisma.TenantWhereInput | boolean
+  delete?: Prisma.TenantWhereInput | boolean
+  connect?: Prisma.TenantWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.TenantUpdateToOneWithWhereWithoutLeadsInput, Prisma.TenantUpdateWithoutLeadsInput>, Prisma.TenantUncheckedUpdateWithoutLeadsInput>
+}
+
+export type TenantCreateNestedOneWithoutLeadCollectionInput = {
+  create?: Prisma.XOR<Prisma.TenantCreateWithoutLeadCollectionInput, Prisma.TenantUncheckedCreateWithoutLeadCollectionInput>
+  connectOrCreate?: Prisma.TenantCreateOrConnectWithoutLeadCollectionInput
+  connect?: Prisma.TenantWhereUniqueInput
+}
+
+export type TenantUpdateOneRequiredWithoutLeadCollectionNestedInput = {
+  create?: Prisma.XOR<Prisma.TenantCreateWithoutLeadCollectionInput, Prisma.TenantUncheckedCreateWithoutLeadCollectionInput>
+  connectOrCreate?: Prisma.TenantCreateOrConnectWithoutLeadCollectionInput
+  upsert?: Prisma.TenantUpsertWithoutLeadCollectionInput
+  connect?: Prisma.TenantWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.TenantUpdateToOneWithWhereWithoutLeadCollectionInput, Prisma.TenantUpdateWithoutLeadCollectionInput>, Prisma.TenantUncheckedUpdateWithoutLeadCollectionInput>
+}
+
 export type TenantCreateNestedOneWithoutAdminTenantInput = {
   create?: Prisma.XOR<Prisma.TenantCreateWithoutAdminTenantInput, Prisma.TenantUncheckedCreateWithoutAdminTenantInput>
   connectOrCreate?: Prisma.TenantCreateOrConnectWithoutAdminTenantInput
@@ -437,6 +486,138 @@ export type TenantUpdateOneRequiredWithoutBlogNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.TenantUpdateToOneWithWhereWithoutBlogInput, Prisma.TenantUpdateWithoutBlogInput>, Prisma.TenantUncheckedUpdateWithoutBlogInput>
 }
 
+export type TenantCreateWithoutLeadsInput = {
+  name: string
+  slug: string
+  domain?: string | null
+  active?: boolean
+  created_at?: Date | string
+  updated_at?: Date | string
+  AdminTenant?: Prisma.AdminTenantCreateNestedManyWithoutTenantInput
+  Blog?: Prisma.BlogCreateNestedManyWithoutTenantInput
+  LeadCollection?: Prisma.LeadCollectionCreateNestedManyWithoutTenantInput
+}
+
+export type TenantUncheckedCreateWithoutLeadsInput = {
+  id?: number
+  name: string
+  slug: string
+  domain?: string | null
+  active?: boolean
+  created_at?: Date | string
+  updated_at?: Date | string
+  AdminTenant?: Prisma.AdminTenantUncheckedCreateNestedManyWithoutTenantInput
+  Blog?: Prisma.BlogUncheckedCreateNestedManyWithoutTenantInput
+  LeadCollection?: Prisma.LeadCollectionUncheckedCreateNestedManyWithoutTenantInput
+}
+
+export type TenantCreateOrConnectWithoutLeadsInput = {
+  where: Prisma.TenantWhereUniqueInput
+  create: Prisma.XOR<Prisma.TenantCreateWithoutLeadsInput, Prisma.TenantUncheckedCreateWithoutLeadsInput>
+}
+
+export type TenantUpsertWithoutLeadsInput = {
+  update: Prisma.XOR<Prisma.TenantUpdateWithoutLeadsInput, Prisma.TenantUncheckedUpdateWithoutLeadsInput>
+  create: Prisma.XOR<Prisma.TenantCreateWithoutLeadsInput, Prisma.TenantUncheckedCreateWithoutLeadsInput>
+  where?: Prisma.TenantWhereInput
+}
+
+export type TenantUpdateToOneWithWhereWithoutLeadsInput = {
+  where?: Prisma.TenantWhereInput
+  data: Prisma.XOR<Prisma.TenantUpdateWithoutLeadsInput, Prisma.TenantUncheckedUpdateWithoutLeadsInput>
+}
+
+export type TenantUpdateWithoutLeadsInput = {
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  slug?: Prisma.StringFieldUpdateOperationsInput | string
+  domain?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  AdminTenant?: Prisma.AdminTenantUpdateManyWithoutTenantNestedInput
+  Blog?: Prisma.BlogUpdateManyWithoutTenantNestedInput
+  LeadCollection?: Prisma.LeadCollectionUpdateManyWithoutTenantNestedInput
+}
+
+export type TenantUncheckedUpdateWithoutLeadsInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  slug?: Prisma.StringFieldUpdateOperationsInput | string
+  domain?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  AdminTenant?: Prisma.AdminTenantUncheckedUpdateManyWithoutTenantNestedInput
+  Blog?: Prisma.BlogUncheckedUpdateManyWithoutTenantNestedInput
+  LeadCollection?: Prisma.LeadCollectionUncheckedUpdateManyWithoutTenantNestedInput
+}
+
+export type TenantCreateWithoutLeadCollectionInput = {
+  name: string
+  slug: string
+  domain?: string | null
+  active?: boolean
+  created_at?: Date | string
+  updated_at?: Date | string
+  AdminTenant?: Prisma.AdminTenantCreateNestedManyWithoutTenantInput
+  Blog?: Prisma.BlogCreateNestedManyWithoutTenantInput
+  leads?: Prisma.LeadCreateNestedManyWithoutTenantInput
+}
+
+export type TenantUncheckedCreateWithoutLeadCollectionInput = {
+  id?: number
+  name: string
+  slug: string
+  domain?: string | null
+  active?: boolean
+  created_at?: Date | string
+  updated_at?: Date | string
+  AdminTenant?: Prisma.AdminTenantUncheckedCreateNestedManyWithoutTenantInput
+  Blog?: Prisma.BlogUncheckedCreateNestedManyWithoutTenantInput
+  leads?: Prisma.LeadUncheckedCreateNestedManyWithoutTenantInput
+}
+
+export type TenantCreateOrConnectWithoutLeadCollectionInput = {
+  where: Prisma.TenantWhereUniqueInput
+  create: Prisma.XOR<Prisma.TenantCreateWithoutLeadCollectionInput, Prisma.TenantUncheckedCreateWithoutLeadCollectionInput>
+}
+
+export type TenantUpsertWithoutLeadCollectionInput = {
+  update: Prisma.XOR<Prisma.TenantUpdateWithoutLeadCollectionInput, Prisma.TenantUncheckedUpdateWithoutLeadCollectionInput>
+  create: Prisma.XOR<Prisma.TenantCreateWithoutLeadCollectionInput, Prisma.TenantUncheckedCreateWithoutLeadCollectionInput>
+  where?: Prisma.TenantWhereInput
+}
+
+export type TenantUpdateToOneWithWhereWithoutLeadCollectionInput = {
+  where?: Prisma.TenantWhereInput
+  data: Prisma.XOR<Prisma.TenantUpdateWithoutLeadCollectionInput, Prisma.TenantUncheckedUpdateWithoutLeadCollectionInput>
+}
+
+export type TenantUpdateWithoutLeadCollectionInput = {
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  slug?: Prisma.StringFieldUpdateOperationsInput | string
+  domain?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  AdminTenant?: Prisma.AdminTenantUpdateManyWithoutTenantNestedInput
+  Blog?: Prisma.BlogUpdateManyWithoutTenantNestedInput
+  leads?: Prisma.LeadUpdateManyWithoutTenantNestedInput
+}
+
+export type TenantUncheckedUpdateWithoutLeadCollectionInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  slug?: Prisma.StringFieldUpdateOperationsInput | string
+  domain?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  AdminTenant?: Prisma.AdminTenantUncheckedUpdateManyWithoutTenantNestedInput
+  Blog?: Prisma.BlogUncheckedUpdateManyWithoutTenantNestedInput
+  leads?: Prisma.LeadUncheckedUpdateManyWithoutTenantNestedInput
+}
+
 export type TenantCreateWithoutAdminTenantInput = {
   name: string
   slug: string
@@ -445,6 +626,8 @@ export type TenantCreateWithoutAdminTenantInput = {
   created_at?: Date | string
   updated_at?: Date | string
   Blog?: Prisma.BlogCreateNestedManyWithoutTenantInput
+  LeadCollection?: Prisma.LeadCollectionCreateNestedManyWithoutTenantInput
+  leads?: Prisma.LeadCreateNestedManyWithoutTenantInput
 }
 
 export type TenantUncheckedCreateWithoutAdminTenantInput = {
@@ -456,6 +639,8 @@ export type TenantUncheckedCreateWithoutAdminTenantInput = {
   created_at?: Date | string
   updated_at?: Date | string
   Blog?: Prisma.BlogUncheckedCreateNestedManyWithoutTenantInput
+  LeadCollection?: Prisma.LeadCollectionUncheckedCreateNestedManyWithoutTenantInput
+  leads?: Prisma.LeadUncheckedCreateNestedManyWithoutTenantInput
 }
 
 export type TenantCreateOrConnectWithoutAdminTenantInput = {
@@ -482,6 +667,8 @@ export type TenantUpdateWithoutAdminTenantInput = {
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   Blog?: Prisma.BlogUpdateManyWithoutTenantNestedInput
+  LeadCollection?: Prisma.LeadCollectionUpdateManyWithoutTenantNestedInput
+  leads?: Prisma.LeadUpdateManyWithoutTenantNestedInput
 }
 
 export type TenantUncheckedUpdateWithoutAdminTenantInput = {
@@ -493,6 +680,8 @@ export type TenantUncheckedUpdateWithoutAdminTenantInput = {
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   Blog?: Prisma.BlogUncheckedUpdateManyWithoutTenantNestedInput
+  LeadCollection?: Prisma.LeadCollectionUncheckedUpdateManyWithoutTenantNestedInput
+  leads?: Prisma.LeadUncheckedUpdateManyWithoutTenantNestedInput
 }
 
 export type TenantCreateWithoutBlogInput = {
@@ -503,6 +692,8 @@ export type TenantCreateWithoutBlogInput = {
   created_at?: Date | string
   updated_at?: Date | string
   AdminTenant?: Prisma.AdminTenantCreateNestedManyWithoutTenantInput
+  LeadCollection?: Prisma.LeadCollectionCreateNestedManyWithoutTenantInput
+  leads?: Prisma.LeadCreateNestedManyWithoutTenantInput
 }
 
 export type TenantUncheckedCreateWithoutBlogInput = {
@@ -514,6 +705,8 @@ export type TenantUncheckedCreateWithoutBlogInput = {
   created_at?: Date | string
   updated_at?: Date | string
   AdminTenant?: Prisma.AdminTenantUncheckedCreateNestedManyWithoutTenantInput
+  LeadCollection?: Prisma.LeadCollectionUncheckedCreateNestedManyWithoutTenantInput
+  leads?: Prisma.LeadUncheckedCreateNestedManyWithoutTenantInput
 }
 
 export type TenantCreateOrConnectWithoutBlogInput = {
@@ -540,6 +733,8 @@ export type TenantUpdateWithoutBlogInput = {
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   AdminTenant?: Prisma.AdminTenantUpdateManyWithoutTenantNestedInput
+  LeadCollection?: Prisma.LeadCollectionUpdateManyWithoutTenantNestedInput
+  leads?: Prisma.LeadUpdateManyWithoutTenantNestedInput
 }
 
 export type TenantUncheckedUpdateWithoutBlogInput = {
@@ -551,6 +746,8 @@ export type TenantUncheckedUpdateWithoutBlogInput = {
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   AdminTenant?: Prisma.AdminTenantUncheckedUpdateManyWithoutTenantNestedInput
+  LeadCollection?: Prisma.LeadCollectionUncheckedUpdateManyWithoutTenantNestedInput
+  leads?: Prisma.LeadUncheckedUpdateManyWithoutTenantNestedInput
 }
 
 
@@ -561,11 +758,15 @@ export type TenantUncheckedUpdateWithoutBlogInput = {
 export type TenantCountOutputType = {
   AdminTenant: number
   Blog: number
+  LeadCollection: number
+  leads: number
 }
 
 export type TenantCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   AdminTenant?: boolean | TenantCountOutputTypeCountAdminTenantArgs
   Blog?: boolean | TenantCountOutputTypeCountBlogArgs
+  LeadCollection?: boolean | TenantCountOutputTypeCountLeadCollectionArgs
+  leads?: boolean | TenantCountOutputTypeCountLeadsArgs
 }
 
 /**
@@ -592,6 +793,20 @@ export type TenantCountOutputTypeCountBlogArgs<ExtArgs extends runtime.Types.Ext
   where?: Prisma.BlogWhereInput
 }
 
+/**
+ * TenantCountOutputType without action
+ */
+export type TenantCountOutputTypeCountLeadCollectionArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.LeadCollectionWhereInput
+}
+
+/**
+ * TenantCountOutputType without action
+ */
+export type TenantCountOutputTypeCountLeadsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.LeadWhereInput
+}
+
 
 export type TenantSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -603,6 +818,8 @@ export type TenantSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   updated_at?: boolean
   AdminTenant?: boolean | Prisma.Tenant$AdminTenantArgs<ExtArgs>
   Blog?: boolean | Prisma.Tenant$BlogArgs<ExtArgs>
+  LeadCollection?: boolean | Prisma.Tenant$LeadCollectionArgs<ExtArgs>
+  leads?: boolean | Prisma.Tenant$leadsArgs<ExtArgs>
   _count?: boolean | Prisma.TenantCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["tenant"]>
 
@@ -640,6 +857,8 @@ export type TenantOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
 export type TenantInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   AdminTenant?: boolean | Prisma.Tenant$AdminTenantArgs<ExtArgs>
   Blog?: boolean | Prisma.Tenant$BlogArgs<ExtArgs>
+  LeadCollection?: boolean | Prisma.Tenant$LeadCollectionArgs<ExtArgs>
+  leads?: boolean | Prisma.Tenant$leadsArgs<ExtArgs>
   _count?: boolean | Prisma.TenantCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type TenantIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -650,6 +869,8 @@ export type $TenantPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs
   objects: {
     AdminTenant: Prisma.$AdminTenantPayload<ExtArgs>[]
     Blog: Prisma.$BlogPayload<ExtArgs>[]
+    LeadCollection: Prisma.$LeadCollectionPayload<ExtArgs>[]
+    leads: Prisma.$LeadPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: number
@@ -1055,6 +1276,8 @@ export interface Prisma__TenantClient<T, Null = never, ExtArgs extends runtime.T
   readonly [Symbol.toStringTag]: "PrismaPromise"
   AdminTenant<T extends Prisma.Tenant$AdminTenantArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Tenant$AdminTenantArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AdminTenantPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   Blog<T extends Prisma.Tenant$BlogArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Tenant$BlogArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$BlogPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  LeadCollection<T extends Prisma.Tenant$LeadCollectionArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Tenant$LeadCollectionArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$LeadCollectionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  leads<T extends Prisma.Tenant$leadsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Tenant$leadsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$LeadPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1524,6 +1747,54 @@ export type Tenant$BlogArgs<ExtArgs extends runtime.Types.Extensions.InternalArg
   take?: number
   skip?: number
   distinct?: Prisma.BlogScalarFieldEnum | Prisma.BlogScalarFieldEnum[]
+}
+
+/**
+ * Tenant.LeadCollection
+ */
+export type Tenant$LeadCollectionArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the LeadCollection
+   */
+  select?: Prisma.LeadCollectionSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the LeadCollection
+   */
+  omit?: Prisma.LeadCollectionOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.LeadCollectionInclude<ExtArgs> | null
+  where?: Prisma.LeadCollectionWhereInput
+  orderBy?: Prisma.LeadCollectionOrderByWithRelationInput | Prisma.LeadCollectionOrderByWithRelationInput[]
+  cursor?: Prisma.LeadCollectionWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.LeadCollectionScalarFieldEnum | Prisma.LeadCollectionScalarFieldEnum[]
+}
+
+/**
+ * Tenant.leads
+ */
+export type Tenant$leadsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Lead
+   */
+  select?: Prisma.LeadSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Lead
+   */
+  omit?: Prisma.LeadOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.LeadInclude<ExtArgs> | null
+  where?: Prisma.LeadWhereInput
+  orderBy?: Prisma.LeadOrderByWithRelationInput | Prisma.LeadOrderByWithRelationInput[]
+  cursor?: Prisma.LeadWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.LeadScalarFieldEnum | Prisma.LeadScalarFieldEnum[]
 }
 
 /**

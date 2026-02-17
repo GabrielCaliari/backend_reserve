@@ -25,6 +25,8 @@ export default class LeadRepository implements ILeadRepository {
                     ...(data.origin_font ? { origin_font: data.origin_font } : {}),
                     status: data.status,
                     ...(data.data ? { data: data.data } : {}),
+                    ...(data.collectionId ? { collection_id: data.collectionId } : {}),
+                    ...(data.tenantId ? { tenant_id: data.tenantId } : {}),
                 }
             });
 
@@ -40,6 +42,8 @@ export default class LeadRepository implements ILeadRepository {
                 status: raw.status,
                 created_at: raw.created_at,
                 updated_at: raw.updated_at,
+                ...(raw.collection_id ? { collectionId: raw.collection_id } : {}),
+                ...(raw.tenant_id ? { tenantId: raw.tenant_id } : {}),
             });
         } catch (error) {
             throw new RepositoryException('Erro ao criar o lead', error);

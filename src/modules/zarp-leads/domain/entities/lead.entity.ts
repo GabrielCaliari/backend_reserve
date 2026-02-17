@@ -28,6 +28,8 @@ export class Lead {
   public status: ELeadStatus;
   public created_at?: Date;
   public updated_at?: Date;
+  public collectionId?: number;
+  public tenantId?: number;
 
   constructor(lead: Lead) {
     this.id = lead.id ?? null;
@@ -41,5 +43,7 @@ export class Lead {
     this.status = lead.status;
     this.created_at = lead.created_at ?? null;
     this.updated_at = lead.updated_at ?? null;
+    this.collectionId = lead.collectionId ?? null;
+    this.tenantId = lead.tenantId ?? null;
   }
 }

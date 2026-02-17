@@ -14,6 +14,11 @@ export class LeadService {
     ) { }
 
     async createLead(data: CreateLeadDto) {
+        // ... (existing implementation)
+        return this.createCollectionLead(data);
+    }
+
+    async createCollectionLead(data: CreateLeadDto, collection?: { id: number; tenantId: number }) {
         try {
             const lead = new Lead({
                 ...(data.phone_number ? { phone_number: new PhoneNumber(data.phone_number) } : {}),
@@ -23,7 +28,8 @@ export class LeadService {
                 ...(data.origin_font ? { origin_font: data.origin_font } : {}),
                 ...(data.description ? { description: data.description } : {}),
                 origin: data.origin,
-                status: ELeadStatus.new
+                status: ELeadStatus.new,
+                ...(collection ? { collectionId: collection.id, tenantId: collection.tenantId } : {})
             });
 
             const raw = await this.leadRepository.create(lead)
@@ -92,6 +98,36 @@ export class LeadService {
             });
         } catch (error) {
             return errorResponse('500:Erro ao atualizar o lead', 500, error);
+        }
+    }
+
+    async findLeadsByCollection(collectionId: number, { page = 1, limit = 30 }) {
+        try {
+            const { raws, count } = await this.leadRepository.find({
+                page,
+                limit,
+                where: {
+                    collection_id: collectionId,
+                },
+            });
+
+            return successResponse({
+                leads: raws.map(raw => {
+                    return {
+                        ...raw,
+                        ...(raw.phone_number ? { phone_number: raw.phone_number.toString() } : {}),
+                        ...(raw.email ? { email: raw.email.toString() } : {}),
+                    }
+                }),
+                page: {
+                    count,
+                    count_pages: Math.ceil(count / limit),
+                    current_page: page,
+                    limit
+                }
+            })
+        } catch (error) {
+            return errorResponse(ERROR_FIND_LEAD, 500, error);
         }
     }
 }

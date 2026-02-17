@@ -616,17 +616,23 @@ model APIToken {
 }
 
 model Lead {
-  id           Int      @id @default(autoincrement())
-  name         String?  @db.VarChar(255)
-  email        String?
-  phone_number String?  @db.VarChar(14)
-  origin       Int?     @db.SmallInt
-  origin_font  String?  @db.VarChar(50)
-  description  String?
-  data         Json?
-  status       Int?     @default(1) @db.SmallInt
-  created_at   DateTime @default(now())
-  updated_at   DateTime @updatedAt
+  id             Int             @id @default(autoincrement())
+  name           String?         @db.VarChar(255)
+  email          String?
+  phone_number   String?         @db.VarChar(14)
+  origin         Int?            @db.SmallInt
+  origin_font    String?         @db.VarChar(50)
+  description    String?
+  data           Json?
+  status         Int?            @default(1) @db.SmallInt
+  collection_id  Int?
+  tenant_id      Int?
+  created_at     DateTime        @default(now())
+  updated_at     DateTime        @updatedAt
+  LeadCollection LeadCollection? @relation(fields: [collection_id], references: [id])
+  Tenant         Tenant?         @relation(fields: [tenant_id], references: [id])
+
+  @@index([tenant_id])
 }
 
 model LeadQualificationMessage {
@@ -663,6 +669,12 @@ enum EArticleStatus {
   archived
 }
 
+enum ECollectionAccessMode {
+  public
+  private
+  restricted
+}
+
 model Admin {
   id                Int                 @id @default(autoincrement())
   name              String              @db.VarChar(100)
@@ -677,15 +689,37 @@ model Admin {
 }
 
 model Tenant {
-  id          Int           @id @default(autoincrement())
-  name        String        @db.VarChar(100)
-  slug        String        @unique @db.VarChar(50)
-  domain      String?       @db.VarChar(255)
-  active      Boolean       @default(true)
-  created_at  DateTime      @default(now())
-  updated_at  DateTime      @updatedAt
-  AdminTenant AdminTenant[]
-  Blog        Blog[]
+  id             Int              @id @default(autoincrement())
+  name           String           @db.VarChar(100)
+  slug           String           @unique @db.VarChar(50)
+  domain         String?          @db.VarChar(255)
+  active         Boolean          @default(true)
+  created_at     DateTime         @default(now())
+  updated_at     DateTime         @updatedAt
+  AdminTenant    AdminTenant[]
+  Blog           Blog[]
+  LeadCollection LeadCollection[]
+  leads          Lead[]
+}
+
+model LeadCollection {
+  id              Int                   @id @default(autoincrement())
+  name            String                @db.VarChar(150)
+  slug            String                @db.VarChar(100)
+  source          String                @db.VarChar(100)
+  access_mode     ECollectionAccessMode @default(public)
+  allowed_domains String[]              @default([])
+  secret_key_hash String?
+  secret_key_salt String?
+  active          Boolean               @default(true)
+  tenant_id       Int
+  created_at      DateTime              @default(now())
+  updated_at      DateTime              @updatedAt
+  Tenant          Tenant                @relation(fields: [tenant_id], references: [id])
+  Lead            Lead[]
+
+  @@unique([slug])
+  @@index([tenant_id])
 }
 
 model AdminTenant {

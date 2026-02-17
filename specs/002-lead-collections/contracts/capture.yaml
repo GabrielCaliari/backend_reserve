@@ -1,0 +1,132 @@
+# API Contract: Lead Capture Endpoint
+
+**Base Path**: `/api/leads/collect`
+**Auth**: Varies by collection access mode
+**Tags**: `Lead Capture`
+
+---
+
+## POST /collect/:slug
+
+**Summary**: Submit a lead to a collection's capture endpoint
+**Auth**: Depends on collection `access_mode`:
+  - `public`: No auth, no CORS restrictions
+  - `private`: No auth, CORS enforced (Origin must be in `allowed_domains`)
+  - `restricted`: `x-collection-key` header required
+
+### Path Parameters
+
+| Param | Type | Description |
+|-------|------|-------------|
+| `slug` | string | Collection slug (URL-safe identifier) |
+
+### Request Headers (conditional)
+
+| Header | Type | Required | When | Description |
+|--------|------|----------|------|-------------|
+| `x-collection-key` | string | Yes | `access_mode=restricted` | Secret key for the collection |
+| `Origin` | string | Yes | `access_mode=private` | Request origin (validated against allowed domains) |
+
+### Request Body
+
+```json
+{
+  "name": "John Smith",
+  "email": "john@example.com",
+  "phone_number": "11999999999",
+  "origin": 6,
+  "origin_font": "Google Ads",
+  "description": "Interested in premium plan",
+  "data": {
+    "campaign": "black-friday-2026",
+    "utm_source": "google"
+  }
+}
+```
+
+| Field | Type | Required | Validation | Description |
+|-------|------|----------|------------|-------------|
+| `name` | string | No* | Max 255 chars | Lead name |
+| `email` | string | No* | Valid email format | Lead email |
+| `phone_number` | string | No* | Max 14 chars | Lead phone number |
+| `origin` | number | No | Enum value (SmallInt) | Lead origin type |
+| `origin_font` | string | No | Max 50 chars | Lead origin source label |
+| `description` | string | No | Text | Description/notes |
+| `data` | object | No | Valid JSON | Freeform additional data |
+
+> **\*Validation**: At least one of `name`, `email`, or `phone_number` must be provided.
+
+### Response 201 Created
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": 123
+  }
+}
+```
+
+### Response 400 Bad Request (validation)
+
+```json
+{
+  "success": false,
+  "error": "At least one of name, email, or phone_number is required"
+}
+```
+
+### Response 401 Unauthorized (restricted mode, missing/invalid key)
+
+```json
+{
+  "success": false,
+  "error": "Invalid or missing x-collection-key"
+}
+```
+
+### Response 403 Forbidden (private mode, invalid origin)
+
+```json
+{
+  "success": false,
+  "error": "Origin not allowed for this collection"
+}
+```
+
+### Response 404 Not Found (slug not found)
+
+```json
+{
+  "success": false,
+  "error": "Collection not found"
+}
+```
+
+### Response 410 Gone (inactive collection)
+
+```json
+{
+  "success": false,
+  "error": "Collection is not accepting leads"
+}
+```
+
+---
+
+## CORS Behavior
+
+### Public Collections
+- `Access-Control-Allow-Origin: *`
+- `Access-Control-Allow-Methods: POST, OPTIONS`
+- `Access-Control-Allow-Headers: Content-Type`
+
+### Private Collections
+- `Access-Control-Allow-Origin: <matched-origin>` (only if origin is in `allowed_domains`)
+- Preflight OPTIONS returns 204 with appropriate headers
+- Non-matching origins receive 403
+
+### Restricted Collections
+- `Access-Control-Allow-Origin: *`
+- `Access-Control-Allow-Headers: Content-Type, x-collection-key`
+- Security is enforced by the key, not CORS

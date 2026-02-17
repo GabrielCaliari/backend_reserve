@@ -28,3 +28,12 @@ export const EArticleStatus = {
 } as const
 
 export type EArticleStatus = (typeof EArticleStatus)[keyof typeof EArticleStatus]
+
+
+export const ECollectionAccessMode = {
+  public: 'public',
+  private: 'private',
+  restricted: 'restricted'
+} as const
+
+export type ECollectionAccessMode = (typeof ECollectionAccessMode)[keyof typeof ECollectionAccessMode]

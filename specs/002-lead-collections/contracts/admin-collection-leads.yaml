@@ -1,0 +1,106 @@
+# API Contract: Admin Lead Listing by Collection
+
+**Base Path**: `/api/leads/collections`
+**Auth**: `AdminJwtGuard` + `TenantGuard` + `RolesGuard`
+**Tags**: `Lead Collections`
+
+---
+
+## GET /collections/:id/leads
+
+**Summary**: List leads captured through a specific collection
+**Minimum Role**: `viewer`
+**Guards**: `AdminJwtGuard`, `TenantGuard`, `RolesGuard`
+
+### Path Parameters
+
+| Param | Type | Description |
+|-------|------|-------------|
+| `id` | number | Collection ID |
+
+### Query Parameters
+
+| Param | Type | Default | Description |
+|-------|------|---------|-------------|
+| `page` | number | 1 | Page number |
+| `limit` | number | 30 | Items per page |
+| `status` | number | - | Filter by lead status |
+
+### Request Headers
+
+| Header | Type | Required | Description |
+|--------|------|----------|-------------|
+| `Authorization` | string | Yes | Bearer JWT token |
+| `x-tenant-id` | number | Yes* | *Super admin can access any tenant's collection leads |
+
+### Response 200 OK
+
+```json
+{
+  "success": true,
+  "data": {
+    "leads": [
+      {
+        "id": 123,
+        "name": "John Smith",
+        "email": "john@example.com",
+        "phone_number": "11999999999",
+        "origin": 6,
+        "origin_font": "Google Ads",
+        "description": "Interested in premium plan",
+        "data": { "campaign": "black-friday-2026" },
+        "status": 1,
+        "collection_id": 1,
+        "created_at": "2026-02-16T23:00:00.000Z",
+        "updated_at": "2026-02-16T23:00:00.000Z"
+      }
+    ],
+    "page": {
+      "count": 50,
+      "count_pages": 2,
+      "current_page": 1,
+      "limit": 30
+    }
+  }
+}
+```
+
+### Response 404 Not Found
+
+```json
+{
+  "success": false,
+  "error": "Collection not found"
+}
+```
+
+### Response 403 Forbidden
+
+```json
+{
+  "success": false,
+  "error": "You do not have access to this tenant"
+}
+```
+
+---
+
+## Authorization Flow
+
+```
+Request
+  │
+  ├── AdminJwtGuard: Validate JWT, extract admin_id
+  │
+  ├── TenantGuard: Validate tenant_id access
+  │     ├── super_admin: bypass tenant check
+  │     └── other roles: verify admin-tenant association
+  │
+  ├── RolesGuard: Check minimum role (viewer)
+  │     ├── super_admin: bypass
+  │     └── tenant role >= viewer: allow
+  │
+  └── Controller: Verify collection belongs to tenant_id
+        ├── Match: return leads
+        └── No match: 404
+```

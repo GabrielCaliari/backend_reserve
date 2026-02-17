@@ -15,7 +15,7 @@ ALTER TYPE "EAdminRole" ADD VALUE 'editor';
 ALTER TYPE "EAdminRole" ADD VALUE 'viewer';
 
 -- AlterTable
-ALTER TABLE "AdminTenant" ADD COLUMN     "role" "EAdminRole" NOT NULL DEFAULT 'manager';
+ALTER TABLE "AdminTenant" ADD COLUMN     "role" "EAdminRole" NOT NULL DEFAULT 'company_admin';
 
 -- CreateTable
 CREATE TABLE "Blog" (

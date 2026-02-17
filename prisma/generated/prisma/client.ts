@@ -208,6 +208,11 @@ export type Admin = Prisma.AdminModel
  */
 export type Tenant = Prisma.TenantModel
 /**
+ * Model LeadCollection
+ * 
+ */
+export type LeadCollection = Prisma.LeadCollectionModel
+/**
  * Model AdminTenant
  * 
  */
