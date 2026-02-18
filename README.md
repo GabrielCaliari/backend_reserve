@@ -59,6 +59,6 @@ Para mais detalhes, consulte a documentação individual de cada dependência em
 
 ## Documentação das Dependências
 
-A documentação detalhada de cada dependência está organizada em arquivos individuais dentro da pasta `/docs`.
+A documentação detalhada de cada dependência está organizada em arquivos individuais dentro da pasta `/docs`...
 
-Consulte o arquivo principal de dependências: [docs/dependencies.md](docs/dependencies.md)
+Consulte o arquivo principal de dependências: [docs/dependencies.md](docs/dependencies.md).
