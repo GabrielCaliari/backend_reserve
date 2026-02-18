@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Post, Query, Req, Res, UseGuards } from '@nestjs/common';
-import { AdminJwtGuard } from '@/shared/auth/guards';
+import { AdminJwtGuard } from '../../../../shared/auth/guards';
 import { LeadService } from '../../application/services/lead.service';
 import { Response } from 'express';
 import { CreateLead, LeadQuery } from '../../application/dtos/lead.dto';

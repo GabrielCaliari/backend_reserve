@@ -1,6 +1,6 @@
-import CPF from '@/shared/domain/value-objects/cpf.vo';
-import Email from '@/shared/domain/value-objects/email.vo';
-import PhoneNumber from '@/shared/domain/value-objects/phone-number.vo';
+import CPF from '../../../../shared/domain/value-objects/cpf.vo';
+import Email from '../../../../shared/domain/value-objects/email.vo';
+import PhoneNumber from '../../../../shared/domain/value-objects/phone-number.vo';
 
 export default class User {
   public id?: number;

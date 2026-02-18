@@ -1,7 +1,7 @@
 ﻿import { Inject, Injectable } from '@nestjs/common';
-import { errorTypes } from '@/shared/constants/error-types';
-import { errorResponse, gerarSenha } from '@/shared/helpers';
-import { IAuthenticateUser, IValidateUserToken } from '@/modules/zarp-auth/domain/interfaces/authenticate-user.interface';
+import { errorTypes } from '../../../../shared/constants/error-types';
+import { errorResponse, gerarSenha } from '../../../../shared/helpers';
+import { IAuthenticateUser, IValidateUserToken } from '../../domain/interfaces/authenticate-user.interface';
 import {
     IUserRepository,
     IUserCredentialRepository,
@@ -12,15 +12,15 @@ import {
     USER_CREDENTIAL_REPOSITORY,
     USER_SESSION_TOKEN_REPOSITORY,
     PLAN_REPOSITORY,
-} from '@/modules/zarp-auth/domain/interfaces';
+} from '../../domain/interfaces';
 // Cross-context repositories (temporary, to be replaced by module imports)
-import SearchRepository from '@/modules/zarp-cnpjs/infrastructure/repositories/search.repository';
-import BrandRepository from '@/modules/zarp-brands/infrastructure/repositories/brand.repository';
-import BrandAlertRepository from '@/modules/zarp-brands/infrastructure/repositories/brand-alert.repository';
-import { EStatus } from '@/modules/zarp-auth/domain/enums/plan-status.enum';
-import BrandAnalysisRepository from '@/modules/zarp-brands/infrastructure/repositories/brand-analysis.repository';
-import { EBrandAnalysisTokenStatus } from '@/modules/zarp-brands/domain/enums/brand-analysis-token-status.enum';
-import AdditionalTokenPackRepository from '@/modules/zarp-pi-bot/infrastructure/repositories/additional-token-pack.repository';
+import SearchRepository from '../../../zarp-cnpjs/infrastructure/repositories/search.repository';
+import BrandRepository from '../../../zarp-brands/infrastructure/repositories/brand.repository';
+import BrandAlertRepository from '../../../zarp-brands/infrastructure/repositories/brand-alert.repository';
+import { EStatus } from '../../domain/enums/plan-status.enum';
+import BrandAnalysisRepository from '../../../zarp-brands/infrastructure/repositories/brand-analysis.repository';
+import { EBrandAnalysisTokenStatus } from '../../../zarp-brands/domain/enums/brand-analysis-token-status.enum';
+import AdditionalTokenPackRepository from '../../../zarp-pi-bot/infrastructure/repositories/additional-token-pack.repository';
 const Stripe = require('stripe');
 
 @Injectable()

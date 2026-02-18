@@ -1,9 +1,9 @@
 ﻿import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@/shared/database/prisma.service';
-import { RepositoryException } from '@/shared/exceptions';
-import { HashProvider } from '@/shared/providers/hash.provider';
-import { JwtProvider } from '@/shared/providers/jwt.provider';
-import { IUserSessionTokenRepository, ICreateUserSessionToken } from '@/modules/zarp-auth/domain/interfaces';
+import { PrismaService } from '../../../../shared/database/prisma.service';
+import { RepositoryException } from '../../../../shared/exceptions';
+import { HashProvider } from '../../../../shared/providers/hash.provider';
+import { JwtProvider } from '../../../../shared/providers/jwt.provider';
+import { IUserSessionTokenRepository, ICreateUserSessionToken } from '../../domain/interfaces';
 
 export { ICreateUserSessionToken };
 

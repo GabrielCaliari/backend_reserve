@@ -1,8 +1,8 @@
 import { Body, Controller, Get, Post, Req, Res, UseGuards } from '@nestjs/common';
 import { Request, Response } from 'express';
-import { UserJwtGuard } from '@/shared/auth/guards';
+import { UserJwtGuard } from '../../../../shared/auth/guards';
 import { PiBotService } from '../../application/services/pi-bot.service';
-import { PiBotMessageDTO } from '@/modules/zarp-pi-bot/application/dtos/pi-bot-message.dto';
+import { PiBotMessageDTO } from '../../application/dtos/pi-bot-message.dto';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 
 @ApiTags('Pi Bot')

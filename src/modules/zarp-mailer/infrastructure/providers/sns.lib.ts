@@ -1,5 +1,5 @@
 import { SNSClient as SNSSDKImport } from '@aws-sdk/client-sns';
-import { env } from '@/shared/helpers/env.helper';
+import { env } from '../../../../shared/helpers/env.helper';
 
 let snsClientInstance: SNSSDKImport | null = null;
 

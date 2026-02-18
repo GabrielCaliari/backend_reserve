@@ -1,14 +1,14 @@
 import { Module } from '@nestjs/common';
-import { LeadController } from '@/modules/zarp-leads/infrastructure/controllers/lead.controller';
-import { LeadCollectionController } from '@/modules/zarp-leads/infrastructure/controllers/lead-collection.controller';
-import { LeadCaptureController } from '@/modules/zarp-leads/infrastructure/controllers/lead-capture.controller';
-import { LeadService } from '@/modules/zarp-leads/application/services/lead.service';
-import { LeadCollectionService } from '@/modules/zarp-leads/application/services/lead-collection.service';
-import LeadRepository from '@/modules/zarp-leads/infrastructure/repositories/lead.repository';
-import { LeadCollectionRepository } from '@/modules/zarp-leads/infrastructure/repositories/lead-collection.repository';
-import { CollectionSecretKeyGuard } from '@/modules/zarp-leads/infrastructure/guards/collection-secret-key.guard';
-import { LEAD_REPOSITORY, LEAD_COLLECTION_REPOSITORY } from '@/modules/zarp-leads/domain/interfaces';
-import { ZarpAuthModule } from '@/modules/zarp-auth/zarp-auth.module';
+import { LeadController } from './infrastructure/controllers/lead.controller';
+import { LeadCollectionController } from './infrastructure/controllers/lead-collection.controller';
+import { LeadCaptureController } from './infrastructure/controllers/lead-capture.controller';
+import { LeadService } from './application/services/lead.service';
+import { LeadCollectionService } from './application/services/lead-collection.service';
+import LeadRepository from './infrastructure/repositories/lead.repository';
+import { LeadCollectionRepository } from './infrastructure/repositories/lead-collection.repository';
+import { CollectionSecretKeyGuard } from './infrastructure/guards/collection-secret-key.guard';
+import { LEAD_REPOSITORY, LEAD_COLLECTION_REPOSITORY } from './domain/interfaces';
+import { ZarpAuthModule } from '../zarp-auth/zarp-auth.module';
 
 /**
  * Zarp Leads Module

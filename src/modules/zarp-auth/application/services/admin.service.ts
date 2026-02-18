@@ -1,6 +1,6 @@
 ﻿import { Inject, Injectable } from '@nestjs/common';
-import AuthAdminDTO, { IValidateAdminToken } from '@/modules/zarp-auth/application/dtos/auth-admin.dto';
-import { CreateAdminDTO } from '@/modules/zarp-auth/application/dtos/admin-management.dto';
+import AuthAdminDTO, { IValidateAdminToken } from '../dtos/auth-admin.dto';
+import { CreateAdminDTO } from '../dtos/admin-management.dto';
 import {
     IAdminRepository,
     IAdminCredentialRepository,
@@ -8,14 +8,14 @@ import {
     ADMIN_REPOSITORY,
     ADMIN_CREDENTIAL_REPOSITORY,
     ADMIN_SESSION_TOKEN_REPOSITORY,
-} from '@/modules/zarp-auth/domain/interfaces';
+} from '../../domain/interfaces';
 import {
     ADMIN_TENANT_REPOSITORY,
     IAdminTenantRepository,
-} from '@/modules/zarp-auth/domain/interfaces/admin-tenant.repository.interface';
-import { EAdminRole } from '@/modules/zarp-auth/domain/enums/admin-role.enum';
-import { errorTypes } from '@/shared/constants/error-types';
-import { errorResponse, successResponse } from '@/shared/helpers';
+} from '../../domain/interfaces/admin-tenant.repository.interface';
+import { EAdminRole } from '../../domain/enums/admin-role.enum';
+import { errorTypes } from '../../../../shared/constants/error-types';
+import { errorResponse, successResponse } from '../../../../shared/helpers';
 
 @Injectable()
 export class AdminService {

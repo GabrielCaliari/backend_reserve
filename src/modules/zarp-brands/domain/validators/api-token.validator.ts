@@ -1,4 +1,4 @@
-import { ICreateAPIToken, IUpdateAPIToken } from '@/modules/zarp-brands/domain/interfaces/api-token.repository.interface';
+import { ICreateAPIToken, IUpdateAPIToken } from '../interfaces/api-token.repository.interface';
 
 export function isApiTokenDataValidToCreate(data: ICreateAPIToken): ICreateAPIToken {
   return { ...data };

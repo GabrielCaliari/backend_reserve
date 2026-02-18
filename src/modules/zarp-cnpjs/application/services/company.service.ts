@@ -1,6 +1,6 @@
 ﻿import { Inject, Injectable } from '@nestjs/common';
-import { errorTypes } from '@/shared/constants/error-types';
-import { errorResponse, inverterObjeto, separar } from '@/shared/helpers';
+import { errorTypes } from '../../../../shared/constants/error-types';
+import { errorResponse, inverterObjeto, separar } from '../../../../shared/helpers';
 import {
     ICompanyRepository,
     ICompanyFields,
@@ -11,8 +11,8 @@ import {
     CNAE_REPOSITORY,
 } from '../../domain/interfaces';
 import { Company, Search } from '../../../../generated/prisma/client';
-import UserRepository from '@/modules/zarp-auth/infrastructure/repositories/user.repository';
-import { EStatus as ECompanyExportStatus } from '@/modules/zarp-cnpjs/domain/enums/company-export-status.enum'
+import UserRepository from '../../../zarp-auth/infrastructure/repositories/user.repository';
+import { EStatus as ECompanyExportStatus } from '../../domain/enums/company-export-status.enum'
 
 import { createWriteStream } from 'fs';
 import * as AWS from '@aws-sdk/client-s3';
@@ -20,9 +20,9 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { randomBytes } from 'crypto';
 import { format } from 'fast-csv';
-import { municipios } from '@/shared/data/municipios';
+import { municipios } from '../../../../shared/data/municipios';
 
-import { EStatus } from '@/modules/zarp-cnpjs/domain/enums/company.enum';
+import { EStatus } from '../../domain/enums/company.enum';
 
 export interface ISearchParams {
     cnae?: string[]; // TODO: ADICIONAR PARA FILTRAR POR CNAES SECUNDARIOS TAMBEM

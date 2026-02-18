@@ -6,12 +6,12 @@ import {
   ForbiddenException,
   BadRequestException,
 } from '@nestjs/common';
-import { ADMIN_REPOSITORY, IAdminRepository } from '@/modules/zarp-auth/domain/interfaces';
+import { ADMIN_REPOSITORY, IAdminRepository } from '../../../modules/zarp-auth/domain/interfaces';
 import {
   ADMIN_TENANT_REPOSITORY,
   IAdminTenantRepository,
-} from '@/modules/zarp-auth/domain/interfaces/admin-tenant.repository.interface';
-import { EAdminRole } from '@/modules/zarp-auth/domain/enums/admin-role.enum';
+} from '../../../modules/zarp-auth/domain/interfaces/admin-tenant.repository.interface';
+import { EAdminRole } from '../../../modules/zarp-auth/domain/enums/admin-role.enum';
 
 /**
  * Guard that validates the admin has access to the requested tenant.

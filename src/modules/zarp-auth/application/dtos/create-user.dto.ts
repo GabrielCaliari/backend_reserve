@@ -6,7 +6,7 @@ import {
     MinLength,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { IsCPF } from '@/shared/validators/is-cpf.validator';
+import { IsCPF } from '../../../../shared/validators/is-cpf.validator';
 
 export default class CreateUserDTO {
     @ApiProperty({ description: 'Full name (min 2 words, letters only)', example: 'John Doe' })

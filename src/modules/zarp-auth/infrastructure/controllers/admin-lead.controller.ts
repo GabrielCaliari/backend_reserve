@@ -1,8 +1,8 @@
 import { Body, Controller, Get, Param, Post, Put, Query, Req, Res, UseGuards } from '@nestjs/common';
 import { LeadService } from '../../application/services/admin-lead.service';
 import { Request, Response } from 'express';
-import { AdminJwtGuard } from '@/shared/auth/guards';
-import { ELeadStatus } from '@/modules/zarp-auth/domain/enums/lead.enum';
+import { AdminJwtGuard } from '../../../../shared/auth/guards';
+import { ELeadStatus } from '../../domain/enums/lead.enum';
 
 // TODO: Adicionar o log para toda ação que seja feito por um admin
 @Controller('admin/lead')

@@ -1,13 +1,13 @@
 import { Body, Controller, Get, Param, Post, Query, Req, Res, UseGuards, UsePipes } from '@nestjs/common';
-import ListingParamsDTO from '@/modules/zarp-cnpjs/application/dtos/listing-params.dto';
-import ListingQueryParamsValidator from '@/shared/validators/listing-query-params.dto';
+import ListingParamsDTO from '../../application/dtos/listing-params.dto';
+import ListingQueryParamsValidator from '../../../../shared/validators/listing-query-params.dto';
 import { CompanyService } from '../../application/services/company.service';
 import { Request, Response } from 'express';
-import { UserJwtGuard } from '@/shared/auth/guards';
-import ExportDTO from '@/modules/zarp-cnpjs/application/dtos/export.dto';
-import ExportCountDTO from '@/modules/zarp-cnpjs/application/dtos/export-count.dto';
-import { ToLowercaseBodyRequestPipe } from '@/shared/pipes';
-import IdValidator from '@/shared/validators/id.dto';
+import { UserJwtGuard } from '../../../../shared/auth/guards';
+import ExportDTO from '../../application/dtos/export.dto';
+import ExportCountDTO from '../../application/dtos/export-count.dto';
+import { ToLowercaseBodyRequestPipe } from '../../../../shared/pipes';
+import IdValidator from '../../../../shared/validators/id.dto';
 import { Readable } from 'stream';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody, ApiParam, ApiQuery } from '@nestjs/swagger';
 

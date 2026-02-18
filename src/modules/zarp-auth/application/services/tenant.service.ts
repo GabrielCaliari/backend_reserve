@@ -1,20 +1,20 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { errorTypes } from '@/shared/constants/error-types';
-import { errorResponse, successResponse } from '@/shared/helpers';
+import { errorTypes } from '../../../../shared/constants/error-types';
+import { errorResponse, successResponse } from '../../../../shared/helpers';
 import {
   TENANT_REPOSITORY,
   ITenantRepository,
-} from '@/modules/zarp-auth/domain/interfaces/tenant.repository.interface';
+} from '../../domain/interfaces/tenant.repository.interface';
 import {
   ADMIN_TENANT_REPOSITORY,
   IAdminTenantRepository,
-} from '@/modules/zarp-auth/domain/interfaces/admin-tenant.repository.interface';
+} from '../../domain/interfaces/admin-tenant.repository.interface';
 import {
   ADMIN_REPOSITORY,
   IAdminRepository,
-} from '@/modules/zarp-auth/domain/interfaces/admin.repository.interface';
-import { EAdminRole } from '@/modules/zarp-auth/domain/enums/admin-role.enum';
-import { CreateTenantDTO, UpdateTenantDTO } from '@/modules/zarp-auth/application/dtos/tenant-management.dto';
+} from '../../domain/interfaces/admin.repository.interface';
+import { EAdminRole } from '../../domain/enums/admin-role.enum';
+import { CreateTenantDTO, UpdateTenantDTO } from '../dtos/tenant-management.dto';
 
 @Injectable()
 export class TenantService {

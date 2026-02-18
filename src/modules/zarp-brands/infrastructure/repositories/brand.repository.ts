@@ -1,10 +1,10 @@
 ﻿import { PrismaClient } from "../../../../generated/prisma/client";
-import { EBrandMonitoring } from '@/modules/zarp-brands/domain/enums/brand-monitoring-status.enum';
-import { EStatus } from '@/modules/zarp-auth/domain/enums/plan-status.enum';
+import { EBrandMonitoring } from '../../domain/enums/brand-monitoring-status.enum';
+import { EStatus } from '../../../zarp-auth/domain/enums/plan-status.enum';
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@/shared/database/prisma.service';
-import { RepositoryException } from '@/shared/exceptions';
-import { IBrandRepository, IBrandFields, IBrandInclude } from '@/modules/zarp-brands/domain/interfaces';
+import { PrismaService } from '../../../../shared/database/prisma.service';
+import { RepositoryException } from '../../../../shared/exceptions';
+import { IBrandRepository, IBrandFields, IBrandInclude } from '../../domain/interfaces';
 
 export { IBrandFields, IBrandInclude };
 

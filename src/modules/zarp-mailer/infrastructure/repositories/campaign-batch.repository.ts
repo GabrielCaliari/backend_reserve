@@ -1,8 +1,8 @@
 ﻿import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@/shared/database/prisma.service';
-import { RepositoryException } from '@/shared/exceptions';
+import { PrismaService } from '../../../../shared/database/prisma.service';
+import { RepositoryException } from '../../../../shared/exceptions';
 import { CampaignBatch, PrismaClient } from "../../../../generated/prisma/client";
-import { ECampaignBatchStatus } from '@/modules/zarp-mailer/domain/enums/campaign-batch-status.enum';
+import { ECampaignBatchStatus } from '../../domain/enums/campaign-batch-status.enum';
 
 @Injectable()
 export default class CampaignBatchRepository {

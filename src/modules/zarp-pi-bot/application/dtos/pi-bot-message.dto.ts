@@ -1,6 +1,6 @@
 import { IsString, IsArray, IsNotEmpty, ValidateNested, IsEnum } from 'class-validator';
 import { Type } from 'class-transformer';
-import { MessageHistory } from '@/modules/zarp-pi-bot/domain/interfaces/message-history.interface';
+import { MessageHistory } from '../../domain/interfaces/message-history.interface';
 import { ApiProperty } from '@nestjs/swagger';
 
 class MessageHistoryDTO implements MessageHistory {

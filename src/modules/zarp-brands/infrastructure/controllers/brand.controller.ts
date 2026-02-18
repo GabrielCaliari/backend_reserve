@@ -1,14 +1,14 @@
 import { Body, Controller, Get, Param, Post, Query, Req, Res, UseGuards } from '@nestjs/common';
-import { UserJwtGuard } from '@/shared/auth/guards';
+import { UserJwtGuard } from '../../../../shared/auth/guards';
 import { BrandService } from '../../application/services/brand.service';
-import CreateBrandDTO from '@/modules/zarp-brands/application/dtos/create-brand.dto';
+import CreateBrandDTO from '../../application/dtos/create-brand.dto';
 import { Request, Response } from 'express';
-import AlertsByBrandNameDTO from '@/modules/zarp-brands/application/dtos/alerts-by-brand-name.dto';
-import FindBrandDTO from '@/modules/zarp-brands/application/dtos/find-brand.dto';
-import PublicFindBrandDTO from '@/modules/zarp-brands/application/dtos/public-find-brand.dto';
-import ListingQueryParamsValidator from '@/shared/validators/listing-query-params.dto';
-import PublicBrandFindDTO from '@/modules/zarp-brands/application/dtos/public-brand-find.dto';
-import CreateLeadDTO from '@/modules/zarp-brands/application/dtos/create-lead.dto';
+import AlertsByBrandNameDTO from '../../application/dtos/alerts-by-brand-name.dto';
+import FindBrandDTO from '../../application/dtos/find-brand.dto';
+import PublicFindBrandDTO from '../../application/dtos/public-find-brand.dto';
+import ListingQueryParamsValidator from '../../../../shared/validators/listing-query-params.dto';
+import PublicBrandFindDTO from '../../application/dtos/public-brand-find.dto';
+import CreateLeadDTO from '../../application/dtos/create-lead.dto';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody, ApiParam, ApiQuery } from '@nestjs/swagger';
 
 @ApiTags('Brand')

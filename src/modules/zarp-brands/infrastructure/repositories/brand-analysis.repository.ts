@@ -1,9 +1,9 @@
 ﻿import { PrismaClient } from "../../../../generated/prisma/client";
-import { EBrandAnalysisTokenStatus } from '@/modules/zarp-brands/domain/enums/brand-analysis-token-status.enum';
+import { EBrandAnalysisTokenStatus } from '../../domain/enums/brand-analysis-token-status.enum';
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@/shared/database/prisma.service';
-import { RepositoryException } from '@/shared/exceptions';
-import { IBrandAnalysisRepository, IBrandAnalysis, IBrandAnalysisRequest, IBrandAnalysisToken } from '@/modules/zarp-brands/domain/interfaces';
+import { PrismaService } from '../../../../shared/database/prisma.service';
+import { RepositoryException } from '../../../../shared/exceptions';
+import { IBrandAnalysisRepository, IBrandAnalysis, IBrandAnalysisRequest, IBrandAnalysisToken } from '../../domain/interfaces';
 
 export { IBrandAnalysis, IBrandAnalysisRequest, IBrandAnalysisToken };
 

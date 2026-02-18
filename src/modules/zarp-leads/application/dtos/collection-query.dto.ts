@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum, IsBoolean, IsOptional, IsInt, Min } from 'class-validator';
 import { Type, Transform } from 'class-transformer';
-import { EAccessMode } from '@/modules/zarp-leads/domain/enums/access-mode.enum';
+import { EAccessMode } from '../../domain/enums/access-mode.enum';
 
 export class CollectionQueryDto {
   @ApiProperty({ required: false, default: 1 })

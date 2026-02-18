@@ -12,15 +12,15 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
-import { BlogService } from '@/modules/zarp-cms/application/services/blog.service';
-import { CreateBlogDTO } from '@/modules/zarp-cms/application/dtos/create-blog.dto';
-import { UpdateBlogDTO } from '@/modules/zarp-cms/application/dtos/update-blog.dto';
-import { AdminJwtGuard } from '@/shared/auth/guards/admin-jwt.guard';
-import { TenantGuard } from '@/shared/auth/guards/tenant.guard';
-import { RolesGuard } from '@/shared/auth/guards/roles.guard';
-import { Roles } from '@/shared/auth/decorators/roles.decorator';
-import { EAdminRole } from '@/modules/zarp-auth/domain/enums/admin-role.enum';
-import { CurrentAdmin, CurrentAdminPayload } from '@/shared/auth/decorators/current-admin.decorator';
+import { BlogService } from '../../application/services/blog.service';
+import { CreateBlogDTO } from '../../application/dtos/create-blog.dto';
+import { UpdateBlogDTO } from '../../application/dtos/update-blog.dto';
+import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
+import { TenantGuard } from '../../../../shared/auth/guards/tenant.guard';
+import { RolesGuard } from '../../../../shared/auth/guards/roles.guard';
+import { Roles } from '../../../../shared/auth/decorators/roles.decorator';
+import { EAdminRole } from '../../../zarp-auth/domain/enums/admin-role.enum';
+import { CurrentAdmin, CurrentAdminPayload } from '../../../../shared/auth/decorators/current-admin.decorator';
 
 @ApiTags('CMS Blogs')
 @ApiBearerAuth()

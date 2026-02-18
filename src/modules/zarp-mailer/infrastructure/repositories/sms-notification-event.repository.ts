@@ -1,13 +1,13 @@
-﻿import SMSNotificationEvent from "@/modules/zarp-mailer/domain/entities/sms-notification-event.entity";
+﻿import SMSNotificationEvent from '../../domain/entities/sms-notification-event.entity';
 import {
     REPOSITORY_CREATE_SMS_NOTIFICATION_EVENT_ERROR,
     REPOSITORY_SELECT_BY_ID_SMS_NOTIFICATION_EVENT_ERROR,
     REPOSITORY_SELECT_EVENT_BY_SMS_NOTIFICATION_EVENT_ERROR
-} from "@/modules/zarp-mailer/domain/constants";
+} from '../../domain/constants';
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@/shared/database/prisma.service';
-import { RepositoryException } from '@/shared/exceptions';
-import PhoneNumber from "@/shared/domain/value-objects/phone-number.vo";
+import { PrismaService } from '../../../../shared/database/prisma.service';
+import { RepositoryException } from '../../../../shared/exceptions';
+import PhoneNumber from '../../../../shared/domain/value-objects/phone-number.vo';
 import { PrismaClient } from "../../../../generated/prisma/client";
 
 @Injectable()

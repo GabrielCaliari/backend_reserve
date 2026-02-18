@@ -1,9 +1,9 @@
 ﻿import { Prisma } from "../../../../generated/prisma/client";
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@/shared/database/prisma.service';
-import { RepositoryException } from '@/shared/exceptions';
-import { ECopyVariationType, EEmailCampaignStatus } from '@/modules/zarp-mailer/domain/enums/email-campaign.enum';
-import { isEmailCampaignDataValidToCreate } from "@/modules/zarp-mailer/domain/validators/email-campaign.validator";
+import { PrismaService } from '../../../../shared/database/prisma.service';
+import { RepositoryException } from '../../../../shared/exceptions';
+import { ECopyVariationType, EEmailCampaignStatus } from '../../domain/enums/email-campaign.enum';
+import { isEmailCampaignDataValidToCreate } from '../../domain/validators/email-campaign.validator';
 
 @Injectable()
 export default class EmailCampaignRepository {

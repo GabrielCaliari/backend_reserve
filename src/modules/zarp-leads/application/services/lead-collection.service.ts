@@ -2,12 +2,12 @@ import { Injectable, Inject, BadRequestException } from '@nestjs/common';
 import { CreateCollectionDto } from '../dtos/create-collection.dto';
 import { UpdateCollectionDto } from '../dtos/update-collection.dto';
 import { CollectionQueryDto } from '../dtos/collection-query.dto';
-import { ILeadCollectionRepository, LEAD_COLLECTION_REPOSITORY } from '@/modules/zarp-leads/domain/interfaces/lead-collection.repository.interface';
-import { LeadCollection } from '@/modules/zarp-leads/domain/entities/lead-collection.entity';
-import { generateSlug } from '@/modules/zarp-leads/domain/utils/slug.util';
-import { EAccessMode } from '@/modules/zarp-leads/domain/enums/access-mode.enum';
-import { CollectionSlugConflictError } from '@/modules/zarp-leads/domain/errors/collection-slug-conflict.error';
-import { CollectionNotFoundError } from '@/modules/zarp-leads/domain/errors/collection-not-found.error';
+import { ILeadCollectionRepository, LEAD_COLLECTION_REPOSITORY } from '../../domain/interfaces/lead-collection.repository.interface';
+import { LeadCollection } from '../../domain/entities/lead-collection.entity';
+import { generateSlug } from '../../domain/utils/slug.util';
+import { EAccessMode } from '../../domain/enums/access-mode.enum';
+import { CollectionSlugConflictError } from '../../domain/errors/collection-slug-conflict.error';
+import { CollectionNotFoundError } from '../../domain/errors/collection-not-found.error';
 import * as crypto from 'crypto';
 
 @Injectable()

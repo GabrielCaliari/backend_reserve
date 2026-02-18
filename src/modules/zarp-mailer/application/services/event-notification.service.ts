@@ -1,17 +1,17 @@
 ﻿import { Injectable } from '@nestjs/common';
-import SMSNotificationRepository from '@/modules/zarp-mailer/infrastructure/repositories/sms-notification.repository';
+import SMSNotificationRepository from '../../infrastructure/repositories/sms-notification.repository';
 import { CreateEventNotificationDTO, CreateEventNotificationEventDTO, CreateEventNotificationEventParam, IdEventNotificationEventParam, IdNotificationEventNotificationEventParam } from '../dtos/event-notification.dto';
-import { errorResponse, renderTemplate, successResponse } from '@/shared/helpers';
-import { ERROR_CREATE_SMS_NOTIFICATION, ERROR_CREATE_SMS_NOTIFICATION_EVENT_NOTIFICATION_NOT_FOUND, ERROR_FIND_BY_ID_NOTIFICATION_SMS_NOTIFICATION, ERROR_FIND_BY_ID_SMS_NOTIFICATION, ERROR_FIND_SMS_NOTIFICATION } from '@/modules/zarp-mailer/domain/constants';
-import { SMSNotification } from '@/modules/zarp-mailer/domain/entities/sms-notification.entity';
-import SMSNotificationEvent, { ESMSNotificationEventStatus, ESMSProvider } from '@/modules/zarp-mailer/domain/entities/sms-notification-event.entity';
-import PhoneNumber from '@/shared/domain/value-objects/phone-number.vo';
-import countryCode from '@/shared/data/country-code';
+import { errorResponse, renderTemplate, successResponse } from '../../../../shared/helpers';
+import { ERROR_CREATE_SMS_NOTIFICATION, ERROR_CREATE_SMS_NOTIFICATION_EVENT_NOTIFICATION_NOT_FOUND, ERROR_FIND_BY_ID_NOTIFICATION_SMS_NOTIFICATION, ERROR_FIND_BY_ID_SMS_NOTIFICATION, ERROR_FIND_SMS_NOTIFICATION } from '../../domain/constants';
+import { SMSNotification } from '../../domain/entities/sms-notification.entity';
+import SMSNotificationEvent, { ESMSNotificationEventStatus, ESMSProvider } from '../../domain/entities/sms-notification-event.entity';
+import PhoneNumber from '../../../../shared/domain/value-objects/phone-number.vo';
+import countryCode from '../../../../shared/data/country-code';
 
-import SMSNotificationEventRepository from '@/modules/zarp-mailer/infrastructure/repositories/sms-notification-event.repository';
+import SMSNotificationEventRepository from '../../infrastructure/repositories/sms-notification-event.repository';
 import { PrismaClient } from "../../../../generated/prisma/client";
-import { AWSSMSProvider } from '@/modules/zarp-mailer/infrastructure/providers/aws-sms.provider';
-import { PrismaService } from '@/shared/database/prisma.service';
+import { AWSSMSProvider } from '../../infrastructure/providers/aws-sms.provider';
+import { PrismaService } from '../../../../shared/database/prisma.service';
 
 @Injectable()
 export class EventNotificationService {

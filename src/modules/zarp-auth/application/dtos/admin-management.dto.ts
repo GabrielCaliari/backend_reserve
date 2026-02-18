@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsString, IsNotEmpty, IsOptional, IsEnum, IsEmail } from 'class-validator';
-import { EAdminRole } from '@/modules/zarp-auth/domain/enums/admin-role.enum';
+import { EAdminRole } from '../../domain/enums/admin-role.enum';
 
 export class CreateAdminDTO {
   @ApiProperty({ description: 'Administrator name', example: 'John Doe' })

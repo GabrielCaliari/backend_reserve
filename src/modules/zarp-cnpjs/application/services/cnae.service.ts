@@ -3,8 +3,8 @@ import {
     ICnaeRepository,
     CNAE_REPOSITORY,
 } from '../../domain/interfaces';
-import { errorResponse } from '@/shared/helpers';
-import { errorTypes } from '@/shared/constants/error-types';
+import { errorResponse } from '../../../../shared/helpers';
+import { errorTypes } from '../../../../shared/constants/error-types';
 
 @Injectable()
 export class CnaeService {

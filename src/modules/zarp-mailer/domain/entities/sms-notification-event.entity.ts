@@ -1,4 +1,4 @@
-import PhoneNumber from '@/shared/domain/value-objects/phone-number.vo';
+import PhoneNumber from '../../../../shared/domain/value-objects/phone-number.vo';
 
 export enum ESMSNotificationEventStatus {
   pending = 1,

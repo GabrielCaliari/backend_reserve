@@ -35,23 +35,23 @@ import {
 } from './domain/interfaces';
 
 // Cross-context repositories (temporary, to be replaced by module imports)
-import SearchRepository from '@/modules/zarp-cnpjs/infrastructure/repositories/search.repository';
-import BrandRepository from '@/modules/zarp-brands/infrastructure/repositories/brand.repository';
-import BrandAlertRepository from '@/modules/zarp-brands/infrastructure/repositories/brand-alert.repository';
-import BrandAnalysisRepository from '@/modules/zarp-brands/infrastructure/repositories/brand-analysis.repository';
-import AdditionalTokenPackRepository from '@/modules/zarp-pi-bot/infrastructure/repositories/additional-token-pack.repository';
-import APITokenRepository from '@/modules/zarp-brands/infrastructure/repositories/api-token.repository';
+import SearchRepository from '../zarp-cnpjs/infrastructure/repositories/search.repository';
+import BrandRepository from '../zarp-brands/infrastructure/repositories/brand.repository';
+import BrandAlertRepository from '../zarp-brands/infrastructure/repositories/brand-alert.repository';
+import BrandAnalysisRepository from '../zarp-brands/infrastructure/repositories/brand-analysis.repository';
+import AdditionalTokenPackRepository from '../zarp-pi-bot/infrastructure/repositories/additional-token-pack.repository';
+import APITokenRepository from '../zarp-brands/infrastructure/repositories/api-token.repository';
 
 // DIP Guards
-import { AdminJwtGuard, UserJwtGuard, RolesGuard, TenantGuard } from '@/shared/auth/guards';
-import { ADMIN_TOKEN_VALIDATOR, USER_TOKEN_VALIDATOR } from '@/shared/auth/interfaces/token-validator.interface';
+import { AdminJwtGuard, UserJwtGuard, RolesGuard, TenantGuard } from '../../shared/auth/guards';
+import { ADMIN_TOKEN_VALIDATOR, USER_TOKEN_VALIDATOR } from '../../shared/auth/interfaces/token-validator.interface';
 
 // Token Validators (ITokenValidator implementations)
 import { AdminTokenValidator } from './infrastructure/providers/admin-token-validator.provider';
 import { UserTokenValidator } from './infrastructure/providers/user-token-validator.provider';
 
 // Providers
-import { FXGoogleAPITokenProvider } from '@/modules/zarp-auth/infrastructure/providers/fx-google-api-token.provider';
+import { FXGoogleAPITokenProvider } from './infrastructure/providers/fx-google-api-token.provider';
 
 /**
  * Zarp Auth Module

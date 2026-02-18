@@ -1,4 +1,4 @@
-import { ICreateEmailCampaign } from '@/modules/zarp-mailer/domain/enums/email-campaign.enum';
+import { ICreateEmailCampaign } from '../enums/email-campaign.enum';
 
 export function isEmailCampaignDataValidToCreate(data: ICreateEmailCampaign): ICreateEmailCampaign {
   const { name, smtp_server_id } = data;

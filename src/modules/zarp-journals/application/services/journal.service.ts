@@ -1,6 +1,6 @@
 ﻿import { Inject, Injectable } from '@nestjs/common';
-import { errorTypes } from '@/shared/constants/error-types';
-import { converterParaData, errorResponse } from '@/shared/helpers';
+import { errorTypes } from '../../../../shared/constants/error-types';
+import { converterParaData, errorResponse } from '../../../../shared/helpers';
 
 import * as fs from 'fs';
 import * as path from 'path';
@@ -18,8 +18,8 @@ import { randomUUID } from 'crypto';
 import { parseString } from "xml2js";
 import { JournalAlert } from '../../../../generated/prisma/client';
 
-import throttle from '@/shared/providers/queue.provider';
-import { PrismaService } from '@/shared/database/prisma.service';
+import throttle from '../../../../shared/providers/queue.provider';
+import { PrismaService } from '../../../../shared/database/prisma.service';
 
 @Injectable()
 export class JournalService {

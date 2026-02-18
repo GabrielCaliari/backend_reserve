@@ -1,18 +1,18 @@
 ﻿import { Injectable } from "@nestjs/common";
 import { Process, Processor } from "@nestjs/bull";
 import { Job } from "bull";
-import { ProviderException } from '@/shared/exceptions';
-import EmailCampaignRepository from '@/modules/zarp-mailer/infrastructure/repositories/email-campaign-legacy.repository';
-import { EEmailCampaignStatus } from '@/modules/zarp-mailer/domain/enums/email-campaign.enum';
-import CampaignBatchRepository from '@/modules/zarp-mailer/infrastructure/repositories/campaign-batch.repository';
-import { ECampaignBatchStatus } from '@/modules/zarp-mailer/domain/enums/campaign-batch-status.enum';
+import { ProviderException } from '../../../../shared/exceptions';
+import EmailCampaignRepository from '../repositories/email-campaign-legacy.repository';
+import { EEmailCampaignStatus } from '../../domain/enums/email-campaign.enum';
+import CampaignBatchRepository from '../repositories/campaign-batch.repository';
+import { ECampaignBatchStatus } from '../../domain/enums/campaign-batch-status.enum';
 
-import { DeliveryRepository } from '@/modules/zarp-mailer/infrastructure/repositories/delivery.repository';
-import { ESMTPProvider } from '@/modules/zarp-mailer/domain/enums/smtp-provider.enum';
-import SMTPServerRepository from '@/modules/zarp-mailer/infrastructure/repositories/smtp-server-legacy.repository';
-import { EncryptProvider } from '@/shared/providers/encrypt.provider';
-import { env } from '@/shared/helpers';
-import { EDeliveryStatus } from '@/modules/zarp-mailer/domain/enums/delivery-status.enum';
+import { DeliveryRepository } from '../repositories/delivery.repository';
+import { ESMTPProvider } from '../../domain/enums/smtp-provider.enum';
+import SMTPServerRepository from '../repositories/smtp-server-legacy.repository';
+import { EncryptProvider } from '../../../../shared/providers/encrypt.provider';
+import { env } from '../../../../shared/helpers';
+import { EDeliveryStatus } from '../../domain/enums/delivery-status.enum';
 const { JSDOM } = require('jsdom');
 
 const nodemailer = require('nodemailer');

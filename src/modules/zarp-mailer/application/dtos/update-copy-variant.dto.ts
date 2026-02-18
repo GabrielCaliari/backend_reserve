@@ -1,6 +1,6 @@
 import { IsEnum } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { CopyVariationType } from '@/modules/zarp-mailer/domain/enums';
+import { CopyVariationType } from '../../domain/enums';
 
 export class UpdateCopyVariantDto {
   @ApiProperty({

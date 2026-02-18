@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Post, Query, Res } from '@nestjs/common';
 import { JournalService } from '../../application/services/journal.service';
 import { Response } from 'express';
-import SyncQueryParamsDTO from '@/modules/zarp-journals/application/dtos/sync-query-params.dto';
+import SyncQueryParamsDTO from '../../application/dtos/sync-query-params.dto';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 
 @ApiTags('Journal')

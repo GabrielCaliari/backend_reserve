@@ -1,12 +1,12 @@
 import { Body, Controller, Get, Param, Post, Req, Res, UseGuards, UseInterceptors, UsePipes } from '@nestjs/common';
 import { UserService } from '../../application/services/user.service';
-import { ToLowercaseBodyRequestPipe } from '@/shared/pipes';
+import { ToLowercaseBodyRequestPipe } from '../../../../shared/pipes';
 import { Response } from 'express';
-import CreateUserDTO from '@/modules/zarp-auth/application/dtos/create-user.dto';
-import AuthUserDTO from '@/modules/zarp-auth/application/dtos/auth-user.dto';
-import { UserJwtGuard } from '@/shared/auth/guards';
+import CreateUserDTO from '../../application/dtos/create-user.dto';
+import AuthUserDTO from '../../application/dtos/auth-user.dto';
+import { UserJwtGuard } from '../../../../shared/auth/guards';
 import axios from 'axios';
-import PreCreateUserDTO from '@/modules/zarp-auth/application/dtos/pre-create-user.dto';
+import PreCreateUserDTO from '../../application/dtos/pre-create-user.dto';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody, ApiParam } from '@nestjs/swagger';
 
 @ApiTags('User')

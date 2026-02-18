@@ -1,6 +1,6 @@
 import { Prisma } from '../../../../generated/prisma/client';
-import Email from '@/shared/domain/value-objects/email.vo';
-import PhoneNumber from '@/shared/domain/value-objects/phone-number.vo';
+import Email from '../../../../shared/domain/value-objects/email.vo';
+import PhoneNumber from '../../../../shared/domain/value-objects/phone-number.vo';
 
 export enum EOriginLead {
   seo_tool = 1,

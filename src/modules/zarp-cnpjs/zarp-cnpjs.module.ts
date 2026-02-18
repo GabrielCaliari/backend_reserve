@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { ZarpAuthModule } from '@/modules/zarp-auth/zarp-auth.module';
+import { ZarpAuthModule } from '../zarp-auth/zarp-auth.module';
 import { CnaeService } from './application/services/cnae.service';
 import { CnaeController } from './infrastructure/controllers/cnae.controller';
 import { CompanyService } from './application/services/company.service';
@@ -18,7 +18,7 @@ import {
 } from './domain/interfaces';
 
 // Cross-context repositories (temporary coupling)
-import UserRepository from '@/modules/zarp-auth/infrastructure/repositories/user.repository';
+import UserRepository from '../zarp-auth/infrastructure/repositories/user.repository';
 
 /**
  * Zarp CNPJs Module

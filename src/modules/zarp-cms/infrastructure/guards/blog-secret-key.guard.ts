@@ -1,6 +1,6 @@
 import { CanActivate, ExecutionContext, Injectable, Inject, UnauthorizedException } from '@nestjs/common';
-import { BLOG_REPOSITORY, IBlogRepository } from '@/modules/zarp-cms/domain/interfaces/blog.repository.interface';
-import { InvalidBlogSecretKeyException } from '@/modules/zarp-cms/domain/errors/invalid-blog-secret-key.error';
+import { BLOG_REPOSITORY, IBlogRepository } from '../../domain/interfaces/blog.repository.interface';
+import { InvalidBlogSecretKeyException } from '../../domain/errors/invalid-blog-secret-key.error';
 import * as crypto from 'crypto';
 
 @Injectable()

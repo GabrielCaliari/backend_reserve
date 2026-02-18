@@ -1,9 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { BlogSecretKeyGuard } from './blog-secret-key.guard';
-import { BLOG_REPOSITORY } from '@/modules/zarp-cms/domain/interfaces/blog.repository.interface';
-import { InMemoryBlogRepository } from '@/shared/testing/in-memory-repos/in-memory-blog.repository';
-import { InvalidBlogSecretKeyException } from '@/modules/zarp-cms/domain/errors/invalid-blog-secret-key.error';
+import { BLOG_REPOSITORY } from '../../domain/interfaces/blog.repository.interface';
+import { InMemoryBlogRepository } from '../../../../shared/testing/in-memory-repos/in-memory-blog.repository';
+import { InvalidBlogSecretKeyException } from '../../domain/errors/invalid-blog-secret-key.error';
 import * as crypto from 'crypto';
 
 describe('BlogSecretKeyGuard', () => {

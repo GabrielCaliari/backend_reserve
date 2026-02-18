@@ -1,12 +1,12 @@
 import { Controller, Get, Post, Put, Body, Param, Query, HttpCode, HttpStatus } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
-import { EmailCampaignService } from '@/modules/zarp-mailer/application/services';
+import { EmailCampaignService } from '../../application/services';
 import {
   CreateEmailCampaignDto,
   EmailCampaignQueryDto,
   UpdateCopyVariantDto,
   UpdateCampaignBatchSizeDto,
-} from '@/modules/zarp-mailer/application/dtos';
+} from '../../application/dtos';
 
 @ApiTags('Email Campaign')
 @Controller()

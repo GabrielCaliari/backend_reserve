@@ -1,5 +1,5 @@
-﻿import { errorTypes } from '@/shared/constants/error-types';
-import { errorResponse, separarPorPropriedade } from '@/shared/helpers';
+﻿import { errorTypes } from '../../../../shared/constants/error-types';
+import { errorResponse, separarPorPropriedade } from '../../../../shared/helpers';
 import {
     IBrandRepository,
     IBrandAlertRepository,
@@ -8,21 +8,21 @@ import {
     BRAND_REPOSITORY,
     BRAND_ALERT_REPOSITORY,
     BRAND_MONITORING_REPOSITORY,
-} from '@/modules/zarp-brands/domain/interfaces';
+} from '../../domain/interfaces';
 
 import { Inject, Injectable } from '@nestjs/common';
 // Cross-context repositories (temporary)
-import JournalAlertRepository from '@/modules/zarp-journals/infrastructure/repositories/journal-alert.repository';
+import JournalAlertRepository from '../../../zarp-journals/infrastructure/repositories/journal-alert.repository';
 import BrandNotificationRepository from '../../infrastructure/repositories/brand-notification.repository';
-import { EBrandMonitoring } from '@/modules/zarp-brands/domain/enums/brand-monitoring-status.enum';
+import { EBrandMonitoring } from '../../domain/enums/brand-monitoring-status.enum';
 import { JournalAlert, PrismaClient } from '../../../../generated/prisma/client';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import PlanRepository from '@/modules/zarp-auth/infrastructure/repositories/plan.repository';
-import { EStatus } from '@/modules/zarp-auth/domain/enums/plan-status.enum';
+import PlanRepository from '../../../zarp-auth/infrastructure/repositories/plan.repository';
+import { EStatus } from '../../../zarp-auth/domain/enums/plan-status.enum';
 import PublicBrandSearchRepository from '../../infrastructure/repositories/public-brand-search.repository';
-import { EuipoAPITokenProvider } from '@/modules/zarp-brands/infrastructure/providers/euipo-api-token.provider';
+import { EuipoAPITokenProvider } from '../../infrastructure/providers/euipo-api-token.provider';
 import axios from 'axios';
-import { PrismaService } from '@/shared/database/prisma.service';
+import { PrismaService } from '../../../../shared/database/prisma.service';
 
 @Injectable()
 export class BrandService {

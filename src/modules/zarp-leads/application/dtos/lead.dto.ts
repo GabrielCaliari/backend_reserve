@@ -1,5 +1,5 @@
 import { IsEmail, IsEnum, IsNumberString, IsObject, IsOptional, IsString } from "class-validator";
-import { EOriginLead } from '@/modules/zarp-leads/domain/entities/lead.entity';
+import { EOriginLead } from '../../domain/entities/lead.entity';
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 
 export class CreateLeadDto {

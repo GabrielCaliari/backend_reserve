@@ -15,12 +15,7 @@
     "noImplicitAny": false,
     "strictBindCallApply": false,
     "forceConsistentCasingInFileNames": false,
-    "noFallthroughCasesInSwitch": false,
-    "paths": {
-      "@/*": ["src/*"],
-      "@/shared/*": ["src/shared/*"],
-      "@/modules/*": ["src/modules/*"]
-    }
+    "noFallthroughCasesInSwitch": false
   },
   "exclude": ["node_modules", "dist"]
 }

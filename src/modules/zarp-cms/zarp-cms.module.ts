@@ -12,13 +12,13 @@ import { PrismaArticleImageRepository } from './infrastructure/repositories/pris
 import { S3StorageProvider } from './infrastructure/providers/s3-storage.provider';
 import { VercelBlobStorageProvider } from './infrastructure/providers/vercel-blob-storage.provider';
 import { SharpImageProcessorProvider } from './infrastructure/providers/sharp-image-processor.provider';
-import { BLOG_REPOSITORY } from '@/modules/zarp-cms/domain/interfaces/blog.repository.interface';
-import { ARTICLE_REPOSITORY } from '@/modules/zarp-cms/domain/interfaces/article.repository.interface';
-import { ARTICLE_IMAGE_REPOSITORY } from '@/modules/zarp-cms/domain/interfaces/article-image.repository.interface';
-import { STORAGE_PROVIDER } from '@/modules/zarp-cms/domain/interfaces/storage.interface';
-import { IMAGE_PROCESSOR } from '@/modules/zarp-cms/domain/interfaces/image-processor.interface';
+import { BLOG_REPOSITORY } from './domain/interfaces/blog.repository.interface';
+import { ARTICLE_REPOSITORY } from './domain/interfaces/article.repository.interface';
+import { ARTICLE_IMAGE_REPOSITORY } from './domain/interfaces/article-image.repository.interface';
+import { STORAGE_PROVIDER } from './domain/interfaces/storage.interface';
+import { IMAGE_PROCESSOR } from './domain/interfaces/image-processor.interface';
 import { BlogSecretKeyGuard } from './infrastructure/guards/blog-secret-key.guard';
-import { ZarpAuthModule } from '@/modules/zarp-auth/zarp-auth.module';
+import { ZarpAuthModule } from '../zarp-auth/zarp-auth.module';
 
 /**
  * Zarp CMS Module

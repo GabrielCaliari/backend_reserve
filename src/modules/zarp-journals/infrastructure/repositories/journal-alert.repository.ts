@@ -1,7 +1,7 @@
 ﻿import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@/shared/database/prisma.service';
-import { RepositoryException } from '@/shared/exceptions';
-import { IJournalAlertRepository } from '@/modules/zarp-journals/domain/interfaces';
+import { PrismaService } from '../../../../shared/database/prisma.service';
+import { RepositoryException } from '../../../../shared/exceptions';
+import { IJournalAlertRepository } from '../../domain/interfaces';
 
 @Injectable()
 export default class JournalAlertRepository implements IJournalAlertRepository {

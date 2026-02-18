@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { ITokenValidator } from '@/shared/auth/interfaces/token-validator.interface';
-import AdminSessionTokenRepository from '@/modules/zarp-auth/infrastructure/repositories/admin-session-token.repository';
+import { ITokenValidator } from '../../../../shared/auth/interfaces/token-validator.interface';
+import AdminSessionTokenRepository from '../repositories/admin-session-token.repository';
 
 /**
  * Admin Token Validator

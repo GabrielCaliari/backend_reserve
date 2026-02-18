@@ -5,13 +5,13 @@ import { LeadService } from '../../application/services/lead.service';
 import { CreateCollectionDto } from '../../application/dtos/create-collection.dto';
 import { UpdateCollectionDto } from '../../application/dtos/update-collection.dto';
 import { CollectionQueryDto } from '../../application/dtos/collection-query.dto';
-import { AdminJwtGuard } from '@/shared/auth/guards/admin-jwt.guard';
-import { TenantGuard } from '@/shared/auth/guards/tenant.guard';
-import { RolesGuard } from '@/shared/auth/guards/roles.guard';
-import { Roles } from '@/shared/auth/decorators/roles.decorator';
-import { EAdminRole } from '@/modules/zarp-auth/domain/enums/admin-role.enum';
-import { GetTenantId } from '@/shared/decorators/get-tenant-id.decorator';
-import { successResponse } from '@/shared/helpers/response.helper';
+import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
+import { TenantGuard } from '../../../../shared/auth/guards/tenant.guard';
+import { RolesGuard } from '../../../../shared/auth/guards/roles.guard';
+import { Roles } from '../../../../shared/auth/decorators/roles.decorator';
+import { EAdminRole } from '../../../zarp-auth/domain/enums/admin-role.enum';
+import { GetTenantId } from '../../../../shared/decorators/get-tenant-id.decorator';
+import { successResponse } from '../../../../shared/helpers/response.helper';
 
 @ApiTags('Lead Collections')
 @ApiBearerAuth()

@@ -1,6 +1,6 @@
 ﻿import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bull';
-import { ZarpAuthModule } from '@/modules/zarp-auth/zarp-auth.module';
+import { ZarpAuthModule } from '../zarp-auth/zarp-auth.module';
 import {
   EMAIL_CAMPAIGN_REPOSITORY,
   SMTP_SERVER_REPOSITORY,
@@ -36,7 +36,7 @@ import SMSNotificationEventRepository from './infrastructure/repositories/sms-no
 import ConfigRepository from './infrastructure/repositories/config.repository';
 
 // Cross-context
-import { AWSSMSProvider } from '@/modules/zarp-mailer/infrastructure/providers/aws-sms.provider';
+import { AWSSMSProvider } from './infrastructure/providers/aws-sms.provider';
 
 /**
  * Zarp Mailer Module

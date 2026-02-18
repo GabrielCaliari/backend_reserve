@@ -1,8 +1,8 @@
 ﻿import { PrismaClient } from "../../../../generated/prisma/client";
-import { EEmailType } from '@/modules/zarp-mailer/domain/enums/email-type.enum';
+import { EEmailType } from '../../domain/enums/email-type.enum';
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@/shared/database/prisma.service';
-import { RepositoryException } from '@/shared/exceptions';
+import { PrismaService } from '../../../../shared/database/prisma.service';
+import { RepositoryException } from '../../../../shared/exceptions';
 
 export interface ICreateEmail {
     from_name: string;

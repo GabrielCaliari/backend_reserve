@@ -1,8 +1,8 @@
 import { Controller, Get, Query, Res, Param, UsePipes, ValidationPipe } from '@nestjs/common';
 import { Response } from 'express';
 import { PostService } from '../../application/services/post.service';
-import { PaginationQuery } from '@/shared/validators/pagination.dto';
-import { SlugParam } from '@/shared/validators/slug.param';
+import { PaginationQuery } from '../../../../shared/validators/pagination.dto';
+import { SlugParam } from '../../../../shared/validators/slug.param';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery } from '@nestjs/swagger';
 
 @ApiTags('Post')

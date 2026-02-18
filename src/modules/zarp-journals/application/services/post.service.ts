@@ -1,7 +1,7 @@
 ﻿import { Injectable } from '@nestjs/common';
 import axios from 'axios';
-import { errorTypes } from '@/shared/constants/error-types';
-import { errorResponse } from '@/shared/helpers';
+import { errorTypes } from '../../../../shared/constants/error-types';
+import { errorResponse } from '../../../../shared/helpers';
 
 interface WordPressPost {
     id: number;

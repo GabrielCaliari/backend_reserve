@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { ProviderException } from '@/shared/exceptions';
+import { ProviderException } from '../exceptions';
 import * as jwt from 'jsonwebtoken';
 
 export interface JwtPayload {

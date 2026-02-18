@@ -1,8 +1,8 @@
 import { Controller, Post, Param, Body, HttpCode, HttpStatus, BadRequestException, NotFoundException, ForbiddenException, GoneException, Req } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiHeader } from '@nestjs/swagger';
-import { LeadCollectionService } from '@/modules/zarp-leads/application/services/lead-collection.service';
-import { LeadService } from '@/modules/zarp-leads/application/services/lead.service';
-import { CreateLeadDto } from '@/modules/zarp-leads/application/dtos/lead.dto';
+import { LeadCollectionService } from '../../application/services/lead-collection.service';
+import { LeadService } from '../../application/services/lead.service';
+import { CreateLeadDto } from '../../application/dtos/lead.dto';
 import * as crypto from 'crypto';
 
 @ApiTags('Lead Capture')

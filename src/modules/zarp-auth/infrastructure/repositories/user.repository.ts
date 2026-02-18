@@ -1,9 +1,9 @@
-﻿import { EUserSex } from '@/modules/zarp-auth/domain/enums/user-sex.enum';
+﻿import { EUserSex } from '../../domain/enums/user-sex.enum';
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@/shared/database/prisma.service';
-import { RepositoryException } from '@/shared/exceptions';
-import { HashProvider } from '@/shared/providers/hash.provider';
-import { IUserRepository, ICreateUser, IUserFindInclude } from '@/modules/zarp-auth/domain/interfaces';
+import { PrismaService } from '../../../../shared/database/prisma.service';
+import { RepositoryException } from '../../../../shared/exceptions';
+import { HashProvider } from '../../../../shared/providers/hash.provider';
+import { IUserRepository, ICreateUser, IUserFindInclude } from '../../domain/interfaces';
 
 export { ICreateUser, IUserFindInclude };
 

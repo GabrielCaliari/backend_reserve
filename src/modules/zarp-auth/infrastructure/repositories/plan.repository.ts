@@ -1,9 +1,9 @@
 ﻿import { PrismaClient } from "../../../../generated/prisma/client";
-import { EStatus } from '@/modules/zarp-auth/domain/enums/plan-status.enum';
+import { EStatus } from '../../domain/enums/plan-status.enum';
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@/shared/database/prisma.service';
-import { RepositoryException } from '@/shared/exceptions';
-import { IPlanRepository } from '@/modules/zarp-auth/domain/interfaces';
+import { PrismaService } from '../../../../shared/database/prisma.service';
+import { RepositoryException } from '../../../../shared/exceptions';
+import { IPlanRepository } from '../../domain/interfaces';
 
 @Injectable()
 export default class PlanRepository implements IPlanRepository {

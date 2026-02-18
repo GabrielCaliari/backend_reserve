@@ -1,5 +1,5 @@
-import { DomainException } from '@/shared/exceptions';
-import { isValidCPF } from '@/shared/helpers/cpf.helper';
+import { DomainException } from '../../exceptions';
+import { isValidCPF } from '../../helpers/cpf.helper';
 
 export default class CPF {
   private readonly cpf: string;

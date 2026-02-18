@@ -1,4 +1,4 @@
-import { ESMTPProvider } from '@/modules/zarp-mailer/domain/enums/smtp-provider.enum';
+import { ESMTPProvider } from '../../domain/enums/smtp-provider.enum';
 import { IsBoolean, IsEmail, IsEnum, IsObject, IsOptional, IsString } from "class-validator";
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 

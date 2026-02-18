@@ -1,10 +1,10 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { BLOG_REPOSITORY, IBlogRepository } from '@/modules/zarp-cms/domain/interfaces/blog.repository.interface';
+import { BLOG_REPOSITORY, IBlogRepository } from '../../domain/interfaces/blog.repository.interface';
 import { CreateBlogDTO } from '../dtos/create-blog.dto';
 import { UpdateBlogDTO } from '../dtos/update-blog.dto';
-import { generateSlug } from '@/modules/zarp-cms/domain/utils/slug.util';
-import { BlogSlugConflictException } from '@/modules/zarp-cms/domain/errors/blog-slug-conflict.error';
-import { BlogNotFoundError } from '@/modules/zarp-cms/domain/errors/blog-not-found.error';
+import { generateSlug } from '../../domain/utils/slug.util';
+import { BlogSlugConflictException } from '../../domain/errors/blog-slug-conflict.error';
+import { BlogNotFoundError } from '../../domain/errors/blog-not-found.error';
 import * as crypto from 'crypto';
 
 @Injectable()

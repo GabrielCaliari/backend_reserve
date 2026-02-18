@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { IAPIToken } from '@/shared/interfaces/api-token.interface';
-import { ProviderException } from '@/shared/exceptions';
-import { EncryptProvider } from '@/shared/providers/encrypt.provider';
-import { isValidString } from '@/shared/helpers/string.helper';
-import APITokenRepository from '@/modules/zarp-brands/infrastructure/repositories/api-token.repository';
+import { IAPIToken } from '../../../../shared/interfaces/api-token.interface';
+import { ProviderException } from '../../../../shared/exceptions';
+import { EncryptProvider } from '../../../../shared/providers/encrypt.provider';
+import { isValidString } from '../../../../shared/helpers/string.helper';
+import APITokenRepository from '../repositories/api-token.repository';
 import axios from 'axios';
 
 interface IMakeRequestResponse {

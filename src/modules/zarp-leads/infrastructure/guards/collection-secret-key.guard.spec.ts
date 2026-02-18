@@ -1,10 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { CollectionSecretKeyGuard } from './collection-secret-key.guard';
-import { LEAD_COLLECTION_REPOSITORY } from '@/modules/zarp-leads/domain/interfaces/lead-collection.repository.interface';
-import { LeadCollection } from '@/modules/zarp-leads/domain/entities/lead-collection.entity';
-import { InvalidCollectionKeyError } from '@/modules/zarp-leads/domain/errors/invalid-collection-key.error';
-import { EAccessMode } from '@/modules/zarp-leads/domain/enums/access-mode.enum';
+import { LEAD_COLLECTION_REPOSITORY } from '../../domain/interfaces/lead-collection.repository.interface';
+import { LeadCollection } from '../../domain/entities/lead-collection.entity';
+import { InvalidCollectionKeyError } from '../../domain/errors/invalid-collection-key.error';
+import { EAccessMode } from '../../domain/enums/access-mode.enum';
 import * as crypto from 'crypto';
 
 describe('CollectionSecretKeyGuard', () => {

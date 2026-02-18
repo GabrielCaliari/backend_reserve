@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@/shared/database/prisma.service';
-import { RepositoryException } from '@/shared/exceptions';
-import { IBlogRepository, ICreateBlog } from '@/modules/zarp-cms/domain/interfaces/blog.repository.interface';
+import { PrismaService } from '../../../../shared/database/prisma.service';
+import { RepositoryException } from '../../../../shared/exceptions';
+import { IBlogRepository, ICreateBlog } from '../../domain/interfaces/blog.repository.interface';
 
 @Injectable()
 export class PrismaBlogRepository implements IBlogRepository {

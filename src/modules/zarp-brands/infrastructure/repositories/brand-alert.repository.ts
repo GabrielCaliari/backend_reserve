@@ -1,9 +1,9 @@
 ﻿import { PrismaClient } from "../../../../generated/prisma/client";
-import { EBrandMonitoring } from '@/modules/zarp-brands/domain/enums/brand-monitoring-status.enum';
+import { EBrandMonitoring } from '../../domain/enums/brand-monitoring-status.enum';
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@/shared/database/prisma.service';
-import { RepositoryException } from '@/shared/exceptions';
-import { IBrandAlertRepository, IBrandAlert } from '@/modules/zarp-brands/domain/interfaces';
+import { PrismaService } from '../../../../shared/database/prisma.service';
+import { RepositoryException } from '../../../../shared/exceptions';
+import { IBrandAlertRepository, IBrandAlert } from '../../domain/interfaces';
 
 export { IBrandAlert };
 

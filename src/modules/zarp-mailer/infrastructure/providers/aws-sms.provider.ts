@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { PublishCommand, SNSClient } from '@aws-sdk/client-sns';
 import { SNSClientLib } from './sns.lib';
-import { ProviderException } from '@/shared/exceptions';
-import { PROVIDER_AWS_SMS_ERROR } from '@/modules/zarp-mailer/domain/constants/error-messages';
+import { ProviderException } from '../../../../shared/exceptions';
+import { PROVIDER_AWS_SMS_ERROR } from '../../domain/constants/error-messages';
 
 @Injectable()
 export class AWSSMSProvider {

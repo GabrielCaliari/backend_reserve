@@ -1,8 +1,8 @@
 ﻿import { Injectable } from '@nestjs/common';
 import axios from 'axios';
-import { MessageHistory } from '@/modules/zarp-pi-bot/domain/interfaces/message-history.interface';
-import { errorTypes } from '@/shared/constants/error-types';
-import { errorResponse } from '@/shared/helpers';
+import { MessageHistory } from '../../domain/interfaces/message-history.interface';
+import { errorTypes } from '../../../../shared/constants/error-types';
+import { errorResponse } from '../../../../shared/helpers';
 
 export interface IMessage {
     user_id: number;

@@ -1,12 +1,12 @@
 import { Prisma } from "../../../../generated/prisma/client";
-import { ICreateLead, ILead } from '@/modules/zarp-leads/domain/enums/lead.enum';
+import { ICreateLead, ILead } from '../../domain/enums/lead.enum';
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@/shared/database/prisma.service';
-import { RepositoryException } from '@/shared/exceptions';
-import { Lead } from "@/modules/zarp-leads/domain/entities/lead.entity";
-import PhoneNumber from "@/shared/domain/value-objects/phone-number.vo";
-import Email from "@/shared/domain/value-objects/email.vo";
-import { ILeadRepository } from '@/modules/zarp-leads/domain/interfaces';
+import { PrismaService } from '../../../../shared/database/prisma.service';
+import { RepositoryException } from '../../../../shared/exceptions';
+import { Lead } from '../../domain/entities/lead.entity';
+import PhoneNumber from '../../../../shared/domain/value-objects/phone-number.vo';
+import Email from '../../../../shared/domain/value-objects/email.vo';
+import { ILeadRepository } from '../../domain/interfaces';
 
 export { ICreateLead };
 

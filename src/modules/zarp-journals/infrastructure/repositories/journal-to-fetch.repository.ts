@@ -1,7 +1,7 @@
 ﻿import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@/shared/database/prisma.service';
-import { RepositoryException } from '@/shared/exceptions';
-import { IJournalToFetchRepository, ICreateJournalToFetch } from '@/modules/zarp-journals/domain/interfaces';
+import { PrismaService } from '../../../../shared/database/prisma.service';
+import { RepositoryException } from '../../../../shared/exceptions';
+import { IJournalToFetchRepository, ICreateJournalToFetch } from '../../domain/interfaces';
 
 export { ICreateJournalToFetch };
 

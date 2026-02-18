@@ -4,11 +4,11 @@ import {
   EMAIL_CAMPAIGN_REPOSITORY,
   ISMTPServerRepository,
   SMTP_SERVER_REPOSITORY,
-} from '@/modules/zarp-mailer/domain/interfaces';
-import { EmailCampaign } from '@/modules/zarp-mailer/domain/entities';
-import { BatchSize } from '@/modules/zarp-mailer/domain/value-objects';
-import { CopyVariationType, EmailCampaignStatus } from '@/modules/zarp-mailer/domain/enums';
-import { DomainException } from '@/shared/exceptions';
+} from '../../domain/interfaces';
+import { EmailCampaign } from '../../domain/entities';
+import { BatchSize } from '../../domain/value-objects';
+import { CopyVariationType, EmailCampaignStatus } from '../../domain/enums';
+import { DomainException } from '../../../../shared/exceptions';
 
 /**
  * Email Campaign Service

@@ -1,7 +1,7 @@
-﻿import { ETemperature } from '@/modules/zarp-auth/domain/enums/temperature.enum';
+﻿import { ETemperature } from '../../domain/enums/temperature.enum';
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@/shared/database/prisma.service';
-import { RepositoryException } from '@/shared/exceptions';
+import { PrismaService } from '../../../../shared/database/prisma.service';
+import { RepositoryException } from '../../../../shared/exceptions';
 
 @Injectable()
 export default class LeadQualificationMessageRepository {

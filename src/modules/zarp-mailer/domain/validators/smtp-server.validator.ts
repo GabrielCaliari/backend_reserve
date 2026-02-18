@@ -1,4 +1,4 @@
-import { ICreateSmtpServer } from '@/modules/zarp-mailer/domain/enums/smtp-provider.enum';
+import { ICreateSmtpServer } from '../enums/smtp-provider.enum';
 
 export function isSmtpServerDataValidToCreate(data: ICreateSmtpServer): ICreateSmtpServer {
   const { name, email, provider, domain } = data;

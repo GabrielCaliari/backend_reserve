@@ -1,9 +1,9 @@
 import { Controller, Get, Post, Put, Body, Param, Query, HttpCode, HttpStatus, ParseIntPipe, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBearerAuth } from '@nestjs/swagger';
-import { LeadService } from '@/modules/zarp-leads/application/services/lead.service';
-import { CreateLeadDto, LeadQueryDto } from '@/modules/zarp-leads/application/dtos/lead.dto';
-import { ELeadStatus } from '@/modules/zarp-leads/domain/entities/lead.entity';
-import { AdminJwtGuard } from '@/shared/auth/guards';
+import { LeadService } from '../../application/services/lead.service';
+import { CreateLeadDto, LeadQueryDto } from '../../application/dtos/lead.dto';
+import { ELeadStatus } from '../../domain/entities/lead.entity';
+import { AdminJwtGuard } from '../../../../shared/auth/guards';
 
 @ApiTags('Leads')
 @Controller()

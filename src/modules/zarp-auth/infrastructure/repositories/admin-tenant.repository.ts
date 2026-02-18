@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@/shared/database/prisma.service';
-import { RepositoryException } from '@/shared/exceptions';
+import { PrismaService } from '../../../../shared/database/prisma.service';
+import { RepositoryException } from '../../../../shared/exceptions';
 import {
   IAdminTenantRepository,
   IAssignAdminTenant,
-} from '@/modules/zarp-auth/domain/interfaces/admin-tenant.repository.interface';
-import { EAdminRole } from '@/modules/zarp-auth/domain/enums/admin-role.enum';
+} from '../../domain/interfaces/admin-tenant.repository.interface';
+import { EAdminRole } from '../../domain/enums/admin-role.enum';
 
 @Injectable()
 export default class AdminTenantRepository implements IAdminTenantRepository {

@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum, IsNotEmpty, IsOptional, IsString, MaxLength, IsArray, IsUrl } from 'class-validator';
-import { EAccessMode } from '@/modules/zarp-leads/domain/enums/access-mode.enum';
+import { EAccessMode } from '../../domain/enums/access-mode.enum';
 
 export class CreateCollectionDto {
   @ApiProperty({ example: 'My Collection', description: 'Name of the lead collection' })

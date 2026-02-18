@@ -1,4 +1,4 @@
-import { EAdminRole } from '@/modules/zarp-auth/domain/enums/admin-role.enum';
+import { EAdminRole } from '../enums/admin-role.enum';
 
 export interface IAssignAdminTenant {
   admin_id: number;

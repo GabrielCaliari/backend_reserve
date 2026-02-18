@@ -1,5 +1,5 @@
 import { createAzure, type AzureOpenAIProvider } from '@ai-sdk/azure';
-import { env } from '@/shared/helpers/env.helper';
+import { env } from '../helpers/env.helper';
 
 let azureInstance: AzureOpenAIProvider | null = null;
 

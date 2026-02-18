@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@/shared/database/prisma.service';
-import { RepositoryException } from '@/shared/exceptions';
+import { PrismaService } from '../../../../shared/database/prisma.service';
+import { RepositoryException } from '../../../../shared/exceptions';
 import {
   IEmailCampaignRepository,
   PaginationParams,
   PaginatedResult,
-} from '@/modules/zarp-mailer/domain/interfaces';
-import { EmailCampaign } from '@/modules/zarp-mailer/domain/entities';
-import { EmailCampaignStatus } from '@/modules/zarp-mailer/domain/enums';
+} from '../../domain/interfaces';
+import { EmailCampaign } from '../../domain/entities';
+import { EmailCampaignStatus } from '../../domain/enums';
 
 /**
  * Prisma implementation of Email Campaign Repository

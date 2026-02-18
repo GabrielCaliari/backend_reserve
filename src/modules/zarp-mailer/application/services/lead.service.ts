@@ -1,11 +1,11 @@
 ﻿import { Injectable } from '@nestjs/common';
-import { ERROR_FIND_LEAD, ERROR_CREATE_LEAD } from '@/modules/zarp-mailer/domain/constants';
-import LeadRepository from '@/modules/zarp-auth/infrastructure/repositories/lead.repository';
-import { errorResponse, successResponse } from '@/shared/helpers';
+import { ERROR_FIND_LEAD, ERROR_CREATE_LEAD } from '../../domain/constants';
+import LeadRepository from '../../../zarp-auth/infrastructure/repositories/lead.repository';
+import { errorResponse, successResponse } from '../../../../shared/helpers';
 import { CreateLead } from '../dtos/lead.dto';
-import { ELeadStatus, Lead } from '@/modules/zarp-auth/domain/entities/lead.entity';
-import PhoneNumber from '@/shared/domain/value-objects/phone-number.vo';
-import Email from '@/shared/domain/value-objects/email.vo';
+import { ELeadStatus, Lead } from '../../../zarp-auth/domain/entities/lead.entity';
+import PhoneNumber from '../../../../shared/domain/value-objects/phone-number.vo';
+import Email from '../../../../shared/domain/value-objects/email.vo';
 
 @Injectable()
 export class LeadService {

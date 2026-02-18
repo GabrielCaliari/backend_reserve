@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@/shared/database/prisma.service';
-import { RepositoryException } from '@/shared/exceptions';
+import { PrismaService } from '../../../../shared/database/prisma.service';
+import { RepositoryException } from '../../../../shared/exceptions';
 import {
   ITenantRepository,
   ICreateTenant,
   IUpdateTenant,
-} from '@/modules/zarp-auth/domain/interfaces/tenant.repository.interface';
+} from '../../domain/interfaces/tenant.repository.interface';
 
 @Injectable()
 export default class TenantRepository implements ITenantRepository {

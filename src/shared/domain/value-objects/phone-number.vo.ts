@@ -1,4 +1,4 @@
-import { getCountryCodeFromPhoneNumber } from '@/shared/helpers/phone.helper';
+import { getCountryCodeFromPhoneNumber } from '../../helpers/phone.helper';
 
 export default class PhoneNumber {
   private readonly phone_number: string;

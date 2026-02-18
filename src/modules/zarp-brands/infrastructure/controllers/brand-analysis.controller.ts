@@ -1,9 +1,9 @@
 import { Body, Controller, Get, Param, Post, Req, Res, UseGuards } from '@nestjs/common';
-import { UserJwtGuard } from '@/shared/auth/guards';
-import BrandAnalysisMessageDTO from '@/modules/zarp-brands/application/dtos/brand-analysis-message.dto';
+import { UserJwtGuard } from '../../../../shared/auth/guards';
+import BrandAnalysisMessageDTO from '../../application/dtos/brand-analysis-message.dto';
 import { BrandAnalysisService } from '../../application/services/brand-analysis.service';
 import { Request, Response } from 'express';
-import FindByUserAndIdDTO from '@/modules/zarp-brands/application/dtos/find-by-user-and-id.dto';
+import FindByUserAndIdDTO from '../../application/dtos/find-by-user-and-id.dto';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody, ApiParam } from '@nestjs/swagger';
 
 @ApiTags('Brand Analysis')

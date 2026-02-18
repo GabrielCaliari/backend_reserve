@@ -1,8 +1,8 @@
 import {
   IAdminTenantRepository,
   IAssignAdminTenant,
-} from '@/modules/zarp-auth/domain/interfaces/admin-tenant.repository.interface';
-import { EAdminRole } from '@/modules/zarp-auth/domain/enums/admin-role.enum';
+} from '../../../modules/zarp-auth/domain/interfaces/admin-tenant.repository.interface';
+import { EAdminRole } from '../../../modules/zarp-auth/domain/enums/admin-role.enum';
 
 interface StoredAdminTenant {
   id: number;

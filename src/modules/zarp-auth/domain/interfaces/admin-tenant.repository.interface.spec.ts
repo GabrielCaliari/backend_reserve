@@ -1,5 +1,5 @@
-import { InMemoryAdminTenantRepository } from '@/shared/testing/in-memory-repos/in-memory-admin-tenant.repository';
-import { EAdminRole } from '@/modules/zarp-auth/domain/enums/admin-role.enum';
+import { InMemoryAdminTenantRepository } from '../../../../shared/testing/in-memory-repos/in-memory-admin-tenant.repository';
+import { EAdminRole } from '../enums/admin-role.enum';
 
 describe('InMemoryAdminTenantRepository - findRoleInTenant', () => {
   let repo: InMemoryAdminTenantRepository;

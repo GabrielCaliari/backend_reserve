@@ -1,4 +1,4 @@
-import { DomainException } from '@/shared/exceptions';
+import { DomainException } from '../../../../shared/exceptions';
 import { EmailCampaignStatus, CopyVariationType } from '../enums';
 import { BatchSize } from '../value-objects';
 

@@ -1,4 +1,4 @@
-import { LeadCollection } from '@/modules/zarp-leads/domain/entities/lead-collection.entity';
+import { LeadCollection } from '../entities/lead-collection.entity';
 
 export const LEAD_COLLECTION_REPOSITORY = Symbol('LEAD_COLLECTION_REPOSITORY');
 

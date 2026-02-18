@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { ZarpAuthModule } from '@/modules/zarp-auth/zarp-auth.module';
+import { ZarpAuthModule } from '../zarp-auth/zarp-auth.module';
 import { PiBotService } from './application/services/pi-bot.service';
 import { PiBotController } from './infrastructure/controllers/pi-bot.controller';
 

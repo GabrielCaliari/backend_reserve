@@ -1,9 +1,9 @@
 ﻿import { Injectable } from '@nestjs/common';
-import APITokenRepository from '@/modules/zarp-brands/infrastructure/repositories/api-token.repository';
-import { errorTypes } from '@/shared/constants/error-types';
-import { errorResponse } from '@/shared/helpers';
-import generateImageFX from '@/modules/zarp-auth/infrastructure/providers/generate-image-fx';
-import { FXGoogleAPITokenProvider } from '@/modules/zarp-auth/infrastructure/providers/fx-google-api-token.provider';
+import APITokenRepository from '../../../zarp-brands/infrastructure/repositories/api-token.repository';
+import { errorTypes } from '../../../../shared/constants/error-types';
+import { errorResponse } from '../../../../shared/helpers';
+import generateImageFX from '../../infrastructure/providers/generate-image-fx';
+import { FXGoogleAPITokenProvider } from '../../infrastructure/providers/fx-google-api-token.provider';
 
 @Injectable()
 export class PostService {

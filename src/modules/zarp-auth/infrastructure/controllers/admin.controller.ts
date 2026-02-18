@@ -1,13 +1,13 @@
 import { Body, Controller, Get, Param, ParseIntPipe, Patch, Post, Req, Res, UseGuards } from '@nestjs/common';
 import { AdminService } from '../../application/services/admin.service';
 import { Request, Response } from 'express';
-import AuthAdminDTO from '@/modules/zarp-auth/application/dtos/auth-admin.dto';
-import { CreateAdminDTO, UpdateAdminRoleDTO } from '@/modules/zarp-auth/application/dtos/admin-management.dto';
-import { AdminJwtGuard } from '@/shared/auth/guards/admin-jwt.guard';
-import { RolesGuard } from '@/shared/auth/guards/roles.guard';
-import { Roles } from '@/shared/auth/decorators/roles.decorator';
-import { CurrentAdmin, CurrentAdminPayload } from '@/shared/auth/decorators/current-admin.decorator';
-import { EAdminRole } from '@/modules/zarp-auth/domain/enums/admin-role.enum';
+import AuthAdminDTO from '../../application/dtos/auth-admin.dto';
+import { CreateAdminDTO, UpdateAdminRoleDTO } from '../../application/dtos/admin-management.dto';
+import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
+import { RolesGuard } from '../../../../shared/auth/guards/roles.guard';
+import { Roles } from '../../../../shared/auth/decorators/roles.decorator';
+import { CurrentAdmin, CurrentAdminPayload } from '../../../../shared/auth/decorators/current-admin.decorator';
+import { EAdminRole } from '../../domain/enums/admin-role.enum';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody, ApiParam } from '@nestjs/swagger';
 
 @ApiTags('Admin')

@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { IAPIToken } from '@/shared/interfaces/api-token.interface';
-import { IAPITokenCreate } from '@/modules/zarp-brands/domain/interfaces/api-token.repository.interface';
-import { RepositoryException } from '@/shared/exceptions';
-import { EncryptProvider } from '@/shared/providers/encrypt.provider';
-import { isValidString } from '@/shared/helpers/string.helper';
-import APITokenRepository from '@/modules/zarp-brands/infrastructure/repositories/api-token.repository';
+import { IAPIToken } from '../../../../shared/interfaces/api-token.interface';
+import { IAPITokenCreate } from '../../../zarp-brands/domain/interfaces/api-token.repository.interface';
+import { RepositoryException } from '../../../../shared/exceptions';
+import { EncryptProvider } from '../../../../shared/providers/encrypt.provider';
+import { isValidString } from '../../../../shared/helpers/string.helper';
+import APITokenRepository from '../../../zarp-brands/infrastructure/repositories/api-token.repository';
 
 @Injectable()
 export class FXGoogleAPITokenProvider implements IAPIToken {

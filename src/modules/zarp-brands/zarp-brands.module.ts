@@ -1,5 +1,5 @@
 ﻿import { Module } from '@nestjs/common';
-import { ZarpAuthModule } from '@/modules/zarp-auth/zarp-auth.module';
+import { ZarpAuthModule } from '../zarp-auth/zarp-auth.module';
 import { BrandService } from './application/services/brand.service';
 import { BrandController } from './infrastructure/controllers/brand.controller';
 import { BrandAnalysisService } from './application/services/brand-analysis.service';
@@ -24,12 +24,12 @@ import {
 } from './domain/interfaces';
 
 // Cross-context repositories (temporary, will be replaced by module imports)
-import JournalAlertRepository from '@/modules/zarp-journals/infrastructure/repositories/journal-alert.repository';
-import PlanRepository from '@/modules/zarp-auth/infrastructure/repositories/plan.repository';
-import UserRepository from '@/modules/zarp-auth/infrastructure/repositories/user.repository';
+import JournalAlertRepository from '../zarp-journals/infrastructure/repositories/journal-alert.repository';
+import PlanRepository from '../zarp-auth/infrastructure/repositories/plan.repository';
+import UserRepository from '../zarp-auth/infrastructure/repositories/user.repository';
 
 // Providers
-import { EuipoAPITokenProvider } from '@/modules/zarp-brands/infrastructure/providers/euipo-api-token.provider';
+import { EuipoAPITokenProvider } from './infrastructure/providers/euipo-api-token.provider';
 
 /**
  * Zarp Brands Module

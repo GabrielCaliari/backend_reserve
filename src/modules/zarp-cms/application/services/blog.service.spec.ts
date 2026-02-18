@@ -1,9 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { BlogService } from './blog.service';
-import { InMemoryBlogRepository } from '@/shared/testing/in-memory-repos/in-memory-blog.repository';
-import { BLOG_REPOSITORY } from '@/modules/zarp-cms/domain/interfaces/blog.repository.interface';
+import { InMemoryBlogRepository } from '../../../../shared/testing/in-memory-repos/in-memory-blog.repository';
+import { BLOG_REPOSITORY } from '../../domain/interfaces/blog.repository.interface';
 import { CreateBlogDTO } from '../dtos/create-blog.dto';
-import { BlogNotFoundError } from '@/modules/zarp-cms/domain/errors/blog-not-found.error';
+import { BlogNotFoundError } from '../../domain/errors/blog-not-found.error';
 import * as crypto from 'crypto';
 
 describe('BlogService', () => {

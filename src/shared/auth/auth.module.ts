@@ -1,5 +1,5 @@
 import { Global, Module } from '@nestjs/common';
-import { JwtProvider, EncryptProvider, HashProvider } from '@/shared/providers';
+import { JwtProvider, EncryptProvider, HashProvider } from '../providers';
 
 /**
  * Global Auth Module

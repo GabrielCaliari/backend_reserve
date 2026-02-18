@@ -1,9 +1,9 @@
 ﻿import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@/shared/database/prisma.service';
-import { RepositoryException } from '@/shared/exceptions';
-import { HashProvider } from '@/shared/providers/hash.provider';
-import { IAdminRepository, ICreateAdmin } from '@/modules/zarp-auth/domain/interfaces';
-import { EAdminRole } from '@/modules/zarp-auth/domain/enums/admin-role.enum';
+import { PrismaService } from '../../../../shared/database/prisma.service';
+import { RepositoryException } from '../../../../shared/exceptions';
+import { HashProvider } from '../../../../shared/providers/hash.provider';
+import { IAdminRepository, ICreateAdmin } from '../../domain/interfaces';
+import { EAdminRole } from '../../domain/enums/admin-role.enum';
 
 export { ICreateAdmin };
 

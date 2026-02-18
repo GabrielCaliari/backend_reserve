@@ -1,5 +1,5 @@
-import { Lead } from '@/modules/zarp-auth/domain/entities/lead.entity';
-import { ILead } from '@/modules/zarp-auth/domain/enums/lead.enum';
+import { Lead } from '../entities/lead.entity';
+import { ILead } from '../enums/lead.enum';
 
 export interface ILeadRepository {
     create(data: Lead): Promise<Lead>;

@@ -1,12 +1,12 @@
 ﻿import { ViewCompany } from "../../../../generated/prisma/client";
-import { EBranchType, ESize, EStatus } from '@/modules/zarp-cnpjs/domain/enums/company.enum';
-import { EStatus as ECompanyExportStatus } from '@/modules/zarp-cnpjs/domain/enums/company-export-status.enum';
+import { EBranchType, ESize, EStatus } from '../../domain/enums/company.enum';
+import { EStatus as ECompanyExportStatus } from '../../domain/enums/company-export-status.enum';
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@/shared/database/prisma.service';
-import { RepositoryException } from '@/shared/exceptions';
-import { convertSearchParamsToSQL } from '@/modules/zarp-cnpjs/infrastructure/helpers/sql-builder.helper';
-import { getKeysWithTrueValue } from '@/shared/helpers/array.helper';
-import { ICompanyRepository, ICompanyFields, ICreateCompanyExport } from '@/modules/zarp-cnpjs/domain/interfaces';
+import { PrismaService } from '../../../../shared/database/prisma.service';
+import { RepositoryException } from '../../../../shared/exceptions';
+import { convertSearchParamsToSQL } from '../helpers/sql-builder.helper';
+import { getKeysWithTrueValue } from '../../../../shared/helpers/array.helper';
+import { ICompanyRepository, ICompanyFields, ICreateCompanyExport } from '../../domain/interfaces';
 
 export { ICompanyFields, ICreateCompanyExport };
 

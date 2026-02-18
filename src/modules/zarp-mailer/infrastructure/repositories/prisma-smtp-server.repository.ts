@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@/shared/database/prisma.service';
-import { RepositoryException } from '@/shared/exceptions';
-import { ISMTPServerRepository } from '@/modules/zarp-mailer/domain/interfaces';
+import { PrismaService } from '../../../../shared/database/prisma.service';
+import { RepositoryException } from '../../../../shared/exceptions';
+import { ISMTPServerRepository } from '../../domain/interfaces';
 
 /**
  * Prisma implementation of SMTP Server Repository

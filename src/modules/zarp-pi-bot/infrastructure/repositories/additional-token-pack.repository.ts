@@ -1,7 +1,7 @@
 ﻿import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@/shared/database/prisma.service';
-import { RepositoryException } from '@/shared/exceptions';
-import { IAdditionalTokenPackRepository } from '@/modules/zarp-pi-bot/domain/interfaces';
+import { PrismaService } from '../../../../shared/database/prisma.service';
+import { RepositoryException } from '../../../../shared/exceptions';
+import { IAdditionalTokenPackRepository } from '../../domain/interfaces';
 
 @Injectable()
 export default class AdditionalTokenPackRepository implements IAdditionalTokenPackRepository {

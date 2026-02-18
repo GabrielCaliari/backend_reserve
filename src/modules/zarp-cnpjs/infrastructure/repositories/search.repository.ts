@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@/shared/database/prisma.service';
-import { RepositoryException } from '@/shared/exceptions';
+import { PrismaService } from '../../../../shared/database/prisma.service';
+import { RepositoryException } from '../../../../shared/exceptions';
 import { randomBytes } from 'crypto';
-import { ISearchRepository, ISearchCreate } from '@/modules/zarp-cnpjs/domain/interfaces';
+import { ISearchRepository, ISearchCreate } from '../../domain/interfaces';
 
 export { ISearchCreate };
 

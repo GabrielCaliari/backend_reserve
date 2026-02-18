@@ -2,7 +2,7 @@ import { Body, Controller, Get, Param, Post, Req, Res, UseGuards } from '@nestjs
 import { EventNotificationService } from '../../application/services/event-notification.service';
 import { CreateEventNotificationDTO, CreateEventNotificationEventDTO, CreateEventNotificationEventParam, IdEventNotificationEventParam, IdNotificationEventNotificationEventParam } from '../../application/dtos/event-notification.dto';
 import { Request, Response } from 'express';
-import { AdminJwtGuard } from '@/shared/auth/guards';
+import { AdminJwtGuard } from '../../../../shared/auth/guards';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiBody } from '@nestjs/swagger';
 
 @ApiTags('Event Notification (SMS)')

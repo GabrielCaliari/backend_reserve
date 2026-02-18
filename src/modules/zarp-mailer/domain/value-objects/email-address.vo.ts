@@ -1,4 +1,4 @@
-import { DomainException } from '@/shared/exceptions';
+import { DomainException } from '../../../../shared/exceptions';
 
 /**
  * Value Object for Email Address

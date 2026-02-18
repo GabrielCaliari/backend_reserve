@@ -1,6 +1,6 @@
 import { CanActivate, ExecutionContext, Injectable, Inject, UnauthorizedException } from '@nestjs/common';
-import { LEAD_COLLECTION_REPOSITORY, ILeadCollectionRepository } from '@/modules/zarp-leads/domain/interfaces/lead-collection.repository.interface';
-import { InvalidCollectionKeyError } from '@/modules/zarp-leads/domain/errors/invalid-collection-key.error';
+import { LEAD_COLLECTION_REPOSITORY, ILeadCollectionRepository } from '../../domain/interfaces/lead-collection.repository.interface';
+import { InvalidCollectionKeyError } from '../../domain/errors/invalid-collection-key.error';
 import * as crypto from 'crypto';
 
 @Injectable()

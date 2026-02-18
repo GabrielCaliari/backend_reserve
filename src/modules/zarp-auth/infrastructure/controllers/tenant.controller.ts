@@ -18,13 +18,13 @@ import {
   ApiBearerAuth,
   ApiParam,
 } from '@nestjs/swagger';
-import { TenantService } from '@/modules/zarp-auth/application/services/tenant.service';
-import { CreateTenantDTO, UpdateTenantDTO, AssignAdminToTenantDTO } from '@/modules/zarp-auth/application/dtos/tenant-management.dto';
-import { AdminJwtGuard } from '@/shared/auth/guards/admin-jwt.guard';
-import { RolesGuard } from '@/shared/auth/guards/roles.guard';
-import { Roles } from '@/shared/auth/decorators/roles.decorator';
-import { EAdminRole } from '@/modules/zarp-auth/domain/enums/admin-role.enum';
-import { CurrentAdmin, CurrentAdminPayload } from '@/shared/auth/decorators/current-admin.decorator';
+import { TenantService } from '../../application/services/tenant.service';
+import { CreateTenantDTO, UpdateTenantDTO, AssignAdminToTenantDTO } from '../../application/dtos/tenant-management.dto';
+import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
+import { RolesGuard } from '../../../../shared/auth/guards/roles.guard';
+import { Roles } from '../../../../shared/auth/decorators/roles.decorator';
+import { EAdminRole } from '../../domain/enums/admin-role.enum';
+import { CurrentAdmin, CurrentAdminPayload } from '../../../../shared/auth/decorators/current-admin.decorator';
 
 @ApiTags('Tenant Management')
 @ApiBearerAuth()
