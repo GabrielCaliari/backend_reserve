@@ -1,10 +1,10 @@
 {
   "name": "api_zarp-admin",
   "version": "26.1.0",
-  "description": "",
-  "author": "",
+  "description": "The most advanced admin panel for website management",
+  "author": "Zarp Studio",
   "private": true,
-  "license": "UNLICENSED",
+  "license": "MIT",
   "prisma": {
     "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seeds.ts"
   },
