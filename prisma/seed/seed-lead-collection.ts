@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { PrismaClient, ECollectionAccessMode } from "../generated/prisma/client";
+import { PrismaClient, ECollectionAccessMode } from "@/generated/prisma/client";
 import { PrismaPg } from '@prisma/adapter-pg';
 import * as crypto from 'crypto';
 

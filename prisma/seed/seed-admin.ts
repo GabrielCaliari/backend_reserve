@@ -1,5 +1,5 @@
-﻿import 'dotenv/config';
-import { PrismaClient } from "../generated/prisma/client";
+import 'dotenv/config';
+import { PrismaClient } from "@/generated/prisma/client";
 import { PrismaPg } from '@prisma/adapter-pg';
 import * as crypto from 'crypto';
 
@@ -58,7 +58,7 @@ export async function seedAdmin() {
         // Emails permitidos na seed
         const allowedEmails = admins.map(a => a.email);
         
-        // Admins a serem deletados (que nÃ£o estÃ£o na lista)
+        // Admins a serem deletados (que não estão na lista)
         const adminsToDelete = allAdmins.filter(admin => !allowedEmails.includes(admin.email));
         
         let deletados = 0;
