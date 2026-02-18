@@ -21,7 +21,7 @@ import { Roles } from '../../../../shared/auth/decorators/roles.decorator';
 import { EAdminRole } from '../../../zarp-auth/domain/enums/admin-role.enum';
 
 @ApiTags('CMS Article Management')
-@Controller('api/cms/blogs/:blogId/articles')
+@Controller('blogs/:blogId/articles')
 @UseGuards(AdminJwtGuard, TenantGuard, RolesGuard)
 @ApiBearerAuth()
 @ApiHeader({

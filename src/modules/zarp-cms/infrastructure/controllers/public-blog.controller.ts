@@ -14,7 +14,7 @@ import { BlogSecretKeyGuard } from '../guards/blog-secret-key.guard';
 import { Request } from 'express';
 
 @ApiTags('CMS Public API')
-@Controller('api/cms/public')
+@Controller('public')
 @UseGuards(BlogSecretKeyGuard)
 @ApiHeader({
   name: 'x-blog-secret-key',
