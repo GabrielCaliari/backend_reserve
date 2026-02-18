@@ -9,7 +9,7 @@ import PhoneNumber from '@/shared/domain/value-objects/phone-number.vo';
 import countryCode from '@/shared/data/country-code';
 
 import SMSNotificationEventRepository from '@/modules/zarp-mailer/infrastructure/repositories/sms-notification-event.repository';
-import { PrismaClient } from '@/generated/prisma/client';
+import { PrismaClient } from "../../../../generated/prisma/client";
 import { AWSSMSProvider } from '@/modules/zarp-mailer/infrastructure/providers/aws-sms.provider';
 import { PrismaService } from '@/shared/database/prisma.service';
 

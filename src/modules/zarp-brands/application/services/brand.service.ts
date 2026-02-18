@@ -15,7 +15,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import JournalAlertRepository from '@/modules/zarp-journals/infrastructure/repositories/journal-alert.repository';
 import BrandNotificationRepository from '../../infrastructure/repositories/brand-notification.repository';
 import { EBrandMonitoring } from '@/modules/zarp-brands/domain/enums/brand-monitoring-status.enum';
-import { JournalAlert, PrismaClient } from '@/generated/prisma/client';
+import { JournalAlert, PrismaClient } from '../../../../generated/prisma/client';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import PlanRepository from '@/modules/zarp-auth/infrastructure/repositories/plan.repository';
 import { EStatus } from '@/modules/zarp-auth/domain/enums/plan-status.enum';

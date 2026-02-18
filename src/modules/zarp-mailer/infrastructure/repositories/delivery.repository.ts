@@ -1,4 +1,4 @@
-﻿import { Delivery, OpenTracking, PrismaClient } from "@/generated/prisma/client";
+﻿import { Delivery, OpenTracking, PrismaClient } from "../../../../generated/prisma/client";
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@/shared/database/prisma.service';
 import { RepositoryException } from '@/shared/exceptions';

@@ -10,7 +10,7 @@ import {
     ICnaeRepository,
     CNAE_REPOSITORY,
 } from '../../domain/interfaces';
-import { Company, Search } from '@/generated/prisma/client';
+import { Company, Search } from '../../../../generated/prisma/client';
 import UserRepository from '@/modules/zarp-auth/infrastructure/repositories/user.repository';
 import { EStatus as ECompanyExportStatus } from '@/modules/zarp-cnpjs/domain/enums/company-export-status.enum'
 

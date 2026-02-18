@@ -4,7 +4,7 @@ import { RepositoryException } from '@/shared/exceptions';
 import { REPOSITORY_CREATE_SMS_NOTIFICATION_ERROR, REPOSITORY_SELECT_ALL_SMS_NOTIFICATION_ERROR, REPOSITORY_SELECT_BY_ID_SMS_NOTIFICATION_ERROR, REPOSITORY_SELECT_BY_WEBHOOK_SMS_NOTIFICATION_ERROR } from "@/modules/zarp-mailer/domain/constants";
 import { randomUUID } from "crypto";
 import { SMSNotification } from "@/modules/zarp-mailer/domain/entities/sms-notification.entity";
-import { PrismaClient } from "@/generated/prisma/client";
+import { PrismaClient } from "../../../../generated/prisma/client";
 
 @Injectable()
 export default class SMSNotificationRepository {

@@ -8,7 +8,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@/shared/database/prisma.service';
 import { RepositoryException } from '@/shared/exceptions';
 import PhoneNumber from "@/shared/domain/value-objects/phone-number.vo";
-import { PrismaClient } from "@/generated/prisma/client";
+import { PrismaClient } from "../../../../generated/prisma/client";
 
 @Injectable()
 export default class SMSNotificationEventRepository {

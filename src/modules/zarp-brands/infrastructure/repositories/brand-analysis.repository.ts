@@ -1,4 +1,4 @@
-﻿import { PrismaClient } from "@/generated/prisma/client";
+﻿import { PrismaClient } from "../../../../generated/prisma/client";
 import { EBrandAnalysisTokenStatus } from '@/modules/zarp-brands/domain/enums/brand-analysis-token-status.enum';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@/shared/database/prisma.service';

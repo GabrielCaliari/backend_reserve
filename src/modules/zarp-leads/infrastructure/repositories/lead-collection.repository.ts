@@ -3,7 +3,7 @@ import { PrismaService } from '@/shared/database/prisma.service';
 import { LeadCollection } from '@/modules/zarp-leads/domain/entities/lead-collection.entity';
 import { ILeadCollectionRepository } from '@/modules/zarp-leads/domain/interfaces/lead-collection.repository.interface';
 import { EAccessMode } from '@/modules/zarp-leads/domain/enums/access-mode.enum';
-import { ECollectionAccessMode, Prisma, LeadCollection as PrismaLeadCollection } from '@/generated/prisma/client';
+import { ECollectionAccessMode, Prisma, LeadCollection as PrismaLeadCollection } from '../../../../generated/prisma/client';
 import { CollectionQueryDto } from '@/modules/zarp-leads/application/dtos/collection-query.dto';
 
 @Injectable()

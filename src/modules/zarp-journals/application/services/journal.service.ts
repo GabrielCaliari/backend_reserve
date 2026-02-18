@@ -16,7 +16,7 @@ import {
 } from '../../domain/interfaces';
 import { randomUUID } from 'crypto';
 import { parseString } from "xml2js";
-import { JournalAlert } from '@/generated/prisma/client';
+import { JournalAlert } from '../../../../generated/prisma/client';
 
 import throttle from '@/shared/providers/queue.provider';
 import { PrismaService } from '@/shared/database/prisma.service';

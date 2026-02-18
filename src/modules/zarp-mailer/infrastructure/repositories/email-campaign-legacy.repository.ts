@@ -1,4 +1,4 @@
-﻿import { Prisma, PrismaClient } from "@/generated/prisma/client";
+﻿import { Prisma } from "../../../../generated/prisma/client";
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@/shared/database/prisma.service';
 import { RepositoryException } from '@/shared/exceptions';
@@ -13,7 +13,7 @@ export default class EmailCampaignRepository {
             name,
             smtp_server_id,
         },
-        tx?: PrismaClient
+        tx?: PrismaService
     ) {
         try {
             let conn = tx ?? this.prisma;
@@ -44,7 +44,7 @@ export default class EmailCampaignRepository {
         click_rate?: number;
         open_rate?: number;
         status?: EEmailCampaignStatus;
-    }, prisma?: PrismaClient) {
+    }, prisma?: PrismaService) {
         try {
             const conn = prisma ?? this.prisma;
             const emailCampaign = await conn.emailCampaign.update({ where: { id }, data });
@@ -55,7 +55,7 @@ export default class EmailCampaignRepository {
         }
     }
 
-    async updateMainEmail(id: number, main_email_id: number, tx?: PrismaClient) {
+    async updateMainEmail(id: number, main_email_id: number, tx?: PrismaService) {
         try {
             const conn = tx ?? this.prisma;
 

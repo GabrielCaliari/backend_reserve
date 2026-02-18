@@ -1,4 +1,4 @@
-﻿import { PrismaClient } from "@/generated/prisma/client";
+﻿import { PrismaClient } from "../../../../generated/prisma/client";
 import { EStatus } from '@/modules/zarp-auth/domain/enums/plan-status.enum';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@/shared/database/prisma.service';
