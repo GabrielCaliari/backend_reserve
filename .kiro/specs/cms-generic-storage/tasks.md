@@ -36,14 +36,14 @@ The implementation follows Domain-Driven Design principles with pure domain laye
     - Ensure pure TypeScript with no framework dependencies
     - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 8.1, 8.2, 8.3, 8.4_
 
-  - [~] 1.5 Create MediaAssetRelation entity
+  - [ ] 1.5 Create MediaAssetRelation entity
     - Create `domain/entities/media-asset-relation.entity.ts`
     - Implement constructor with lowercase conversion for entity_type and relation_type
     - Implement method: `updateOrder()`
     - Ensure pure TypeScript with no framework dependencies
     - _Requirements: 3.1, 3.3, 3.4, 8.1, 8.2, 8.3, 8.4_
 
-  - [~] 1.6 Create repository interfaces with Symbol tokens
+  - [ ] 1.6 Create repository interfaces with Symbol tokens
     - Create `domain/interfaces/media-asset.repository.interface.ts` with MEDIA_ASSET_REPOSITORY token
     - Create `domain/interfaces/media-collection.repository.interface.ts` with MEDIA_COLLECTION_REPOSITORY token
     - Create `domain/interfaces/media-relation.repository.interface.ts` with MEDIA_RELATION_REPOSITORY token
@@ -58,7 +58,7 @@ The implementation follows Domain-Driven Design principles with pure domain laye
     - _Requirements: 11.2_
 
 - [ ] 2. Phase 1: Create Application Layer
-  - [~] 2.1 Create DTOs with validation decorators
+  - [ ] 2.1 Create DTOs with validation decorators
     - Create `application/dtos/upload-media.dto.ts` with @ApiProperty and class-validator decorators
     - Create `application/dtos/create-collection.dto.ts`
     - Create `application/dtos/update-collection.dto.ts`
@@ -69,13 +69,13 @@ The implementation follows Domain-Driven Design principles with pure domain laye
     - Create `application/dtos/find-collections-params.dto.ts`
     - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 7.7, 7.8, 7.9, 7.10, 7.11, 7.12, 7.13, 7.14, 7.15_
 
-  - [~] 2.2 Create presenters for response formatting
+  - [ ] 2.2 Create presenters for response formatting
     - Create `application/presenters/media-asset.presenter.ts` with present() and presentList() methods
     - Create `application/presenters/media-collection.presenter.ts`
     - Create `application/presenters/media-relation.presenter.ts`
     - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 7.7, 7.8, 7.9, 7.10, 7.11, 7.12, 7.13, 7.14, 7.15_
 
-  - [~] 2.3 Implement MediaAssetService
+  - [ ] 2.3 Implement MediaAssetService
     - Create `application/services/media-asset.service.ts` with @Injectable decorator
     - Inject repositories via interface tokens using @Inject()
     - Inject existing StorageProvider and ImageProcessor (reuse from zarp-cms)
@@ -98,7 +98,7 @@ The implementation follows Domain-Driven Design principles with pure domain laye
     - Verify uploads rejected when violating rules, accepted when satisfying all rules
     - Run 100 iterations minimum
 
-  - [~] 2.6 Implement MediaCollectionService
+  - [ ] 2.6 Implement MediaCollectionService
     - Create `application/services/media-collection.service.ts` with @Injectable decorator
     - Inject MEDIA_COLLECTION_REPOSITORY via @Inject()
     - Implement createCollection(), findAll(), findById(), findBySlug(), updateCollection(), deleteCollection()
@@ -114,7 +114,7 @@ The implementation follows Domain-Driven Design principles with pure domain laye
     - Mock repository using jest.Mocked
     - _Requirements: 11.3_
 
-  - [~] 2.8 Implement MediaRelationService
+  - [ ] 2.8 Implement MediaRelationService
     - Create `application/services/media-relation.service.ts` with @Injectable decorator
     - Inject MEDIA_RELATION_REPOSITORY and MEDIA_ASSET_REPOSITORY via @Inject()
     - Implement attachAsset() with uniqueness check, auto-increment display_order
@@ -137,7 +137,7 @@ The implementation follows Domain-Driven Design principles with pure domain laye
     - Run 100 iterations minimum
 
 - [ ] 3. Phase 1: Create Infrastructure Layer
-  - [~] 3.1 Implement PrismaMediaAssetRepository
+  - [ ] 3.1 Implement PrismaMediaAssetRepository
     - Create `infrastructure/repositories/prisma-media-asset.repository.ts` implementing IMediaAssetRepository
     - Inject PrismaService from shared/database module
     - Implement all interface methods: create(), findById(), findAll(), update(), delete(), countByCollection()
@@ -146,7 +146,7 @@ The implementation follows Domain-Driven Design principles with pure domain laye
     - Throw RepositoryException on database failures
     - _Requirements: 9.4, 9.9, 9.10_
 
-  - [~] 3.2 Implement PrismaMediaCollectionRepository
+  - [ ] 3.2 Implement PrismaMediaCollectionRepository
     - Create `infrastructure/repositories/prisma-media-collection.repository.ts` implementing IMediaCollectionRepository
     - Inject PrismaService
     - Implement all interface methods: create(), findById(), findBySlug(), findAll(), update(), delete()
@@ -154,7 +154,7 @@ The implementation follows Domain-Driven Design principles with pure domain laye
     - Throw RepositoryException on database failures
     - _Requirements: 9.5, 9.9, 9.10_
 
-  - [~] 3.3 Implement PrismaMediaRelationRepository
+  - [ ] 3.3 Implement PrismaMediaRelationRepository
     - Create `infrastructure/repositories/prisma-media-relation.repository.ts` implementing IMediaRelationRepository
     - Inject PrismaService
     - Implement all interface methods: create(), findByEntity(), findByAsset(), delete(), deleteByAsset(), updateOrder(), exists()
@@ -170,7 +170,7 @@ The implementation follows Domain-Driven Design principles with pure domain laye
     - Test transaction support
     - _Requirements: 11.4_
 
-  - [~] 3.5 Create MediaAssetController
+  - [ ] 3.5 Create MediaAssetController
     - Create `infrastructure/controllers/media-asset.controller.ts` with @Controller('media') decorator
     - Add @ApiTags('CMS - Media Assets'), @ApiBearerAuth() decorators
     - Implement POST / (upload), GET / (list), GET /:id (details), PATCH /:id (update), DELETE /:id (delete)
@@ -181,7 +181,7 @@ The implementation follows Domain-Driven Design principles with pure domain laye
     - Add @ApiOperation, @ApiResponse, @ApiConsumes decorators for Swagger
     - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5, 12.1, 12.2, 12.3, 12.4, 12.5, 12.6, 12.7, 12.8, 15.1_
 
-  - [~] 3.6 Create MediaCollectionController
+  - [ ] 3.6 Create MediaCollectionController
     - Create `infrastructure/controllers/media-collection.controller.ts` with @Controller('collections') decorator
     - Add @ApiTags('CMS - Media Collections'), @ApiBearerAuth() decorators
     - Implement POST / (create), GET / (list), GET /:id (details), GET /:id/assets (collection assets), PUT /:id (update), DELETE /:id (delete)
@@ -191,7 +191,7 @@ The implementation follows Domain-Driven Design principles with pure domain laye
     - Add complete Swagger documentation
     - _Requirements: 7.6, 7.7, 7.8, 7.9, 7.10, 7.11, 12.1, 12.2, 12.3, 12.4, 12.5, 12.6, 12.7, 12.8, 15.1_
 
-  - [~] 3.7 Create MediaRelationController
+  - [ ] 3.7 Create MediaRelationController
     - Create `infrastructure/controllers/media-relation.controller.ts` with @Controller('relations') decorator
     - Add @ApiTags('CMS - Media Relations'), @ApiBearerAuth() decorators
     - Implement POST /attach, POST /detach, GET /:entityType/:entityId, PUT /reorder
@@ -202,7 +202,7 @@ The implementation follows Domain-Driven Design principles with pure domain laye
     - _Requirements: 7.12, 7.13, 7.14, 7.15, 12.1, 12.2, 12.3, 12.4, 12.5, 12.6, 12.7, 12.8, 15.1_
 
 - [ ] 4. Phase 1: Wire Up Module and Test
-  - [~] 4.1 Create ZarpCmsModule with dependency injection
+  - [ ] 4.1 Create ZarpCmsModule with dependency injection
     - Create `zarp-cms.module.ts` with @Module decorator
     - Register repository implementations using provide/useClass pattern:
       - { provide: MEDIA_ASSET_REPOSITORY, useClass: PrismaMediaAssetRepository }
@@ -216,13 +216,13 @@ The implementation follows Domain-Driven Design principles with pure domain laye
     - Mark as @Global() to make services available everywhere
     - _Requirements: 9.7, 9.8, 16.10_
 
-  - [~] 4.2 Register ZarpCmsModule in app.module.ts
+  - [ ] 4.2 Register ZarpCmsModule in app.module.ts
     - Import ZarpCmsModule in app.module.ts
     - Configure RouterModule with prefix '/api/cms'
     - Verify module loads without errors
     - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 7.7, 7.8, 7.9, 7.10, 7.11, 7.12, 7.13, 7.14, 7.15_
 
-  - [~] 4.3 Create error constants file
+  - [ ] 4.3 Create error constants file
     - Create `application/constants/error-constants.ts`
     - Define all error constants with format 'STATUS:MESSAGE'
     - ERROR_ASSET_NOT_FOUND, ERROR_COLLECTION_NOT_FOUND, ERROR_COLLECTION_SLUG_EXISTS, etc.
@@ -258,7 +258,7 @@ The implementation follows Domain-Driven Design principles with pure domain laye
   - Ask the user if questions arise
 
 - [ ] 6. Phase 2: Data Migration
-  - [~] 6.1 Create system collections seed script
+  - [ ] 6.1 Create system collections seed script
     - Create `prisma/seed/seed-media-collections.ts`
     - Create collections: article-images, article-featured, brand-logos, company-documents, user-avatars, email-attachments
     - Use specifications from Requirements 5.1-5.6
@@ -272,7 +272,7 @@ The implementation follows Domain-Driven Design principles with pure domain laye
     - Verify same collections exist with no duplicates or errors
     - Run 100 iterations minimum
 
-  - [~] 6.3 Create ArticleImage migration script
+  - [ ] 6.3 Create ArticleImage migration script
     - Create `prisma/seed/migrate-article-images.ts`
     - Ensure article-images and article-featured collections exist
     - For each ArticleImage record:
@@ -283,7 +283,7 @@ The implementation follows Domain-Driven Design principles with pure domain laye
     - Log migration progress and errors
     - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 6.8_
 
-  - [~] 6.4 Create migration validation script
+  - [ ] 6.4 Create migration validation script
     - Create `prisma/seed/validate-article-image-migration.ts`
     - Count ArticleImage records
     - Count corresponding MediaAsset records
@@ -293,7 +293,7 @@ The implementation follows Domain-Driven Design principles with pure domain laye
     - Report any discrepancies
     - _Requirements: 6.7_
 
-  - [~] 6.5 Run migration in staging environment
+  - [ ] 6.5 Run migration in staging environment
     - Execute seed-media-collections.ts
     - Execute migrate-article-images.ts
     - Execute validate-article-image-migration.ts
@@ -308,7 +308,7 @@ The implementation follows Domain-Driven Design principles with pure domain laye
   - Ask the user if questions arise
 
 - [ ] 8. Phase 3: Update Article Module
-  - [~] 8.1 Update ArticleService to use MediaRelationService
+  - [ ] 8.1 Update ArticleService to use MediaRelationService
     - Inject MediaRelationService into ArticleService
     - Add method: getArticleImages(articleId) calling mediaRelationService.getEntityAssets('article', articleId, 'gallery')
     - Add method: getArticleFeaturedImage(articleId) calling mediaRelationService.getEntityFeaturedImage('article', articleId, 'featured')
@@ -317,13 +317,13 @@ The implementation follows Domain-Driven Design principles with pure domain laye
     - Add method: reorderArticleImages(articleId, orderedIds) calling mediaRelationService.reorderAssets()
     - _Requirements: 10.4, 16.1, 16.2, 16.8_
 
-  - [~] 8.2 Mark ArticleImageController as deprecated
+  - [ ] 8.2 Mark ArticleImageController as deprecated
     - Add @deprecated JSDoc comment to ArticleImageController class
     - Add deprecation notice to Swagger documentation using @ApiDeprecated()
     - Keep all endpoints functional (backward compatibility)
     - _Requirements: 10.3_
 
-  - [~] 8.3 Update ArticleController to use new media endpoints
+  - [ ] 8.3 Update ArticleController to use new media endpoints
     - Update article creation/update endpoints to use MediaRelationService
     - Add endpoints for attaching/detaching images using new system
     - Document migration path in API documentation
@@ -336,7 +336,7 @@ The implementation follows Domain-Driven Design principles with pure domain laye
     - Test removing images from article
     - _Requirements: 11.5_
 
-  - [~] 8.5 Create migration guide documentation
+  - [ ] 8.5 Create migration guide documentation
     - Document old vs new endpoint mappings
     - Provide code examples for frontend integration
     - Document breaking changes coming in Phase 4
@@ -349,13 +349,13 @@ The implementation follows Domain-Driven Design principles with pure domain laye
   - Ask the user if questions arise
 
 - [ ] 10. Phase 4: Cleanup (Breaking Change)
-  - [~] 10.1 Create Prisma migration to drop ArticleImage table
+  - [ ] 10.1 Create Prisma migration to drop ArticleImage table
     - Create migration: `npx prisma migrate dev --name drop_article_image_table`
     - Drop article_images table
     - Verify migration runs successfully in staging
     - _Requirements: 10.5_
 
-  - [~] 10.2 Remove ArticleImage-related code
+  - [ ] 10.2 Remove ArticleImage-related code
     - Delete ArticleImageController
     - Delete ArticleImageService
     - Delete PrismaArticleImageRepository
@@ -363,7 +363,7 @@ The implementation follows Domain-Driven Design principles with pure domain laye
     - Remove ArticleImage imports from ArticleModule
     - _Requirements: 10.6_
 
-  - [~] 10.3 Update API documentation
+  - [ ] 10.3 Update API documentation
     - Remove deprecated endpoints from Swagger
     - Update README with new endpoint documentation
     - Announce breaking changes to API consumers
@@ -383,21 +383,21 @@ The implementation follows Domain-Driven Design principles with pure domain laye
   - Ask the user if questions arise
 
 - [ ] 12. Create In-Memory Repository Fakes for TDD
-  - [~] 12.1 Create InMemoryMediaAssetRepo
+  - [ ] 12.1 Create InMemoryMediaAssetRepo
     - Create `shared/testing/in-memory-repos/in-memory-media-asset.repo.ts`
     - Implement IMediaAssetRepository interface
     - Use in-memory array for storage
     - Support all CRUD operations
     - _Requirements: 11.1_
 
-  - [~] 12.2 Create InMemoryMediaCollectionRepo
+  - [ ] 12.2 Create InMemoryMediaCollectionRepo
     - Create `shared/testing/in-memory-repos/in-memory-media-collection.repo.ts`
     - Implement IMediaCollectionRepository interface
     - Use in-memory array for storage
     - Support all CRUD operations
     - _Requirements: 11.1_
 
-  - [~] 12.3 Create InMemoryMediaRelationRepo
+  - [ ] 12.3 Create InMemoryMediaRelationRepo
     - Create `shared/testing/in-memory-repos/in-memory-media-relation.repo.ts`
     - Implement IMediaRelationRepository interface
     - Use in-memory array for storage
@@ -405,17 +405,17 @@ The implementation follows Domain-Driven Design principles with pure domain laye
     - _Requirements: 11.1_
 
 - [ ] 13. Create Integration Example Documentation
-  - [~] 13.1 Document Brand Logo integration example
+  - [ ] 13.1 Document Brand Logo integration example
     - Create example code for BrandService using MediaRelationService
     - Show uploadBrandLogo() and getBrandLogo() methods
     - _Requirements: 16.3, 16.6_
 
-  - [~] 13.2 Document Lead Avatar integration example
+  - [ ] 13.2 Document Lead Avatar integration example
     - Create example code for LeadService using MediaRelationService
     - Show attachAvatar() and getLeadAvatar() methods
     - _Requirements: 16.3, 16.6_
 
-  - [~] 13.3 Document Email Campaign Attachments integration example
+  - [ ] 13.3 Document Email Campaign Attachments integration example
     - Create example code for EmailCampaignService using MediaRelationService
     - Show attachDocument() and getCampaignAttachments() methods
     - _Requirements: 16.3, 16.6_
