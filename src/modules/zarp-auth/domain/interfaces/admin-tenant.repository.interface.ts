@@ -9,6 +9,7 @@ export interface IAssignAdminTenant {
 export interface IAdminTenantRepository {
   assign(data: IAssignAdminTenant): Promise<any>;
   unassign(adminId: number, tenantId: number): Promise<void>;
+  updateRole(adminId: number, tenantId: number, role: EAdminRole): Promise<any>;
   findTenantsByAdminId(adminId: number): Promise<any[]>;
   findAdminsByTenantId(tenantId: number): Promise<any[]>;
   isAdminInTenant(adminId: number, tenantId: number): Promise<boolean>;

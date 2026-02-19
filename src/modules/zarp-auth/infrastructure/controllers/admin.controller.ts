@@ -1,8 +1,8 @@
-import { Body, Controller, Get, Param, ParseIntPipe, Patch, Post, Req, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseIntPipe, Patch, Post, Req, Res, UseGuards, Delete } from '@nestjs/common';
 import { AdminService } from '../../application/services/admin.service';
 import { Request, Response } from 'express';
 import AuthAdminDTO from '../../application/dtos/auth-admin.dto';
-import { CreateAdminDTO, UpdateAdminRoleDTO } from '../../application/dtos/admin-management.dto';
+import { CreateAdminDTO, UpdateAdminRoleDTO, UpdateAdminDTO, AdminResponseDTO, AdminListItemDTO } from '../../application/dtos/admin-management.dto';
 import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
 import { RolesGuard } from '../../../../shared/auth/guards/roles.guard';
 import { Roles } from '../../../../shared/auth/decorators/roles.decorator';
@@ -10,7 +10,7 @@ import { CurrentAdmin, CurrentAdminPayload } from '../../../../shared/auth/decor
 import { EAdminRole } from '../../domain/enums/admin-role.enum';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody, ApiParam } from '@nestjs/swagger';
 
-@ApiTags('Admin')
+@ApiTags('Admin Management')
 @Controller('admin')
 export class AdminController {
     constructor(
@@ -18,10 +18,28 @@ export class AdminController {
     ) { }
 
     @Post('/authenticate')
-    @ApiOperation({ summary: 'Authenticate administrator' })
+    @ApiOperation({ 
+        summary: 'Authenticate administrator',
+        description: 'Authenticates an admin user and returns a session token'
+    })
     @ApiBody({ type: AuthAdminDTO })
-    @ApiResponse({ status: 200, description: 'Authentication successful' })
+    @ApiResponse({ 
+        status: 200, 
+        description: 'Authentication successful',
+        schema: {
+            example: {
+                session_id: 1,
+                session_token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+                details: {
+                    name: 'John Doe',
+                    email: 'john@company.com',
+                    role: 'super_admin'
+                }
+            }
+        }
+    })
     @ApiResponse({ status: 401, description: 'Invalid credentials' })
+    @ApiResponse({ status: 403, description: 'Admin account deactivated' })
     async authenticateAdmin(@Res() res: Response, @Body() data: AuthAdminDTO) {
         const result = await this.adminService.authenticate(data);
         return res.status(result.status).json(result.data)
@@ -30,8 +48,15 @@ export class AdminController {
     @Get('/me')
     @UseGuards(AdminJwtGuard)
     @ApiBearerAuth()
-    @ApiOperation({ summary: 'Get authenticated administrator data with role and tenants' })
-    @ApiResponse({ status: 200, description: 'Administrator data returned' })
+    @ApiOperation({ 
+        summary: 'Get authenticated administrator data',
+        description: 'Returns the current admin profile with role and associated tenants'
+    })
+    @ApiResponse({ 
+        status: 200, 
+        description: 'Administrator data returned',
+        type: AdminResponseDTO
+    })
     @ApiResponse({ status: 401, description: 'Invalid or expired token' })
     async me(
         @CurrentAdmin() admin: CurrentAdminPayload,
@@ -45,9 +70,23 @@ export class AdminController {
     @Roles(EAdminRole.super_admin)
     @UseGuards(AdminJwtGuard, RolesGuard)
     @ApiBearerAuth()
-    @ApiOperation({ summary: 'Register a new admin (super_admin only)' })
+    @ApiOperation({ 
+        summary: 'Register a new admin (super_admin only)',
+        description: 'Creates a new administrator account. Only accessible by super_admin users.'
+    })
     @ApiBody({ type: CreateAdminDTO })
-    @ApiResponse({ status: 201, description: 'Admin created' })
+    @ApiResponse({ 
+        status: 201, 
+        description: 'Admin created successfully',
+        schema: {
+            example: {
+                id: 1,
+                name: 'John Doe',
+                email: 'john@company.com',
+                role: 'manager'
+            }
+        }
+    })
     @ApiResponse({ status: 400, description: 'Email already exists' })
     @ApiResponse({ status: 403, description: 'Insufficient permissions' })
     async register(@Res() res: Response, @Body() data: CreateAdminDTO) {
@@ -59,8 +98,15 @@ export class AdminController {
     @Roles(EAdminRole.super_admin)
     @UseGuards(AdminJwtGuard, RolesGuard)
     @ApiBearerAuth()
-    @ApiOperation({ summary: 'List all admins with their tenants (super_admin only)' })
-    @ApiResponse({ status: 200, description: 'Admin list returned' })
+    @ApiOperation({ 
+        summary: 'List all admins (super_admin only)',
+        description: 'Returns a list of all administrators with their associated tenants'
+    })
+    @ApiResponse({ 
+        status: 200, 
+        description: 'Admin list returned',
+        type: [AdminListItemDTO]
+    })
     @ApiResponse({ status: 403, description: 'Insufficient permissions' })
     async listAll(@Res() res: Response) {
         const result = await this.adminService.listAll();
@@ -71,10 +117,23 @@ export class AdminController {
     @Roles(EAdminRole.super_admin)
     @UseGuards(AdminJwtGuard, RolesGuard)
     @ApiBearerAuth()
-    @ApiOperation({ summary: 'Update admin role (super_admin only)' })
-    @ApiParam({ name: 'id', type: Number })
+    @ApiOperation({ 
+        summary: 'Update admin role (super_admin only)',
+        description: 'Changes the role of an administrator'
+    })
+    @ApiParam({ name: 'id', type: Number, description: 'Admin ID' })
     @ApiBody({ type: UpdateAdminRoleDTO })
-    @ApiResponse({ status: 200, description: 'Admin role updated' })
+    @ApiResponse({ 
+        status: 200, 
+        description: 'Admin role updated',
+        schema: {
+            example: {
+                id: 1,
+                name: 'John Doe',
+                role: 'manager'
+            }
+        }
+    })
     @ApiResponse({ status: 403, description: 'Insufficient permissions' })
     @ApiResponse({ status: 404, description: 'Admin not found' })
     async updateRole(
@@ -90,9 +149,22 @@ export class AdminController {
     @Roles(EAdminRole.super_admin)
     @UseGuards(AdminJwtGuard, RolesGuard)
     @ApiBearerAuth()
-    @ApiOperation({ summary: 'Deactivate an admin (super_admin only)' })
-    @ApiParam({ name: 'id', type: Number })
-    @ApiResponse({ status: 200, description: 'Admin deactivated' })
+    @ApiOperation({ 
+        summary: 'Deactivate an admin (super_admin only)',
+        description: 'Deactivates an administrator account. Cannot deactivate yourself.'
+    })
+    @ApiParam({ name: 'id', type: Number, description: 'Admin ID' })
+    @ApiResponse({ 
+        status: 200, 
+        description: 'Admin deactivated',
+        schema: {
+            example: {
+                id: 1,
+                active: false
+            }
+        }
+    })
+    @ApiResponse({ status: 400, description: 'Cannot deactivate self' })
     @ApiResponse({ status: 403, description: 'Insufficient permissions' })
     @ApiResponse({ status: 404, description: 'Admin not found' })
     async deactivate(
@@ -101,6 +173,122 @@ export class AdminController {
         @Res() res: Response,
     ) {
         const result = await this.adminService.deactivate(id, admin.admin_id);
+        return res.status(result.status).json(result.data)
+    }
+
+    @Patch('/:id/activate')
+    @Roles(EAdminRole.super_admin)
+    @UseGuards(AdminJwtGuard, RolesGuard)
+    @ApiBearerAuth()
+    @ApiOperation({ 
+        summary: 'Activate an admin (super_admin only)',
+        description: 'Reactivates a previously deactivated administrator account'
+    })
+    @ApiParam({ name: 'id', type: Number, description: 'Admin ID' })
+    @ApiResponse({ 
+        status: 200, 
+        description: 'Admin activated',
+        schema: {
+            example: {
+                id: 1,
+                active: true
+            }
+        }
+    })
+    @ApiResponse({ status: 403, description: 'Insufficient permissions' })
+    @ApiResponse({ status: 404, description: 'Admin not found' })
+    async activate(
+        @Param('id', ParseIntPipe) id: number,
+        @Res() res: Response,
+    ) {
+        const result = await this.adminService.activate(id);
+        return res.status(result.status).json(result.data)
+    }
+
+    @Get('/:id')
+    @Roles(EAdminRole.super_admin)
+    @UseGuards(AdminJwtGuard, RolesGuard)
+    @ApiBearerAuth()
+    @ApiOperation({ 
+        summary: 'Get admin by ID (super_admin only)',
+        description: 'Returns detailed information about a specific administrator'
+    })
+    @ApiParam({ name: 'id', type: Number, description: 'Admin ID' })
+    @ApiResponse({ 
+        status: 200, 
+        description: 'Admin found',
+        type: AdminResponseDTO
+    })
+    @ApiResponse({ status: 403, description: 'Insufficient permissions' })
+    @ApiResponse({ status: 404, description: 'Admin not found' })
+    async findById(
+        @Param('id', ParseIntPipe) id: number,
+        @Res() res: Response,
+    ) {
+        const result = await this.adminService.findById(id);
+        return res.status(result.status).json(result.data)
+    }
+
+    @Patch('/:id')
+    @Roles(EAdminRole.super_admin)
+    @UseGuards(AdminJwtGuard, RolesGuard)
+    @ApiBearerAuth()
+    @ApiOperation({ 
+        summary: 'Update admin data (super_admin only)',
+        description: 'Updates administrator name and/or email'
+    })
+    @ApiParam({ name: 'id', type: Number, description: 'Admin ID' })
+    @ApiBody({ type: UpdateAdminDTO })
+    @ApiResponse({ 
+        status: 200, 
+        description: 'Admin updated',
+        schema: {
+            example: {
+                id: 1,
+                name: 'John Doe Updated',
+                email: 'john.new@company.com'
+            }
+        }
+    })
+    @ApiResponse({ status: 400, description: 'Email already exists' })
+    @ApiResponse({ status: 403, description: 'Insufficient permissions' })
+    @ApiResponse({ status: 404, description: 'Admin not found' })
+    async update(
+        @Param('id', ParseIntPipe) id: number,
+        @Body() data: UpdateAdminDTO,
+        @Res() res: Response,
+    ) {
+        const result = await this.adminService.update(id, data);
+        return res.status(result.status).json(result.data)
+    }
+
+    @Delete('/:id')
+    @Roles(EAdminRole.super_admin)
+    @UseGuards(AdminJwtGuard, RolesGuard)
+    @ApiBearerAuth()
+    @ApiOperation({ 
+        summary: 'Delete admin permanently (super_admin only)',
+        description: 'Permanently deletes an administrator account. Cannot delete yourself.'
+    })
+    @ApiParam({ name: 'id', type: Number, description: 'Admin ID' })
+    @ApiResponse({ 
+        status: 200, 
+        description: 'Admin deleted',
+        schema: {
+            example: {
+                deleted: true
+            }
+        }
+    })
+    @ApiResponse({ status: 400, description: 'Cannot delete self' })
+    @ApiResponse({ status: 403, description: 'Insufficient permissions' })
+    @ApiResponse({ status: 404, description: 'Admin not found' })
+    async delete(
+        @Param('id', ParseIntPipe) id: number,
+        @CurrentAdmin() admin: CurrentAdminPayload,
+        @Res() res: Response,
+    ) {
+        const result = await this.adminService.delete(id, admin.admin_id);
         return res.status(result.status).json(result.data)
     }
 }

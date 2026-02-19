@@ -108,4 +108,20 @@ export default class AdminTenantRepository implements IAdminTenantRepository {
       throw new RepositoryException('Erro ao buscar role do admin no tenant.', error);
     }
   }
+
+  async updateRole(adminId: number, tenantId: number, role: EAdminRole) {
+    try {
+      return await this.prisma.adminTenant.update({
+        where: {
+          admin_id_tenant_id: {
+            admin_id: adminId,
+            tenant_id: tenantId,
+          },
+        },
+        data: { role },
+      });
+    } catch (error) {
+      throw new RepositoryException('Erro ao atualizar role do admin no tenant.', error);
+    }
+  }
 }

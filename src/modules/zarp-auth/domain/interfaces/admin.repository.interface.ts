@@ -14,7 +14,10 @@ export interface IAdminRepository {
     selectByIdWithTenants(id: number): Promise<any>;
     selectAll(): Promise<any[]>;
     updateRole(id: number, role: EAdminRole): Promise<any>;
+    update(id: number, data: { name?: string; email?: string }): Promise<any>;
     deactivate(id: number): Promise<any>;
+    activate(id: number): Promise<any>;
+    delete(id: number): Promise<any>;
 }
 
 export const ADMIN_REPOSITORY = Symbol('ADMIN_REPOSITORY');

@@ -988,3 +988,73 @@ model SMTPServer {
   updated_at         DateTime        @updatedAt
   EmailCampaign      EmailCampaign[]
 }
+
+// ============================================
+// CMS - Generic Media Asset Management
+// ============================================
+
+model MediaCollection {
+  id                  Int           @id @default(autoincrement())
+  name                String        @db.VarChar(100)
+  slug                String        @db.VarChar(100)
+  description         String?       @db.Text
+  type                String        @db.VarChar(20) // image, document, video, audio, mixed
+  max_file_size       Int?          // bytes
+  allowed_mime_types  String?       @db.Text // JSON array
+  max_items           Int?
+  tenant_id           Int
+  created_at          DateTime      @default(now())
+  updated_at          DateTime      @updatedAt
+  
+  assets              MediaAsset[]
+  
+  @@unique([tenant_id, slug])
+  @@index([tenant_id])
+  @@map("media_collections")
+}
+
+model MediaAsset {
+  id              Int                   @id @default(autoincrement())
+  url             String                @db.VarChar(500)
+  storage_key     String                @db.VarChar(500)
+  filename        String                @db.VarChar(255)
+  mime_type       String                @db.VarChar(100)
+  file_size       Int
+  width           Int?
+  height          Int?
+  alt_text        String?               @db.VarChar(255)
+  metadata        Json?                 // Flexible metadata
+  status          String                @default("ready") @db.VarChar(20)
+  collection_id   Int
+  tenant_id       Int
+  created_by      Int
+  created_at      DateTime              @default(now())
+  updated_at      DateTime              @updatedAt
+  
+  collection      MediaCollection       @relation(fields: [collection_id], references: [id], onDelete: Cascade)
+  relations       MediaAssetRelation[]
+  
+  @@index([collection_id])
+  @@index([tenant_id])
+  @@index([created_by])
+  @@index([status])
+  @@map("media_assets")
+}
+
+model MediaAssetRelation {
+  id              Int         @id @default(autoincrement())
+  asset_id        Int
+  entity_type     String      @db.VarChar(50) // 'article', 'brand', 'company', etc.
+  entity_id       Int
+  relation_type   String      @db.VarChar(50) // 'featured', 'gallery', 'attachment', 'avatar'
+  display_order   Int?
+  metadata        Json?
+  created_at      DateTime    @default(now())
+  
+  asset           MediaAsset  @relation(fields: [asset_id], references: [id], onDelete: Cascade)
+  
+  @@unique([asset_id, entity_type, entity_id, relation_type])
+  @@index([entity_type, entity_id])
+  @@index([asset_id])
+  @@map("media_asset_relations")
+}

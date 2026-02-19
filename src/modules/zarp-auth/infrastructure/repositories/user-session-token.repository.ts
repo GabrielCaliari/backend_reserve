@@ -18,7 +18,7 @@ export default class UserSessionTokenRepository implements IUserSessionTokenRepo
         try {
             const credential = await this.prisma.userCredential.findUnique({
                 where: {
-                    user_id: data.userId
+                    user_id: data.user_id
                 }
             });
 
@@ -89,7 +89,7 @@ export default class UserSessionTokenRepository implements IUserSessionTokenRepo
             }
 
             return {
-                userId: session.User.id
+                user_id: session.User.id
             };
         } catch (error) {
             throw new RepositoryException('Erro ao validar um token de autorizaÃ§Ã£o do usuÃ¡rio.', error);

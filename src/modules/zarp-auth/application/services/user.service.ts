@@ -226,7 +226,7 @@ export class UserService {
             }
 
             const session = await this.userSessionTokenRepository.create({
-                userId: user.id,
+                user_id: user.id,
                 password: data.password,
                 payload: {
                     id: user.id,
@@ -263,7 +263,7 @@ export class UserService {
                 return {
                     status: 200,
                     data: {
-                        user_id: tokenIsValidResponse.userId
+                        user_id: tokenIsValidResponse.user_id
                     }
                 }
             }

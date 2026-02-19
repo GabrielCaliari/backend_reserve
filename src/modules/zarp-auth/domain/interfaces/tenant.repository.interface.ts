@@ -17,6 +17,9 @@ export interface ITenantRepository {
   selectBySlug(slug: string): Promise<any>;
   selectAll(): Promise<any[]>;
   update(id: number, data: IUpdateTenant): Promise<any>;
+  deactivate(id: number): Promise<any>;
+  activate(id: number): Promise<any>;
+  delete(id: number): Promise<any>;
 }
 
 export const TENANT_REPOSITORY = Symbol('TENANT_REPOSITORY');

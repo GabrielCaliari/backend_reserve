@@ -21,7 +21,7 @@ export class UserTokenValidator implements ITokenValidator {
         return { valid: false };
       }
 
-      return { valid: true, userId: result.userId };
+      return { valid: true, userId: result.user_id };
     } catch {
       return { valid: false };
     }

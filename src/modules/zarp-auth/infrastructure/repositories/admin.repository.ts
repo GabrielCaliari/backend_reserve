@@ -44,18 +44,16 @@ export default class AdminRepository implements IAdminRepository {
     }
 
     async selectById(id: number) {
-        try {
+        return this.withRetry(async () => {
             const admin = await this.prisma.admin.findUnique({
                 where: { id },
             });
             return admin ?? null;
-        } catch (error) {
-            throw new RepositoryException('Erro ao selecionar um admin por ID.', error);
-        }
+        }, 'Erro ao selecionar um admin por ID.');
     }
 
     async selectByIdWithTenants(id: number) {
-        try {
+        return this.withRetry(async () => {
             const admin = await this.prisma.admin.findUnique({
                 where: { id },
                 include: {
@@ -66,20 +64,57 @@ export default class AdminRepository implements IAdminRepository {
                 },
             });
             return admin ?? null;
-        } catch (error) {
-            throw new RepositoryException('Erro ao selecionar admin com tenants.', error);
-        }
+        }, 'Erro ao selecionar admin com tenants.');
     }
 
     async selectByEmail(email: string) {
-        try {
+        return this.withRetry(async () => {
             const admin = await this.prisma.admin.findUnique({
                 where: { email },
             });
             return admin ?? null;
-        } catch (error) {
-            throw new RepositoryException('Erro ao selecionar um admin por email.', error);
+        }, 'Erro ao selecionar um admin por email.');
+    }
+
+    /**
+     * Retry wrapper for database operations
+     * Handles transient connection failures
+     */
+    private async withRetry<T>(
+        operation: () => Promise<T>,
+        errorMessage: string,
+        maxRetries = 3,
+        delayMs = 1000
+    ): Promise<T> {
+        let lastError: any;
+        
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+                return await operation();
+            } catch (error: any) {
+                lastError = error;
+                
+                // Check if it's a connection error that we should retry
+                const isRetryable = 
+                    error?.code === 'P1001' || // Can't reach database server
+                    error?.code === 'P1002' || // Database server timeout
+                    error?.code === 'P1008' || // Operations timed out
+                    error?.code === 'P1017' || // Server has closed the connection
+                    error?.message?.includes('Connection terminated') ||
+                    error?.message?.includes('timeout') ||
+                    error?.message?.includes('ECONNRESET');
+                
+                if (!isRetryable || attempt === maxRetries) {
+                    break;
+                }
+                
+                // Exponential backoff
+                const delay = delayMs * Math.pow(2, attempt - 1);
+                await new Promise(resolve => setTimeout(resolve, delay));
+            }
         }
+        
+        throw new RepositoryException(errorMessage, lastError);
     }
 
     async selectAll() {
@@ -117,6 +152,38 @@ export default class AdminRepository implements IAdminRepository {
             });
         } catch (error) {
             throw new RepositoryException('Erro ao desativar admin.', error);
+        }
+    }
+
+    async activate(id: number) {
+        try {
+            return await this.prisma.admin.update({
+                where: { id },
+                data: { active: true },
+            });
+        } catch (error) {
+            throw new RepositoryException('Erro ao ativar admin.', error);
+        }
+    }
+
+    async update(id: number, data: { name?: string; email?: string }) {
+        try {
+            return await this.prisma.admin.update({
+                where: { id },
+                data,
+            });
+        } catch (error) {
+            throw new RepositoryException('Erro ao atualizar admin.', error);
+        }
+    }
+
+    async delete(id: number) {
+        try {
+            await this.prisma.admin.delete({
+                where: { id },
+            });
+        } catch (error) {
+            throw new RepositoryException('Erro ao deletar admin.', error);
         }
     }
 }

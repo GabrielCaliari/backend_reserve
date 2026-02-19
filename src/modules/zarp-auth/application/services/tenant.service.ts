@@ -150,4 +150,76 @@ export class TenantService {
       return errorResponse('500:TENANT_ADMINS_NOT_LISTED', 500, error);
     }
   }
+
+  async deactivate(id: number) {
+    try {
+      const tenant = await this.tenantRepository.selectById(id);
+      if (!tenant) {
+        return errorResponse('404:TENANT_NOT_FOUND', 404);
+      }
+
+      const deactivated = await this.tenantRepository.deactivate(id);
+      return successResponse({
+        id: deactivated.id,
+        active: deactivated.active,
+      });
+    } catch (error) {
+      return errorResponse('500:TENANT_NOT_DEACTIVATED', 500, error);
+    }
+  }
+
+  async activate(id: number) {
+    try {
+      const tenant = await this.tenantRepository.selectById(id);
+      if (!tenant) {
+        return errorResponse('404:TENANT_NOT_FOUND', 404);
+      }
+
+      const activated = await this.tenantRepository.activate(id);
+      return successResponse({
+        id: activated.id,
+        active: activated.active,
+      });
+    } catch (error) {
+      return errorResponse('500:TENANT_NOT_ACTIVATED', 500, error);
+    }
+  }
+
+  async delete(id: number) {
+    try {
+      const tenant = await this.tenantRepository.selectById(id);
+      if (!tenant) {
+        return errorResponse('404:TENANT_NOT_FOUND', 404);
+      }
+
+      await this.tenantRepository.delete(id);
+      return successResponse({ deleted: true });
+    } catch (error) {
+      return errorResponse('500:TENANT_NOT_DELETED', 500, error);
+    }
+  }
+
+  async updateAdminRole(adminId: number, tenantId: number, role: EAdminRole) {
+    try {
+      const admin = await this.adminRepository.selectById(adminId);
+      if (!admin) {
+        return errorResponse(errorTypes._404.admin_nf, 404);
+      }
+
+      const tenant = await this.tenantRepository.selectById(tenantId);
+      if (!tenant) {
+        return errorResponse('404:TENANT_NOT_FOUND', 404);
+      }
+
+      const isInTenant = await this.adminTenantRepository.isAdminInTenant(adminId, tenantId);
+      if (!isInTenant) {
+        return errorResponse('404:ADMIN_NOT_IN_TENANT', 404);
+      }
+
+      const updated = await this.adminTenantRepository.updateRole(adminId, tenantId, role);
+      return successResponse(updated);
+    } catch (error) {
+      return errorResponse('500:ADMIN_TENANT_ROLE_NOT_UPDATED', 500, error);
+    }
+  }
 }

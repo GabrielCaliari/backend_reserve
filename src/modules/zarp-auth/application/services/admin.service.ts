@@ -222,4 +222,93 @@ export class AdminService {
             return errorResponse('500:ADMIN_NOT_DEACTIVATED', 500, error);
         }
     }
+
+    async activate(adminId: number) {
+        try {
+            const admin = await this.adminRepository.selectById(adminId);
+            if (!admin) {
+                return errorResponse(errorTypes._404.admin_nf, 404);
+            }
+
+            const activated = await this.adminRepository.activate(adminId);
+            return successResponse({
+                id: activated.id,
+                active: activated.active,
+            });
+        } catch (error) {
+            return errorResponse('500:ADMIN_NOT_ACTIVATED', 500, error);
+        }
+    }
+
+    async update(adminId: number, data: { name?: string; email?: string }) {
+        try {
+            const admin = await this.adminRepository.selectById(adminId);
+            if (!admin) {
+                return errorResponse(errorTypes._404.admin_nf, 404);
+            }
+
+            if (data.email && data.email !== admin.email) {
+                const existing = await this.adminRepository.selectByEmail(data.email);
+                if (existing) {
+                    return errorResponse('400:ADMIN_EMAIL_ALREADY_EXISTS', 400);
+                }
+            }
+
+            const updated = await this.adminRepository.update(adminId, data);
+            return successResponse({
+                id: updated.id,
+                name: updated.name,
+                email: updated.email,
+            });
+        } catch (error) {
+            return errorResponse('500:ADMIN_NOT_UPDATED', 500, error);
+        }
+    }
+
+    async findById(adminId: number) {
+        try {
+            const admin = await this.adminRepository.selectByIdWithTenants(adminId);
+            if (!admin) {
+                return errorResponse(errorTypes._404.admin_nf, 404);
+            }
+
+            const tenants = admin.AdminTenant?.map((at: any) => ({
+                id: at.Tenant.id,
+                name: at.Tenant.name,
+                slug: at.Tenant.slug,
+                domain: at.Tenant.domain,
+                role: at.role,
+            })) ?? [];
+
+            return successResponse({
+                id: admin.id,
+                name: admin.name,
+                email: admin.email,
+                role: admin.role,
+                active: admin.active,
+                tenants,
+                created_at: admin.created_at,
+            });
+        } catch (error) {
+            return errorResponse('500:ADMIN_NOT_FOUND', 500, error);
+        }
+    }
+
+    async delete(adminId: number, currentAdminId: number) {
+        try {
+            if (adminId === currentAdminId) {
+                return errorResponse('400:CANNOT_DELETE_SELF', 400);
+            }
+
+            const admin = await this.adminRepository.selectById(adminId);
+            if (!admin) {
+                return errorResponse(errorTypes._404.admin_nf, 404);
+            }
+
+            await this.adminRepository.delete(adminId);
+            return successResponse({ deleted: true });
+        } catch (error) {
+            return errorResponse('500:ADMIN_NOT_DELETED', 500, error);
+        }
+    }
 }

@@ -56,3 +56,44 @@ export class AssignAdminToTenantDTO {
   @IsNotEmpty()
   tenant_id: number;
 }
+
+export class UpdateAdminTenantRoleDTO {
+  @ApiProperty({ description: 'New role for admin in tenant', enum: ['manager', 'editor', 'viewer'] })
+  @IsNotEmpty()
+  role: string;
+}
+
+export class TenantResponseDTO {
+  @ApiProperty({ example: 1 })
+  id: number;
+
+  @ApiProperty({ example: 'Acme Corp' })
+  name: string;
+
+  @ApiProperty({ example: 'acme-corp' })
+  slug: string;
+
+  @ApiProperty({ example: 'admin.acme.com', nullable: true })
+  domain?: string;
+
+  @ApiProperty({ example: true })
+  active: boolean;
+
+  @ApiProperty({ example: '2024-01-01T00:00:00.000Z' })
+  created_at: Date;
+
+  @ApiProperty({ example: '2024-01-01T00:00:00.000Z' })
+  updated_at: Date;
+}
+
+export class TenantWithAdminsDTO extends TenantResponseDTO {
+  @ApiProperty({ type: 'array', items: { type: 'object' } })
+  AdminTenant: Array<{
+    Admin: {
+      id: number;
+      name: string;
+      email: string;
+      role: string;
+    };
+  }>;
+}

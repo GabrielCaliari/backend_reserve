@@ -9,6 +9,8 @@ import { PostService as AdminPostService } from './application/services/admin-po
 import { PostController as AdminPostController } from './infrastructure/controllers/admin-post.controller';
 import { TenantService } from './application/services/tenant.service';
 import { TenantController } from './infrastructure/controllers/tenant.controller';
+import { UserManagementService } from './application/services/user-management.service';
+import { AdminUserController } from './infrastructure/controllers/admin-user.controller';
 
 // Legacy repositories (will be replaced by DIP interfaces incrementally)
 import AdminRepository from './infrastructure/repositories/admin.repository';
@@ -65,6 +67,7 @@ import { FXGoogleAPITokenProvider } from './infrastructure/providers/fx-google-a
     EmailController,
     AdminPostController,
     TenantController,
+    AdminUserController,
   ],
   providers: [
     // Application services
@@ -73,6 +76,7 @@ import { FXGoogleAPITokenProvider } from './infrastructure/providers/fx-google-a
     EmailService,
     AdminPostService,
     TenantService,
+    UserManagementService,
 
     // Token Validators (DIP implementations)
     AdminTokenValidator,

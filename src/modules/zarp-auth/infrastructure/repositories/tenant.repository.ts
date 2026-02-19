@@ -71,4 +71,36 @@ export default class TenantRepository implements ITenantRepository {
       throw new RepositoryException('Erro ao atualizar tenant.', error);
     }
   }
+
+  async deactivate(id: number) {
+    try {
+      return await this.prisma.tenant.update({
+        where: { id },
+        data: { active: false },
+      });
+    } catch (error) {
+      throw new RepositoryException('Erro ao desativar tenant.', error);
+    }
+  }
+
+  async activate(id: number) {
+    try {
+      return await this.prisma.tenant.update({
+        where: { id },
+        data: { active: true },
+      });
+    } catch (error) {
+      throw new RepositoryException('Erro ao ativar tenant.', error);
+    }
+  }
+
+  async delete(id: number) {
+    try {
+      await this.prisma.tenant.delete({
+        where: { id },
+      });
+    } catch (error) {
+      throw new RepositoryException('Erro ao deletar tenant.', error);
+    }
+  }
 }

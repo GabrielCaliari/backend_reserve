@@ -92,6 +92,20 @@ export class InMemoryAdminTenantRepository implements IAdminTenantRepository {
     return record.role;
   }
 
+  async updateRole(adminId: number, tenantId: number, role: EAdminRole): Promise<any> {
+    const record = this.records.find(
+      (r) => r.admin_id === adminId && r.tenant_id === tenantId,
+    );
+
+    if (!record) {
+      throw new Error('Admin-Tenant relation not found');
+    }
+
+    record.role = role;
+    record.updated_at = new Date();
+    return { ...record };
+  }
+
   /** Test helper: seed a record directly */
   seed(data: {
     admin_id: number;

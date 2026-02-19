@@ -16,7 +16,7 @@ export function errorResponse(code: string, status: number, err?: unknown) {
   };
 }
 
-export function successResponse(data: unknown, status = 200) {
+export function successResponse<T>(data: T, status = 200) {
   return {
     data,
     status,

@@ -34,3 +34,71 @@ export class UpdateAdminRoleDTO {
   @IsNotEmpty()
   role: EAdminRole;
 }
+
+export class UpdateAdminDTO {
+  @ApiPropertyOptional({ description: 'Administrator name', example: 'John Doe' })
+  @IsString()
+  @IsOptional()
+  name?: string;
+
+  @ApiPropertyOptional({ description: 'Administrator email', example: 'john@company.com' })
+  @IsEmail()
+  @IsOptional()
+  email?: string;
+}
+
+export class AdminResponseDTO {
+  @ApiProperty({ example: 1 })
+  id: number;
+
+  @ApiProperty({ example: 'John Doe' })
+  name: string;
+
+  @ApiProperty({ example: 'john@company.com' })
+  email: string;
+
+  @ApiProperty({ enum: EAdminRole, example: EAdminRole.super_admin })
+  role: EAdminRole;
+
+  @ApiProperty({ example: true })
+  active: boolean;
+
+  @ApiProperty({ type: 'array', items: { type: 'object' } })
+  tenants: Array<{
+    id: number;
+    name: string;
+    slug: string;
+    domain?: string;
+    role?: EAdminRole;
+  }>;
+
+  @ApiProperty({ example: '2024-01-01T00:00:00.000Z' })
+  created_at: Date;
+}
+
+export class AdminListItemDTO {
+  @ApiProperty({ example: 1 })
+  id: number;
+
+  @ApiProperty({ example: 'John Doe' })
+  name: string;
+
+  @ApiProperty({ example: 'john@company.com' })
+  email: string;
+
+  @ApiProperty({ enum: EAdminRole, example: EAdminRole.manager })
+  role: EAdminRole;
+
+  @ApiProperty({ example: true })
+  active: boolean;
+
+  @ApiProperty({ type: 'array', items: { type: 'object' } })
+  tenants: Array<{
+    id: number;
+    name: string;
+    slug: string;
+  }>;
+
+  @ApiProperty({ example: '2024-01-01T00:00:00.000Z' })
+  created_at: Date;
+}
