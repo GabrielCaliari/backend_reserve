@@ -12,7 +12,7 @@ import { MediaAsset } from '../../domain/entities/media-asset.entity';
 import { AttachMediaDTO } from '../dtos/attach-media.dto';
 import { DetachMediaDTO } from '../dtos/detach-media.dto';
 import { ReorderMediaDTO } from '../dtos/reorder-media.dto';
-import { successResponse, errorResponse } from '@/shared/helpers/response.helper';
+import { successResponse, errorResponse } from '../../../../shared/helpers/response.helper';
 import {
   ERROR_ASSET_NOT_FOUND,
   ERROR_RELATION_ALREADY_EXISTS,

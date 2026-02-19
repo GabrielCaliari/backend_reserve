@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@/shared/database/prisma.service';
-import { RepositoryException } from '@/shared/exceptions/repository.exception';
+import { PrismaService } from '../../../../shared/database/prisma.service';
+import { RepositoryException } from '../../../../shared/exceptions/repository.exception';
 import {
   IMediaCollectionRepository,
   IFindCollectionsParams,
@@ -11,7 +11,7 @@ import { ECollectionType } from '../../domain/enums/collection-type.enum';
 import {
   Prisma,
   MediaCollection as PrismaMediaCollection,
-} from '@/generated/prisma/client';
+} from '../../../../generated/prisma/client';
 
 /**
  * PrismaMediaCollectionRepository

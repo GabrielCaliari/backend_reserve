@@ -24,9 +24,9 @@ import {
   ApiParam,
   ApiQuery,
 } from '@nestjs/swagger';
-import { AdminJwtGuard } from '@/shared/auth/guards/admin-jwt.guard';
-import { TenantGuard } from '@/shared/auth/guards/tenant.guard';
-import { CurrentAdmin, CurrentAdminPayload } from '@/shared/auth/decorators/current-admin.decorator';
+import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
+import { TenantGuard } from '../../../../shared/auth/guards/tenant.guard';
+import { CurrentAdmin, CurrentAdminPayload } from '../../../../shared/auth/decorators/current-admin.decorator';
 import { MediaAssetService } from '../../application/services/media-asset.service';
 import { UploadMediaDTO } from '../../application/dtos/upload-media.dto';
 import { MediaAssetPresenter } from '../presenters/media-asset.presenter';

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@/shared/database/prisma.service';
-import { RepositoryException } from '@/shared/exceptions/repository.exception';
+import { PrismaService } from '../../../../shared/database/prisma.service';
+import { RepositoryException } from '../../../../shared/exceptions/repository.exception';
 import {
   IMediaAssetRepository,
   IFindAssetsParams,
@@ -11,7 +11,7 @@ import { EAssetStatus } from '../../domain/enums/asset-status.enum';
 import {
   Prisma,
   MediaAsset as PrismaMediaAsset,
-} from '@/generated/prisma/client';
+} from '../../../../generated/prisma/client';
 
 /**
  * PrismaMediaAssetRepository

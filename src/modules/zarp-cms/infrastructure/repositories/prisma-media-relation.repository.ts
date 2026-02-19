@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@/shared/database/prisma.service';
-import { RepositoryException } from '@/shared/exceptions/repository.exception';
+import { PrismaService } from '../../../../shared/database/prisma.service';
+import { RepositoryException } from '../../../../shared/exceptions/repository.exception';
 import { IMediaRelationRepository } from '../../domain/interfaces/media-relation.repository.interface';
 import { MediaAssetRelation } from '../../domain/entities/media-asset-relation.entity';
 import {
   Prisma,
   MediaAssetRelation as PrismaMediaAssetRelation,
-} from '@/generated/prisma/client';
+} from '../../../../generated/prisma/client';
 
 /**
  * PrismaMediaRelationRepository
