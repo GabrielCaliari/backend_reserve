@@ -36,12 +36,18 @@ export class PrismaAuthorRepository implements IAuthorRepository {
     try {
       // Validate UUID format
       if (!this.isValidUUID(id)) {
+        console.log(`[DEBUG] Invalid author ID format: "${id}" (length: ${id.length})`);
         return null;
       }
 
       const record = await this.prisma.author.findUnique({
         where: { id },
       });
+      
+      if (!record) {
+        console.log(`[DEBUG] Author not found in database: "${id}"`);
+      }
+      
       return record ? this.toDomain(record) : null;
     } catch (error) {
       throw new RepositoryException('Failed to find author by ID', error);
@@ -160,12 +166,12 @@ export class PrismaAuthorRepository implements IAuthorRepository {
   }
 
   /**
-   * Validates UUID format (12-character cuid)
-   * @param id - The UUID string to validate
-   * @returns true if valid UUID format, false otherwise
+   * Validates cuid format (up to 25 characters)
+   * @param id - The cuid string to validate
+   * @returns true if valid cuid format, false otherwise
    */
   private isValidUUID(id: string): boolean {
-    // cuid format: 12 characters, alphanumeric
-    return /^[a-z0-9]{12}$/i.test(id);
+    // cuid format: starts with 'c', followed by alphanumeric, length between 9-25 characters
+    return typeof id === 'string' && id.length >= 9 && id.length <= 25 && /^c[a-z0-9]+$/i.test(id);
   }
 }
