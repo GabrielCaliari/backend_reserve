@@ -23,13 +23,26 @@ import {
  * - Maps between domain entities and Prisma models
  * - Enforces tenant isolation at database level
  * - Handles pagination and filtering
+ * - Validates UUID format for all ID parameters
  * - Throws RepositoryException on database failures
  * 
  * @Injectable decorator enables NestJS dependency injection
+ * 
+ * **Validates: Requirements 15.6**
  */
 @Injectable()
 export class PrismaMediaAssetRepository implements IMediaAssetRepository {
   constructor(private readonly prisma: PrismaService) {}
+
+  /**
+   * Validates UUID format (12-character cuid)
+   * @param id - The UUID string to validate
+   * @returns true if valid UUID format, false otherwise
+   */
+  private isValidUUID(id: string): boolean {
+    // cuid format: 12 characters, alphanumeric
+    return /^[a-z0-9]{12}$/i.test(id);
+  }
 
   /**
    * Maps Prisma model to domain entity
@@ -87,8 +100,13 @@ export class PrismaMediaAssetRepository implements IMediaAssetRepository {
     }
   }
 
-  async findById(id: number, tenantId: number): Promise<MediaAsset | null> {
+  async findById(id: string, tenantId: number): Promise<MediaAsset | null> {
     try {
+      // Validate UUID format
+      if (!this.isValidUUID(id)) {
+        return null;
+      }
+
       const record = await this.prisma.mediaAsset.findFirst({
         where: {
           id,
@@ -147,11 +165,16 @@ export class PrismaMediaAssetRepository implements IMediaAssetRepository {
   }
 
   async update(
-    id: number,
+    id: string,
     data: Partial<MediaAsset>,
     tenantId: number,
   ): Promise<MediaAsset> {
     try {
+      // Validate UUID format
+      if (!this.isValidUUID(id)) {
+        throw new RepositoryException('Invalid UUID format for media asset ID', 'INVALID_UUID');
+      }
+
       const updateData: Prisma.MediaAssetUncheckedUpdateInput = {};
 
       // Only allow updating specific fields (alt_text and metadata per requirements)
@@ -182,8 +205,13 @@ export class PrismaMediaAssetRepository implements IMediaAssetRepository {
     }
   }
 
-  async delete(id: number, tenantId: number): Promise<void> {
+  async delete(id: string, tenantId: number): Promise<void> {
     try {
+      // Validate UUID format
+      if (!this.isValidUUID(id)) {
+        throw new RepositoryException('Invalid UUID format for media asset ID', 'INVALID_UUID');
+      }
+
       await this.prisma.mediaAsset.delete({
         where: {
           id,
@@ -195,8 +223,13 @@ export class PrismaMediaAssetRepository implements IMediaAssetRepository {
     }
   }
 
-  async countByCollection(collectionId: number, tenantId: number): Promise<number> {
+  async countByCollection(collectionId: string, tenantId: number): Promise<number> {
     try {
+      // Validate UUID format
+      if (!this.isValidUUID(collectionId)) {
+        throw new RepositoryException('Invalid UUID format for collection ID', 'INVALID_UUID');
+      }
+
       return await this.prisma.mediaAsset.count({
         where: {
           collection_id: collectionId,

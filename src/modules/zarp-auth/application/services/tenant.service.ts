@@ -85,7 +85,7 @@ export class TenantService {
     }
   }
 
-  async assignAdmin(adminId: number, tenantId: number) {
+  async assignAdmin(adminId: string, tenantId: number) {
     try {
       const admin = await this.adminRepository.selectById(adminId);
       if (!admin) {
@@ -108,7 +108,7 @@ export class TenantService {
     }
   }
 
-  async unassignAdmin(adminId: number, tenantId: number) {
+  async unassignAdmin(adminId: string, tenantId: number) {
     try {
       await this.adminTenantRepository.unassign(adminId, tenantId);
       return successResponse({ removed: true });
@@ -117,7 +117,7 @@ export class TenantService {
     }
   }
 
-  async findTenantsByAdmin(adminId: number) {
+  async findTenantsByAdmin(adminId: string) {
     try {
       const admin = await this.adminRepository.selectById(adminId);
       if (!admin) {
@@ -199,7 +199,7 @@ export class TenantService {
     }
   }
 
-  async updateAdminRole(adminId: number, tenantId: number, role: EAdminRole) {
+  async updateAdminRole(adminId: string, tenantId: number, role: EAdminRole) {
     try {
       const admin = await this.adminRepository.selectById(adminId);
       if (!admin) {

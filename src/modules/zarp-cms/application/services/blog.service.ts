@@ -2,11 +2,24 @@ import { Injectable, Inject } from '@nestjs/common';
 import { BLOG_REPOSITORY, IBlogRepository } from '../../domain/interfaces/blog.repository.interface';
 import { CreateBlogDTO } from '../dtos/create-blog.dto';
 import { UpdateBlogDTO } from '../dtos/update-blog.dto';
-import { generateSlug } from '../../domain/utils/slug.util';
-import { BlogSlugConflictException } from '../../domain/errors/blog-slug-conflict.error';
-import { BlogNotFoundError } from '../../domain/errors/blog-not-found.error';
+import { ServiceResponse, successResponse, errorResponse } from '../utils/service-response.util';
+import { Blog } from '../../domain/entities/blog.entity';
 import * as crypto from 'crypto';
 
+// Error constants
+const ERROR_BLOG_NOT_FOUND = '404:Blog not found';
+const ERROR_BLOG_NAME_DUPLICATE = '409:Blog name already exists for this tenant';
+const ERROR_CREATE_BLOG = '500:Failed to create blog';
+const ERROR_UPDATE_BLOG = '500:Failed to update blog';
+const ERROR_DELETE_BLOG = '500:Failed to delete blog';
+const ERROR_REGENERATE_KEY = '500:Failed to regenerate secret key';
+
+/**
+ * BlogService
+ * 
+ * Handles blog management operations including creation, updates, and secret key management.
+ * Validates blog name uniqueness per tenant (Requirement 1.2).
+ */
 @Injectable()
 export class BlogService {
   constructor(
@@ -14,122 +27,181 @@ export class BlogService {
     private readonly blogRepository: IBlogRepository,
   ) {}
 
-  async create(tenantId: number, data: CreateBlogDTO) {
-    const slug = generateSlug(data.name);
-
-    // Check slug uniqueness within tenant
-    const existing = await this.blogRepository.findBySlugAndTenantId(slug, tenantId);
-    if (existing) {
-      throw new BlogSlugConflictException(slug);
-    }
-
-    // Generate secret key
-    const secretKey = crypto.randomBytes(32).toString('hex');
-    const salt = crypto.randomBytes(16).toString('hex');
-
-    // Hash secret key
-    // NOTE: Based on previous analysis (T027), we decided to use a DETERMINISTIC HASH if we want to lookup by key.
-    // However, the spec (data-model.md) says `findBySecretKey(secretKeyHash)`.
-    // And `BlogSecretKeyGuard` needs to find the blog.
-    // If we use scrypt with random salt, we CANNOT lookup by key.
-    // To support lookup by ONLY key, we need a deterministic hash (e.g. SHA256 of key).
-    // Or we store (DeterministicHash, Salt) where DeterministicHash is indexable.
-    // Let's change this to use SHA-256 for the hash stored in DB for lookup.
-    // The `secret_key_salt` field in DB might be redundant if we just use SHA-256, 
-    // OR we use it for something else.
-    // Given the requirement "validate x-blog-secret-key header against SHA-256 hash stored in Blog" (task T033 description),
-    // I will use SHA-256(key). Salt is not strictly needed for this pattern unless we salt the input before SHA-256 with a GLOBAL salt.
-    // Using random per-blog salt prevents lookup.
-    // So I will IGNORE `secret_key_salt` for the lookup hash mechanism, or store a random string there just to fill the column.
-    
-    const sha256Hash = crypto.createHash('sha256').update(secretKey).digest('hex');
-
-    const blog = await this.blogRepository.create({
-      name: data.name,
-      description: data.description,
-      slug,
-      tenant_id: tenantId,
-      secret_key_hash: sha256Hash,
-      secret_key_salt: salt, // Storing random salt, though not used for lookup
-    });
-
-    // Return the blog with the PLAIN secret key (only once)
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { secret_key_hash: _h, secret_key_salt: _s, ...rest } = blog;
-    return {
-      ...rest,
-      secret_key: secretKey,
-    };
+  /**
+   * Validates that a blog name is unique within a tenant
+   * Requirement 1.2: Blog name uniqueness per tenant
+   */
+  async validateNameUniqueness(name: string, tenantId: number): Promise<boolean> {
+    const existing = await this.blogRepository.findByNameAndTenantId(name, tenantId);
+    return existing === null;
   }
 
-  async findAll(tenantId: number) {
-    const blogs = await this.blogRepository.findAllByTenantId(tenantId);
-    // Strip sensitive data
-    return blogs.map((b) => {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { secret_key_hash: _h, secret_key_salt: _s, ...rest } = b;
-      return rest;
-    });
+  /**
+   * Creates a new blog with a generated secret key
+   * Validates name uniqueness per tenant before creation
+   */
+  async create(tenantId: number, data: CreateBlogDTO): Promise<ServiceResponse> {
+    try {
+      // Validate name uniqueness within tenant (Requirement 1.2)
+      const isUnique = await this.validateNameUniqueness(data.name, tenantId);
+      if (!isUnique) {
+        return errorResponse(ERROR_BLOG_NAME_DUPLICATE, 409);
+      }
+
+      // Generate secret key
+      const secretKey = crypto.randomBytes(32).toString('hex');
+      const salt = crypto.randomBytes(16).toString('hex');
+
+      // Use SHA-256 for deterministic hash to support lookup by key
+      const sha256Hash = crypto.createHash('sha256').update(secretKey).digest('hex');
+
+      const blog = new Blog({
+        name: data.name,
+        description: data.description,
+        tenantId,
+        secretKeyHash: sha256Hash,
+        secretKeySalt: salt,
+      });
+
+      const created = await this.blogRepository.create(blog);
+
+      // Return the blog with the PLAIN secret key (only once)
+      return successResponse({
+        id: created.id,
+        name: created.name,
+        description: created.description,
+        tenantId: created.tenantId,
+        active: created.active,
+        createdAt: created.createdAt,
+        updatedAt: created.updatedAt,
+        secret_key: secretKey, // Only returned on creation
+      }, 201);
+    } catch (error) {
+      return errorResponse(ERROR_CREATE_BLOG, 500, error);
+    }
   }
 
-  async update(tenantId: number, blogId: number, data: UpdateBlogDTO) {
-    const blog = await this.blogRepository.findById(blogId);
+  /**
+   * Retrieves all blogs for a tenant
+   * Strips sensitive data (secret key hash and salt)
+   */
+  async findAll(tenantId: number): Promise<ServiceResponse> {
+    try {
+      const blogs = await this.blogRepository.findByTenantId(tenantId);
+      
+      // Strip sensitive data
+      const sanitized = blogs.map((blog) => ({
+        id: blog.id,
+        name: blog.name,
+        description: blog.description,
+        tenantId: blog.tenantId,
+        active: blog.active,
+        createdAt: blog.createdAt,
+        updatedAt: blog.updatedAt,
+      }));
 
-    if (!blog || !blog.active) {
-      throw new BlogNotFoundError(`Blog with id ${blogId} not found`);
+      return successResponse(sanitized, 200);
+    } catch (error) {
+      return errorResponse(ERROR_CREATE_BLOG, 500, error);
     }
-
-    if (blog.tenant_id !== tenantId) {
-      // Don't leak existence of other tenant's blog, or throw specific Forbidden?
-      // Spec says "404 (blog not found)".
-      throw new BlogNotFoundError(`Blog with id ${blogId} not found`);
-    }
-
-    // Update fields
-    const updated = await this.blogRepository.update(blogId, {
-      name: data.name,
-      description: data.description,
-    });
-
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { secret_key_hash: _h, secret_key_salt: _s, ...rest } = updated;
-    return rest;
   }
 
-  async delete(tenantId: number, blogId: number) {
-    const blog = await this.blogRepository.findById(blogId);
+  /**
+   * Updates a blog's information
+   * Validates name uniqueness if name is being changed
+   */
+  async update(tenantId: number, blogId: string, data: UpdateBlogDTO): Promise<ServiceResponse> {
+    try {
+      const blog = await this.blogRepository.findById(blogId);
 
-    if (!blog || !blog.active) {
-      throw new BlogNotFoundError(`Blog with id ${blogId} not found`);
+      if (!blog || !blog.active) {
+        return errorResponse(ERROR_BLOG_NOT_FOUND, 404);
+      }
+
+      if (blog.tenantId !== tenantId) {
+        return errorResponse(ERROR_BLOG_NOT_FOUND, 404);
+      }
+
+      // If name is being changed, validate uniqueness
+      if (data.name && data.name !== blog.name) {
+        const isUnique = await this.validateNameUniqueness(data.name, tenantId);
+        if (!isUnique) {
+          return errorResponse(ERROR_BLOG_NAME_DUPLICATE, 409);
+        }
+      }
+
+      // Update fields
+      const updated = await this.blogRepository.update(blogId, {
+        name: data.name,
+        description: data.description,
+      });
+
+      // Strip sensitive data
+      return successResponse({
+        id: updated.id,
+        name: updated.name,
+        description: updated.description,
+        tenantId: updated.tenantId,
+        active: updated.active,
+        createdAt: updated.createdAt,
+        updatedAt: updated.updatedAt,
+      }, 200);
+    } catch (error) {
+      return errorResponse(ERROR_UPDATE_BLOG, 500, error);
     }
-
-    if (blog.tenant_id !== tenantId) {
-      throw new BlogNotFoundError(`Blog with id ${blogId} not found`);
-    }
-
-    await this.blogRepository.delete(blogId);
   }
 
-  async regenerateSecretKey(tenantId: number, blogId: number) {
-    const blog = await this.blogRepository.findById(blogId);
+  /**
+   * Soft deletes a blog
+   */
+  async delete(tenantId: number, blogId: string): Promise<ServiceResponse> {
+    try {
+      const blog = await this.blogRepository.findById(blogId);
 
-    if (!blog || !blog.active) {
-      throw new BlogNotFoundError(`Blog with id ${blogId} not found`);
+      if (!blog || !blog.active) {
+        return errorResponse(ERROR_BLOG_NOT_FOUND, 404);
+      }
+
+      if (blog.tenantId !== tenantId) {
+        return errorResponse(ERROR_BLOG_NOT_FOUND, 404);
+      }
+
+      await this.blogRepository.delete(blogId);
+      
+      return successResponse({ message: 'Blog deleted successfully' }, 200);
+    } catch (error) {
+      return errorResponse(ERROR_DELETE_BLOG, 500, error);
     }
+  }
 
-    if (blog.tenant_id !== tenantId) {
-       throw new BlogNotFoundError(`Blog with id ${blogId} not found`);
+  /**
+   * Regenerates the secret key for a blog
+   * Returns the new plain secret key (only time it's visible)
+   */
+  async regenerateSecretKey(tenantId: number, blogId: string): Promise<ServiceResponse> {
+    try {
+      const blog = await this.blogRepository.findById(blogId);
+
+      if (!blog || !blog.active) {
+        return errorResponse(ERROR_BLOG_NOT_FOUND, 404);
+      }
+
+      if (blog.tenantId !== tenantId) {
+        return errorResponse(ERROR_BLOG_NOT_FOUND, 404);
+      }
+
+      const secretKey = crypto.randomBytes(32).toString('hex');
+      const salt = crypto.randomBytes(16).toString('hex');
+      const sha256Hash = crypto.createHash('sha256').update(secretKey).digest('hex');
+
+      await this.blogRepository.update(blogId, {
+        secretKeyHash: sha256Hash,
+        secretKeySalt: salt,
+      });
+
+      return successResponse({ secret_key: secretKey }, 200);
+    } catch (error) {
+      return errorResponse(ERROR_REGENERATE_KEY, 500, error);
     }
-
-    const secretKey = crypto.randomBytes(32).toString('hex');
-    const salt = crypto.randomBytes(16).toString('hex');
-    const sha256Hash = crypto.createHash('sha256').update(secretKey).digest('hex');
-
-    await this.blogRepository.update(blogId, {
-      secret_key_hash: sha256Hash,
-      secret_key_salt: salt,
-    });
-
-    return { secret_key: secretKey };
   }
 }

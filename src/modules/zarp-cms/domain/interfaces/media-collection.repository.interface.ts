@@ -30,12 +30,12 @@ export interface IMediaCollectionRepository {
 
   /**
    * Finds a MediaCollection by ID and tenant
-   * @param id - The collection ID
+   * @param id - The collection ID (UUID string)
    * @param tenantId - The tenant ID for isolation
    * @param tx - Optional transaction context
    * @returns The MediaCollection or null if not found
    */
-  findById(id: number, tenantId: number, tx?: any): Promise<MediaCollection | null>;
+  findById(id: string, tenantId: number, tx?: any): Promise<MediaCollection | null>;
 
   /**
    * Finds a MediaCollection by slug and tenant
@@ -56,19 +56,19 @@ export interface IMediaCollectionRepository {
 
   /**
    * Updates a MediaCollection record
-   * @param id - The collection ID
+   * @param id - The collection ID (UUID string)
    * @param data - Partial data to update
    * @param tenantId - The tenant ID for isolation
    * @param tx - Optional transaction context
    * @returns The updated MediaCollection
    */
-  update(id: number, data: Partial<MediaCollection>, tenantId: number, tx?: any): Promise<MediaCollection>;
+  update(id: string, data: Partial<MediaCollection>, tenantId: number, tx?: any): Promise<MediaCollection>;
 
   /**
    * Deletes a MediaCollection record
-   * @param id - The collection ID
+   * @param id - The collection ID (UUID string)
    * @param tenantId - The tenant ID for isolation
    * @param tx - Optional transaction context
    */
-  delete(id: number, tenantId: number, tx?: any): Promise<void>;
+  delete(id: string, tenantId: number, tx?: any): Promise<void>;
 }

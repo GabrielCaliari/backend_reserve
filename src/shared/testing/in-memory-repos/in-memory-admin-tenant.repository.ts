@@ -6,7 +6,7 @@ import { EAdminRole } from '../../../modules/zarp-auth/domain/enums/admin-role.e
 
 interface StoredAdminTenant {
   id: number;
-  admin_id: number;
+  admin_id: string;
   tenant_id: number;
   role: EAdminRole;
   active: boolean;
@@ -48,7 +48,7 @@ export class InMemoryAdminTenantRepository implements IAdminTenantRepository {
     return { ...record };
   }
 
-  async unassign(adminId: number, tenantId: number): Promise<void> {
+  async unassign(adminId: string, tenantId: number): Promise<void> {
     const record = this.records.find(
       (r) => r.admin_id === adminId && r.tenant_id === tenantId,
     );
@@ -58,7 +58,7 @@ export class InMemoryAdminTenantRepository implements IAdminTenantRepository {
     }
   }
 
-  async findTenantsByAdminId(adminId: number): Promise<any[]> {
+  async findTenantsByAdminId(adminId: string): Promise<any[]> {
     return this.records
       .filter((r) => r.admin_id === adminId && r.active)
       .map((r) => ({ id: r.tenant_id }));
@@ -70,7 +70,7 @@ export class InMemoryAdminTenantRepository implements IAdminTenantRepository {
       .map((r) => ({ id: r.admin_id, role: r.role }));
   }
 
-  async isAdminInTenant(adminId: number, tenantId: number): Promise<boolean> {
+  async isAdminInTenant(adminId: string, tenantId: number): Promise<boolean> {
     const record = this.records.find(
       (r) => r.admin_id === adminId && r.tenant_id === tenantId,
     );
@@ -78,7 +78,7 @@ export class InMemoryAdminTenantRepository implements IAdminTenantRepository {
   }
 
   async findRoleInTenant(
-    adminId: number,
+    adminId: string,
     tenantId: number,
   ): Promise<EAdminRole | null> {
     const record = this.records.find(
@@ -92,7 +92,7 @@ export class InMemoryAdminTenantRepository implements IAdminTenantRepository {
     return record.role;
   }
 
-  async updateRole(adminId: number, tenantId: number, role: EAdminRole): Promise<any> {
+  async updateRole(adminId: string, tenantId: number, role: EAdminRole): Promise<any> {
     const record = this.records.find(
       (r) => r.admin_id === adminId && r.tenant_id === tenantId,
     );
@@ -108,7 +108,7 @@ export class InMemoryAdminTenantRepository implements IAdminTenantRepository {
 
   /** Test helper: seed a record directly */
   seed(data: {
-    admin_id: number;
+    admin_id: string;
     tenant_id: number;
     role?: EAdminRole;
     active?: boolean;

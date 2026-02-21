@@ -13,10 +13,12 @@ import { MediaAsset } from '../../domain/entities/media-asset.entity';
 import { ECollectionType } from '../../domain/enums/collection-type.enum';
 import { CreateCollectionDTO } from '../dtos/create-collection.dto';
 import { successResponse, errorResponse } from '../../../../shared/helpers/response.helper';
+import { isValidUUID } from '../../domain/utils/uuid.util';
 import { 
   ERROR_COLLECTION_SLUG_EXISTS,
   ERROR_COLLECTION_NOT_FOUND,
   ERROR_COLLECTION_NOT_EMPTY,
+  ERROR_INVALID_UUID,
 } from '../../domain/constants/error-constants';
 
 /**
@@ -89,7 +91,7 @@ export class MediaCollectionService {
   /**
    * Retrieves a specific media collection by ID
    *
-   * @param id - Collection identifier
+   * @param id - Collection identifier (UUID string)
    * @param tenantId - Tenant identifier for isolation
    * @returns ServiceResponse with collection or error
    *
@@ -101,9 +103,14 @@ export class MediaCollectionService {
    * - Tenant isolation is enforced by passing tenantId to repository
    */
   async getCollectionById(
-    id: number,
+    id: string,
     tenantId: number,
   ): Promise<{ status: number; data: MediaCollection | { code: string } }> {
+    // Validate collection UUID format (Requirement 15.7)
+    if (!isValidUUID(id)) {
+      return errorResponse(`${ERROR_INVALID_UUID}: collection_id`, 400);
+    }
+
     // Call repository with tenant isolation (Requirement 7.8, 15.1)
     const collection = await this.collectionRepo.findById(id, tenantId);
     
@@ -169,11 +176,16 @@ export class MediaCollectionService {
      * - Results are paginated with total count and page metadata
      */
     async getCollectionAssets(
-      id: number,
+      id: string,
       tenantId: number,
       page: number = 1,
       limit: number = 20,
     ): Promise<{ status: number; data: IPaginatedResult<MediaAsset> | { code: string } }> {
+      // Validate collection UUID format (Requirement 15.7)
+      if (!isValidUUID(id)) {
+        return errorResponse(`${ERROR_INVALID_UUID}: collection_id`, 400);
+      }
+
       // First check if collection exists (Requirement 7.9)
       const collection = await this.collectionRepo.findById(id, tenantId);
       
@@ -197,7 +209,7 @@ export class MediaCollectionService {
     /**
      * Updates an existing media collection
      *
-     * @param id - Collection identifier
+     * @param id - Collection identifier (UUID string)
      * @param data - Partial collection data to update
      * @param tenantId - Tenant identifier for isolation
      * @returns ServiceResponse with updated collection or error
@@ -211,10 +223,15 @@ export class MediaCollectionService {
      * - Tenant isolation is enforced by passing tenantId to repository methods
      */
     async updateCollection(
-      id: number,
+      id: string,
       data: Partial<MediaCollection>,
       tenantId: number,
     ): Promise<{ status: number; data: MediaCollection | { code: string } }> {
+      // Validate collection UUID format (Requirement 15.7)
+      if (!isValidUUID(id)) {
+        return errorResponse(`${ERROR_INVALID_UUID}: collection_id`, 400);
+      }
+
       // First check if collection exists (Requirement 7.10)
       const collection = await this.collectionRepo.findById(id, tenantId);
       
@@ -247,9 +264,14 @@ export class MediaCollectionService {
      * - Only empty collections can be deleted to prevent orphaned assets
      */
     async deleteCollection(
-      id: number,
+      id: string,
       tenantId: number,
     ): Promise<{ status: number; data: { deleted: boolean } | { code: string } }> {
+      // Validate collection UUID format (Requirement 15.7)
+      if (!isValidUUID(id)) {
+        return errorResponse(`${ERROR_INVALID_UUID}: collection_id`, 400);
+      }
+
       // First check if collection exists (Requirement 7.11)
       const collection = await this.collectionRepo.findById(id, tenantId);
       

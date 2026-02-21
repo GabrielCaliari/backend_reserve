@@ -12,6 +12,7 @@ import { MediaAsset } from '../../domain/entities/media-asset.entity';
 import { EAssetStatus } from '../../domain/enums/asset-status.enum';
 import { UploadMediaDTO } from '../dtos/upload-media.dto';
 import { errorResponse, successResponse } from '../../../../shared/helpers/response.helper';
+import { isValidUUID } from '../../domain/utils/uuid.util';
 import {
   ERROR_COLLECTION_NOT_FOUND,
   ERROR_FILE_SIZE_EXCEEDED,
@@ -19,6 +20,7 @@ import {
   ERROR_COLLECTION_LIMIT_EXCEEDED,
   ERROR_STORAGE_PROVIDER_ERROR,
   ERROR_ASSET_NOT_FOUND,
+  ERROR_INVALID_UUID,
 } from '../../domain/constants/error-constants';
 
 /**
@@ -66,6 +68,11 @@ export class MediaAssetService {
     userId: number,
   ) {
     try {
+      // 0. Validate collection UUID format (Requirement 15.7)
+      if (!isValidUUID(dto.collection_id)) {
+        return errorResponse(`${ERROR_INVALID_UUID}: collection_id`, 400);
+      }
+
       // 1. Validate collection exists and belongs to tenant (Requirement 4.1)
       const collection = await this.collectionRepo.findById(dto.collection_id, tenantId);
       if (!collection) {
@@ -168,7 +175,7 @@ export class MediaAssetService {
    * Validates Requirements: 1.7, 7.2
    * 
    * @param tenantId - Tenant ID for isolation
-   * @param collectionId - Optional filter by collection
+   * @param collectionId - Optional filter by collection UUID
    * @param status - Optional filter by status
    * @param mimeType - Optional filter by mime type
    * @param page - Page number (default: 1)
@@ -177,7 +184,7 @@ export class MediaAssetService {
    */
   async listAssets(
     tenantId: number,
-    collectionId?: number,
+    collectionId?: string,
     status?: EAssetStatus,
     mimeType?: string,
     page: number = 1,
@@ -200,16 +207,21 @@ export class MediaAssetService {
   }
 
   /**
-   * Get a single asset by ID with tenant isolation
+   * Get a single asset by UUID with tenant isolation
    * 
    * Validates Requirements: 7.3, 15.1
    * 
-   * @param id - Asset ID
+   * @param id - Asset UUID (12-character cuid)
    * @param tenantId - Tenant ID for isolation
    * @returns ServiceResponse with asset or error
    */
-  async getAssetById(id: number, tenantId: number) {
+  async getAssetById(id: string, tenantId: number) {
     try {
+      // Validate asset UUID format (Requirement 15.7)
+      if (!isValidUUID(id)) {
+        return errorResponse(`${ERROR_INVALID_UUID}: asset_id`, 400);
+      }
+
       const asset = await this.assetRepo.findById(id, tenantId);
       
       if (!asset) {
@@ -227,19 +239,24 @@ export class MediaAssetService {
    * 
    * Validates Requirements: 1.8, 7.4
    * 
-   * @param id - Asset ID
+   * @param id - Asset UUID (12-character cuid)
    * @param altText - Optional new alt text
    * @param metadata - Optional new metadata
    * @param tenantId - Tenant ID for isolation
    * @returns ServiceResponse with updated asset or error
    */
   async updateAsset(
-    id: number,
+    id: string,
     altText?: string,
     metadata?: Record<string, any>,
     tenantId?: number,
   ) {
     try {
+      // Validate asset UUID format (Requirement 15.7)
+      if (!isValidUUID(id)) {
+        return errorResponse(`${ERROR_INVALID_UUID}: asset_id`, 400);
+      }
+
       // Verify asset exists and belongs to tenant
       const asset = await this.assetRepo.findById(id, tenantId);
       
@@ -272,12 +289,17 @@ export class MediaAssetService {
    * 
    * Validates Requirements: 1.6, 7.5
    * 
-   * @param id - Asset ID
+   * @param id - Asset UUID (12-character cuid)
    * @param tenantId - Tenant ID for isolation
    * @returns ServiceResponse with deletion confirmation or error
    */
-  async deleteAsset(id: number, tenantId: number) {
+  async deleteAsset(id: string, tenantId: number) {
     try {
+      // Validate asset UUID format (Requirement 15.7)
+      if (!isValidUUID(id)) {
+        return errorResponse(`${ERROR_INVALID_UUID}: asset_id`, 400);
+      }
+
       // Verify asset exists and belongs to tenant
       const asset = await this.assetRepo.findById(id, tenantId);
       

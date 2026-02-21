@@ -1,66 +1,64 @@
-import { IBlogRepository, ICreateBlog } from '../../../modules/zarp-cms/domain/interfaces/blog.repository.interface';
+import { IBlogRepository } from '../../../modules/zarp-cms/domain/interfaces/blog.repository.interface';
 import { Blog } from '../../../modules/zarp-cms/domain/entities/blog.entity';
+import { createId } from '@paralleldrive/cuid2';
 
 export class InMemoryBlogRepository implements IBlogRepository {
   public blogs: Blog[] = [];
-  private idCounter = 1;
 
-  async create(data: ICreateBlog): Promise<Blog> {
+  async create(data: Blog): Promise<Blog> {
     const blog = new Blog({
-      id: this.idCounter++,
+      id: createId(),
       ...data,
-      created_at: new Date(),
-      updated_at: new Date(),
+      createdAt: new Date(),
+      updatedAt: new Date(),
     });
     this.blogs.push(blog);
     return blog;
   }
 
-  async findById(id: number): Promise<Blog | null> {
+  async findById(id: string): Promise<Blog | null> {
     const blog = this.blogs.find((b) => b.id === id && b.active);
     return blog || null;
   }
 
-  async findBySlugAndTenantId(slug: string, tenantId: number): Promise<Blog | null> {
-    const blog = this.blogs.find((b) => b.slug === slug && b.tenant_id === tenantId && b.active);
+  async findByNameAndTenantId(name: string, tenantId: number): Promise<Blog | null> {
+    const blog = this.blogs.find((b) => b.name === name && b.tenantId === tenantId && b.active);
     return blog || null;
   }
 
-  async findAllByTenantId(tenantId: number): Promise<Blog[]> {
-    return this.blogs.filter((b) => b.tenant_id === tenantId && b.active);
+  async findByTenantId(tenantId: number): Promise<Blog[]> {
+    return this.blogs.filter((b) => b.tenantId === tenantId && b.active);
   }
 
   async findBySecretKey(secretKeyHash: string): Promise<Blog | null> {
-    const blog = this.blogs.find((b) => b.secret_key_hash === secretKeyHash && b.active);
+    const blog = this.blogs.find((b) => b.secretKeyHash === secretKeyHash && b.active);
     return blog || null;
   }
 
-  async update(id: number, data: Partial<ICreateBlog>): Promise<Blog> {
+  async update(id: string, data: Partial<Blog>): Promise<Blog> {
     const blog = this.blogs.find((b) => b.id === id);
     if (blog) {
       Object.assign(blog, data);
-      blog.updated_at = new Date();
     }
     return blog!;
   }
 
-  async delete(id: number): Promise<void> {
+  async delete(id: string): Promise<void> {
     const blog = this.blogs.find((b) => b.id === id);
     if (blog) {
       blog.active = false;
-      blog.updated_at = new Date();
     }
   }
 
   // Test helpers
   seed(data: Partial<Blog>): Blog {
     const blog = new Blog({
-      id: this.idCounter++,
+      id: createId(),
       name: 'Test Blog',
-      slug: 'test-blog',
-      tenant_id: 1,
-      secret_key_hash: 'hash',
-      secret_key_salt: 'salt',
+      tenantId: 1,
+      secretKeyHash: 'hash',
+      secretKeySalt: 'salt',
+      description: null,
       ...data,
     });
     this.blogs.push(blog);
@@ -69,6 +67,5 @@ export class InMemoryBlogRepository implements IBlogRepository {
 
   clear(): void {
     this.blogs = [];
-    this.idCounter = 1;
   }
 }

@@ -1,9 +1,9 @@
 ﻿import { Injectable } from '@nestjs/common';
 import { ERROR_FIND_LEAD, ERROR_CREATE_LEAD } from '../../domain/constants';
-import LeadRepository from '../../../zarp-auth/infrastructure/repositories/lead.repository';
+import LeadRepository from '../../../zarp-leads/infrastructure/repositories/lead.repository';
 import { errorResponse, successResponse } from '../../../../shared/helpers';
 import { CreateLead } from '../dtos/lead.dto';
-import { ELeadStatus, Lead } from '../../../zarp-auth/domain/entities/lead.entity';
+import { ELeadStatus, Lead } from '../../../zarp-leads/domain/entities/lead.entity';
 import PhoneNumber from '../../../../shared/domain/value-objects/phone-number.vo';
 import Email from '../../../../shared/domain/value-objects/email.vo';
 

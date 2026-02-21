@@ -174,7 +174,7 @@ export class TenantController {
     description: 'Removes the association between an admin and a tenant'
   })
   @ApiParam({ name: 'tenantId', type: Number, description: 'Tenant ID' })
-  @ApiParam({ name: 'adminId', type: Number, description: 'Admin ID' })
+  @ApiParam({ name: 'adminId', type: String, description: 'Admin ID (UUID)' })
   @ApiResponse({ 
     status: 200, 
     description: 'Admin removed from tenant',
@@ -186,7 +186,7 @@ export class TenantController {
   })
   async unassignAdmin(
     @Param('tenantId', ParseIntPipe) tenantId: number,
-    @Param('adminId', ParseIntPipe) adminId: number,
+    @Param('adminId') adminId: string,
     @Res() res: Response,
   ) {
     const result = await this.tenantService.unassignAdmin(adminId, tenantId);
@@ -315,7 +315,7 @@ export class TenantController {
     description: 'Changes the role of an admin within a specific tenant'
   })
   @ApiParam({ name: 'tenantId', type: Number, description: 'Tenant ID' })
-  @ApiParam({ name: 'adminId', type: Number, description: 'Admin ID' })
+  @ApiParam({ name: 'adminId', type: String, description: 'Admin ID (UUID)' })
   @ApiBody({
     schema: {
       type: 'object',
@@ -334,7 +334,7 @@ export class TenantController {
     schema: {
       example: {
         id: 1,
-        admin_id: 1,
+        admin_id: 'ckl1234abcd5',
         tenant_id: 1,
         role: 'manager',
         active: true
@@ -345,7 +345,7 @@ export class TenantController {
   @ApiResponse({ status: 404, description: 'Admin or tenant not found' })
   async updateAdminRole(
     @Param('tenantId', ParseIntPipe) tenantId: number,
-    @Param('adminId', ParseIntPipe) adminId: number,
+    @Param('adminId') adminId: string,
     @Body() dto: { role: EAdminRole },
     @Res() res: Response,
   ) {

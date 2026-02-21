@@ -40,6 +40,7 @@ export class PrismaMediaRelationRepository implements IMediaRelationRepository {
       asset_id: prismaData.asset_id,
       entity_type: prismaData.entity_type,
       entity_id: prismaData.entity_id,
+      entity_id_type: prismaData.entity_id_type as 'uuid' | 'int',
       relation_type: prismaData.relation_type,
       display_order: prismaData.display_order ?? undefined,
       metadata: prismaData.metadata as Record<string, any> | undefined,
@@ -60,6 +61,7 @@ export class PrismaMediaRelationRepository implements IMediaRelationRepository {
         asset_id: entity.asset_id,
         entity_type: entity.entity_type,
         entity_id: entity.entity_id,
+        entity_id_type: entity.entity_id_type,
         relation_type: entity.relation_type,
         display_order: entity.display_order,
         metadata: entity.metadata as Prisma.InputJsonValue,
@@ -78,7 +80,7 @@ export class PrismaMediaRelationRepository implements IMediaRelationRepository {
 
   async findByEntity(
     entityType: string,
-    entityId: number,
+    entityId: string,
     relationType?: string,
   ): Promise<MediaAssetRelation[]> {
     try {
@@ -106,7 +108,7 @@ export class PrismaMediaRelationRepository implements IMediaRelationRepository {
     }
   }
 
-  async findByAsset(assetId: number): Promise<MediaAssetRelation[]> {
+  async findByAsset(assetId: string): Promise<MediaAssetRelation[]> {
     try {
       const records = await this.prisma.mediaAssetRelation.findMany({
         where: { asset_id: assetId },
@@ -124,9 +126,9 @@ export class PrismaMediaRelationRepository implements IMediaRelationRepository {
   }
 
   async delete(
-    assetId: number,
+    assetId: string,
     entityType: string,
-    entityId: number,
+    entityId: string,
     relationType: string,
   ): Promise<void> {
     try {
@@ -147,7 +149,7 @@ export class PrismaMediaRelationRepository implements IMediaRelationRepository {
     }
   }
 
-  async deleteByAsset(assetId: number): Promise<void> {
+  async deleteByAsset(assetId: string): Promise<void> {
     try {
       await this.prisma.mediaAssetRelation.deleteMany({
         where: { asset_id: assetId },
@@ -162,7 +164,7 @@ export class PrismaMediaRelationRepository implements IMediaRelationRepository {
   }
 
   async updateOrder(
-    relations: Array<{ id: number; display_order: number }>,
+    relations: Array<{ id: string; display_order: number }>,
   ): Promise<void> {
     try {
       // Use transaction to ensure atomicity
@@ -184,9 +186,9 @@ export class PrismaMediaRelationRepository implements IMediaRelationRepository {
   }
 
   async exists(
-    assetId: number,
+    assetId: string,
     entityType: string,
-    entityId: number,
+    entityId: string,
     relationType: string,
   ): Promise<boolean> {
     try {

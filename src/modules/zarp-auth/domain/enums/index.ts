@@ -1,5 +1,4 @@
 export * from './user-sex.enum';
 export * from './plan-status.enum';
-export * from './lead.enum';
 export * from './temperature.enum';
 export * from './admin-role.enum';

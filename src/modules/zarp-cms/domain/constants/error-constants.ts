@@ -20,6 +20,7 @@ export const ERROR_COLLECTION_NOT_EMPTY = '400:Cannot delete collection that con
 // Validation Errors
 export const ERROR_INVALID_FILE_TYPE = '422:File type not allowed for this collection';
 export const ERROR_FILE_SIZE_EXCEEDED = '422:File size exceeds collection maximum';
+export const ERROR_INVALID_UUID = '400:Invalid UUID format';
 
 // Relation Errors
 export const ERROR_RELATION_ALREADY_EXISTS = '409:Asset is already attached to this entity with this relation type';

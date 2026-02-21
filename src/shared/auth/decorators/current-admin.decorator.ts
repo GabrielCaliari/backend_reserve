@@ -2,7 +2,8 @@ import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 import { EAdminRole } from '../../../modules/zarp-auth/domain/enums/admin-role.enum';
 
 export interface CurrentAdminPayload {
-  admin_id: number;
+  id: string; // UUID (12-character cuid)
+  admin_id: string; // Deprecated: use 'id' instead
   token: string;
   'session-id': number;
   admin_role?: EAdminRole;
@@ -21,7 +22,8 @@ export const CurrentAdmin = createParamDecorator(
   (data: keyof CurrentAdminPayload | undefined, ctx: ExecutionContext): CurrentAdminPayload | any => {
     const request = ctx.switchToHttp().getRequest();
     const admin: CurrentAdminPayload = {
-      admin_id: request.admin_id,
+      id: request.admin_id, // Map admin_id to id
+      admin_id: request.admin_id, // Keep for backward compatibility
       token: request.token,
       'session-id': request['session-id'],
       admin_role: request.admin_role,

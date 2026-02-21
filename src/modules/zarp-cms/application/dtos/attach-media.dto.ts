@@ -1,20 +1,20 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsInt, IsString, IsNotEmpty, IsOptional, IsObject, Min } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsObject, Min, IsInt, IsIn } from 'class-validator';
 
 /**
  * DTO for attaching a media asset to an entity
  * 
- * **Validates: Requirements 7.12**
+ * **Validates: Requirements 7.12, 17.7**
  */
 export class AttachMediaDTO {
   @ApiProperty({
-    description: 'Media asset ID to attach',
-    example: 123,
-    type: Number,
+    description: 'Media asset ID to attach (UUID string)',
+    example: 'a1b2c3d4e5f6',
+    type: String,
   })
-  @IsInt()
-  @Min(1)
-  asset_id: number;
+  @IsString()
+  @IsNotEmpty()
+  asset_id: string;
 
   @ApiProperty({
     description: 'Entity type (e.g., article, brand, company, user)',
@@ -26,13 +26,23 @@ export class AttachMediaDTO {
   entity_type: string;
 
   @ApiProperty({
-    description: 'Entity ID',
-    example: 456,
-    type: Number,
+    description: 'Entity ID (UUID string or integer as string)',
+    example: 'x9y8z7w6v5u4',
+    type: String,
   })
-  @IsInt()
-  @Min(1)
-  entity_id: number;
+  @IsString()
+  @IsNotEmpty()
+  entity_id: string;
+
+  @ApiProperty({
+    description: 'Entity ID type discriminator (uuid for Article/Author, int for others)',
+    example: 'uuid',
+    enum: ['uuid', 'int'],
+    type: String,
+  })
+  @IsString()
+  @IsIn(['uuid', 'int'])
+  entity_id_type: 'uuid' | 'int';
 
   @ApiProperty({
     description: 'Relation type (e.g., featured, gallery, avatar, logo)',

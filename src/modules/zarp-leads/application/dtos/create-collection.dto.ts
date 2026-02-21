@@ -1,5 +1,5 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsNotEmpty, IsOptional, IsString, MaxLength, IsArray, IsUrl } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsEnum, IsNotEmpty, IsOptional, IsString, MaxLength, IsArray, IsObject } from 'class-validator';
 import { EAccessMode } from '../../domain/enums/access-mode.enum';
 
 export class CreateCollectionDto {
@@ -15,6 +15,21 @@ export class CreateCollectionDto {
   @MaxLength(100)
   source: string;
 
+  @ApiPropertyOptional({ example: 'career_page', description: 'Source type' })
+  @IsString()
+  @IsOptional()
+  source_type?: string;
+
+  @ApiPropertyOptional({ example: 'organic', description: 'Source channel' })
+  @IsString()
+  @IsOptional()
+  source_channel?: string;
+
+  @ApiPropertyOptional({ example: 'hiring-2026', description: 'Source campaign' })
+  @IsString()
+  @IsOptional()
+  source_campaign?: string;
+
   @ApiProperty({ enum: EAccessMode, default: EAccessMode.public, description: 'Access mode for the collection' })
   @IsEnum(EAccessMode)
   @IsOptional()
@@ -25,4 +40,9 @@ export class CreateCollectionDto {
   @IsString({ each: true })
   @IsOptional()
   allowed_domains?: string[];
+
+  @ApiPropertyOptional({ example: { department: 'Engineering' }, description: 'Additional metadata' })
+  @IsObject()
+  @IsOptional()
+  metadata?: any;
 }

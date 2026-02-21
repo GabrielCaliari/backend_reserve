@@ -10,15 +10,13 @@ import { EAssetStatus } from '../../domain/enums/asset-status.enum';
  */
 export class FindAssetsParamsDTO {
   @ApiPropertyOptional({
-    description: 'Filter by collection ID',
-    example: 1,
-    type: Number,
+    description: 'Filter by collection ID (UUID)',
+    example: 'a1b2c3d4e5f6',
+    type: String,
   })
   @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  @Min(1)
-  collection_id?: number;
+  @IsString()
+  collection_id?: string;
 
   @ApiPropertyOptional({
     description: 'Filter by asset status',

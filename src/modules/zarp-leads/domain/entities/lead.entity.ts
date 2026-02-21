@@ -17,7 +17,7 @@ export enum ELeadStatus {
 }
 
 export class Lead {
-  public id?: number;
+  public id?: string;
   public name?: string;
   public email?: Email;
   public phone_number?: PhoneNumber;

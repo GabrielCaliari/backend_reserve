@@ -94,8 +94,16 @@ export class PrismaMediaCollectionRepository implements IMediaCollectionReposito
     }
   }
 
-  async findById(id: number, tenantId: number): Promise<MediaCollection | null> {
+  async findById(id: string, tenantId: number): Promise<MediaCollection | null> {
     try {
+      // Validate UUID format (12-character cuid)
+      if (!id || typeof id !== 'string' || id.length !== 12) {
+        throw new RepositoryException(
+          'Invalid collection ID format: must be a 12-character UUID',
+          'INVALID_ID_FORMAT',
+        );
+      }
+
       const record = await this.prisma.mediaCollection.findFirst({
         where: {
           id,
@@ -105,6 +113,9 @@ export class PrismaMediaCollectionRepository implements IMediaCollectionReposito
 
       return record ? this.toDomain(record) : null;
     } catch (error) {
+      if (error instanceof RepositoryException) {
+        throw error;
+      }
       throw new RepositoryException(
         'Failed to find media collection by ID',
         'FIND_FAILED',
@@ -175,11 +186,19 @@ export class PrismaMediaCollectionRepository implements IMediaCollectionReposito
   }
 
   async update(
-    id: number,
+    id: string,
     data: Partial<MediaCollection>,
     tenantId: number,
   ): Promise<MediaCollection> {
     try {
+      // Validate UUID format (12-character cuid)
+      if (!id || typeof id !== 'string' || id.length !== 12) {
+        throw new RepositoryException(
+          'Invalid collection ID format: must be a 12-character UUID',
+          'INVALID_ID_FORMAT',
+        );
+      }
+
       const updateData: Prisma.MediaCollectionUncheckedUpdateInput = {};
 
       if (data.name !== undefined) {
@@ -218,6 +237,9 @@ export class PrismaMediaCollectionRepository implements IMediaCollectionReposito
 
       return this.toDomain(updated);
     } catch (error) {
+      if (error instanceof RepositoryException) {
+        throw error;
+      }
       throw new RepositoryException(
         'Failed to update media collection',
         'UPDATE_FAILED',
@@ -226,8 +248,16 @@ export class PrismaMediaCollectionRepository implements IMediaCollectionReposito
     }
   }
 
-  async delete(id: number, tenantId: number): Promise<void> {
+  async delete(id: string, tenantId: number): Promise<void> {
     try {
+      // Validate UUID format (12-character cuid)
+      if (!id || typeof id !== 'string' || id.length !== 12) {
+        throw new RepositoryException(
+          'Invalid collection ID format: must be a 12-character UUID',
+          'INVALID_ID_FORMAT',
+        );
+      }
+
       await this.prisma.mediaCollection.delete({
         where: {
           id,
@@ -235,6 +265,9 @@ export class PrismaMediaCollectionRepository implements IMediaCollectionReposito
         },
       });
     } catch (error) {
+      if (error instanceof RepositoryException) {
+        throw error;
+      }
       throw new RepositoryException(
         'Failed to delete media collection',
         'DELETE_FAILED',

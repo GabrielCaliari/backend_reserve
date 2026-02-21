@@ -163,7 +163,7 @@ export class JournalService {
 
                 await new Promise(resolve => {
                     return parseString(xmlData, (err, results) => {
-                        let journalAlert: any[] = [];
+                        const journalAlert: any[] = [];
 
                         results.revista.processo.forEach(processo => {
                             journalAlert.push({

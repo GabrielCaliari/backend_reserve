@@ -50,7 +50,7 @@ export default class LeadRepository implements ILeadRepository {
         }
     }
 
-    async update(lead_id: number, data: Partial<ILead>) {
+    async update(lead_id: string, data: Partial<ILead>) {
         try {
             const raw = await this.prisma.lead.update({
                 where: { id: lead_id },
@@ -76,7 +76,7 @@ export default class LeadRepository implements ILeadRepository {
         }
     }
 
-    async findById(lead_id: number) {
+    async findById(lead_id: string) {
         try {
             const raw = await this.prisma.lead.findUnique({
                 where: { id: lead_id }

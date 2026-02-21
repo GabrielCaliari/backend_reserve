@@ -65,7 +65,7 @@ export class RolesGuard implements CanActivate {
     }
 
     const request = context.switchToHttp().getRequest();
-    const adminId: number = request.admin_id;
+    const adminId: string = request.admin_id;
 
     if (!adminId) {
       throw new ForbiddenException('Admin identity not found in request');

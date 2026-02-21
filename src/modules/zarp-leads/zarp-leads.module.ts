@@ -6,24 +6,30 @@ import { LeadService } from './application/services/lead.service';
 import { LeadCollectionService } from './application/services/lead-collection.service';
 import LeadRepository from './infrastructure/repositories/lead.repository';
 import { LeadCollectionRepository } from './infrastructure/repositories/lead-collection.repository';
+import { PrismaLeadAttachmentRepository } from './infrastructure/repositories/lead-attachment.repository';
 import { CollectionSecretKeyGuard } from './infrastructure/guards/collection-secret-key.guard';
-import { LEAD_REPOSITORY, LEAD_COLLECTION_REPOSITORY } from './domain/interfaces';
+import { LEAD_REPOSITORY, LEAD_COLLECTION_REPOSITORY, LEAD_ATTACHMENT_REPOSITORY } from './domain/interfaces';
 import { ZarpAuthModule } from '../zarp-auth/zarp-auth.module';
+import { CreateLeadWithAttachmentsUseCase } from './application/use-cases/create-lead-with-attachments.use-case';
+import { AttachFileToLeadUseCase } from './application/use-cases/attach-file-to-lead.use-case';
+import { RemoveLeadAttachmentUseCase } from './application/use-cases/remove-lead-attachment.use-case';
 
 /**
  * Zarp Leads Module
- * Bounded context for lead management
+ * Bounded context for lead management with file attachment support
  *
  * Implements:
  * - Lead CRUD operations
+ * - Lead file attachments (CVs, documents)
  * - Lead listing with pagination
  * - Lead status updates
- * - Lead Collections (Tenant-scoped)
+ * - Lead Collections with source metadata (Tenant-scoped)
  * - Lead Capture endpoints (public/private/restricted)
  *
  * Exports:
  * - LeadService and LeadRepository for cross-context consumers
  * - LeadCollectionService
+ * - Use cases for lead operations
  */
 @Module({
   imports: [
@@ -35,11 +41,24 @@ import { ZarpAuthModule } from '../zarp-auth/zarp-auth.module';
     LeadCaptureController,
   ],
   providers: [
+    // Services (legacy, for backward compatibility)
     LeadService,
     LeadCollectionService,
+    
+    // Repositories
     LeadRepository,
     LeadCollectionRepository,
+    PrismaLeadAttachmentRepository,
+    
+    // Guards
     CollectionSecretKeyGuard,
+    
+    // Use Cases (SRP pattern)
+    CreateLeadWithAttachmentsUseCase,
+    AttachFileToLeadUseCase,
+    RemoveLeadAttachmentUseCase,
+    
+    // Repository DI tokens
     {
       provide: LEAD_REPOSITORY,
       useClass: LeadRepository,
@@ -48,6 +67,10 @@ import { ZarpAuthModule } from '../zarp-auth/zarp-auth.module';
       provide: LEAD_COLLECTION_REPOSITORY,
       useClass: LeadCollectionRepository,
     },
+    {
+      provide: LEAD_ATTACHMENT_REPOSITORY,
+      useClass: PrismaLeadAttachmentRepository,
+    },
   ],
   exports: [
     LeadService,
@@ -55,6 +78,8 @@ import { ZarpAuthModule } from '../zarp-auth/zarp-auth.module';
     LeadRepository,
     LEAD_REPOSITORY,
     LEAD_COLLECTION_REPOSITORY,
+    LEAD_ATTACHMENT_REPOSITORY,
+    CreateLeadWithAttachmentsUseCase,
   ],
 })
 export class ZarpLeadsModule {}

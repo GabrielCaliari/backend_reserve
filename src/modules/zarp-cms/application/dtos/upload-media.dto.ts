@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsInt, IsOptional, IsString, IsObject } from 'class-validator';
+import { IsOptional, IsString, IsObject } from 'class-validator';
 
 /**
  * DTO for uploading media assets to a collection
@@ -8,12 +8,12 @@ import { IsInt, IsOptional, IsString, IsObject } from 'class-validator';
  */
 export class UploadMediaDTO {
   @ApiProperty({
-    description: 'Collection ID where the asset will be stored',
-    example: 1,
-    type: Number,
+    description: 'Collection ID where the asset will be stored (UUID)',
+    example: 'a1b2c3d4e5f6',
+    type: String,
   })
-  @IsInt()
-  collection_id: number;
+  @IsString()
+  collection_id: string;
 
   @ApiPropertyOptional({
     description: 'Alternative text for accessibility',

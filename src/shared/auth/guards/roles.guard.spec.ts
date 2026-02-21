@@ -18,12 +18,12 @@ describe('RolesGuard', () => {
   };
 
   function createMockContext(overrides: {
-    admin_id?: number;
+    admin_id?: string;
     tenant_id?: number;
     handlerRoles?: EAdminRole[];
   }): ExecutionContext {
     const request: any = {
-      admin_id: overrides.admin_id ?? 1,
+      admin_id: overrides.admin_id ?? 'ckl1234abcd5',
       tenant_id: overrides.tenant_id,
     };
 

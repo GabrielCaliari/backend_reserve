@@ -16,9 +16,13 @@ export class LeadCollectionRepository implements ILeadCollectionRepository {
       name: prismaData.name,
       slug: prismaData.slug,
       source: prismaData.source,
+      sourceType: prismaData.source_type,
+      sourceChannel: prismaData.source_channel,
+      sourceCampaign: prismaData.source_campaign,
       accessMode: prismaData.access_mode as EAccessMode,
       allowedDomains: prismaData.allowed_domains,
       active: prismaData.active,
+      metadata: prismaData.metadata,
       tenantId: prismaData.tenant_id,
       createdAt: prismaData.created_at,
       updatedAt: prismaData.updated_at,
@@ -30,24 +34,14 @@ export class LeadCollectionRepository implements ILeadCollectionRepository {
       name: collection.name,
       slug: collection.slug,
       source: collection.source,
+      source_type: collection.sourceType,
+      source_channel: collection.sourceChannel,
+      source_campaign: collection.sourceCampaign,
       access_mode: collection.accessMode as ECollectionAccessMode,
       allowed_domains: collection.allowedDomains,
       active: collection.active,
+      metadata: collection.metadata,
       tenant_id: collection.tenantId,
-      // infrastructure fields managed here or by caller?
-      // secret_key_hash etc are not on entity. They will be handled via update or separate args if generated.
-      // Wait, create might need secret key hash if restricted.
-      // But domain entity creates doesn't have secret key logic yet.
-      // We'll update the entity definition or pass secrets separately?
-      // For now, create assumes no restricted key yet or we pass it?
-      // Actually, LeadCollectionService handles key generation. It needs to pass hash during create if mode is restricted.
-      // The entity definition on plan.md explicitly said secret keys are infrastructure concerns.
-      // But creating a restricted collection requires storing the hash.
-      // I'll add optional secret_key_hash to update/create if needed, but repo interface takes Entity.
-      // The correct pattern is: repository methods accept Entity + optional implementation details or Entity should carry the *value object* of credentials if needed.
-      // Or simply, the service creates with mode=restricted, thus it generates generic key, then updates it? No, atomic creation is better.
-      // I'll check how Blog repo handles it.
-      // For now, I'll just map the base entity fields. Key generation logic will use update().
     };
 
     const created = await this.prisma.leadCollection.create({ data });
@@ -141,20 +135,16 @@ export class LeadCollectionRepository implements ILeadCollectionRepository {
   }
 
   async update(id: number, collection: LeadCollection): Promise<LeadCollection> {
-    // Need to handle partial updates or full entity replacement?
-    // Entity is usually full state. But we don't carry secret_key_hash in entity.
-    // So update might wipe secret key if we just replace fields?
-    // No, entity fields map to DB fields. If entity doesn't have secret key field, we don't update it in DB unless we explicitly handle it.
-    // Here we map entity fields to data.
     const data: Prisma.LeadCollectionUncheckedUpdateInput = {
       name: collection.name,
       source: collection.source,
+      source_type: collection.sourceType,
+      source_channel: collection.sourceChannel,
+      source_campaign: collection.sourceCampaign,
       access_mode: collection.accessMode as ECollectionAccessMode,
       allowed_domains: collection.allowedDomains,
       active: collection.active,
-      // Secret key hash is NOT updated here because it's not in the entity.
-      // This implies we need a specific method for updating secrets or extended entity.
-      // But for now, general update is covered.
+      metadata: collection.metadata,
     };
 
     const updated = await this.prisma.leadCollection.update({

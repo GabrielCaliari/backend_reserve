@@ -12,7 +12,7 @@ export interface ICreateMediaCollection {
 }
 
 export class MediaCollection {
-  public readonly id?: number;
+  public readonly id?: string; // UUID (12-character cuid)
   public name: string;
   public slug: string;
   public description?: string;

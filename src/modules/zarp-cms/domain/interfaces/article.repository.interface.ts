@@ -1,23 +1,32 @@
-export interface ICreateArticle {
-  title: string;
-  content: string;
-  slug: string;
-  blog_id: number;
+import { Article } from '../entities/article.entity';
+import { EArticleStatus } from '../enums/article-status.enum';
+
+export const ARTICLE_REPOSITORY = Symbol('ARTICLE_REPOSITORY');
+
+export interface ArticleFilters {
+  status?: EArticleStatus;
+  authorId?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface PaginatedResult<T> {
+  data: T[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
 }
 
 export interface IArticleRepository {
-  create(data: ICreateArticle): Promise<any>;
-  findById(id: number): Promise<any>;
-  findBySlugAndBlogId(slug: string, blogId: number): Promise<any>;
-  existsBySlugAndBlogId(slug: string, blogId: number): Promise<boolean>;
-  findAllByBlogId(blogId: number): Promise<any[]>;
-  findPublishedByBlogId(blogId: number): Promise<any[]>;
-  findPublishedBySlugAndBlogId(slug: string, blogId: number): Promise<any>;
-  update(id: number, data: Partial<any>): Promise<any>;
-  updateDisplayOrders(
-    items: { id: number; display_order: number }[],
-  ): Promise<void>;
-  delete(id: number): Promise<void>;
+  create(article: Article): Promise<Article>;
+  findById(id: string): Promise<Article | null>;
+  findBySlugAndBlogId(slug: string, blogId: string): Promise<Article | null>;
+  findByBlogId(
+    blogId: string,
+    filters?: ArticleFilters,
+  ): Promise<PaginatedResult<Article>>;
+  update(id: string, data: Partial<Article>): Promise<Article>;
+  delete(id: string): Promise<void>;
+  countByAuthorId(authorId: string, status?: EArticleStatus): Promise<number>;
 }
-
-export const ARTICLE_REPOSITORY = Symbol('ARTICLE_REPOSITORY');

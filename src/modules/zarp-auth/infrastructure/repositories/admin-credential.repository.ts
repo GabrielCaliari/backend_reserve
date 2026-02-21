@@ -10,7 +10,7 @@ export default class AdminCredentialRepository implements IAdminCredentialReposi
         private readonly prisma: PrismaService,
         private readonly hashProvider: HashProvider,
     ) {}
-    async compareHashByAdminId(value: string, adminId: number) {
+    async compareHashByAdminId(value: string, adminId: string) {
         try {
             const credential = await this.prisma.adminCredential.findUnique({
                 where: {

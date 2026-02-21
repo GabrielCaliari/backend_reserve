@@ -45,7 +45,7 @@ export default class EmailLeadRepository {
         tx?: PrismaClient
     ) {
         try {
-            let conn = tx ?? this.prisma;
+            const conn = tx ?? this.prisma;
             const leads = await conn.lead.createMany({ data: lead });
             return leads;
         } catch (err) {

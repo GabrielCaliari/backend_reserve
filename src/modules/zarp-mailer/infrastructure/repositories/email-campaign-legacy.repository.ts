@@ -16,7 +16,7 @@ export default class EmailCampaignRepository {
         tx?: PrismaService
     ) {
         try {
-            let conn = tx ?? this.prisma;
+            const conn = tx ?? this.prisma;
 
             const emailCampaign = await conn.emailCampaign.create({
                 data: {

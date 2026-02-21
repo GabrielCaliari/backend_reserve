@@ -69,7 +69,7 @@ export class LeadService {
         }
     }
 
-    async findLeadById(leadId: number) {
+    async findLeadById(leadId: string) {
         try {
             const lead = await this.leadRepository.findById(leadId);
 
@@ -83,7 +83,7 @@ export class LeadService {
         }
     }
 
-    async updateLeadStatus(leadId: number, status: ELeadStatus) {
+    async updateLeadStatus(leadId: string, status: ELeadStatus) {
         try {
             const lead = await this.leadRepository.findById(leadId);
 

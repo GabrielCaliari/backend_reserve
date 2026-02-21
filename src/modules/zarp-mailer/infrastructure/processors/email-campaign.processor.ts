@@ -76,9 +76,9 @@ export class EmailCampaignProcess {
             // TODO: Adicionar a lÃ³gica de disparo para Amazon SES Server e fazer essa funÃ§Ã£o ser externa
             switch (smtpServer.provider) {
                 case ESMTPProvider.smtp:
-                    let pk = env('SMTP_PRIVATE_KEY');
+                    const pk = env('SMTP_PRIVATE_KEY');
 
-                    let password = this.encryptProvider.decrypt(smtpServer.hash_password, `${smtpServer.email}-${pk}`);
+                    const password = this.encryptProvider.decrypt(smtpServer.hash_password, `${smtpServer.email}-${pk}`);
 
                     const transporter = nodemailer.createTransport({
                         host: smtpServer.host,

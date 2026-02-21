@@ -69,7 +69,7 @@ describe('BlogSecretKeyGuard', () => {
     // Let's Mock crypto.createHash('sha256')
     
     // Setup repo
-    repo.seed({ secret_key_hash: 'correct-hash' }); // assuming 'correct-hash' is the SHA256 of 'valid-key'
+    repo.seed({ secretKeyHash: 'correct-hash' }); // assuming 'correct-hash' is the SHA256 of 'valid-key'
 
     // Mock Hash
     const mockHash = {
@@ -83,7 +83,7 @@ describe('BlogSecretKeyGuard', () => {
   });
 
   it('should return true and attach blog to request if key is valid', async () => {
-    const blog = repo.seed({ secret_key_hash: 'valid-hash', name: 'My Blog' });
+    const blog = repo.seed({ secretKeyHash: 'valid-hash', name: 'My Blog' });
 
     const mockHash = {
       update: jest.fn().mockReturnThis(),

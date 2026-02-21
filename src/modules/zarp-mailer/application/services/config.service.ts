@@ -15,7 +15,7 @@ export class ConfigService {
     public async createSmtpServer(data: { name: string, email: string, provider: number, default?: boolean, smtp?: { host: string, port: string, username: string, password: string }, api?: { access_token: string, private_token: string, region?: string } }) {
         try {
             let values: ICreateSmtpServer;
-            let pk = env('SMTP_PRIVATE_KEY');
+            const pk = env('SMTP_PRIVATE_KEY');
 
             switch (data.provider) {
                 case ESMTPProvider.smtp:

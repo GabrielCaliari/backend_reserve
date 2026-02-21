@@ -57,7 +57,7 @@ export class EncryptProvider {
       const decipher = crypto.createDecipheriv(this.ALGORITHM, key, iv);
       decipher.setAuthTag(authTag);
 
-      let decrypted = decipher.update(encryptedText);
+      const decrypted = decipher.update(encryptedText);
       const finalBuffer = decipher.final();
       const result = Buffer.concat([decrypted, finalBuffer]).toString('utf8');
 

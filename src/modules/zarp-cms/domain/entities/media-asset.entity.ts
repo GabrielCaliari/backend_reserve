@@ -11,13 +11,13 @@ export interface ICreateMediaAsset {
   alt_text?: string;
   metadata?: Record<string, any>;
   status?: EAssetStatus;
-  collection_id: number;
+  collection_id: string; // UUID reference to MediaCollection
   tenant_id: number;
   created_by: number;
 }
 
 export class MediaAsset {
-  public readonly id?: number;
+  public readonly id?: string; // UUID (12-character cuid)
   public url: string;
   public storage_key: string;
   public filename: string;
@@ -28,7 +28,7 @@ export class MediaAsset {
   public alt_text?: string;
   public metadata?: Record<string, any>;
   public status: EAssetStatus;
-  public collection_id: number;
+  public collection_id: string; // UUID reference to MediaCollection
   public tenant_id: number;
   public created_by: number;
   public created_at?: Date;
@@ -51,8 +51,8 @@ export class MediaAsset {
     if (data.file_size <= 0) {
       throw new Error('File size must be greater than 0');
     }
-    if (data.collection_id <= 0) {
-      throw new Error('Collection ID must be greater than 0');
+    if (!data.collection_id || data.collection_id.trim().length === 0) {
+      throw new Error('Collection ID is required');
     }
     if (data.tenant_id <= 0) {
       throw new Error('Tenant ID must be greater than 0');

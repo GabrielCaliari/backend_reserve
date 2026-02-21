@@ -32,7 +32,7 @@ export default class AdminTenantRepository implements IAdminTenantRepository {
     }
   }
 
-  async unassign(adminId: number, tenantId: number) {
+  async unassign(adminId: string, tenantId: number) {
     try {
       await this.prisma.adminTenant.updateMany({
         where: { admin_id: adminId, tenant_id: tenantId },
@@ -43,7 +43,7 @@ export default class AdminTenantRepository implements IAdminTenantRepository {
     }
   }
 
-  async findTenantsByAdminId(adminId: number) {
+  async findTenantsByAdminId(adminId: string) {
     try {
       const records = await this.prisma.adminTenant.findMany({
         where: { admin_id: adminId, active: true },
@@ -71,7 +71,7 @@ export default class AdminTenantRepository implements IAdminTenantRepository {
     }
   }
 
-  async isAdminInTenant(adminId: number, tenantId: number): Promise<boolean> {
+  async isAdminInTenant(adminId: string, tenantId: number): Promise<boolean> {
     try {
       const record = await this.prisma.adminTenant.findUnique({
         where: {
@@ -87,7 +87,7 @@ export default class AdminTenantRepository implements IAdminTenantRepository {
     }
   }
 
-  async findRoleInTenant(adminId: number, tenantId: number): Promise<EAdminRole | null> {
+  async findRoleInTenant(adminId: string, tenantId: number): Promise<EAdminRole | null> {
     try {
       const record = await this.prisma.adminTenant.findUnique({
         where: {
@@ -109,7 +109,7 @@ export default class AdminTenantRepository implements IAdminTenantRepository {
     }
   }
 
-  async updateRole(adminId: number, tenantId: number, role: EAdminRole) {
+  async updateRole(adminId: string, tenantId: number, role: EAdminRole) {
     try {
       return await this.prisma.adminTenant.update({
         where: {

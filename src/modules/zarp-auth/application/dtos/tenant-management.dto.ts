@@ -48,9 +48,9 @@ export class UpdateTenantDTO {
 }
 
 export class AssignAdminToTenantDTO {
-  @ApiProperty({ description: 'Admin ID to assign', example: 1 })
+  @ApiProperty({ description: 'Admin ID to assign', example: 'ckl1234abcd5' })
   @IsNotEmpty()
-  admin_id: number;
+  admin_id: string;
 
   @ApiProperty({ description: 'Tenant ID to assign to', example: 1 })
   @IsNotEmpty()

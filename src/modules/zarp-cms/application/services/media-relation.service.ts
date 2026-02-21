@@ -95,6 +95,7 @@ export class MediaRelationService {
       asset_id: dto.asset_id,
       entity_type: dto.entity_type,
       entity_id: dto.entity_id,
+      entity_id_type: dto.entity_id_type,
       relation_type: dto.relation_type,
       display_order: dto.display_order ?? maxOrder + 1,
       metadata: dto.metadata,
@@ -130,7 +131,7 @@ export class MediaRelationService {
    * Retrieves all assets attached to a specific entity
    * 
    * @param entityType - Entity type (e.g., 'article', 'brand', 'company')
-   * @param entityId - Entity identifier
+   * @param entityId - Entity identifier (UUID string or integer as string)
    * @param relationType - Optional filter by relation type (e.g., 'featured', 'gallery')
    * @returns ServiceResponse with sorted asset array
    * 
@@ -141,7 +142,7 @@ export class MediaRelationService {
    */
   async getEntityAssets(
     entityType: string,
-    entityId: number,
+    entityId: string,
     relationType?: string,
   ): Promise<{ status: number; data: MediaAsset[] }> {
     const relations = await this.relationRepo.findByEntity(
@@ -178,7 +179,7 @@ export class MediaRelationService {
    * Helper method to get the featured image for an entity
    * 
    * @param entityType - Entity type (e.g., 'article', 'brand')
-   * @param entityId - Entity identifier
+   * @param entityId - Entity identifier (UUID string or integer as string)
    * @param relationType - Relation type (default: 'featured')
    * @returns ServiceResponse with first asset or null
    * 
@@ -189,7 +190,7 @@ export class MediaRelationService {
    */
   async getEntityFeaturedImage(
     entityType: string,
-    entityId: number,
+    entityId: string,
     relationType: string = 'featured',
   ): Promise<{ status: number; data: MediaAsset | null }> {
     const result = await this.getEntityAssets(entityType, entityId, relationType);

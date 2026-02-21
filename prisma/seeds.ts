@@ -2,118 +2,113 @@ import 'dotenv/config';
 import { PrismaClient } from '../src/generated/prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 
-import { seedCnae } from "./seed/seed-cnae";
-import { seedCNPJ } from "./seed/seed-company";
-import { seedPlan } from "./seed/seed-plan";
-import { seedAdmin } from './seed/seed-admin';
-import { seedSMTPServer } from './seed/seed-smtp-server';
-import { seedTokenPack } from './seed/seed-token-pack';
-import { seedLeadCollection } from './seed/seed-lead-collection';
-import { seedCMS } from './seed/seed-cms';
+// Auth module seeds
+import { seedTenants } from './seeds/zarp-auth/tenants.seed';
+import { seedAdmins } from './seeds/zarp-auth/admins.seed';
 
+// Shared seeds
+import { seedPlans } from './seeds/shared/plans.seed';
+import { seedTokenPacks } from './seeds/shared/token-packs.seed';
+
+// CMS module seeds
+import { seedAuthors } from './seeds/zarp-cms/authors.seed';
+import { seedBlogs } from './seeds/zarp-cms/blogs.seed';
+import { seedAuthorAvatarsCollection } from './seeds/zarp-cms/storage/author-avatars-collection.seed';
+import { seedArticleImagesCollection } from './seeds/zarp-cms/storage/article-images-collection.seed';
+import { seedArticles } from './seeds/zarp-cms/articles.seed';
+
+// Leads module seeds
+import { seedLeadCollections } from './seeds/zarp-leads/collections.seed';
+import { seedLeads } from './seeds/zarp-leads/leads.seed';
+
+// Mailer module seeds
+import { seedSMTPServers } from './seeds/zarp-mailer/smtp-servers.seed';
+
+/**
+ * Main seed orchestrator
+ * 
+ * Execution order follows dependency hierarchy:
+ * 1. Auth: Tenants → Admins (foundation)
+ * 2. Shared: Plans, Token Packs
+ * 3. CMS: Authors → Blogs → Storage Collections → Articles
+ * 4. Leads: Collections → Leads
+ * 5. Mailer: SMTP Servers
+ */
 (async function main() {
+  const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
+  const prisma = new PrismaClient({ adapter });
 
-    const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
-    const prisma = new PrismaClient({ adapter });
+  console.log('\n╔════════════════════════════════════════════════════════════╗');
+  console.log('║          DATABASE SEEDING - ZARP STUDIO API               ║');
+  console.log('╚════════════════════════════════════════════════════════════╝');
 
-    async function ensureViewExists() {
-        const viewName = [
-            "ViewCompany",
-            "ViewCompany_AC", "ViewCompany_AL", "ViewCompany_AM", "ViewCompany_AP", "ViewCompany_BA",
-            "ViewCompany_CE", "ViewCompany_DF", "ViewCompany_ES", "ViewCompany_GO", "ViewCompany_MA",
-            "ViewCompany_MG", "ViewCompany_MS", "ViewCompany_MT", "ViewCompany_PA", "ViewCompany_PB",
-            "ViewCompany_PE", "ViewCompany_PI", "ViewCompany_PR", "ViewCompany_RJ", "ViewCompany_RN",
-            "ViewCompany_RO", "ViewCompany_RR", "ViewCompany_RS", "ViewCompany_SC", "ViewCompany_SE",
-            "ViewCompany_SP", "ViewCompany_TO"
-        ];
+  try {
+    // ========================================
+    // 1. AUTH MODULE (Foundation)
+    // ========================================
+    console.log('\n┌─────────────────────────────────────┐');
+    console.log('│  MÓDULO: ZARP-AUTH                  │');
+    console.log('└─────────────────────────────────────┘');
+    
+    await seedTenants();
+    await seedAdmins();
 
-        try {
-            // Verificar se a view já existe
-            await Promise.all(viewName.map(async name => {
-                const result = await prisma.$queryRaw
-                    `SELECT EXISTS (
-                    SELECT FROM information_schema.views
-                    WHERE table_name = ${name.toLocaleLowerCase()}
-                  ) AS exists`
-                    ;
+    // ========================================
+    // 2. SHARED DATA
+    // ========================================
+    console.log('\n┌─────────────────────────────────────┐');
+    console.log('│  MÓDULO: SHARED                     │');
+    console.log('└─────────────────────────────────────┘');
+    
+    await seedPlans();
+    await seedTokenPacks();
 
-                const uf = name.split('_').length == 2 ? name.split('_')[1].toLocaleLowerCase() : null;
+    // ========================================
+    // 3. CMS MODULE
+    // ========================================
+    console.log('\n┌─────────────────────────────────────┐');
+    console.log('│  MÓDULO: ZARP-CMS                   │');
+    console.log('└─────────────────────────────────────┘');
+    
+    await seedAuthors();
+    await seedBlogs();
+    await seedAuthorAvatarsCollection();
+    await seedArticleImagesCollection();
+    await seedArticles();
 
-                if (result[0].exists) {
-                    console.log(`A view "${name}" já existe.`);
-                } else {
-                    console.log(`A view "${name}" não existe. Criando...`);
+    // ========================================
+    // 4. LEADS MODULE
+    // ========================================
+    console.log('\n┌─────────────────────────────────────┐');
+    console.log('│  MÓDULO: ZARP-LEADS                 │');
+    console.log('└─────────────────────────────────────┘');
+    
+    await seedLeadCollections();
+    await seedLeads();
 
-                    // Criar a view
-                    await prisma.$executeRawUnsafe(`
-                    CREATE VIEW ${name} AS
-                        SELECT
-                            c.id AS company_id,
-                            a.id AS auxiliary_company_information_id,
-                            c.cnpj,
-                            c.branch_type,
-                            c.business_name,
-                            c.status,
-                            c.date_status,
-                            c.code_detail_status,
-                            c.outer_city,
-                            c.coutry_code,
-                            c.start_date,
-                            c.type_of_place,
-                            c.place,
-                            c.house_number,
-                            c.address_complement,
-                            c.district,
-                            c.cep,
-                            c.uf,
-                            c.city_code,
-                            c.ddd_1,
-                            c.phone_1,
-                            c.ddd_2,
-                            c.phone_2,
-                            c.ddd_fax,
-                            c.fax,
-                            c.email,
-                            c.special_citation,
-                            c.special_citation_date,
-                            c.load_update_date,
-                            c.main_cnae,
-                            c.secondary_cnae,
-                            a.fantasy_name,
-                            a.legal_nature,
-                            a.qualification_representative_before_cnpj,
-                            a.social_capital,
-                            a.size,
-                            a.federative_entity,
-                            c.created_at AS company_created_at, 
-                            c.updated_at AS company_updated_at
-                        FROM
-                            "public"."Company" c
-                        LEFT JOIN
-                            "public"."AuxiliaryCompanyInformation" a
-                        ON
-                            LEFT(c.cnpj, 8) = a.cnpj
-                            ${uf ? `WHERE uf ILIKE '${uf}'` : ''}`);
+    // ========================================
+    // 5. MAILER MODULE
+    // ========================================
+    console.log('\n┌─────────────────────────────────────┐');
+    console.log('│  MÓDULO: ZARP-MAILER                │');
+    console.log('└─────────────────────────────────────┘');
+    
+    await seedSMTPServers();
 
-                    console.log(`A view "${viewName}" foi criada com sucesso.`);
-                }
-            }))
-        } catch (error) {
-            console.error(`Erro ao verificar ou criar a view: ${error.message}`);
-        } finally {
-            await prisma.$disconnect();
-        }
-    }
+    // ========================================
+    // COMPLETION
+    // ========================================
+    console.log('\n╔════════════════════════════════════════════════════════════╗');
+    console.log('║              ✓ SEEDING CONCLUÍDO COM SUCESSO              ║');
+    console.log('╚════════════════════════════════════════════════════════════╝\n');
 
-    await ensureViewExists();
-
-    // await seedCnae();
-    await seedPlan();
-    await seedAdmin();
-    await seedSMTPServer();
-    await seedTokenPack();
-    await seedLeadCollection();
-    await seedCMS();
-
-    // await seedCNPJ();
-})()
+  } catch (error) {
+    console.error('\n╔════════════════════════════════════════════════════════════╗');
+    console.error('║                  ✗ ERRO NO SEEDING                        ║');
+    console.error('╚════════════════════════════════════════════════════════════╝\n');
+    console.error(error);
+    process.exit(1);
+  } finally {
+    await prisma.$disconnect();
+  }
+})();

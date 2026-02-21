@@ -2,6 +2,7 @@ import { Module, Global } from '@nestjs/common';
 import { BlogController } from './infrastructure/controllers/blog.controller';
 import { ArticleController } from './infrastructure/controllers/article.controller';
 import { ArticleImageController } from './infrastructure/controllers/article-image.controller';
+import { AuthorController } from './infrastructure/controllers/author.controller';
 import { PublicBlogController } from './infrastructure/controllers/public-blog.controller';
 import { MediaAssetController } from './infrastructure/controllers/media-asset.controller';
 import { MediaCollectionController } from './infrastructure/controllers/media-collection.controller';
@@ -12,9 +13,11 @@ import { ArticleImageService } from './application/services/article-image.servic
 import { MediaAssetService } from './application/services/media-asset.service';
 import { MediaCollectionService } from './application/services/media-collection.service';
 import { MediaRelationService } from './application/services/media-relation.service';
+import { AuthorService } from './application/services/author.service';
 import { PrismaBlogRepository } from './infrastructure/repositories/prisma-blog.repository';
 import { PrismaArticleRepository } from './infrastructure/repositories/prisma-article.repository';
 import { PrismaArticleImageRepository } from './infrastructure/repositories/prisma-article-image.repository';
+import { PrismaAuthorRepository } from './infrastructure/repositories/prisma-author.repository';
 import { PrismaMediaAssetRepository } from './infrastructure/repositories/prisma-media-asset.repository';
 import { PrismaMediaCollectionRepository } from './infrastructure/repositories/prisma-media-collection.repository';
 import { PrismaMediaRelationRepository } from './infrastructure/repositories/prisma-media-relation.repository';
@@ -24,6 +27,7 @@ import { SharpImageProcessorProvider } from './infrastructure/providers/sharp-im
 import { BLOG_REPOSITORY } from './domain/interfaces/blog.repository.interface';
 import { ARTICLE_REPOSITORY } from './domain/interfaces/article.repository.interface';
 import { ARTICLE_IMAGE_REPOSITORY } from './domain/interfaces/article-image.repository.interface';
+import { AUTHOR_REPOSITORY } from './domain/interfaces/author.repository.interface';
 import { MEDIA_ASSET_REPOSITORY } from './domain/interfaces/media-asset.repository.interface';
 import { MEDIA_COLLECTION_REPOSITORY } from './domain/interfaces/media-collection.repository.interface';
 import { MEDIA_RELATION_REPOSITORY } from './domain/interfaces/media-relation.repository.interface';
@@ -60,6 +64,7 @@ import { ZarpAuthModule } from '../zarp-auth/zarp-auth.module';
     BlogController,
     ArticleController,
     ArticleImageController,
+    AuthorController,
     PublicBlogController,
     MediaAssetController,
     MediaCollectionController,
@@ -69,6 +74,7 @@ import { ZarpAuthModule } from '../zarp-auth/zarp-auth.module';
     BlogService,
     ArticleService,
     ArticleImageService,
+    AuthorService,
     MediaAssetService,
     MediaCollectionService,
     MediaRelationService,
@@ -84,6 +90,10 @@ import { ZarpAuthModule } from '../zarp-auth/zarp-auth.module';
     {
       provide: ARTICLE_IMAGE_REPOSITORY,
       useClass: PrismaArticleImageRepository,
+    },
+    {
+      provide: AUTHOR_REPOSITORY,
+      useClass: PrismaAuthorRepository,
     },
     {
       provide: MEDIA_ASSET_REPOSITORY,
@@ -110,12 +120,14 @@ import { ZarpAuthModule } from '../zarp-auth/zarp-auth.module';
     BlogService,
     ArticleService,
     ArticleImageService,
+    AuthorService,
     MediaAssetService,
     MediaCollectionService,
     MediaRelationService,
     BLOG_REPOSITORY,
     ARTICLE_REPOSITORY,
     ARTICLE_IMAGE_REPOSITORY,
+    AUTHOR_REPOSITORY,
     MEDIA_ASSET_REPOSITORY,
     MEDIA_COLLECTION_REPOSITORY,
     MEDIA_RELATION_REPOSITORY,

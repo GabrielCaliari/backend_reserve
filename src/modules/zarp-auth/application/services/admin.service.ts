@@ -105,7 +105,7 @@ export class AdminService {
         }
     }
 
-    async me(adminId: number) {
+    async me(adminId: string) {
         try {
             const admin = await this.adminRepository.selectByIdWithTenants(adminId);
 
@@ -184,7 +184,7 @@ export class AdminService {
         }
     }
 
-    async updateRole(adminId: number, role: EAdminRole) {
+    async updateRole(adminId: string, role: EAdminRole) {
         try {
             const admin = await this.adminRepository.selectById(adminId);
             if (!admin) {
@@ -202,7 +202,7 @@ export class AdminService {
         }
     }
 
-    async deactivate(adminId: number, currentAdminId: number) {
+    async deactivate(adminId: string, currentAdminId: string) {
         try {
             if (adminId === currentAdminId) {
                 return errorResponse('400:CANNOT_DEACTIVATE_SELF', 400);
@@ -223,7 +223,7 @@ export class AdminService {
         }
     }
 
-    async activate(adminId: number) {
+    async activate(adminId: string) {
         try {
             const admin = await this.adminRepository.selectById(adminId);
             if (!admin) {
@@ -240,7 +240,7 @@ export class AdminService {
         }
     }
 
-    async update(adminId: number, data: { name?: string; email?: string }) {
+    async update(adminId: string, data: { name?: string; email?: string }) {
         try {
             const admin = await this.adminRepository.selectById(adminId);
             if (!admin) {
@@ -265,7 +265,7 @@ export class AdminService {
         }
     }
 
-    async findById(adminId: number) {
+    async findById(adminId: string) {
         try {
             const admin = await this.adminRepository.selectByIdWithTenants(adminId);
             if (!admin) {
@@ -294,7 +294,7 @@ export class AdminService {
         }
     }
 
-    async delete(adminId: number, currentAdminId: number) {
+    async delete(adminId: string, currentAdminId: string) {
         try {
             if (adminId === currentAdminId) {
                 return errorResponse('400:CANNOT_DELETE_SELF', 400);

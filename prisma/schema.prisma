@@ -616,21 +616,22 @@ model APIToken {
 }
 
 model Lead {
-  id             Int             @id @default(autoincrement())
-  name           String?         @db.VarChar(255)
+  id             String           @id @default(uuid()) @db.Uuid
+  name           String?          @db.VarChar(255)
   email          String?
-  phone_number   String?         @db.VarChar(14)
-  origin         Int?            @db.SmallInt
-  origin_font    String?         @db.VarChar(50)
+  phone_number   String?          @db.VarChar(14)
+  origin         Int?             @db.SmallInt
+  origin_font    String?          @db.VarChar(50)
   description    String?
   data           Json?
-  status         Int?            @default(1) @db.SmallInt
+  status         Int?             @default(1) @db.SmallInt
   collection_id  Int?
   tenant_id      Int?
-  created_at     DateTime        @default(now())
-  updated_at     DateTime        @updatedAt
-  LeadCollection LeadCollection? @relation(fields: [collection_id], references: [id])
-  Tenant         Tenant?         @relation(fields: [tenant_id], references: [id])
+  created_at     DateTime         @default(now())
+  updated_at     DateTime         @updatedAt
+  LeadCollection LeadCollection?  @relation(fields: [collection_id], references: [id])
+  Tenant         Tenant?          @relation(fields: [tenant_id], references: [id])
+  LeadAttachment LeadAttachment[]
 
   @@index([tenant_id])
 }
@@ -676,16 +677,18 @@ enum ECollectionAccessMode {
 }
 
 model Admin {
-  id                Int                 @id @default(autoincrement())
-  name              String              @db.VarChar(100)
-  email             String              @unique
-  role              EAdminRole          @default(company_admin)
-  active            Boolean             @default(true)
-  created_at        DateTime            @default(now())
-  updated_at        DateTime            @updatedAt
-  AdminSessionToken AdminSessionToken[]
-  AdminCredential   AdminCredential?
-  AdminTenant       AdminTenant[]
+  id                 String              @id @default(cuid()) @db.VarChar(25)
+  name               String              @db.VarChar(100)
+  email              String              @unique
+  role               EAdminRole          @default(company_admin)
+  active             Boolean             @default(true)
+  created_at         DateTime            @default(now())
+  updated_at         DateTime            @updatedAt
+  AdminSessionToken  AdminSessionToken[]
+  AdminCredential    AdminCredential?
+  AdminTenant        AdminTenant[]
+  ArticlesCreated    Article[]           @relation("ArticleCreatedBy")
+  ArticlesLastEdited Article[]           @relation("ArticleLastEditedBy")
 }
 
 model Tenant {
@@ -700,6 +703,7 @@ model Tenant {
   Blog           Blog[]
   LeadCollection LeadCollection[]
   leads          Lead[]
+  Author         Author[]
 }
 
 model LeadCollection {
@@ -707,11 +711,15 @@ model LeadCollection {
   name            String                @db.VarChar(150)
   slug            String                @db.VarChar(100)
   source          String                @db.VarChar(100)
+  source_type     String?               @db.VarChar(50)
+  source_channel  String?               @db.VarChar(50)
+  source_campaign String?               @db.VarChar(100)
   access_mode     ECollectionAccessMode @default(public)
   allowed_domains String[]              @default([])
   secret_key_hash String?
   secret_key_salt String?
   active          Boolean               @default(true)
+  metadata        Json?
   tenant_id       Int
   created_at      DateTime              @default(now())
   updated_at      DateTime              @updatedAt
@@ -724,7 +732,7 @@ model LeadCollection {
 
 model AdminTenant {
   id         Int        @id @default(autoincrement())
-  admin_id   Int
+  admin_id   String     @db.VarChar(25)
   tenant_id  Int
   role       EAdminRole @default(manager)
   active     Boolean    @default(true)
@@ -737,10 +745,9 @@ model AdminTenant {
 }
 
 model Blog {
-  id              Int       @id @default(autoincrement())
+  id              String    @id @default(cuid()) @db.VarChar(25)
   name            String    @db.VarChar(150)
   description     String?
-  slug            String    @db.VarChar(100)
   secret_key_hash String
   secret_key_salt String
   tenant_id       Int
@@ -750,26 +757,60 @@ model Blog {
   Tenant          Tenant    @relation(fields: [tenant_id], references: [id])
   Article         Article[]
 
-  @@unique([slug, tenant_id])
+  @@unique([name, tenant_id])
   @@index([tenant_id])
 }
 
 model Article {
-  id            Int            @id @default(autoincrement())
-  title         String         @db.VarChar(255)
-  content       String
-  slug          String         @db.VarChar(255)
-  status        EArticleStatus @default(draft)
-  display_order Int            @default(0)
-  published_at  DateTime?
-  blog_id       Int
-  created_at    DateTime       @default(now())
-  updated_at    DateTime       @updatedAt
-  Blog          Blog           @relation(fields: [blog_id], references: [id], onDelete: Cascade)
-  ArticleImage  ArticleImage[]
+  id               String         @id @default(cuid()) @db.VarChar(25)
+  display_title    String         @db.VarChar(255)
+  meta_title       String         @db.VarChar(60)
+  meta_description String?        @db.VarChar(160)
+  focus_keyword    String?        @db.VarChar(100)
+  content          String
+  slug             String         @db.VarChar(255)
+  status           EArticleStatus @default(draft)
+  display_order    Int            @default(0)
+  published_at     DateTime?
+  cover_image_id   String?        @db.VarChar(25)
+  author_id        String?        @db.VarChar(25)
+  blog_id          String         @db.VarChar(25)
+  created_by       String?        @db.VarChar(25)
+  last_edited_by   String?        @db.VarChar(25)
+  created_at       DateTime       @default(now())
+  updated_at       DateTime       @updatedAt
+
+  Blog              Blog           @relation(fields: [blog_id], references: [id], onDelete: Cascade)
+  CoverImage        MediaAsset?    @relation("ArticleCoverImage", fields: [cover_image_id], references: [id])
+  Author            Author?        @relation(fields: [author_id], references: [id])
+  CreatedByAdmin    Admin?         @relation("ArticleCreatedBy", fields: [created_by], references: [id])
+  LastEditedByAdmin Admin?         @relation("ArticleLastEditedBy", fields: [last_edited_by], references: [id])
+  ArticleImage      ArticleImage[]
 
   @@unique([slug, blog_id])
   @@index([blog_id, status, display_order])
+  @@index([author_id])
+  @@index([created_by])
+  @@index([last_edited_by])
+}
+
+model Author {
+  id         String   @id @default(cuid()) @db.VarChar(25)
+  first_name String   @db.VarChar(100)
+  last_name  String   @db.VarChar(100)
+  biography  String?  @db.Text
+  avatar_id  String?  @db.VarChar(25)
+  tenant_id  Int
+  active     Boolean  @default(true)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  Avatar  MediaAsset? @relation("AuthorAvatar", fields: [avatar_id], references: [id])
+  Tenant  Tenant      @relation(fields: [tenant_id], references: [id])
+  Article Article[]
+
+  @@index([tenant_id])
+  @@index([active])
 }
 
 model ArticleImage {
@@ -780,19 +821,20 @@ model ArticleImage {
   display_order   Int      @default(0)
   file_size       Int
   original_format String   @db.VarChar(10)
-  article_id      Int
+  article_id      String   @db.VarChar(25)
   created_at      DateTime @default(now())
   updated_at      DateTime @updatedAt
   Article         Article  @relation(fields: [article_id], references: [id], onDelete: Cascade)
 
   @@index([article_id, display_order])
+  @@map("article_images_deprecated")
 }
 
 model AdminSessionToken {
   id         Int      @id @default(autoincrement())
   hash_token String
   salt       String
-  admin_id   Int
+  admin_id   String   @db.VarChar(25)
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
   Admin      Admin    @relation(fields: [admin_id], references: [id])
@@ -800,7 +842,7 @@ model AdminSessionToken {
 
 model AdminCredential {
   id         Int      @id @default(autoincrement())
-  admin_id   Int      @unique
+  admin_id   String   @unique @db.VarChar(25)
   hash       String
   salt       String
   created_at DateTime @default(now())
@@ -994,46 +1036,49 @@ model SMTPServer {
 // ============================================
 
 model MediaCollection {
-  id                  Int           @id @default(autoincrement())
-  name                String        @db.VarChar(100)
-  slug                String        @db.VarChar(100)
-  description         String?       @db.Text
-  type                String        @db.VarChar(20) // image, document, video, audio, mixed
-  max_file_size       Int?          // bytes
-  allowed_mime_types  String?       @db.Text // JSON array
-  max_items           Int?
-  tenant_id           Int
-  created_at          DateTime      @default(now())
-  updated_at          DateTime      @updatedAt
-  
-  assets              MediaAsset[]
-  
+  id                 String   @id @default(cuid()) @db.VarChar(25)
+  name               String   @db.VarChar(100)
+  slug               String   @db.VarChar(100)
+  description        String?  @db.Text
+  type               String   @db.VarChar(20) // image, document, video, audio, mixed
+  max_file_size      Int? // bytes
+  allowed_mime_types String?  @db.Text // JSON array
+  max_items          Int?
+  tenant_id          Int
+  created_at         DateTime @default(now())
+  updated_at         DateTime @updatedAt
+
+  assets MediaAsset[]
+
   @@unique([tenant_id, slug])
   @@index([tenant_id])
   @@map("media_collections")
 }
 
 model MediaAsset {
-  id              Int                   @id @default(autoincrement())
-  url             String                @db.VarChar(500)
-  storage_key     String                @db.VarChar(500)
-  filename        String                @db.VarChar(255)
-  mime_type       String                @db.VarChar(100)
-  file_size       Int
-  width           Int?
-  height          Int?
-  alt_text        String?               @db.VarChar(255)
-  metadata        Json?                 // Flexible metadata
-  status          String                @default("ready") @db.VarChar(20)
-  collection_id   Int
-  tenant_id       Int
-  created_by      Int
-  created_at      DateTime              @default(now())
-  updated_at      DateTime              @updatedAt
-  
-  collection      MediaCollection       @relation(fields: [collection_id], references: [id], onDelete: Cascade)
-  relations       MediaAssetRelation[]
-  
+  id            String   @id @default(cuid()) @db.VarChar(25)
+  url           String   @db.VarChar(500)
+  storage_key   String   @db.VarChar(500)
+  filename      String   @db.VarChar(255)
+  mime_type     String   @db.VarChar(100)
+  file_size     Int
+  width         Int?
+  height        Int?
+  alt_text      String?  @db.VarChar(255)
+  metadata      Json? // Flexible metadata
+  status        String   @default("ready") @db.VarChar(20)
+  collection_id String   @db.VarChar(25)
+  tenant_id     Int
+  created_by    Int
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  collection         MediaCollection      @relation(fields: [collection_id], references: [id], onDelete: Cascade)
+  relations          MediaAssetRelation[]
+  LeadAttachment     LeadAttachment[]
+  ArticleCoverImages Article[]            @relation("ArticleCoverImage")
+  AuthorAvatars      Author[]             @relation("AuthorAvatar")
+
   @@index([collection_id])
   @@index([tenant_id])
   @@index([created_by])
@@ -1042,19 +1087,35 @@ model MediaAsset {
 }
 
 model MediaAssetRelation {
-  id              Int         @id @default(autoincrement())
-  asset_id        Int
-  entity_type     String      @db.VarChar(50) // 'article', 'brand', 'company', etc.
-  entity_id       Int
-  relation_type   String      @db.VarChar(50) // 'featured', 'gallery', 'attachment', 'avatar'
+  id              String   @id @default(cuid()) @db.VarChar(25)
+  asset_id        String   @db.VarChar(25)
+  entity_type     String   @db.VarChar(50) // 'article', 'brand', 'company', etc.
+  entity_id       String   @db.VarChar(50) // Polymorphic - can be Int or UUID
+  entity_id_type  String   @db.VarChar(10) // 'int' or 'uuid'
+  relation_type   String   @db.VarChar(50) // 'featured', 'gallery', 'attachment', 'avatar'
   display_order   Int?
   metadata        Json?
-  created_at      DateTime    @default(now())
-  
-  asset           MediaAsset  @relation(fields: [asset_id], references: [id], onDelete: Cascade)
-  
+  created_at      DateTime @default(now())
+
+  asset MediaAsset @relation(fields: [asset_id], references: [id], onDelete: Cascade)
+
   @@unique([asset_id, entity_type, entity_id, relation_type])
   @@index([entity_type, entity_id])
   @@index([asset_id])
   @@map("media_asset_relations")
+}
+
+model LeadAttachment {
+  id         Int      @id @default(autoincrement())
+  lead_id    String   @db.Uuid
+  asset_id   String   @db.VarChar(25)
+  label      String?  @db.VarChar(100)
+  created_at DateTime @default(now())
+
+  Lead  Lead       @relation(fields: [lead_id], references: [id], onDelete: Cascade)
+  Asset MediaAsset @relation(fields: [asset_id], references: [id])
+
+  @@index([lead_id])
+  @@index([asset_id])
+  @@map("lead_attachments")
 }

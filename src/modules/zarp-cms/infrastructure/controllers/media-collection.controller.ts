@@ -8,7 +8,6 @@ import {
   Param,
   Query,
   UseGuards,
-  ParseIntPipe,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -101,11 +100,11 @@ export class MediaCollectionController {
    */
   @Get(':id')
   @ApiOperation({ summary: 'Get media collection by ID' })
-  @ApiParam({ name: 'id', type: Number, description: 'Collection ID' })
+  @ApiParam({ name: 'id', type: String, description: 'Collection ID (UUID)', example: 'abc123def456' })
   @ApiResponse({ status: 200, description: 'Collection retrieved successfully' })
   @ApiResponse({ status: 404, description: 'Collection not found' })
   async findOne(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: string,
     @CurrentAdmin() admin: CurrentAdminPayload,
   ) {
     const result = await this.collectionService.getCollectionById(id, admin.tenant_id!);
@@ -122,13 +121,13 @@ export class MediaCollectionController {
    */
   @Get(':id/assets')
   @ApiOperation({ summary: 'List all assets in a collection' })
-  @ApiParam({ name: 'id', type: Number, description: 'Collection ID' })
+  @ApiParam({ name: 'id', type: String, description: 'Collection ID (UUID)', example: 'abc123def456' })
   @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
   @ApiQuery({ name: 'limit', required: false, type: Number, example: 20 })
   @ApiResponse({ status: 200, description: 'Assets retrieved successfully' })
   @ApiResponse({ status: 404, description: 'Collection not found' })
   async getAssets(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: string,
     @Query('page') page?: number,
     @Query('limit') limit?: number,
     @CurrentAdmin() admin?: CurrentAdminPayload,
@@ -152,7 +151,7 @@ export class MediaCollectionController {
    */
   @Put(':id')
   @ApiOperation({ summary: 'Update media collection' })
-  @ApiParam({ name: 'id', type: Number, description: 'Collection ID' })
+  @ApiParam({ name: 'id', type: String, description: 'Collection ID (UUID)', example: 'abc123def456' })
   @ApiBody({
     schema: {
       type: 'object',
@@ -169,7 +168,7 @@ export class MediaCollectionController {
   @ApiResponse({ status: 200, description: 'Collection updated successfully' })
   @ApiResponse({ status: 404, description: 'Collection not found' })
   async update(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: string,
     @Body() data: any,
     @CurrentAdmin() admin: CurrentAdminPayload,
   ) {
@@ -187,12 +186,12 @@ export class MediaCollectionController {
    */
   @Delete(':id')
   @ApiOperation({ summary: 'Delete media collection (only if empty)' })
-  @ApiParam({ name: 'id', type: Number, description: 'Collection ID' })
+  @ApiParam({ name: 'id', type: String, description: 'Collection ID (UUID)', example: 'abc123def456' })
   @ApiResponse({ status: 200, description: 'Collection deleted successfully' })
   @ApiResponse({ status: 400, description: 'Collection contains assets and cannot be deleted' })
   @ApiResponse({ status: 404, description: 'Collection not found' })
   async remove(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: string,
     @CurrentAdmin() admin: CurrentAdminPayload,
   ) {
     const result = await this.collectionService.deleteCollection(id, admin.tenant_id!);

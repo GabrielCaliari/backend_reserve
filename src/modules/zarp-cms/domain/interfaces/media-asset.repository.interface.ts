@@ -5,7 +5,7 @@ export const MEDIA_ASSET_REPOSITORY = Symbol('MEDIA_ASSET_REPOSITORY');
 
 export interface IFindAssetsParams {
   tenant_id: number;
-  collection_id?: number;
+  collection_id?: string; // UUID reference to MediaCollection
   status?: EAssetStatus;
   mime_type?: string;
   page?: number;
@@ -26,25 +26,25 @@ export interface IPaginatedResult<T> {
  * Defines the contract for MediaAsset data access operations.
  * Implementations must provide Prisma-based or in-memory storage.
  * 
- * **Validates: Requirements 8.6, 9.1, 9.2, 9.3**
+ * **Validates: Requirements 8.6, 9.1, 9.2, 9.3, 15.6**
  */
 export interface IMediaAssetRepository {
   /**
    * Creates a new MediaAsset record
    * @param entity - The MediaAsset entity to create
    * @param tx - Optional transaction context
-   * @returns The created MediaAsset with generated ID
+   * @returns The created MediaAsset with generated UUID
    */
   create(entity: MediaAsset, tx?: any): Promise<MediaAsset>;
 
   /**
-   * Finds a MediaAsset by ID and tenant
-   * @param id - The asset ID
+   * Finds a MediaAsset by UUID and tenant
+   * @param id - The asset UUID (12-character cuid)
    * @param tenantId - The tenant ID for isolation
    * @param tx - Optional transaction context
    * @returns The MediaAsset or null if not found
    */
-  findById(id: number, tenantId: number, tx?: any): Promise<MediaAsset | null>;
+  findById(id: string, tenantId: number, tx?: any): Promise<MediaAsset | null>;
 
   /**
    * Finds all MediaAssets matching the filter criteria
@@ -56,28 +56,28 @@ export interface IMediaAssetRepository {
 
   /**
    * Updates a MediaAsset record
-   * @param id - The asset ID
+   * @param id - The asset UUID (12-character cuid)
    * @param data - Partial data to update
    * @param tenantId - The tenant ID for isolation
    * @param tx - Optional transaction context
    * @returns The updated MediaAsset
    */
-  update(id: number, data: Partial<MediaAsset>, tenantId: number, tx?: any): Promise<MediaAsset>;
+  update(id: string, data: Partial<MediaAsset>, tenantId: number, tx?: any): Promise<MediaAsset>;
 
   /**
    * Deletes a MediaAsset record (cascade deletes relations)
-   * @param id - The asset ID
+   * @param id - The asset UUID (12-character cuid)
    * @param tenantId - The tenant ID for isolation
    * @param tx - Optional transaction context
    */
-  delete(id: number, tenantId: number, tx?: any): Promise<void>;
+  delete(id: string, tenantId: number, tx?: any): Promise<void>;
 
   /**
    * Counts assets in a collection
-   * @param collectionId - The collection ID
+   * @param collectionId - The collection UUID (12-character cuid)
    * @param tenantId - The tenant ID for isolation
    * @param tx - Optional transaction context
    * @returns The count of assets
    */
-  countByCollection(collectionId: number, tenantId: number, tx?: any): Promise<number>;
+  countByCollection(collectionId: string, tenantId: number, tx?: any): Promise<number>;
 }
