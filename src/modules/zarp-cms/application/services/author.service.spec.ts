@@ -53,7 +53,7 @@ describe('AuthorService', () => {
       };
 
       const createdAuthor = new Author({
-        id: 1,
+        id: '',
         firstName: 'John',
         lastName: 'Doe',
         biography: 'Test bio',
@@ -95,7 +95,7 @@ describe('AuthorService', () => {
         firstName: 'John',
         lastName: 'Doe',
         tenantId: 1,
-        avatarId: 100,
+        avatarId: '',
       };
 
       const avatar = new MediaAsset({
@@ -104,7 +104,7 @@ describe('AuthorService', () => {
         filename: 'avatar.jpg',
         mime_type: 'image/jpeg',
         file_size: 1024,
-        collection_id: 1,
+        collection_id: '',
         tenant_id: 1,
         created_by: 1,
       });
@@ -114,11 +114,11 @@ describe('AuthorService', () => {
       mockMediaAssetRepo.findById.mockResolvedValue(avatar);
 
       const createdAuthor = new Author({
-        id: 1,
+        id: '',
         firstName: 'John',
         lastName: 'Doe',
         tenantId: 1,
-        avatarId: 100,
+        avatarId: '',
         active: true,
       });
 
@@ -135,7 +135,7 @@ describe('AuthorService', () => {
         firstName: 'John',
         lastName: 'Doe',
         tenantId: 1,
-        avatarId: 999,
+        avatarId: '',
       };
 
       mockMediaAssetRepo.findById.mockResolvedValue(null);
@@ -150,7 +150,7 @@ describe('AuthorService', () => {
   describe('updateAuthor', () => {
     it('should update an author successfully', async () => {
       const existingAuthor = new Author({
-        id: 1,
+        id: '',
         firstName: 'John',
         lastName: 'Doe',
         tenantId: 1,
@@ -163,7 +163,7 @@ describe('AuthorService', () => {
       };
 
       const updatedAuthor = new Author({
-        id: 1,
+        id: '',
         firstName: 'Jane',
         lastName: 'Doe',
         biography: 'Updated bio',
@@ -174,7 +174,7 @@ describe('AuthorService', () => {
       mockAuthorRepo.findById.mockResolvedValue(existingAuthor);
       mockAuthorRepo.update.mockResolvedValue(updatedAuthor);
 
-      const result = await service.updateAuthor(1, dto);
+      const result = await service.updateAuthor('', dto);
 
       expect(result.status).toBe(200);
       expect(result.data).toEqual(updatedAuthor);
@@ -183,7 +183,7 @@ describe('AuthorService', () => {
     it('should fail when author not found', async () => {
       mockAuthorRepo.findById.mockResolvedValue(null);
 
-      const result = await service.updateAuthor(999, { firstName: 'Jane' });
+      const result = await service.updateAuthor('', { firstName: 'Jane' });
 
       expect(result.status).toBe(404);
       expect(result.data).toHaveProperty('code', '404:Author not found');
@@ -193,7 +193,7 @@ describe('AuthorService', () => {
   describe('deleteAuthor', () => {
     it('should delete an author without published articles', async () => {
       const existingAuthor = new Author({
-        id: 1,
+        id: '',
         firstName: 'John',
         lastName: 'Doe',
         tenantId: 1,
@@ -204,7 +204,7 @@ describe('AuthorService', () => {
       mockAuthorRepo.hasPublishedArticles.mockResolvedValue(false);
       mockAuthorRepo.delete.mockResolvedValue(undefined);
 
-      const result = await service.deleteAuthor(1);
+      const result = await service.deleteAuthor('');
 
       expect(result.status).toBe(204);
       expect(mockAuthorRepo.delete).toHaveBeenCalledWith(1);
@@ -212,7 +212,7 @@ describe('AuthorService', () => {
 
     it('should fail when author has published articles', async () => {
       const existingAuthor = new Author({
-        id: 1,
+        id: '',
         firstName: 'John',
         lastName: 'Doe',
         tenantId: 1,
@@ -222,7 +222,7 @@ describe('AuthorService', () => {
       mockAuthorRepo.findById.mockResolvedValue(existingAuthor);
       mockAuthorRepo.hasPublishedArticles.mockResolvedValue(true);
 
-      const result = await service.deleteAuthor(1);
+      const result = await service.deleteAuthor('');
 
       expect(result.status).toBe(400);
       expect(result.data).toHaveProperty(
@@ -235,7 +235,7 @@ describe('AuthorService', () => {
     it('should fail when author not found', async () => {
       mockAuthorRepo.findById.mockResolvedValue(null);
 
-      const result = await service.deleteAuthor(999);
+      const result = await service.deleteAuthor('');
 
       expect(result.status).toBe(404);
       expect(result.data).toHaveProperty('code', '404:Author not found');
@@ -245,7 +245,7 @@ describe('AuthorService', () => {
   describe('assignAvatar', () => {
     it('should assign avatar successfully', async () => {
       const existingAuthor = new Author({
-        id: 1,
+        id: '',
         firstName: 'John',
         lastName: 'Doe',
         tenantId: 1,
@@ -258,7 +258,7 @@ describe('AuthorService', () => {
         filename: 'avatar.jpg',
         mime_type: 'image/jpeg',
         file_size: 1024,
-        collection_id: 1,
+        collection_id: '',
         tenant_id: 1,
         created_by: 1,
       });
@@ -267,23 +267,23 @@ describe('AuthorService', () => {
 
       const updatedAuthor = new Author({
         ...existingAuthor,
-        avatarId: 100,
+        avatarId: '',
       });
 
       mockAuthorRepo.findById.mockResolvedValue(existingAuthor);
       mockMediaAssetRepo.findById.mockResolvedValue(avatar);
       mockAuthorRepo.update.mockResolvedValue(updatedAuthor);
 
-      const result = await service.assignAvatar(1, 100);
+      const result = await service.assignAvatar('', String(100));
 
       expect(result.status).toBe(200);
       expect(result.data).toEqual(updatedAuthor);
-      expect(mockAuthorRepo.update).toHaveBeenCalledWith(1, { avatarId: 100 });
+      expect(mockAuthorRepo.update).toHaveBeenCalledWith(1, { avatarId: '' });
     });
 
     it('should fail when avatar tenant mismatch', async () => {
       const existingAuthor = new Author({
-        id: 1,
+        id: '',
         firstName: 'John',
         lastName: 'Doe',
         tenantId: 1,
@@ -296,7 +296,7 @@ describe('AuthorService', () => {
         filename: 'avatar.jpg',
         mime_type: 'image/jpeg',
         file_size: 1024,
-        collection_id: 1,
+        collection_id: '',
         tenant_id: 2, // Different tenant
         created_by: 1,
       });
@@ -306,7 +306,7 @@ describe('AuthorService', () => {
       mockAuthorRepo.findById.mockResolvedValue(existingAuthor);
       mockMediaAssetRepo.findById.mockResolvedValue(avatar);
 
-      const result = await service.assignAvatar(1, 100);
+      const result = await service.assignAvatar('', String(100));
 
       expect(result.status).toBe(400);
       expect(result.data).toHaveProperty(

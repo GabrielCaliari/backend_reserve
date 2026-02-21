@@ -102,7 +102,7 @@ describe('RolesGuard', () => {
       mockAdminRepository.selectById.mockResolvedValue({ id: 1, active: true, role: EAdminRole.company_admin });
 
       // Admin has editor role in tenant 10
-      adminTenantRepo.seed({ admin_id: 1, tenant_id: 10, role: EAdminRole.editor });
+      adminTenantRepo.seed({ admin_id: '1', tenant_id: 10, role: EAdminRole.editor });
 
       const ctx = createMockContext({ tenant_id: 10 });
       const result = await guard.canActivate(ctx);
@@ -115,7 +115,7 @@ describe('RolesGuard', () => {
       mockAdminRepository.selectById.mockResolvedValue({ id: 1, active: true, role: EAdminRole.company_admin });
 
       // Admin has viewer role in tenant 10 (lower than manager)
-      adminTenantRepo.seed({ admin_id: 1, tenant_id: 10, role: EAdminRole.viewer });
+      adminTenantRepo.seed({ admin_id: '1', tenant_id: 10, role: EAdminRole.viewer });
 
       const ctx = createMockContext({ tenant_id: 10 });
 
@@ -146,7 +146,7 @@ describe('RolesGuard', () => {
       jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue([EAdminRole.editor]);
       mockAdminRepository.selectById.mockResolvedValue({ id: 1, active: true, role: EAdminRole.company_admin });
 
-      adminTenantRepo.seed({ admin_id: 1, tenant_id: 10, role: EAdminRole.owner });
+      adminTenantRepo.seed({ admin_id: '1', tenant_id: 10, role: EAdminRole.owner });
 
       const ctx = createMockContext({ tenant_id: 10 });
       const result = await guard.canActivate(ctx);
@@ -158,7 +158,7 @@ describe('RolesGuard', () => {
       jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue([EAdminRole.company_admin]);
       mockAdminRepository.selectById.mockResolvedValue({ id: 1, active: true, role: EAdminRole.company_admin });
 
-      adminTenantRepo.seed({ admin_id: 1, tenant_id: 10, role: EAdminRole.manager });
+      adminTenantRepo.seed({ admin_id: '1', tenant_id: 10, role: EAdminRole.manager });
 
       const ctx = createMockContext({ tenant_id: 10 });
       const result = await guard.canActivate(ctx);

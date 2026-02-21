@@ -43,7 +43,7 @@ export default class AdminRepository implements IAdminRepository {
         }
     }
 
-    async selectById(id: number) {
+    async selectById(id: string) {
         return this.withRetry(async () => {
             const admin = await this.prisma.admin.findUnique({
                 where: { id },
@@ -52,7 +52,7 @@ export default class AdminRepository implements IAdminRepository {
         }, 'Erro ao selecionar um admin por ID.');
     }
 
-    async selectByIdWithTenants(id: number) {
+    async selectByIdWithTenants(id: string) {
         return this.withRetry(async () => {
             const admin = await this.prisma.admin.findUnique({
                 where: { id },
@@ -133,7 +133,7 @@ export default class AdminRepository implements IAdminRepository {
         }
     }
 
-    async updateRole(id: number, role: EAdminRole) {
+    async updateRole(id: string, role: EAdminRole) {
         try {
             return await this.prisma.admin.update({
                 where: { id },
@@ -144,7 +144,7 @@ export default class AdminRepository implements IAdminRepository {
         }
     }
 
-    async deactivate(id: number) {
+    async deactivate(id: string) {
         try {
             return await this.prisma.admin.update({
                 where: { id },
@@ -155,7 +155,7 @@ export default class AdminRepository implements IAdminRepository {
         }
     }
 
-    async activate(id: number) {
+    async activate(id: string) {
         try {
             return await this.prisma.admin.update({
                 where: { id },
@@ -166,7 +166,7 @@ export default class AdminRepository implements IAdminRepository {
         }
     }
 
-    async update(id: number, data: { name?: string; email?: string }) {
+    async update(id: string, data: { name?: string; email?: string }) {
         try {
             return await this.prisma.admin.update({
                 where: { id },
@@ -177,7 +177,7 @@ export default class AdminRepository implements IAdminRepository {
         }
     }
 
-    async delete(id: number) {
+    async delete(id: string) {
         try {
             await this.prisma.admin.delete({
                 where: { id },

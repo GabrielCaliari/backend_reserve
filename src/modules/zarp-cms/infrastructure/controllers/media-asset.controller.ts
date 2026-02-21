@@ -10,7 +10,7 @@ import {
   UseGuards,
   UseInterceptors,
   UploadedFile,
-  ParseIntPipe,
+  ParseUUIDPipe,
   BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -104,7 +104,7 @@ export class MediaAssetController {
       file,
       dto,
       admin.tenant_id!,
-      admin.admin_id,
+      Number(admin.admin_id),
     );
 
     return {
@@ -126,7 +126,7 @@ export class MediaAssetController {
   @ApiQuery({ name: 'limit', required: false, type: Number, example: 20 })
   @ApiResponse({ status: 200, description: 'Assets retrieved successfully' })
   async list(
-    @Query('collection_id') collectionId?: number,
+    @Query('collection_id') collectionId?: string,
     @Query('status') status?: EAssetStatus,
     @Query('mime_type') mimeType?: string,
     @Query('page') page?: number,
@@ -158,7 +158,7 @@ export class MediaAssetController {
   @ApiResponse({ status: 200, description: 'Asset retrieved successfully' })
   @ApiResponse({ status: 404, description: 'Asset not found' })
   async findOne(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseUUIDPipe) id: string,
     @CurrentAdmin() admin: CurrentAdminPayload,
   ) {
     const result = await this.assetService.getAssetById(id, admin.tenant_id!);
@@ -188,7 +188,7 @@ export class MediaAssetController {
   @ApiResponse({ status: 200, description: 'Asset updated successfully' })
   @ApiResponse({ status: 404, description: 'Asset not found' })
   async update(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() data: { alt_text?: string; metadata?: Record<string, any> },
     @CurrentAdmin() admin: CurrentAdminPayload,
   ) {
@@ -215,7 +215,7 @@ export class MediaAssetController {
   @ApiResponse({ status: 200, description: 'Asset deleted successfully' })
   @ApiResponse({ status: 404, description: 'Asset not found' })
   async remove(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseUUIDPipe) id: string,
     @CurrentAdmin() admin: CurrentAdminPayload,
   ) {
     const result = await this.assetService.deleteAsset(id, admin.tenant_id!);

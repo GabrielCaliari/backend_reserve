@@ -11,7 +11,15 @@ export class PrismaArticleImageRepository implements IArticleImageRepository {
 
   async create(data: ICreateArticleImage): Promise<any> {
     return this.prisma.articleImage.create({
-      data,
+      data: {
+        article_id: String(data.article_id),
+        url: data.url,
+        storage_key: data.storage_key,
+        display_order: data.display_order,
+        alt_text: data.alt_text,
+        file_size: data.file_size,
+        original_format: data.original_format,
+      },
     });
   }
 
@@ -23,14 +31,14 @@ export class PrismaArticleImageRepository implements IArticleImageRepository {
 
   async findAllByArticleId(articleId: number): Promise<any[]> {
     return this.prisma.articleImage.findMany({
-      where: { article_id: articleId },
+      where: { article_id: String(articleId) },
       orderBy: { display_order: 'asc' },
     });
   }
 
   async countByArticleId(articleId: number): Promise<number> {
     return this.prisma.articleImage.count({
-      where: { article_id: articleId },
+      where: { article_id: String(articleId) },
     });
   }
 
@@ -53,7 +61,7 @@ export class PrismaArticleImageRepository implements IArticleImageRepository {
 
   async deleteAllByArticleId(articleId: number): Promise<void> {
     await this.prisma.articleImage.deleteMany({
-      where: { article_id: articleId },
+      where: { article_id: String(articleId) },
     });
   }
 }

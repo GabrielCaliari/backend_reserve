@@ -107,7 +107,7 @@ export class ArticleService {
         content: dto.content,
         slug: dto.slug,
         status: EArticleStatus.draft,
-        displayOrder: dto.displayOrder ?? 0,
+        displayOrder: 0,
         coverImageId: dto.coverImageId ?? null,
         authorId: dto.authorId,
         blogId: blogId,
@@ -163,14 +163,14 @@ export class ArticleService {
       }
 
       // Prevent slug changes for published articles (Requirement 2.4)
-      if (dto.slug && dto.slug !== existingArticle.slug) {
+      if (existingArticle.slug) {
         if (existingArticle.status === EArticleStatus.published) {
           return errorResponse(ERROR_ARTICLE_SLUG_IMMUTABLE, 400);
         }
 
         // Validate new slug uniqueness
         const slugValidation = await this.validateSlugUniqueness(
-          dto.slug,
+          existingArticle.slug,
           existingArticle.blogId,
           id,
         );
@@ -272,6 +272,12 @@ export class ArticleService {
         return errorResponse(ERROR_ARTICLE_NOT_FOUND, 404);
       }
 
+      // Get blog to obtain tenantId
+      const blog = await this.blogRepository.findById(article.blogId);
+      if (!blog) {
+        return errorResponse(ERROR_BLOG_NOT_FOUND, 404);
+      }
+
       // Validate all required fields for publishing
       if (!article.canPublish()) {
         const missingFields: string[] = [];
@@ -295,14 +301,13 @@ export class ArticleService {
           status: 400,
           data: {
             code: ERROR_ARTICLE_CANNOT_PUBLISH,
-            message: 'Article cannot be published: missing required fields',
-            missingFields,
+            message: `Article cannot be published: missing required fields - ${missingFields.join(', ')}`,
           },
         };
       }
 
       // Validate image references in markdown (Requirement 7.4)
-      const imageValidation = await this.validateImageReferences(article.content);
+      const imageValidation = await this.validateImageReferences(article.content, blog.tenantId);
       if (!imageValidation.valid) {
         return errorResponse(ERROR_INVALID_IMAGE_REFERENCE, 400, {
           invalidReferences: imageValidation.invalidReferences,
@@ -382,6 +387,7 @@ export class ArticleService {
    */
   async validateImageReferences(
     content: string,
+    tenantId: number,
   ): Promise<{ valid: boolean; invalidReferences?: string[] }> {
     // Extract image references from markdown: ![alt](storage_key) or ![alt](url)
     const imageRegex = /!\[([^\]]*)\]\(([^)]+)\)/g;
@@ -399,7 +405,7 @@ export class ArticleService {
       // Check if reference is a UUID (12-character string)
       if (/^[a-z0-9]{12}$/.test(reference)) {
         // Validate that the asset exists
-        const asset = await this.mediaAssetRepository.findById(reference);
+        const asset = await this.mediaAssetRepository.findById(reference, tenantId);
         if (!asset) {
           invalidReferences.push(reference);
         }
@@ -564,7 +570,7 @@ export class ArticleService {
     const result = await this.articleRepository.findByBlogId(blogId, {
       status: EArticleStatus.published,
     });
-    return result.items || [];
+    return result.data || [];
   }
 
   /**

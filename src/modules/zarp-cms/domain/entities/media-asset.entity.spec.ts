@@ -8,7 +8,7 @@ describe('MediaAsset Entity', () => {
     filename: 'test.png',
     mime_type: 'image/webp',
     file_size: 1024,
-    collection_id: 1,
+    collection_id: '',
     tenant_id: 1,
     created_by: 1,
   };
@@ -76,7 +76,7 @@ describe('MediaAsset Entity', () => {
     });
 
     it('should throw error when collection_id is zero or negative', () => {
-      const invalidData = { ...validAssetData, collection_id: 0 };
+      const invalidData = { ...validAssetData, collection_id: '' };
       expect(() => new MediaAsset(invalidData)).toThrow('Collection ID must be greater than 0');
     });
 

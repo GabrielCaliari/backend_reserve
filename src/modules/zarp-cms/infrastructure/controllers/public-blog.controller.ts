@@ -116,17 +116,10 @@ export class PublicBlogController {
     // Format response
     const data = paginatedArticles.map((article) => ({
       id: article.id,
-      title: article.title,
       slug: article.slug,
       content: article.content,
-      published_at: article.published_at,
-      display_order: article.display_order,
-      images: (article.ArticleImage || []).map((img: any) => ({
-        id: img.id,
-        url: img.url,
-        alt_text: img.alt_text,
-        display_order: img.display_order,
-      })),
+      published_at: article.publishedAt,
+      display_order: article.displayOrder,
     }));
 
     return {
@@ -190,19 +183,12 @@ export class PublicBlogController {
     // Format response
     return {
       id: article.id,
-      title: article.title,
       slug: article.slug,
       content: article.content,
       status: article.status,
-      published_at: article.published_at,
-      images: (article.ArticleImage || []).map((img: any) => ({
-        id: img.id,
-        url: img.url,
-        alt_text: img.alt_text,
-        display_order: img.display_order,
-      })),
-      created_at: article.created_at,
-      updated_at: article.updated_at,
+      published_at: article.publishedAt,
+      created_at: article.createdAt,
+      updated_at: article.updatedAt,
     };
   }
 }

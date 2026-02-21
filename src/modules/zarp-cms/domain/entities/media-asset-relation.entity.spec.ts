@@ -2,9 +2,10 @@ import { MediaAssetRelation, ICreateMediaAssetRelation } from './media-asset-rel
 
 describe('MediaAssetRelation Entity', () => {
   const validRelationData: ICreateMediaAssetRelation = {
-    asset_id: 1,
+    asset_id: '',
     entity_type: 'article',
-    entity_id: 100,
+    entity_id: String(100),
+    entity_id_type: 'int',
     relation_type: 'gallery',
   };
 

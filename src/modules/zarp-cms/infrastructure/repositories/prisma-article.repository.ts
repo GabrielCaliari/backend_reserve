@@ -8,7 +8,7 @@ import {
 } from '../../domain/interfaces/article.repository.interface';
 import { Article } from '../../domain/entities/article.entity';
 import { EArticleStatus } from '../../domain/enums/article-status.enum';
-import { Article as PrismaArticle } from '@prisma/client';
+import { Article as PrismaArticle } from '../../../../../src/generated/prisma/client';
 
 @Injectable()
 export class PrismaArticleRepository implements IArticleRepository {

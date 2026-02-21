@@ -120,9 +120,9 @@ export class ArticlePresenter {
         coverImage: article.coverImageId
           ? options?.coverImages?.get(article.coverImageId)
           : undefined,
-        creator: options?.creators?.get(article.createdBy),
+        creator: options?.creators?.get(Number(article.createdBy)),
         lastEditor: article.lastEditedBy
-          ? options?.lastEditors?.get(article.lastEditedBy)
+          ? options?.lastEditors?.get(Number(article.lastEditedBy))
           : undefined,
       }),
     );

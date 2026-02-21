@@ -75,7 +75,7 @@ describe('ArticleService', () => {
       };
 
       const mockAuthor = {
-        id: 1,
+        id: '',
         firstName: 'John',
         lastName: 'Doe',
         tenantId: 1,
@@ -83,14 +83,14 @@ describe('ArticleService', () => {
       };
 
       const mockArticle = {
-        id: 1,
+        id: '',
         displayTitle: 'Test Article',
         metaTitle: 'Test Meta',
         content: 'Test content',
         slug: 'test-article',
         status: EArticleStatus.draft,
         blogId: 'blog123',
-        authorId: 1,
+        authorId: '',
         createdBy: 1,
       };
 
@@ -107,9 +107,9 @@ describe('ArticleService', () => {
           content: 'Test content',
           slug: 'test-article',
           blogId: 'blog123',
-          authorId: 1,
+          authorId: '',
         },
-        1, // currentAdminId
+        String(1), // currentAdminId
       );
 
       expect(result.status).toBe(201);
@@ -120,7 +120,7 @@ describe('ArticleService', () => {
   describe('findById', () => {
     it('should return an article by id', async () => {
       const mockArticle = {
-        id: 1,
+        id: '',
         displayTitle: 'Test Article',
         metaTitle: 'Test Meta',
         content: 'Test content',
@@ -130,7 +130,7 @@ describe('ArticleService', () => {
 
       articleRepository.findById.mockResolvedValue(mockArticle as any);
 
-      const result = await service.findById(1);
+      const result = await service.findById('');
 
       expect(result.status).toBe(200);
       expect(result.data).toEqual(mockArticle);
@@ -139,7 +139,7 @@ describe('ArticleService', () => {
     it('should return 404 if article not found', async () => {
       articleRepository.findById.mockResolvedValue(null);
 
-      const result = await service.findById(999);
+      const result = await service.findById('');
 
       expect(result.status).toBe(404);
     });

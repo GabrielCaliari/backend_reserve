@@ -1,49 +1,57 @@
 import {
   IArticleRepository,
-  ICreateArticle,
 } from '../../../modules/zarp-cms/domain/interfaces/article.repository.interface';
+import { Article } from '../../../modules/zarp-cms/domain/entities/article.entity';
 
 export class InMemoryArticleRepository implements IArticleRepository {
   private articles: any[] = [];
   private idCounter = 1;
 
-  async create(data: ICreateArticle): Promise<any> {
+  async create(data: any): Promise<any> {
     const article = {
-      id: this.idCounter++,
+      id: String(this.idCounter++),
       ...data,
       status: 'draft',
-      display_order: 0,
-      published_at: null,
-      created_at: new Date(),
-      updated_at: new Date(),
+      displayOrder: 0,
+      publishedAt: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
     };
     this.articles.push(article);
     return article;
   }
 
-  async findById(id: number): Promise<any> {
+  async findById(id: string): Promise<any> {
     return this.articles.find((a) => a.id === id) || null;
   }
 
-  async findBySlugAndBlogId(slug: string, blogId: number): Promise<any> {
-    return this.articles.find((a) => a.slug === slug && a.blog_id === blogId) || null;
+  async findBySlugAndBlogId(slug: string, blogId: string): Promise<any> {
+    return this.articles.find((a) => a.slug === slug && a.blogId === blogId) || null;
   }
 
-  async existsBySlugAndBlogId(slug: string, blogId: number): Promise<boolean> {
+  async findByBlogId(blogId: string, options?: any): Promise<any> {
+    return this.articles.filter((a) => a.blogId === blogId);
+  }
+
+  async countByAuthorId(authorId: string): Promise<number> {
+    return this.articles.filter((a) => a.authorId === authorId).length;
+  }
+
+  async existsBySlugAndBlogId(slug: string, blogId: string): Promise<boolean> {
     return this.articles.some((a) => a.slug === slug && a.blog_id === blogId);
   }
 
-  async findAllByBlogId(blogId: number): Promise<any[]> {
+  async findAllByBlogId(blogId: string): Promise<any[]> {
     return this.articles.filter((a) => a.blog_id === blogId);
   }
 
-  async findPublishedByBlogId(blogId: number): Promise<any[]> {
+  async findPublishedByBlogId(blogId: string): Promise<any[]> {
     return this.articles
       .filter((a) => a.blog_id === blogId && a.status === 'published')
       .sort((a, b) => a.display_order - b.display_order);
   }
 
-  async findPublishedBySlugAndBlogId(slug: string, blogId: number): Promise<any> {
+  async findPublishedBySlugAndBlogId(slug: string, blogId: string): Promise<any> {
     return (
       this.articles.find(
         (a) => a.slug === slug && a.blog_id === blogId && a.status === 'published',
@@ -51,7 +59,7 @@ export class InMemoryArticleRepository implements IArticleRepository {
     );
   }
 
-  async update(id: number, data: Partial<any>): Promise<any> {
+  async update(id: string, data: Partial<any>): Promise<any> {
     const index = this.articles.findIndex((a) => a.id === id);
     if (index === -1) return null;
 
@@ -63,7 +71,7 @@ export class InMemoryArticleRepository implements IArticleRepository {
     return this.articles[index];
   }
 
-  async updateDisplayOrders(items: { id: number; display_order: number }[]): Promise<void> {
+  async updateDisplayOrders(items: { id: string; display_order: number }[]): Promise<void> {
     items.forEach((item) => {
       const article = this.articles.find((a) => a.id === item.id);
       if (article) {
@@ -73,7 +81,7 @@ export class InMemoryArticleRepository implements IArticleRepository {
     });
   }
 
-  async delete(id: number): Promise<void> {
+  async delete(id: string): Promise<void> {
     const index = this.articles.findIndex((a) => a.id === id);
     if (index !== -1) {
       this.articles.splice(index, 1);

@@ -159,7 +159,7 @@ export class MediaRelationService {
     const assetIds = relations.map((r) => r.asset_id);
     const assets = await Promise.all(
       assetIds.map((id) =>
-        this.assetRepo.findById(id, relations[0]?.asset_id || 0),
+        this.assetRepo.findById(id, Number(relations[0]?.asset_id) || 0),
       ),
     );
 

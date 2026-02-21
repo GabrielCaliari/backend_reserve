@@ -59,7 +59,7 @@ export class AuthorController {
       return res.status(result.status).json(result.data);
     }
 
-    const presented = AuthorPresenter.present(result.data);
+    const presented = AuthorPresenter.present(result.data as any);
     return res.status(result.status).json(presented);
   }
 
@@ -81,7 +81,7 @@ export class AuthorController {
       return res.status(result.status).json(result.data);
     }
 
-    const presented = AuthorPresenter.present(result.data);
+    const presented = AuthorPresenter.present(result.data as any);
     return res.status(result.status).json(presented);
   }
 
@@ -97,7 +97,7 @@ export class AuthorController {
       return res.status(result.status).json(result.data);
     }
 
-    const presented = AuthorPresenter.present(result.data);
+    const presented = AuthorPresenter.present(result.data as any);
     return res.status(result.status).json(presented);
   }
 
@@ -133,7 +133,7 @@ export class AuthorController {
       return res.status(result.status).json(result.data);
     }
 
-    const presented = AuthorPresenter.presentPaginated(result.data);
+    const presented = AuthorPresenter.presentPaginated(result.data as any);
     return res.status(result.status).json(presented);
   }
 
@@ -208,7 +208,7 @@ export class AuthorController {
       return res.status(result.status).json(result.data);
     }
 
-    const presented = AuthorPresenter.present(result.data);
+    const presented = AuthorPresenter.present(result.data as any);
     return res.status(result.status).json(presented);
   }
 }

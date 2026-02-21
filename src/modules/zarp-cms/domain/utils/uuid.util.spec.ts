@@ -1,4 +1,4 @@
-import { isValidUUID, validateUUID } from './uuid.util';
+import { isValidUUID, assertValidUUID } from './uuid.util';
 
 describe('UUID Utility Functions', () => {
   describe('isValidUUID', () => {
@@ -46,30 +46,30 @@ describe('UUID Utility Functions', () => {
     });
   });
 
-  describe('validateUUID', () => {
+  describe('assertValidUUID', () => {
     it('should not throw for valid UUID', () => {
-      expect(() => validateUUID('ckl1234abcd5')).not.toThrow();
-      expect(() => validateUUID('cl9876zyxwvu', 'blogId')).not.toThrow();
+      expect(() => assertValidUUID('ckl1234abcd5', 'ID')).not.toThrow();
+      expect(() => assertValidUUID('cl9876zyxwvu', 'blogId')).not.toThrow();
     });
 
     it('should throw error for invalid UUID with default field name', () => {
-      expect(() => validateUUID('invalid')).toThrow('Invalid UUID format for ID: invalid');
-      expect(() => validateUUID('')).toThrow('Invalid UUID format for ID: ');
+      expect(() => assertValidUUID('invalid', 'ID')).toThrow('ID must be a valid UUID (12-character cuid)');
+      expect(() => assertValidUUID('', 'ID')).toThrow('ID must be a valid UUID (12-character cuid)');
     });
 
     it('should throw error for invalid UUID with custom field name', () => {
-      expect(() => validateUUID('short', 'articleId')).toThrow(
-        'Invalid UUID format for articleId: short'
+      expect(() => assertValidUUID('short', 'articleId')).toThrow(
+        'articleId must be a valid UUID (12-character cuid)'
       );
-      expect(() => validateUUID('toolong123456', 'blogId')).toThrow(
-        'Invalid UUID format for blogId: toolong123456'
+      expect(() => assertValidUUID('toolong123456', 'blogId')).toThrow(
+        'blogId must be a valid UUID (12-character cuid)'
       );
     });
 
     it('should throw error for non-string values', () => {
-      expect(() => validateUUID(null as any)).toThrow('Invalid UUID format for ID: null');
-      expect(() => validateUUID(undefined as any)).toThrow('Invalid UUID format for ID: undefined');
-      expect(() => validateUUID(123 as any, 'userId')).toThrow('Invalid UUID format for userId: 123');
+      expect(() => assertValidUUID(null as any, 'ID')).toThrow('ID must be a valid UUID (12-character cuid)');
+      expect(() => assertValidUUID(undefined as any, 'ID')).toThrow('ID must be a valid UUID (12-character cuid)');
+      expect(() => assertValidUUID(123 as any, 'userId')).toThrow('userId must be a valid UUID (12-character cuid)');
     });
   });
 });

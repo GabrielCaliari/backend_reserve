@@ -52,9 +52,11 @@ export default class LeadRepository implements ILeadRepository {
 
     async update(lead_id: string, data: Partial<ILead>) {
         try {
+            // Remove id from data to avoid type conflicts
+            const { id, ...updateData } = data;
             const raw = await this.prisma.lead.update({
                 where: { id: lead_id },
-                data
+                data: updateData as any
             });
 
             return raw;
@@ -65,9 +67,11 @@ export default class LeadRepository implements ILeadRepository {
 
     async updateMany(where: Prisma.LeadWhereInput, data: Partial<ILead>) {
         try {
+            // Remove id from data to avoid type conflicts
+            const { id, ...updateData } = data;
             const raw = await this.prisma.lead.updateMany({
                 where,
-                data
+                data: updateData as any
             });
 
             return raw;

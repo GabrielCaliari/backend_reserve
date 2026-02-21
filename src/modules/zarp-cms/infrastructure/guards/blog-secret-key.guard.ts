@@ -27,7 +27,7 @@ export class BlogSecretKeyGuard implements CanActivate {
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { secret_key_hash: _h, secret_key_salt: _s, ...rest } = blog;
+    const { secretKeyHash: _h, secretKeySalt: _s, ...rest } = blog;
     request.blog = rest;
 
     return true;

@@ -59,7 +59,7 @@ export class ArticleController {
       return res.status(result.status).json(result.data);
     }
 
-    const presented = ArticlePresenter.present(result.data);
+    const presented = ArticlePresenter.present(result.data as any);
     return res.status(result.status).json(presented);
   }
 
@@ -95,7 +95,7 @@ export class ArticleController {
     }
 
     // Present the paginated result
-    const presented = ArticlePresenter.presentPaginated(result.data);
+    const presented = ArticlePresenter.presentPaginated(result.data as any);
     return res.status(result.status).json(presented);
   }
 
@@ -114,7 +114,7 @@ export class ArticleController {
       return res.status(result.status).json(result.data);
     }
 
-    const presented = ArticlePresenter.present(result.data);
+    const presented = ArticlePresenter.present(result.data as any);
     return res.status(result.status).json(presented);
   }
 
@@ -138,7 +138,7 @@ export class ArticleController {
       return res.status(result.status).json(result.data);
     }
 
-    const presented = ArticlePresenter.present(result.data);
+    const presented = ArticlePresenter.present(result.data as any);
     return res.status(result.status).json(presented);
   }
 
@@ -179,7 +179,7 @@ export class ArticleController {
       return res.status(result.status).json(result.data);
     }
 
-    const presented = ArticlePresenter.present(result.data);
+    const presented = ArticlePresenter.present(result.data as any);
     return res.status(result.status).json(presented);
   }
 

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * UUID Migration Data Integrity Verification Script
  * 

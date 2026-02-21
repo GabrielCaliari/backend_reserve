@@ -7,7 +7,7 @@ import {
   PaginatedResult,
 } from '../../domain/interfaces/author.repository.interface';
 import { Author } from '../../domain/entities/author.entity';
-import { Author as PrismaAuthor } from '@prisma/client';
+import { Author as PrismaAuthor } from '../../../../../src/generated/prisma/client';
 import { EArticleStatus } from '../../domain/enums/article-status.enum';
 
 @Injectable()

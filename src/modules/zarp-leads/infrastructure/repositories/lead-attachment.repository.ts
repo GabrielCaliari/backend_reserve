@@ -13,7 +13,7 @@ export class PrismaLeadAttachmentRepository implements ILeadAttachmentRepository
     const attachment = await this.prisma.leadAttachment.create({
       data: {
         lead_id: leadId,
-        asset_id: assetId,
+        asset_id: String(assetId),
         label,
       },
     });

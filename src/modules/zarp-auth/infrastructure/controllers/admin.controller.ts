@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, ParseIntPipe, Patch, Post, Req, Res, UseGuards, Delete } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseUUIDPipe, Patch, Post, Req, Res, UseGuards, Delete } from '@nestjs/common';
 import { AdminService } from '../../application/services/admin.service';
 import { Request, Response } from 'express';
 import AuthAdminDTO from '../../application/dtos/auth-admin.dto';
@@ -137,7 +137,7 @@ export class AdminController {
     @ApiResponse({ status: 403, description: 'Insufficient permissions' })
     @ApiResponse({ status: 404, description: 'Admin not found' })
     async updateRole(
-        @Param('id', ParseIntPipe) id: number,
+        @Param('id', ParseUUIDPipe) id: string,
         @Body() data: UpdateAdminRoleDTO,
         @Res() res: Response,
     ) {
@@ -168,7 +168,7 @@ export class AdminController {
     @ApiResponse({ status: 403, description: 'Insufficient permissions' })
     @ApiResponse({ status: 404, description: 'Admin not found' })
     async deactivate(
-        @Param('id', ParseIntPipe) id: number,
+        @Param('id', ParseUUIDPipe) id: string,
         @CurrentAdmin() admin: CurrentAdminPayload,
         @Res() res: Response,
     ) {
@@ -198,7 +198,7 @@ export class AdminController {
     @ApiResponse({ status: 403, description: 'Insufficient permissions' })
     @ApiResponse({ status: 404, description: 'Admin not found' })
     async activate(
-        @Param('id', ParseIntPipe) id: number,
+        @Param('id', ParseUUIDPipe) id: string,
         @Res() res: Response,
     ) {
         const result = await this.adminService.activate(id);
@@ -222,7 +222,7 @@ export class AdminController {
     @ApiResponse({ status: 403, description: 'Insufficient permissions' })
     @ApiResponse({ status: 404, description: 'Admin not found' })
     async findById(
-        @Param('id', ParseIntPipe) id: number,
+        @Param('id', ParseUUIDPipe) id: string,
         @Res() res: Response,
     ) {
         const result = await this.adminService.findById(id);
@@ -254,7 +254,7 @@ export class AdminController {
     @ApiResponse({ status: 403, description: 'Insufficient permissions' })
     @ApiResponse({ status: 404, description: 'Admin not found' })
     async update(
-        @Param('id', ParseIntPipe) id: number,
+        @Param('id', ParseUUIDPipe) id: string,
         @Body() data: UpdateAdminDTO,
         @Res() res: Response,
     ) {
@@ -284,7 +284,7 @@ export class AdminController {
     @ApiResponse({ status: 403, description: 'Insufficient permissions' })
     @ApiResponse({ status: 404, description: 'Admin not found' })
     async delete(
-        @Param('id', ParseIntPipe) id: number,
+        @Param('id', ParseUUIDPipe) id: string,
         @CurrentAdmin() admin: CurrentAdminPayload,
         @Res() res: Response,
     ) {

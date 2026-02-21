@@ -41,7 +41,7 @@ export class ArticleImageService {
     altText?: string,
   ): Promise<any> {
     // Verify article exists
-    const article = await this.articleRepository.findById(articleId);
+    const article = await this.articleRepository.findById(String(articleId));
     if (!article) {
       throw new ArticleNotFoundError();
     }
@@ -85,8 +85,8 @@ export class ArticleImageService {
     return this.imageRepository.findAllByArticleId(articleId);
   }
 
-  async delete(id: number): Promise<void> {
-    const image = await this.imageRepository.findById(id);
+  async delete(id: string): Promise<void> {
+    const image = await this.imageRepository.findById(Number(id));
     if (!image) {
       throw new NotFoundException('Image not found');
     }
@@ -95,14 +95,14 @@ export class ArticleImageService {
     await this.storageProvider.delete(image.storage_key);
 
     // Delete from database
-    await this.imageRepository.delete(id);
+    await this.imageRepository.delete(Number(id));
   }
 
   async reorderImages(
     articleId: number,
-    items: { id: number; display_order: number }[],
+    items: { id: string; display_order: number }[],
   ): Promise<void> {
     // TODO: Validate that all image IDs belong to the article
-    await this.imageRepository.updateDisplayOrders(items);
+    await this.imageRepository.updateDisplayOrders(items.map(item => ({ id: Number(item.id), display_order: item.display_order })));
   }
 }

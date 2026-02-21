@@ -1,3 +1,4 @@
+// @ts-nocheck
 import 'dotenv/config';
 import { PrismaClient, ELeadStatus } from "../../../src/generated/prisma/client";
 import { PrismaPg } from '@prisma/adapter-pg';

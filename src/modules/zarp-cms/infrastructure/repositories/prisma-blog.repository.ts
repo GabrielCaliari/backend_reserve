@@ -3,7 +3,7 @@ import { PrismaService } from '../../../../shared/database/prisma.service';
 import { RepositoryException } from '../../../../shared/exceptions';
 import { IBlogRepository } from '../../domain/interfaces/blog.repository.interface';
 import { Blog } from '../../domain/entities/blog.entity';
-import { Blog as PrismaBlog } from '@prisma/client';
+import { Blog as PrismaBlog } from '../../../../../src/generated/prisma/client';
 
 @Injectable()
 export class PrismaBlogRepository implements IBlogRepository {

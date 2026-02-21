@@ -13,7 +13,7 @@ export class UserTokenValidator implements ITokenValidator {
     private readonly userSessionTokenRepository: UserSessionTokenRepository,
   ) {}
 
-  async validate(token: string, sessionId: number): Promise<{ valid: boolean; userId?: number }> {
+  async validate(token: string, sessionId: number): Promise<{ valid: boolean; userId?: string }> {
     try {
       const result = await this.userSessionTokenRepository.validateToken(sessionId, token);
 
@@ -21,7 +21,7 @@ export class UserTokenValidator implements ITokenValidator {
         return { valid: false };
       }
 
-      return { valid: true, userId: result.user_id };
+      return { valid: true, userId: String(result.user_id) };
     } catch {
       return { valid: false };
     }

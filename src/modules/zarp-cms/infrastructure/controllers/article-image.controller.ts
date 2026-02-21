@@ -118,7 +118,7 @@ export class ArticleImageController {
   @ApiResponse({ status: 403, description: 'Insufficient role' })
   @ApiResponse({ status: 404, description: 'Image or article not found' })
   async delete(@Param('imageId', ParseIntPipe) imageId: number): Promise<any> {
-    await this.imageService.delete(imageId);
+    await this.imageService.delete(String(imageId));
     return { message: 'Image deleted successfully' };
   }
 
@@ -132,7 +132,7 @@ export class ArticleImageController {
     @Param('articleId', ParseIntPipe) articleId: number,
     @Body() dto: ReorderImagesDTO,
   ): Promise<any> {
-    await this.imageService.reorderImages(articleId, dto.order);
+    await this.imageService.reorderImages(articleId, dto.order.map(item => ({ id: String(item.id), display_order: item.display_order })));
     return { message: 'Images reordered successfully' };
   }
 }
