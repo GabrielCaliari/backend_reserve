@@ -2,11 +2,11 @@
  * UUID Validation Utilities
  * 
  * Provides validation for UUID format used in CMS entities.
- * UUIDs are 12-character cuid strings.
+ * UUIDs are 25-character CUID2 strings.
  */
 
 /**
- * Validates if a string is a valid UUID (12-character cuid)
+ * Validates if a string is a valid UUID (25-character CUID2)
  * @param value - The string to validate
  * @returns true if valid UUID format, false otherwise
  */
@@ -15,8 +15,8 @@ export function isValidUUID(value: string): boolean {
     return false;
   }
 
-  // UUID format: 12-character lowercase alphanumeric string (cuid)
-  const uuidRegex = /^[a-z0-9]{12}$/;
+  // UUID format: 25-character lowercase alphanumeric string (CUID2)
+  const uuidRegex = /^[a-z0-9]{25}$/;
   return uuidRegex.test(value);
 }
 
@@ -40,6 +40,6 @@ export function isValidUUIDOrNull(value: string | null): boolean {
  */
 export function assertValidUUID(value: string, fieldName: string): void {
   if (!isValidUUID(value)) {
-    throw new Error(`${fieldName} must be a valid UUID (12-character cuid)`);
+    throw new Error(`${fieldName} must be a valid UUID (25-character CUID2)`);
   }
 }

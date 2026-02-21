@@ -402,8 +402,8 @@ export class ArticleService {
     for (const match of matches) {
       const reference = match[2]; // storage_key or url
 
-      // Check if reference is a UUID (12-character string)
-      if (/^[a-z0-9]{12}$/.test(reference)) {
+      // Check if reference is a CUID2 (25-character string)
+      if (/^[a-z0-9]{25}$/.test(reference)) {
         // Validate that the asset exists
         const asset = await this.mediaAssetRepository.findById(reference, tenantId);
         if (!asset) {
@@ -411,7 +411,7 @@ export class ArticleService {
         }
       }
 
-      // For non-UUID references, we assume they're valid URLs or storage keys
+      // For non-CUID2 references, we assume they're valid URLs or storage keys
       // A more robust implementation would query the MediaAsset table by storage_key
     }
 
