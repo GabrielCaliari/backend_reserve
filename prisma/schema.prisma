@@ -627,6 +627,11 @@ model Lead {
   status         Int?             @default(1) @db.SmallInt
   collection_id  Int?
   tenant_id      Int?
+  ip_address     String?          @db.VarChar(45)
+  user_agent     String?          @db.Text
+  country        String?          @db.VarChar(100)
+  city           String?          @db.VarChar(100)
+  region         String?          @db.VarChar(100)
   created_at     DateTime         @default(now())
   updated_at     DateTime         @updatedAt
   LeadCollection LeadCollection?  @relation(fields: [collection_id], references: [id])
@@ -634,6 +639,9 @@ model Lead {
   LeadAttachment LeadAttachment[]
 
   @@index([tenant_id])
+  @@index([country])
+  @@index([city])
+  @@index([created_at])
 }
 
 model LeadQualificationMessage {

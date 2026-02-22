@@ -1,54 +1,40 @@
-import { EAccessMode } from '../enums/access-mode.enum';
-import { CollectionSource } from '../value-objects/collection-source.vo';
-
 export class LeadCollection {
-  id?: number;
-  name: string;
-  slug: string;
-  source: string;
-  sourceType?: string;
-  sourceChannel?: string;
-  sourceCampaign?: string;
-  accessMode: EAccessMode;
-  allowedDomains: string[];
-  active: boolean;
-  metadata?: any;
-  tenantId: number;
-  createdAt?: Date;
-  updatedAt?: Date;
+  public readonly id?: number;
+  public name: string;
+  public slug: string;
+  public source: string;
+  public secretKeyHash: string;
+  public secretKeySalt: string;
+  public active: boolean;
+  public tenantId: number;
+  public readonly createdAt?: Date;
+  public readonly updatedAt?: Date;
 
-  constructor(
-    init?: Partial<LeadCollection>
-  ) {
-    if (init) {
-      Object.assign(this, init);
-    }
-  }
-
-  isPublic(): boolean {
-    return this.accessMode === EAccessMode.public;
-  }
-
-  isPrivate(): boolean {
-    return this.accessMode === EAccessMode.private;
-  }
-
-  isRestricted(): boolean {
-    return this.accessMode === EAccessMode.restricted;
+  constructor(data: {
+    id?: number;
+    name: string;
+    slug: string;
+    source: string;
+    secretKeyHash: string;
+    secretKeySalt: string;
+    active?: boolean;
+    tenantId: number;
+    createdAt?: Date;
+    updatedAt?: Date;
+  }) {
+    this.id = data.id;
+    this.name = data.name;
+    this.slug = data.slug;
+    this.source = data.source;
+    this.secretKeyHash = data.secretKeyHash;
+    this.secretKeySalt = data.secretKeySalt;
+    this.active = data.active ?? true;
+    this.tenantId = data.tenantId;
+    this.createdAt = data.createdAt;
+    this.updatedAt = data.updatedAt;
   }
 
   isActive(): boolean {
-    return this.active === true;
-  }
-
-  getCollectionSource(): CollectionSource | null {
-    if (!this.sourceType) return null;
-    return new CollectionSource(this.sourceType, this.sourceChannel, this.sourceCampaign);
-  }
-
-  setCollectionSource(source: CollectionSource): void {
-    this.sourceType = source.type;
-    this.sourceChannel = source.channel;
-    this.sourceCampaign = source.campaign;
+    return this.active;
   }
 }

@@ -30,6 +30,11 @@ export class Lead {
   public updated_at?: Date;
   public collectionId?: number;
   public tenantId?: number;
+  public ipAddress?: string;
+  public userAgent?: string;
+  public country?: string;
+  public city?: string;
+  public region?: string;
 
   constructor(lead: Lead) {
     this.id = lead.id ?? null;
@@ -45,5 +50,10 @@ export class Lead {
     this.updated_at = lead.updated_at ?? null;
     this.collectionId = lead.collectionId ?? null;
     this.tenantId = lead.tenantId ?? null;
+    this.ipAddress = lead.ipAddress ?? null;
+    this.userAgent = lead.userAgent ?? null;
+    this.country = lead.country ?? null;
+    this.city = lead.city ?? null;
+    this.region = lead.region ?? null;
   }
 }

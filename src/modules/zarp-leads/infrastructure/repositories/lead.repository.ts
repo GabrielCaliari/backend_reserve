@@ -27,6 +27,11 @@ export default class LeadRepository implements ILeadRepository {
                     ...(data.data ? { data: data.data } : {}),
                     ...(data.collectionId ? { collection_id: data.collectionId } : {}),
                     ...(data.tenantId ? { tenant_id: data.tenantId } : {}),
+                    ...(data.ipAddress ? { ip_address: data.ipAddress } : {}),
+                    ...(data.userAgent ? { user_agent: data.userAgent } : {}),
+                    ...(data.country ? { country: data.country } : {}),
+                    ...(data.city ? { city: data.city } : {}),
+                    ...(data.region ? { region: data.region } : {}),
                 }
             });
 
@@ -44,6 +49,11 @@ export default class LeadRepository implements ILeadRepository {
                 updated_at: raw.updated_at,
                 ...(raw.collection_id ? { collectionId: raw.collection_id } : {}),
                 ...(raw.tenant_id ? { tenantId: raw.tenant_id } : {}),
+                ...(raw.ip_address ? { ipAddress: raw.ip_address } : {}),
+                ...(raw.user_agent ? { userAgent: raw.user_agent } : {}),
+                ...(raw.country ? { country: raw.country } : {}),
+                ...(raw.city ? { city: raw.city } : {}),
+                ...(raw.region ? { region: raw.region } : {}),
             });
         } catch (error) {
             throw new RepositoryException('Erro ao criar o lead', error);

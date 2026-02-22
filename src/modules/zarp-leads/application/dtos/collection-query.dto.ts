@@ -1,7 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsBoolean, IsOptional, IsInt, Min } from 'class-validator';
+import { IsBoolean, IsOptional, IsInt, Min } from 'class-validator';
 import { Type, Transform } from 'class-transformer';
-import { EAccessMode } from '../../domain/enums/access-mode.enum';
 
 export class CollectionQueryDto {
   @ApiProperty({ required: false, default: 1 })
@@ -17,11 +16,6 @@ export class CollectionQueryDto {
   @Type(() => Number)
   @IsOptional()
   limit?: number = 10;
-
-  @ApiProperty({ enum: EAccessMode, required: false })
-  @IsEnum(EAccessMode)
-  @IsOptional()
-  access_mode?: EAccessMode;
 
   @ApiProperty({ required: false })
   @IsBoolean()

@@ -27,11 +27,11 @@ export class LeadCollectionController {
   @Roles(EAdminRole.manager, EAdminRole.owner, EAdminRole.super_admin)
   @ApiOperation({ 
     summary: 'Create a new lead collection',
-    description: 'Creates a new lead collection for the authenticated tenant. A unique slug is auto-generated from the name. If access mode is "restricted", a secret key is generated and returned (only shown once).'
+    description: 'Creates a new lead collection for the authenticated tenant. A unique slug is auto-generated from the name. A secret key is generated and returned (only shown once).'
   })
   @ApiResponse({ 
     status: 201, 
-    description: 'Collection created successfully. Returns collection data with optional secretKey if access mode is restricted.',
+    description: 'Collection created successfully with secret key.',
     schema: {
       example: {
         success: true,
@@ -40,10 +40,9 @@ export class LeadCollectionController {
           name: 'Landing Page Home',
           slug: 'landing-page-home',
           source: 'website-main',
-          accessMode: 'public',
-          allowedDomains: [],
           active: true,
           tenantId: 1,
+          secretKey: 'a1b2c3d4e5f6...',
           createdAt: '2026-02-16T10:00:00Z',
           updatedAt: '2026-02-16T10:00:00Z'
         }
@@ -150,8 +149,8 @@ export class LeadCollectionController {
   @Post(':id/regenerate-key')
   @Roles(EAdminRole.manager, EAdminRole.owner, EAdminRole.super_admin)
   @ApiOperation({ 
-    summary: 'Regenerate secret key for a restricted collection',
-    description: 'Generates a new secret key for a collection in "restricted" mode. The old key is immediately invalidated. The new key is returned only once and should be stored securely.'
+    summary: 'Regenerate collection secret key',
+    description: 'Generates a new secret key for the collection. The old key will be invalidated. The new key is only shown once.',
   })
   @ApiResponse({ 
     status: 200, 
@@ -160,17 +159,17 @@ export class LeadCollectionController {
       example: {
         success: true,
         data: {
-          secretKey: 'ck_live_new_key_abc123...'
+          secretKey: 'a1b2c3d4e5f6...'
         }
       }
     }
   })
-  @ApiResponse({ status: 400, description: 'Collection is not in restricted mode' })
   @ApiResponse({ status: 404, description: 'Collection not found' })
-  async regenerateKey(@Param('id', ParseIntPipe) id: number, @GetTenantId() tenantId: number) {
-    const result = await this.service.regenerateKey(id, tenantId);
+  async regenerateSecretKey(@Param('id', ParseIntPipe) id: number, @GetTenantId() tenantId: number) {
+    const result = await this.service.regenerateSecretKey(id, tenantId);
     return successResponse(result);
   }
+
 
   @Delete(':id')
   @Roles(EAdminRole.manager, EAdminRole.owner, EAdminRole.super_admin)

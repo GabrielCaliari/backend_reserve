@@ -2,7 +2,6 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { LeadCollectionService } from './lead-collection.service';
 import { LEAD_COLLECTION_REPOSITORY } from '../../domain/interfaces/lead-collection.repository.interface';
 import { LeadCollection } from '../../domain/entities/lead-collection.entity';
-import { EAccessMode } from '../../domain/enums/access-mode.enum';
 import { CreateCollectionDto } from '../dtos/create-collection.dto';
 import { CollectionSlugConflictError } from '../../domain/errors/collection-slug-conflict.error';
 import { CollectionNotFoundError } from '../../domain/errors/collection-not-found.error';
@@ -39,34 +38,47 @@ describe('LeadCollectionService', () => {
     const dto: CreateCollectionDto = {
       name: 'Test Collection',
       source: 'landing-page',
-      access_mode: EAccessMode.public,
     };
 
     it('should create a collection successfully', async () => {
       const slug = 'test-collection';
       mockRepository.findBySlugAndTenantId.mockResolvedValue(null);
-      mockRepository.create.mockResolvedValue({
-        id: 1,
-        ...dto,
-        slug,
-        tenantId,
-        active: true,
-        allowedDomains: [],
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        isPublic: () => true,
-      } as LeadCollection);
+      mockRepository.create.mockResolvedValue(
+        new LeadCollection({
+          id: 1,
+          name: dto.name,
+          slug,
+          source: dto.source,
+          secretKeyHash: 'hash',
+          secretKeySalt: 'salt',
+          tenantId,
+          active: true,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        })
+      );
 
       const result = await service.createCollection(dto, tenantId);
 
       expect(mockRepository.findBySlugAndTenantId).toHaveBeenCalledWith(slug, tenantId);
       expect(mockRepository.create).toHaveBeenCalled();
       expect(result.name).toBe(dto.name);
+      expect(result.secretKey).toBeDefined();
     });
 
     it('should handle slug conflict by throwing error', async () => {
       const slug = 'test-collection';
-      mockRepository.findBySlugAndTenantId.mockResolvedValue({ id: 2 } as LeadCollection);
+      mockRepository.findBySlugAndTenantId.mockResolvedValue(
+        new LeadCollection({
+          id: 2,
+          name: 'Existing',
+          slug,
+          source: 'test',
+          secretKeyHash: 'hash',
+          secretKeySalt: 'salt',
+          tenantId,
+        })
+      );
       
       await expect(service.createCollection(dto, tenantId)).rejects.toThrow(CollectionSlugConflictError);
     });
@@ -75,7 +87,17 @@ describe('LeadCollectionService', () => {
   describe('findCollections', () => {
     it('should return paginated collections for tenant', async () => {
       const tenantId = 1;
-      const collections = [{ id: 1, name: 'C1' }];
+      const collections = [
+        new LeadCollection({
+          id: 1,
+          name: 'C1',
+          slug: 'c1',
+          source: 'test',
+          secretKeyHash: 'hash',
+          secretKeySalt: 'salt',
+          tenantId,
+        })
+      ];
       mockRepository.findAllByTenantId.mockResolvedValue({ collections, total: 1 });
 
       const result = await service.findCollections({ page: 1, limit: 10 }, tenantId);
@@ -90,9 +112,22 @@ describe('LeadCollectionService', () => {
     it('should update collection if found', async () => {
       const id = 1;
       const tenantId = 1;
-      const existing = new LeadCollection({ id, tenantId, name: 'Old' });
+      const existing = new LeadCollection({
+        id,
+        name: 'Old',
+        slug: 'old',
+        source: 'test',
+        secretKeyHash: 'hash',
+        secretKeySalt: 'salt',
+        tenantId,
+      });
+      const updated = new LeadCollection({
+        ...existing,
+        name: 'New',
+      });
+      
       mockRepository.findById.mockResolvedValue(existing);
-      mockRepository.update.mockResolvedValue({ ...existing, name: 'New' });
+      mockRepository.update.mockResolvedValue(updated);
 
       const result = await service.updateCollection(id, { name: 'New' }, tenantId);
       

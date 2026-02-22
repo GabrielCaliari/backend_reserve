@@ -1,6 +1,6 @@
 {
   "name": "api_zarp-admin",
-  "version": "26.1.0",
+  "version": "26.1.3",
   "description": "The most advanced admin panel for website management",
   "author": "Zarp Studio",
   "private": true,
@@ -9,7 +9,7 @@
     "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seeds.ts"
   },
   "scripts": {
-    "build": "prisma generate && nest build",
+    "build": "prisma generate && nest build --watch",
     "postinstall": "prisma generate",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",

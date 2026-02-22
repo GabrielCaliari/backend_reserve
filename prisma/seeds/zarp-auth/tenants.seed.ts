@@ -33,6 +33,12 @@ export async function seedTenants() {
       active: true,
     },
     {
+      name: 'All Brick Pavers',
+      slug: 'allbrickpavers',
+      domain: 'allbrickpavers.net',
+      active: true,
+    },
+    {
       name: 'Tenant Inativo',
       slug: 'tenant-inativo',
       domain: null,

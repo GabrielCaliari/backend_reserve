@@ -1,15 +1,19 @@
-import { Controller, Post, Param, Body, HttpCode, HttpStatus, BadRequestException, NotFoundException, ForbiddenException, GoneException, Req } from '@nestjs/common';
+import { Controller, Post, Param, Body, HttpCode, HttpStatus, NotFoundException, GoneException, UseGuards, Req } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiHeader } from '@nestjs/swagger';
-import { LeadCollectionService } from '../../application/services/lead-collection.service';
 import { LeadService } from '../../application/services/lead.service';
 import { CreateLeadDto } from '../../application/dtos/lead.dto';
-import * as crypto from 'crypto';
+import { CollectionSecretKeyGuard } from '../guards/collection-secret-key.guard';
 
 @ApiTags('Lead Capture')
 @Controller('collect')
+@UseGuards(CollectionSecretKeyGuard)
+@ApiHeader({
+  name: 'x-collection-secret-key',
+  description: 'Collection secret key for authentication',
+  required: true,
+})
 export class LeadCaptureController {
   constructor(
-    private readonly collectionService: LeadCollectionService,
     private readonly leadService: LeadService,
   ) {}
 
@@ -17,64 +21,56 @@ export class LeadCaptureController {
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ 
     summary: 'Submit a lead to a collection',
-    description: 'Capture endpoint that accepts leads based on collection access mode (public, private/CORS, restricted/auth)'
+    description: 'Public endpoint to capture leads. Requires x-collection-secret-key header for authentication. Automatically captures IP address and user-agent for analytics.'
   })
   @ApiParam({ name: 'slug', description: 'Collection slug', example: 'landing-home' })
-  @ApiHeader({ name: 'x-collection-key', required: false, description: 'Secret key (required for restricted collections)' })
   @ApiResponse({ status: 201, description: 'Lead created successfully' })
-  @ApiResponse({ status: 400, description: 'Validation error' })
-  @ApiResponse({ status: 401, description: 'Invalid or missing collection key' })
-  @ApiResponse({ status: 403, description: 'Origin not allowed' })
+  @ApiResponse({ status: 400, description: 'Validation error - at least one of name, email, or phone_number is required' })
+  @ApiResponse({ status: 401, description: 'Missing or invalid x-collection-secret-key header' })
   @ApiResponse({ status: 404, description: 'Collection not found' })
   @ApiResponse({ status: 410, description: 'Collection is not accepting leads' })
   async captureLead(
     @Param('slug') slug: string,
     @Body() dto: CreateLeadDto,
     @Req() request: any,
-  ): Promise<{ success: boolean; data: { id: number } }> {
+  ): Promise<{ success: boolean; data: { id: string } }> {
     // Validate that at least one of name, email, or phone_number is provided
     if (!dto.name && !dto.email && !dto.phone_number) {
-      throw new BadRequestException('At least one of name, email, or phone_number is required');
+      throw new NotFoundException('At least one of name, email, or phone_number is required');
     }
 
-    // Find collection by slug
-    const collection = await this.collectionService.findBySlug(slug);
+    // Get collection from request (set by CollectionSecretKeyGuard)
+    const collection = request.collection;
+    
     if (!collection) {
       throw new NotFoundException('Collection not found');
     }
 
+    // Check if collection slug matches
+    if (collection.slug !== slug) {
+      throw new NotFoundException('Collection not found');
+    }
+
     // Check if collection is active
-    if (!collection.isActive()) {
+    if (!collection.active) {
       throw new GoneException('Collection is not accepting leads');
     }
 
-    // Enforce access mode
-    if (collection.isPrivate()) {
-      // CORS enforcement: validate Origin header against allowed_domains
-      const origin = request.headers['origin'];
-      if (!origin || !collection.allowedDomains.includes(origin)) {
-        throw new ForbiddenException('Origin not allowed for this collection');
-      }
-    } else if (collection.isRestricted()) {
-      // Auth enforcement: validate x-collection-key header
-      const secretKey = request.headers['x-collection-key'];
-      if (!secretKey) {
-        throw new BadRequestException('Missing x-collection-key header');
-      }
-      
-      // Validate the secret key by hashing and comparing
-      await this.validateSecretKey(secretKey, collection.id!);
-    }
+    // Extract IP address and user-agent from request
+    const ipAddress = this.extractIpAddress(request);
+    const userAgent = request.headers['user-agent'] || null;
 
-    // Create lead with collection context
+    // Create lead with collection context and tracking data
     const result = await this.leadService.createCollectionLead(dto, {
-      id: collection.id!,
+      id: collection.id,
       tenantId: collection.tenantId,
+      ipAddress,
+      userAgent,
     });
 
     // The service returns { data, status } format
     if (result.status !== 200) {
-      throw new BadRequestException(result.data);
+      throw new NotFoundException(result.data);
     }
 
     return {
@@ -83,14 +79,23 @@ export class LeadCaptureController {
     };
   }
 
-  private async validateSecretKey(key: string, collectionId: number): Promise<void> {
-    const hash = crypto.createHash('sha256').update(key).digest('hex');
-    
-    // Find collection by secret key hash
-    const collection = await this.collectionService.findBySecretKey(hash);
-    
-    if (!collection || collection.id !== collectionId) {
-      throw new BadRequestException('Invalid collection key');
+  private extractIpAddress(request: any): string | null {
+    // Try to get real IP from common proxy headers
+    const forwarded = request.headers['x-forwarded-for'];
+    if (forwarded) {
+      // x-forwarded-for can contain multiple IPs, get the first one
+      return forwarded.split(',')[0].trim();
     }
+
+    const realIp = request.headers['x-real-ip'];
+    if (realIp) {
+      return realIp;
+    }
+
+    // Fallback to connection remote address
+    return request.connection?.remoteAddress || 
+           request.socket?.remoteAddress || 
+           request.ip || 
+           null;
   }
 }

@@ -13,6 +13,7 @@ import { ZarpAuthModule } from '../zarp-auth/zarp-auth.module';
 import { CreateLeadWithAttachmentsUseCase } from './application/use-cases/create-lead-with-attachments.use-case';
 import { AttachFileToLeadUseCase } from './application/use-cases/attach-file-to-lead.use-case';
 import { RemoveLeadAttachmentUseCase } from './application/use-cases/remove-lead-attachment.use-case';
+import { GeolocationProvider } from '../../shared/providers/geolocation.provider';
 
 /**
  * Zarp Leads Module
@@ -24,7 +25,8 @@ import { RemoveLeadAttachmentUseCase } from './application/use-cases/remove-lead
  * - Lead listing with pagination
  * - Lead status updates
  * - Lead Collections with source metadata (Tenant-scoped)
- * - Lead Capture endpoints (public/private/restricted)
+ * - Lead Capture endpoints (public with secret key authentication)
+ * - IP geolocation tracking
  *
  * Exports:
  * - LeadService and LeadRepository for cross-context consumers
@@ -52,6 +54,9 @@ import { RemoveLeadAttachmentUseCase } from './application/use-cases/remove-lead
     
     // Guards
     CollectionSecretKeyGuard,
+    
+    // Providers
+    GeolocationProvider,
     
     // Use Cases (SRP pattern)
     CreateLeadWithAttachmentsUseCase,

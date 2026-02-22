@@ -1,7 +1,16 @@
 // @ts-nocheck
 import 'dotenv/config';
-import { PrismaClient, ELeadStatus } from "../../../src/generated/prisma/client";
+import { PrismaClient } from "../../../src/generated/prisma/client";
 import { PrismaPg } from '@prisma/adapter-pg';
+
+// Lead status enum (matches domain entity)
+enum ELeadStatus {
+  new = 1,
+  contacted = 2,
+  qualified = 3,
+  converted = 4,
+  lost = 5,
+}
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });

@@ -569,7 +569,7 @@ The plan is divided into two phases:
     - Update implementation
     - _Requirements: 17.7_
 
-- [~] 22. Update application services for UUID
+- [ ] 22. Update application services for UUID
   - [x] 22.1 Update ArticleService
     - Change all ID parameters from number to string
     - Add UUID format validation in all methods
@@ -590,7 +590,7 @@ The plan is divided into two phases:
     - Update relation creation logic for polymorphic IDs
     - _Requirements: 15.7, 17.7_
 
-- [~] 23. Update controllers and DTOs for UUID
+- [ ] 23. Update controllers and DTOs for UUID
   - [x] 23.1 Update ArticleController
     - Change @Param('id') type from number to string
     - Update all endpoint signatures
@@ -619,7 +619,7 @@ The plan is divided into two phases:
     - Update @ApiProperty decorators with UUID examples
     - _Requirements: 14.8_
 
-- [~] 24. Update presenters for UUID
+- [ ] 24. Update presenters for UUID
   - [x] 24.1 Update ArticlePresenter
     - Ensure all ID fields are formatted as strings
     - Update nested object formatting (author, coverImage)
@@ -632,7 +632,7 @@ The plan is divided into two phases:
     - Verify UUID format in responses
     - _Requirements: 14.8_
 
-- [~] 25. UUID migration validation and documentation
+- [ ] 25. UUID migration validation and documentation
   - [x] 25.1 Create UUID validation utilities
     - Create isValidUUID() helper function
     - Create UUID format validation pipe

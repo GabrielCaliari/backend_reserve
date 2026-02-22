@@ -6,11 +6,13 @@ import { CreateLeadDto } from '../dtos/lead.dto';
 import { ELeadStatus, Lead } from '../../domain/entities/lead.entity';
 import PhoneNumber from '../../../../shared/domain/value-objects/phone-number.vo';
 import Email from '../../../../shared/domain/value-objects/email.vo';
+import { GeolocationProvider } from '../../../../shared/providers/geolocation.provider';
 
 @Injectable()
 export class LeadService {
     constructor(
         private readonly leadRepository: LeadRepository,
+        private readonly geolocationProvider: GeolocationProvider,
     ) { }
 
     async createLead(data: CreateLeadDto) {
@@ -18,7 +20,7 @@ export class LeadService {
         return this.createCollectionLead(data);
     }
 
-    async createCollectionLead(data: CreateLeadDto, collection?: { id: number; tenantId: number }) {
+    async createCollectionLead(data: CreateLeadDto, collection?: { id: number; tenantId: number; ipAddress?: string; userAgent?: string }) {
         try {
             const lead = new Lead({
                 ...(data.phone_number ? { phone_number: new PhoneNumber(data.phone_number) } : {}),
@@ -29,8 +31,29 @@ export class LeadService {
                 ...(data.description ? { description: data.description } : {}),
                 origin: data.origin,
                 status: ELeadStatus.new,
-                ...(collection ? { collectionId: collection.id, tenantId: collection.tenantId } : {})
+                ...(collection ? { 
+                    collectionId: collection.id, 
+                    tenantId: collection.tenantId,
+                    ipAddress: collection.ipAddress,
+                    userAgent: collection.userAgent,
+                } : {})
             });
+
+            // Geolocate IP address if available
+            if (collection?.ipAddress) {
+                try {
+                    const geoData = await this.geolocationProvider.resolveIp(collection.ipAddress);
+                    
+                    if (geoData) {
+                        lead.country = geoData.country;
+                        lead.city = geoData.city;
+                        lead.region = geoData.region;
+                    }
+                } catch (geoError) {
+                    // Log but don't fail lead creation if geolocation fails
+                    console.warn('Geolocation failed:', geoError.message);
+                }
+            }
 
             const raw = await this.leadRepository.create(lead)
 

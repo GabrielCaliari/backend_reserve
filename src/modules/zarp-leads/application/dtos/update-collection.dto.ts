@@ -1,10 +1,20 @@
-import { PartialType } from '@nestjs/swagger';
-import { CreateCollectionDto } from './create-collection.dto';
-import { IsBoolean, IsOptional } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiPropertyOptional } from '@nestjs/swagger';
+import { IsBoolean, IsOptional, IsString, MaxLength } from 'class-validator';
 
-export class UpdateCollectionDto extends PartialType(CreateCollectionDto) {
-  @ApiProperty({ example: true, description: 'Whether the collection is active', required: false })
+export class UpdateCollectionDto {
+  @ApiPropertyOptional({ example: 'Updated Collection', description: 'Name of the lead collection' })
+  @IsString()
+  @IsOptional()
+  @MaxLength(150)
+  name?: string;
+
+  @ApiPropertyOptional({ example: 'landing-page-v2', description: 'Internal source identifier' })
+  @IsString()
+  @IsOptional()
+  @MaxLength(100)
+  source?: string;
+
+  @ApiPropertyOptional({ example: true, description: 'Whether the collection is active' })
   @IsBoolean()
   @IsOptional()
   active?: boolean;

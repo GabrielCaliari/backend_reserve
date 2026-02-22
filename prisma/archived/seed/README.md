@@ -1,6 +1,6 @@
 # Database Seeding Guide
 
-This directory contains comprehensive database seed files for populating the API PPPI platform with realistic test data.
+This directory contains comprehensive database seed files for populating the API ZARP platform with realistic test data.
 
 ## Overview
 

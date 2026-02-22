@@ -3,8 +3,7 @@ import { ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { CollectionSecretKeyGuard } from './collection-secret-key.guard';
 import { LEAD_COLLECTION_REPOSITORY } from '../../domain/interfaces/lead-collection.repository.interface';
 import { LeadCollection } from '../../domain/entities/lead-collection.entity';
-import { InvalidCollectionKeyError } from '../../domain/errors/invalid-collection-key.error';
-import { EAccessMode } from '../../domain/enums/access-mode.enum';
+import { InvalidCollectionSecretKeyException } from '../../domain/errors/invalid-collection-secret-key.error';
 import * as crypto from 'crypto';
 
 describe('CollectionSecretKeyGuard', () => {
@@ -42,46 +41,46 @@ describe('CollectionSecretKeyGuard', () => {
     expect(guard).toBeDefined();
   });
 
-  it('should throw UnauthorizedException if x-collection-key header is missing', async () => {
+  it('should throw UnauthorizedException if x-collection-secret-key header is missing', async () => {
     const context = createMockExecutionContext({});
 
     await expect(guard.canActivate(context)).rejects.toThrow(UnauthorizedException);
-    await expect(guard.canActivate(context)).rejects.toThrow('Missing x-collection-key header');
+    await expect(guard.canActivate(context)).rejects.toThrow('Missing x-collection-secret-key header');
   });
 
-  it('should throw InvalidCollectionKeyError if collection not found', async () => {
-    const secretKey = 'ck_live_test123';
-    const context = createMockExecutionContext({ 'x-collection-key': secretKey });
+  it('should throw InvalidCollectionSecretKeyException if collection not found', async () => {
+    const secretKey = 'test123';
+    const context = createMockExecutionContext({ 'x-collection-secret-key': secretKey });
 
     mockRepository.findBySecretKey.mockResolvedValue(null);
 
-    await expect(guard.canActivate(context)).rejects.toThrow(InvalidCollectionKeyError);
+    await expect(guard.canActivate(context)).rejects.toThrow(InvalidCollectionSecretKeyException);
   });
 
-  it('should throw InvalidCollectionKeyError if collection is inactive', async () => {
-    const secretKey = 'ck_live_test123';
-    const context = createMockExecutionContext({ 'x-collection-key': secretKey });
+  it('should throw InvalidCollectionSecretKeyException if collection is inactive', async () => {
+    const secretKey = 'test123';
+    const context = createMockExecutionContext({ 'x-collection-secret-key': secretKey });
 
     const inactiveCollection = new LeadCollection({
       id: 1,
       name: 'Test',
       slug: 'test',
       source: 'test',
-      accessMode: EAccessMode.restricted,
-      allowedDomains: [],
+      secretKeyHash: 'hash',
+      secretKeySalt: 'salt',
       active: false,
       tenantId: 1,
     });
 
     mockRepository.findBySecretKey.mockResolvedValue(inactiveCollection);
 
-    await expect(guard.canActivate(context)).rejects.toThrow(InvalidCollectionKeyError);
+    await expect(guard.canActivate(context)).rejects.toThrow(InvalidCollectionSecretKeyException);
   });
 
   it('should return true and attach collection to request if valid key', async () => {
-    const secretKey = 'ck_live_test123';
+    const secretKey = 'test123';
     const hash = crypto.createHash('sha256').update(secretKey).digest('hex');
-    const request = { headers: { 'x-collection-key': secretKey } };
+    const request = { headers: { 'x-collection-secret-key': secretKey } };
     const context = {
       switchToHttp: () => ({
         getRequest: () => request,
@@ -93,8 +92,8 @@ describe('CollectionSecretKeyGuard', () => {
       name: 'Test',
       slug: 'test',
       source: 'test',
-      accessMode: EAccessMode.restricted,
-      allowedDomains: [],
+      secretKeyHash: hash,
+      secretKeySalt: 'salt',
       active: true,
       tenantId: 1,
     });
