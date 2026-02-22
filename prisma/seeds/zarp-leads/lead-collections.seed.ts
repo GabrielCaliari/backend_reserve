@@ -83,7 +83,7 @@ export async function seedLeadCollections() {
     },
     {
       name: 'All Brick Pavers Lead Collection',
-      slug: 'allbrickpavers-leads',
+      slug: 'frontend_pages_allbrickpavers',
       source: 'allbrickpavers.net',
       source_type: 'form',
       source_channel: 'website',
@@ -96,7 +96,7 @@ export async function seedLeadCollections() {
         business_type: 'paver_installation',
         service_area: 'South Florida',
         auto_qualify: true,
-        notification_email: 'leads@allbrickpavers.net',
+        notification_email: 'allbrickpaving@gmail.com',
       },
       tenantSlug: 'allbrickpavers',
     },
