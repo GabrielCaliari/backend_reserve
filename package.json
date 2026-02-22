@@ -9,7 +9,7 @@
     "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seeds.ts"
   },
   "scripts": {
-    "build": "prisma generate && nest build --watch",
+    "build": "prisma generate && nest build",
     "postinstall": "prisma generate",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
