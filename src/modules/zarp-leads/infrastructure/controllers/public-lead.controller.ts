@@ -5,7 +5,7 @@ import { SubmitLeadDto } from '../../application/dtos/submit-lead.dto';
 import { TenantKeyGuard } from '../guards/tenant-key.guard';
 
 @ApiTags('Public Lead Submission')
-@Controller('leads')
+@Controller()
 @UseGuards(TenantKeyGuard)
 @ApiHeader({
   name: 'X-Tenant-Key',
