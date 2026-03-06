@@ -2,17 +2,20 @@ import { Module } from '@nestjs/common';
 import { LeadController } from './infrastructure/controllers/lead.controller';
 import { LeadCollectionController } from './infrastructure/controllers/lead-collection.controller';
 import { LeadCaptureController } from './infrastructure/controllers/lead-capture.controller';
+import { PublicLeadController } from './infrastructure/controllers/public-lead.controller';
 import { LeadService } from './application/services/lead.service';
 import { LeadCollectionService } from './application/services/lead-collection.service';
 import LeadRepository from './infrastructure/repositories/lead.repository';
 import { LeadCollectionRepository } from './infrastructure/repositories/lead-collection.repository';
 import { PrismaLeadAttachmentRepository } from './infrastructure/repositories/lead-attachment.repository';
 import { CollectionSecretKeyGuard } from './infrastructure/guards/collection-secret-key.guard';
+import { TenantKeyGuard } from './infrastructure/guards/tenant-key.guard';
 import { LEAD_REPOSITORY, LEAD_COLLECTION_REPOSITORY, LEAD_ATTACHMENT_REPOSITORY } from './domain/interfaces';
 import { ZarpAuthModule } from '../zarp-auth/zarp-auth.module';
 import { CreateLeadWithAttachmentsUseCase } from './application/use-cases/create-lead-with-attachments.use-case';
 import { AttachFileToLeadUseCase } from './application/use-cases/attach-file-to-lead.use-case';
 import { RemoveLeadAttachmentUseCase } from './application/use-cases/remove-lead-attachment.use-case';
+import { SubmitLeadUseCase } from './application/use-cases/submit-lead.use-case';
 import { GeolocationProvider } from '../../shared/providers/geolocation.provider';
 
 /**
@@ -41,6 +44,7 @@ import { GeolocationProvider } from '../../shared/providers/geolocation.provider
     LeadController,
     LeadCollectionController,
     LeadCaptureController,
+    PublicLeadController,
   ],
   providers: [
     // Services (legacy, for backward compatibility)
@@ -54,6 +58,7 @@ import { GeolocationProvider } from '../../shared/providers/geolocation.provider
     
     // Guards
     CollectionSecretKeyGuard,
+    TenantKeyGuard,
     
     // Providers
     GeolocationProvider,
@@ -62,6 +67,7 @@ import { GeolocationProvider } from '../../shared/providers/geolocation.provider
     CreateLeadWithAttachmentsUseCase,
     AttachFileToLeadUseCase,
     RemoveLeadAttachmentUseCase,
+    SubmitLeadUseCase,
     
     // Repository DI tokens
     {
