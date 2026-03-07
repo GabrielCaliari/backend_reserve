@@ -707,11 +707,12 @@ model Tenant {
   active         Boolean          @default(true)
   created_at     DateTime         @default(now())
   updated_at     DateTime         @updatedAt
-  AdminTenant    AdminTenant[]
-  Blog           Blog[]
-  LeadCollection LeadCollection[]
-  leads          Lead[]
-  Author         Author[]
+  AdminTenant       AdminTenant[]
+  Blog              Blog[]
+  LeadCollection    LeadCollection[]
+  leads             Lead[]
+  Author            Author[]
+  StatsIntegration  StatsIntegration[]
 }
 
 model LeadCollection {
@@ -1126,4 +1127,24 @@ model LeadAttachment {
   @@index([lead_id])
   @@index([asset_id])
   @@map("lead_attachments")
+}
+
+// ============================================
+// Stats - External Integration API Key Management
+// ============================================
+
+model StatsIntegration {
+  id         Int      @id @default(autoincrement())
+  tenant_id  Int
+  key        String   @db.VarChar(50) // e.g. 'google_search_console'
+  label      String   @db.VarChar(100)
+  config     Json // Provider-specific config (API keys, site URLs, etc.)
+  active     Boolean  @default(true)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  Tenant     Tenant   @relation(fields: [tenant_id], references: [id])
+
+  @@unique([tenant_id, key])
+  @@index([tenant_id])
+  @@map("stats_integrations")
 }

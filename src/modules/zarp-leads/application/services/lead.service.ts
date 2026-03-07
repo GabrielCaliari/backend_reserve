@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ERROR_FIND_LEAD, ERROR_CREATE_LEAD } from '../../domain/constants';
 import LeadRepository from '../../infrastructure/repositories/lead.repository';
 import { errorResponse, successResponse } from '../../../../shared/helpers';
-import { CreateLeadDto } from '../dtos/lead.dto';
+import { CreateLeadDto, UpdateLeadDto } from '../dtos/lead.dto';
 import { ELeadStatus, Lead } from '../../domain/entities/lead.entity';
 import PhoneNumber from '../../../../shared/domain/value-objects/phone-number.vo';
 import Email from '../../../../shared/domain/value-objects/email.vo';
@@ -121,6 +121,46 @@ export class LeadService {
             });
         } catch (error) {
             return errorResponse('500:Erro ao atualizar o lead', 500, error);
+        }
+    }
+
+    async updateLead(leadId: string, dto: UpdateLeadDto) {
+        try {
+            const lead = await this.leadRepository.findById(leadId);
+
+            if (!lead) {
+                return errorResponse('404:Lead not found', 404);
+            }
+
+            const updated = await this.leadRepository.update(leadId, {
+                ...(dto.name !== undefined ? { name: dto.name } : {}),
+                ...(dto.email !== undefined ? { email: dto.email } : {}),
+                ...(dto.phone_number !== undefined ? { phone_number: dto.phone_number } : {}),
+                ...(dto.origin !== undefined ? { origin: dto.origin } : {}),
+                ...(dto.origin_font !== undefined ? { origin_font: dto.origin_font } : {}),
+                ...(dto.description !== undefined ? { description: dto.description } : {}),
+                ...(dto.data !== undefined ? { data: dto.data } : {}),
+            });
+
+            return successResponse({ id: updated.id });
+        } catch (error) {
+            return errorResponse('500:Erro ao atualizar o lead', 500, error);
+        }
+    }
+
+    async deleteLead(leadId: string) {
+        try {
+            const lead = await this.leadRepository.findById(leadId);
+
+            if (!lead) {
+                return errorResponse('404:Lead not found', 404);
+            }
+
+            await this.leadRepository.delete(leadId);
+
+            return successResponse({ id: leadId });
+        } catch (error) {
+            return errorResponse('500:Erro ao deletar o lead', 500, error);
         }
     }
 

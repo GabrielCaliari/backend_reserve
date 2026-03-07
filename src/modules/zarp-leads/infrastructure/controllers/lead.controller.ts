@@ -1,7 +1,7 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, HttpCode, HttpStatus, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Put, Patch, Delete, Body, Param, Query, HttpCode, HttpStatus, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBearerAuth } from '@nestjs/swagger';
 import { LeadService } from '../../application/services/lead.service';
-import { LeadQueryDto } from '../../application/dtos/lead.dto';
+import { LeadQueryDto, UpdateLeadDto } from '../../application/dtos/lead.dto';
 import { CreateLeadWithAttachmentsDto } from '../../application/dtos/create-lead-with-attachments.dto';
 import { AttachmentDto } from '../../application/dtos/attachment.dto';
 import { ELeadStatus } from '../../domain/entities/lead.entity';
@@ -11,7 +11,7 @@ import { AttachFileToLeadUseCase } from '../../application/use-cases/attach-file
 import { RemoveLeadAttachmentUseCase } from '../../application/use-cases/remove-lead-attachment.use-case';
 import { ILeadAttachmentRepository, LEAD_ATTACHMENT_REPOSITORY } from '../../domain/interfaces/lead-attachment.repository.interface';
 import { Inject, ParseIntPipe } from '@nestjs/common';
-import { ParseUUIDPipe } from '../../../../common/pipe/parse-uuid.pipe';
+import { ParseUUIDPipe } from '../../../../shared/pipes/parse-uuid.pipe';
 
 @ApiTags('Leads')
 @Controller()
@@ -125,6 +125,24 @@ export class LeadController {
     return this.removeLeadAttachmentUseCase.execute(attachmentId);
   }
 
+  @Patch('/:id')
+  @UseGuards(AdminJwtGuard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Update lead',
+    description: 'Updates the editable fields of a lead. Requires admin authentication.',
+  })
+  @ApiParam({ name: 'id', description: 'Lead UUID', type: 'string' })
+  @ApiResponse({ status: 200, description: 'Lead updated' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'Lead not found' })
+  async updateLead(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateLeadDto,
+  ) {
+    return this.leadService.updateLead(id, dto);
+  }
+
   @Put('/:id/status')
   @UseGuards(AdminJwtGuard)
   @ApiBearerAuth()
@@ -141,5 +159,20 @@ export class LeadController {
     @Body('status') status: ELeadStatus,
   ) {
     return this.leadService.updateLeadStatus(id, status);
+  }
+
+  @Delete('/:id')
+  @UseGuards(AdminJwtGuard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Delete lead',
+    description: 'Permanently deletes a lead and its attachments. Requires admin authentication.',
+  })
+  @ApiParam({ name: 'id', description: 'Lead UUID', type: 'string' })
+  @ApiResponse({ status: 200, description: 'Lead deleted' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'Lead not found' })
+  async deleteLead(@Param('id', ParseUUIDPipe) id: string) {
+    return this.leadService.deleteLead(id);
   }
 }

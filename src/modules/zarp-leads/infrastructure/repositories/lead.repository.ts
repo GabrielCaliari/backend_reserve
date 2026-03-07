@@ -102,6 +102,14 @@ export default class LeadRepository implements ILeadRepository {
         }
     }
 
+    async delete(lead_id: string): Promise<void> {
+        try {
+            await this.prisma.lead.delete({ where: { id: lead_id } });
+        } catch (error) {
+            throw new RepositoryException('Erro ao deletar o lead', error);
+        }
+    }
+
     async find({ page = 1, limit = 10, where = {} }: { page?: number, limit?: number, where?: Prisma.LeadWhereInput }) {
         try {
             const skip = (page - 1) * limit;

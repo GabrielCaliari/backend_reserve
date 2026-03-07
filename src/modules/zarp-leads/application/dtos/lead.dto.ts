@@ -61,6 +61,66 @@ export class CreateLeadDto {
     data: {};
 }
 
+export class UpdateLeadDto {
+    @ApiPropertyOptional({
+        description: 'Lead name',
+        example: 'John Smith'
+    })
+    @IsString()
+    @IsOptional()
+    name?: string;
+
+    @ApiPropertyOptional({
+        description: 'Lead email address',
+        example: 'john.smith@email.com'
+    })
+    @IsString()
+    @IsEmail()
+    @IsOptional()
+    email?: string;
+
+    @ApiPropertyOptional({
+        description: 'Lead phone number',
+        example: '11999999999'
+    })
+    @IsString()
+    @IsOptional()
+    phone_number?: string;
+
+    @ApiPropertyOptional({
+        description: 'Lead origin',
+        enum: EOriginLead,
+        example: EOriginLead.page
+    })
+    @IsEnum(EOriginLead)
+    @IsOptional()
+    origin?: EOriginLead;
+
+    @ApiPropertyOptional({
+        description: 'Lead origin source',
+        example: 'Google Ads'
+    })
+    @IsString()
+    @IsOptional()
+    origin_font?: string;
+
+    @ApiPropertyOptional({
+        description: 'Description or notes about the lead',
+        example: 'Lead interested in enterprise plans'
+    })
+    @IsString()
+    @IsOptional()
+    description?: string;
+
+    @ApiPropertyOptional({
+        description: 'Additional lead data in JSON format',
+        example: { interest: 'premium-plan' }
+    })
+    @IsObject()
+    @IsOptional()
+    data?: {};
+}
+
 export class LeadQueryDto {
     @ApiPropertyOptional({
         description: 'Page number',
