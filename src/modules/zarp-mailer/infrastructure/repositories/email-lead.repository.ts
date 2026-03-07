@@ -6,7 +6,7 @@ import { RepositoryException } from '../../../../shared/exceptions';
 @Injectable()
 export default class EmailLeadRepository {
     constructor(private readonly prisma: PrismaService) {}
-    public async selectAllByEmailCampaignIdAndEmails(emailCampaignId: number, emails: string[]) {
+    public async selectAllByEmailCampaignIdAndEmails(emailCampaignId: string, emails: string[]) {
         try {
             const leads = await this.prisma.emailLead.findMany({
                 where: {
@@ -23,7 +23,7 @@ export default class EmailLeadRepository {
         }
     }
 
-    public async selectAllByEmailCampaignId(emailCampaignId: number) {
+    public async selectAllByEmailCampaignId(emailCampaignId: string) {
         try {
             const leads = await this.prisma.emailLead.findMany({
                 where: {
@@ -39,7 +39,7 @@ export default class EmailLeadRepository {
 
     public async createLead(lead: {
         email: string,
-        email_campaign_id: number,
+        email_campaign_id: string,
         status: number
     }[],
         tx?: PrismaClient
@@ -53,7 +53,7 @@ export default class EmailLeadRepository {
         }
     }
 
-    public async countByEmailCampaignId(emailCampaignId: number, prisma?: PrismaClient) {
+    public async countByEmailCampaignId(emailCampaignId: string, prisma?: PrismaClient) {
         try {
             const conn = prisma ?? this.prisma;
             const totalLeads = await conn.emailLead.count({ where: { email_campaign_id: emailCampaignId } });
@@ -63,7 +63,7 @@ export default class EmailLeadRepository {
         }
     }
 
-    public async selectByEmailCampaignIdWithPagination(emailCampaignId: number, limit: number, offset: number) {
+    public async selectByEmailCampaignIdWithPagination(emailCampaignId: string, limit: number, offset: number) {
         try {
             const leads = await this.prisma.emailLead.findMany({
                 where: { email_campaign_id: emailCampaignId },

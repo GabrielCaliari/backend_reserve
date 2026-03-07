@@ -894,7 +894,7 @@ model Config {
 }
 
 model EmailCampaign {
-  id                  Int             @id @default(autoincrement())
+  id                  String          @id @default(cuid()) @db.VarChar(25)
   name                String
   total_leads         Int
   open_rate           Int
@@ -994,7 +994,7 @@ model EmailLead {
   id                Int           @id @default(autoincrement())
   email             String
   EmailCampaign     EmailCampaign @relation(fields: [email_campaign_id], references: [id])
-  email_campaign_id Int
+  email_campaign_id String        @db.VarChar(25)
   status            Int           @db.SmallInt
   created_at        DateTime      @default(now())
   updated_at        DateTime      @updatedAt
@@ -1010,7 +1010,7 @@ model CampaignBatch {
   un_success_rate   Int?
   un_failed_rate    Int?
   email_campaign    EmailCampaign @relation(fields: [email_campaign_id], references: [id])
-  email_campaign_id Int
+  email_campaign_id String        @db.VarChar(25)
   status            Int           @db.SmallInt
   email             Email?        @relation(fields: [email_id], references: [id])
   email_id          Int?

@@ -37,7 +37,7 @@ export default class EmailCampaignRepository {
         }
     }
 
-    async update(id: number, data: {
+    async update(id: string, data: {
         name?: string;
         smtp_server_id?: number;
         total_leads?: number;
@@ -55,7 +55,7 @@ export default class EmailCampaignRepository {
         }
     }
 
-    async updateMainEmail(id: number, main_email_id: number, tx?: PrismaService) {
+    async updateMainEmail(id: string, main_email_id: number, tx?: PrismaService) {
         try {
             const conn = tx ?? this.prisma;
 
@@ -72,7 +72,7 @@ export default class EmailCampaignRepository {
         }
     }
 
-    async updateTotalLeads(id: number, totalLeads: number) {
+    async updateTotalLeads(id: string, totalLeads: number) {
         try {
             const emailCampaign = await this.prisma.emailCampaign.update({
                 where: { id },
@@ -88,7 +88,7 @@ export default class EmailCampaignRepository {
         }
     }
 
-    async updateCopyVariant(id: number, copy_variation_type: ECopyVariationType) {
+    async updateCopyVariant(id: string, copy_variation_type: ECopyVariationType) {
         try {
             const emailCampaign = await this.prisma.emailCampaign.update({
                 where: { id },
@@ -103,7 +103,7 @@ export default class EmailCampaignRepository {
         }
     }
 
-    async updateCampaignBatchSize(id: number, campaign_batch_size: number) {
+    async updateCampaignBatchSize(id: string, campaign_batch_size: number) {
         try {
             const emailCampaign = await this.prisma.emailCampaign.update({
                 where: { id },
@@ -118,7 +118,7 @@ export default class EmailCampaignRepository {
         }
     }
 
-    async selectById(id: number) {
+    async selectById(id: string) {
         try {
             const emailCampaign = await this.prisma.emailCampaign.findUnique({
                 where: { id }

@@ -19,10 +19,10 @@ export interface PaginatedResult<T> {
  */
 export interface IEmailCampaignRepository {
   create(campaign: Partial<EmailCampaign>): Promise<EmailCampaign>;
-  findById(id: number): Promise<EmailCampaign | null>;
+  findById(id: string): Promise<EmailCampaign | null>;
   findAll(pagination: PaginationParams): Promise<PaginatedResult<EmailCampaign>>;
-  update(id: number, data: Partial<EmailCampaign>): Promise<EmailCampaign>;
-  delete(id: number): Promise<void>;
+  update(id: string, data: Partial<EmailCampaign>): Promise<EmailCampaign>;
+  delete(id: string): Promise<void>;
 }
 
 export const EMAIL_CAMPAIGN_REPOSITORY = Symbol('EMAIL_CAMPAIGN_REPOSITORY');

@@ -89,7 +89,7 @@ export default class EmailRepository {
         }
     }
 
-    public async selectByEmailCampaignIdAndType(emailCampaignId: number, type: EEmailType) {
+    public async selectByEmailCampaignIdAndType(emailCampaignId: string, type: EEmailType) {
         try {
             const email = await this.prisma.email.findFirst({
                 include: {
@@ -98,7 +98,7 @@ export default class EmailRepository {
                 where: {
                     EmailCampaign: {
                         some: {
-                            id: emailCampaignId
+                            id: String(emailCampaignId)
                         }
                     },
                     type

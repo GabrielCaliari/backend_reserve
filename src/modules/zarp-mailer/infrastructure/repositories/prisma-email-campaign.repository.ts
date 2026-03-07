@@ -39,7 +39,7 @@ export class PrismaEmailCampaignRepository implements IEmailCampaignRepository {
     }
   }
 
-  async findById(id: number): Promise<EmailCampaign | null> {
+  async findById(id: string): Promise<EmailCampaign | null> {
     try {
       const result = await this.prisma.emailCampaign.findUnique({
         where: { id },
@@ -98,7 +98,7 @@ export class PrismaEmailCampaignRepository implements IEmailCampaignRepository {
     }
   }
 
-  async update(id: number, data: Partial<EmailCampaign>): Promise<EmailCampaign> {
+  async update(id: string, data: Partial<EmailCampaign>): Promise<EmailCampaign> {
     try {
       const updateData: any = {};
 
@@ -119,7 +119,7 @@ export class PrismaEmailCampaignRepository implements IEmailCampaignRepository {
     }
   }
 
-  async delete(id: number): Promise<void> {
+  async delete(id: string): Promise<void> {
     try {
       await this.prisma.emailCampaign.delete({
         where: { id },

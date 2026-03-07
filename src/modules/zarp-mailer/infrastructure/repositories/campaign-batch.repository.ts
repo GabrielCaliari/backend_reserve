@@ -18,7 +18,7 @@ export default class CampaignBatchRepository {
         email_id?: number;
         started_at?: Date;
         finished_at?: Date;
-        email_campaign_id: number;
+        email_campaign_id: string;
     }[], prisma?: PrismaClient) {
         try {
             const conn = prisma ?? this.prisma;
@@ -55,7 +55,7 @@ export default class CampaignBatchRepository {
         }
     }
 
-    async selectAllByEmailCampaignId(emailCampaignId: number) {
+    async selectAllByEmailCampaignId(emailCampaignId: string) {
         try {
             const campaignBatches = await this.prisma.campaignBatch.findMany({
                 where: {
@@ -69,7 +69,7 @@ export default class CampaignBatchRepository {
         }
     }
 
-    async selectFirstByEmailCampaignIdAndStatus(emailCampaignId: number, status: ECampaignBatchStatus) {
+    async selectFirstByEmailCampaignIdAndStatus(emailCampaignId: string, status: ECampaignBatchStatus) {
         try {
             const campaignBatch = await this.prisma.campaignBatch.findFirst({
                 where: { email_campaign_id: emailCampaignId, status }

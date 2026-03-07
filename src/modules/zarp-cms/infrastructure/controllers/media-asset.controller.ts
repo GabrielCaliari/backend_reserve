@@ -12,6 +12,8 @@ import {
   UploadedFile,
   ParseUUIDPipe,
   BadRequestException,
+  ParseIntPipe,
+  DefaultValuePipe,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
@@ -129,8 +131,8 @@ export class MediaAssetController {
     @Query('collection_id') collectionId?: string,
     @Query('status') status?: EAssetStatus,
     @Query('mime_type') mimeType?: string,
-    @Query('page') page?: number,
-    @Query('limit') limit?: number,
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page?: number,
+    @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit?: number,
     @CurrentAdmin() admin?: CurrentAdminPayload,
   ) {
     const result = await this.assetService.listAssets(

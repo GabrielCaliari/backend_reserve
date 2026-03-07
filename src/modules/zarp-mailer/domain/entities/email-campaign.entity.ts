@@ -8,7 +8,7 @@ import { BatchSize } from '../value-objects';
  */
 export class EmailCampaign {
   private constructor(
-    public readonly id: number,
+    public readonly id: string,
     public name: string,
     public status: EmailCampaignStatus,
     public smtpServerId: number,
@@ -35,7 +35,7 @@ export class EmailCampaign {
    * Factory method to reconstitute from database
    */
   static fromPersistence(data: {
-    id: number;
+    id: string;
     name: string;
     status: number;
     smtp_server_id: number;

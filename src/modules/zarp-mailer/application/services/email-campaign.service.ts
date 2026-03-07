@@ -72,7 +72,7 @@ export class EmailCampaignService {
   /**
    * Find email campaign by ID
    */
-  async getEmailCampaignById(id: number) {
+  async getEmailCampaignById(id: string) {
     const campaign = await this.campaignRepository.findById(id);
 
     if (!campaign) {
@@ -94,7 +94,7 @@ export class EmailCampaignService {
   /**
    * Update copy variation type
    */
-  async updateCopyVariationType(id: number, copyVariationType: CopyVariationType) {
+  async updateCopyVariationType(id: string, copyVariationType: CopyVariationType) {
     const campaign = await this.campaignRepository.findById(id);
 
     if (!campaign) {
@@ -120,7 +120,7 @@ export class EmailCampaignService {
   /**
    * Update campaign batch size
    */
-  async updateCampaignBatchSize(id: number, size: number) {
+  async updateCampaignBatchSize(id: string, size: number) {
     const campaign = await this.campaignRepository.findById(id);
 
     if (!campaign) {
@@ -147,7 +147,7 @@ export class EmailCampaignService {
   /**
    * Close campaign setup
    */
-  async closeSetup(id: number) {
+  async closeSetup(id: string) {
     const campaign = await this.campaignRepository.findById(id);
 
     if (!campaign) {
@@ -173,7 +173,7 @@ export class EmailCampaignService {
   /**
    * Pause campaign
    */
-  async pauseCampaign(id: number) {
+  async pauseCampaign(id: string) {
     const campaign = await this.campaignRepository.findById(id);
 
     if (!campaign) {
@@ -199,7 +199,7 @@ export class EmailCampaignService {
   /**
    * Resume campaign
    */
-  async resumeCampaign(id: number) {
+  async resumeCampaign(id: string) {
     const campaign = await this.campaignRepository.findById(id);
 
     if (!campaign) {

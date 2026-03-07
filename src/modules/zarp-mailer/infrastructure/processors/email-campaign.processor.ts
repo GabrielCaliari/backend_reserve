@@ -29,7 +29,7 @@ export class EmailCampaignProcess {
     ) { }
 
     @Process('setup')
-    async handleSetup(job: Job<{ email_campaign_id: number }>) {
+    async handleSetup(job: Job<{ email_campaign_id: string }>) {
         try {
 
             console.log('opa')

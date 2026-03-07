@@ -155,8 +155,8 @@ export class PrismaMediaCollectionRepository implements IMediaCollectionReposito
         where.type = params.type;
       }
 
-      const page = params.page || 1;
-      const limit = params.limit || 20;
+      const page = Number(params.page) || 1;
+      const limit = Number(params.limit) || 20;
       const skip = (page - 1) * limit;
 
       const [records, total] = await Promise.all([
