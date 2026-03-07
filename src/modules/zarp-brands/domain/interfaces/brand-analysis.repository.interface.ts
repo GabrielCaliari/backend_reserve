@@ -7,34 +7,34 @@ export interface IBrandAnalysis {
     brand: string;
     niche: string;
     description: string;
-    user_id: number;
+    user_id: string;
 }
 
 export interface IBrandAnalysisRequest {
     valid: boolean;
-    brand_analysis_token_id: number;
-    brand_analysis_id?: number;
-    user_id: number;
+    brand_analysis_token_id: string;
+    brand_analysis_id?: string;
+    user_id: string;
 }
 
 export interface IBrandAnalysisToken {
     status: number;
-    user_id: number;
+    user_id: string;
 }
 
 export interface IBrandAnalysisRepository {
     create(data: IBrandAnalysis, tx?: any): Promise<any>;
     brandAnalysisRequestCreate(data: IBrandAnalysisRequest, tx?: any): Promise<any>;
-    invalidateBrandAnalysisRequest(id: number, tx?: any): Promise<any>;
-    validateBrandAnalysisRequest(id: number, brandAnalysisId: number, tx?: any): Promise<any>;
-    countBrandAnalysisRequestMonth(userId: number, valid?: boolean): Promise<number>;
-    selectByUser(userId: number): Promise<any[]>;
-    selectByUserAndId(id: number, userId: number): Promise<any>;
-    countBrandAnalysisMonth(userId: number): Promise<number>;
+    invalidateBrandAnalysisRequest(id: string, tx?: any): Promise<any>;
+    validateBrandAnalysisRequest(id: string, brandAnalysisId: string, tx?: any): Promise<any>;
+    countBrandAnalysisRequestMonth(userId: string, valid?: boolean): Promise<number>;
+    selectByUser(userId: string): Promise<any[]>;
+    selectByUserAndId(id: string, userId: string): Promise<any>;
+    countBrandAnalysisMonth(userId: string): Promise<number>;
     createBrandAnalysisTokens(tokens: IBrandAnalysisToken[]): Promise<any>;
-    countBrandAnalysisTokens(userId: number, used?: boolean): Promise<number>;
-    selectBrandAnalysisToken(userId: number, used?: boolean): Promise<any>;
-    useBrandAnalyticsToken(brandAnalysiId: number, tokenId: number, tx?: any): Promise<any>;
+    countBrandAnalysisTokens(userId: string, used?: boolean): Promise<number>;
+    selectBrandAnalysisToken(userId: string, used?: boolean): Promise<any>;
+    useBrandAnalyticsToken(brandAnalysiId: string, tokenId: string, tx?: any): Promise<any>;
 }
 
 export const BRAND_ANALYSIS_REPOSITORY = Symbol('BRAND_ANALYSIS_REPOSITORY');

@@ -4,10 +4,10 @@ import { PrismaService } from '../../../../shared/database/prisma.service';
 import { RepositoryException } from '../../../../shared/exceptions';
 
 export interface IBrandNotification {
-    id?: number;
-    user_id: number;
-    brand_id: number;
-    brand_monitoring_id: number;
+    id?: string;
+    user_id: string;
+    brand_id: string;
+    brand_monitoring_id: string;
 }
 
 @Injectable()

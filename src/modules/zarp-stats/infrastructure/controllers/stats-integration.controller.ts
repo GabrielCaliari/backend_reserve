@@ -6,7 +6,6 @@ import {
   Delete,
   Body,
   Param,
-  ParseIntPipe,
   Req,
   UseGuards,
   HttpCode,
@@ -64,7 +63,7 @@ export class StatsIntegrationController {
   @ApiResponse({ status: 200, description: 'Integration details', type: StatsIntegrationResponseDto })
   @ApiResponse({ status: 404, description: 'Not found' })
   async getById(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: string,
     @Req() req: any,
   ): Promise<StatsIntegrationResponseDto> {
     return this.integrationService.getById(id, req.tenant_id);
@@ -96,7 +95,7 @@ export class StatsIntegrationController {
   @ApiResponse({ status: 400, description: 'Invalid config' })
   @ApiResponse({ status: 404, description: 'Not found' })
   async update(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: string,
     @Req() req: any,
     @Body() dto: UpdateStatsIntegrationDto,
   ): Promise<StatsIntegrationResponseDto> {
@@ -110,7 +109,7 @@ export class StatsIntegrationController {
   @ApiResponse({ status: 204, description: 'Integration deleted' })
   @ApiResponse({ status: 404, description: 'Not found' })
   async delete(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: string,
     @Req() req: any,
   ): Promise<void> {
     return this.integrationService.delete(id, req.tenant_id);

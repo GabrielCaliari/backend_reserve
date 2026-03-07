@@ -17,7 +17,7 @@ export class LeadsMetricProvider implements IMetricProvider {
 
   constructor(private readonly prisma: PrismaService) {}
 
-  async getMetrics(tenantId?: number, dateRange?: DateRange): Promise<MetricGroup> {
+  async getMetrics(tenantId?: string, dateRange?: DateRange): Promise<MetricGroup> {
     const now = new Date();
     const from = dateRange?.from ?? new Date(now.getFullYear(), now.getMonth(), 1);
     const to = dateRange?.to ?? now;

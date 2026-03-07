@@ -15,7 +15,7 @@ export default class CampaignBatchRepository {
         un_success_rate?: number;
         un_failed_rate?: number;
         status: ECampaignBatchStatus;
-        email_id?: number;
+        email_id?: string;
         started_at?: Date;
         finished_at?: Date;
         email_campaign_id: string;
@@ -33,7 +33,7 @@ export default class CampaignBatchRepository {
         }
     }
 
-    async selectById(id: number, prisma?: PrismaClient) {
+    async selectById(id: string, prisma?: PrismaClient) {
         try {
             const conn = prisma ?? this.prisma;
             const campaignBatch = await conn.campaignBatch.findUnique({ where: { id } });
@@ -44,7 +44,7 @@ export default class CampaignBatchRepository {
         }
     }
 
-    async update(id: number, data: Partial<CampaignBatch>, prisma?: PrismaClient) {
+    async update(id: string, data: Partial<CampaignBatch>, prisma?: PrismaClient) {
         try {
             const conn = prisma ?? this.prisma;
             const campaignBatch = await conn.campaignBatch.update({ where: { id }, data });

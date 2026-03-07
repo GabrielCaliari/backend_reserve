@@ -5,7 +5,7 @@ export interface ICreateJournal {
 }
 
 export interface IJournalRepository {
-    create(data: ICreateJournal): Promise<{ id: number }>;
+    create(data: ICreateJournal): Promise<{ id: string }>;
     findByName(name: string): Promise<any>;
 }
 
@@ -17,7 +17,7 @@ export interface ICreateJournalToFetch {
 }
 
 export interface IJournalToFetchRepository {
-    create(data: ICreateJournalToFetch): Promise<{ id: number }>;
+    create(data: ICreateJournalToFetch): Promise<{ id: string }>;
     findByName(name: string): Promise<any>;
     findFirstNotSearchedXML(): Promise<any>;
     findAllNotSearchedXML(limit?: number): Promise<any[]>;

@@ -24,7 +24,7 @@ export default class BrandAlertRepository implements IBrandAlertRepository {
         }
     }
 
-    async findByBrand(brandId: number, limit?) {
+    async findByBrand(brandId: string, limit?) {
         try {
             const raw = await this.prisma.brandAlert.findMany({
                 where: {
@@ -42,7 +42,7 @@ export default class BrandAlertRepository implements IBrandAlertRepository {
         }
     }
 
-    async findLastMoves(userId: number, limit = 100) {
+    async findLastMoves(userId: string, limit = 100) {
         try {
             const brands = await this.prisma.brandAlert.findMany({
                 where: {

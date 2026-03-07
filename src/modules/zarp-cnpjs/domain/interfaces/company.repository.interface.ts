@@ -50,7 +50,7 @@ export interface ICreateCompanyExport {
     page: number;
     page_count: number;
     filters: {};
-    user_id: number;
+    user_id: string;
 }
 
 export interface ICompanyRepository {
@@ -60,8 +60,8 @@ export interface ICompanyRepository {
     findByState(params: { uf: string; fields: ICompanyFields }): Promise<any[]>;
     findByCity(params: { cityCode: string; fields: ICompanyFields }): Promise<any[]>;
     createCompanyExport(data: ICreateCompanyExport): Promise<any>;
-    findCompanyExportById(id: number): Promise<any>;
-    updateCompanyExport(id: number, data: Partial<ICreateCompanyExport>): Promise<any>;
+    findCompanyExportById(id: string): Promise<any>;
+    updateCompanyExport(id: string, data: Partial<ICreateCompanyExport>): Promise<any>;
 }
 
 export const COMPANY_REPOSITORY = Symbol('COMPANY_REPOSITORY');

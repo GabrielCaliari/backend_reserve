@@ -59,7 +59,7 @@ export default class SMSNotificationRepository {
         }
     }
 
-    async selectById(id: number) {
+    async selectById(id: string) {
         try {
             const result = await this.prisma.sMSNotification.findUnique({
                 where: {

@@ -62,14 +62,14 @@ describe('CollectionSecretKeyGuard', () => {
     const context = createMockExecutionContext({ 'x-collection-secret-key': secretKey });
 
     const inactiveCollection = new LeadCollection({
-      id: 1,
+      id: '1',
       name: 'Test',
       slug: 'test',
       source: 'test',
       secretKeyHash: 'hash',
       secretKeySalt: 'salt',
       active: false,
-      tenantId: 1,
+      tenantId: '1',
     });
 
     mockRepository.findBySecretKey.mockResolvedValue(inactiveCollection);
@@ -88,14 +88,14 @@ describe('CollectionSecretKeyGuard', () => {
     } as ExecutionContext;
 
     const activeCollection = new LeadCollection({
-      id: 1,
+      id: '1',
       name: 'Test',
       slug: 'test',
       source: 'test',
       secretKeyHash: hash,
       secretKeySalt: 'salt',
       active: true,
-      tenantId: 1,
+      tenantId: '1',
     });
 
     mockRepository.findBySecretKey.mockResolvedValue(activeCollection);

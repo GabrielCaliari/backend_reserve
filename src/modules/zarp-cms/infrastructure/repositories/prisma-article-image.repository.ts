@@ -23,26 +23,26 @@ export class PrismaArticleImageRepository implements IArticleImageRepository {
     });
   }
 
-  async findById(id: number): Promise<any> {
+  async findById(id: string): Promise<any> {
     return this.prisma.articleImage.findUnique({
       where: { id },
     });
   }
 
-  async findAllByArticleId(articleId: number): Promise<any[]> {
+  async findAllByArticleId(articleId: string): Promise<any[]> {
     return this.prisma.articleImage.findMany({
       where: { article_id: String(articleId) },
       orderBy: { display_order: 'asc' },
     });
   }
 
-  async countByArticleId(articleId: number): Promise<number> {
+  async countByArticleId(articleId: string): Promise<number> {
     return this.prisma.articleImage.count({
       where: { article_id: String(articleId) },
     });
   }
 
-  async updateDisplayOrders(items: { id: number; display_order: number }[]): Promise<void> {
+  async updateDisplayOrders(items: { id: string; display_order: number }[]): Promise<void> {
     await this.prisma.$transaction(
       items.map((item) =>
         this.prisma.articleImage.update({
@@ -53,13 +53,13 @@ export class PrismaArticleImageRepository implements IArticleImageRepository {
     );
   }
 
-  async delete(id: number): Promise<void> {
+  async delete(id: string): Promise<void> {
     await this.prisma.articleImage.delete({
       where: { id },
     });
   }
 
-  async deleteAllByArticleId(articleId: number): Promise<void> {
+  async deleteAllByArticleId(articleId: string): Promise<void> {
     await this.prisma.articleImage.deleteMany({
       where: { article_id: String(articleId) },
     });

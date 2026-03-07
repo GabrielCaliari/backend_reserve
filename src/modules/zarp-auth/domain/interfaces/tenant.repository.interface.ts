@@ -13,13 +13,13 @@ export interface IUpdateTenant {
 
 export interface ITenantRepository {
   create(data: ICreateTenant): Promise<any>;
-  selectById(id: number): Promise<any>;
+  selectById(id: string): Promise<any>;
   selectBySlug(slug: string): Promise<any>;
   selectAll(): Promise<any[]>;
-  update(id: number, data: IUpdateTenant): Promise<any>;
-  deactivate(id: number): Promise<any>;
-  activate(id: number): Promise<any>;
-  delete(id: number): Promise<any>;
+  update(id: string, data: IUpdateTenant): Promise<any>;
+  deactivate(id: string): Promise<any>;
+  activate(id: string): Promise<any>;
+  delete(id: string): Promise<any>;
 }
 
 export const TENANT_REPOSITORY = Symbol('TENANT_REPOSITORY');

@@ -1,4 +1,4 @@
-﻿import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { errorTypes } from '../../../../shared/constants/error-types';
 import { errorResponse, inverterObjeto, separar } from '../../../../shared/helpers';
 import {
@@ -27,18 +27,18 @@ import { EStatus } from '../../domain/enums/company.enum';
 export interface ISearchParams {
     cnae?: string[]; // TODO: ADICIONAR PARA FILTRAR POR CNAES SECUNDARIOS TAMBEM
     cnae_secondary?: boolean;
-    uf?: string; // TODO: corrigir, nÃ£o estÃ¡ filtrando
-    city?: string; // TODO: corrigir, nÃ£o estÃ¡ filtrando
-    branch_type?: number; // TODO: erro ao filtrar, estÃ¡ dando erro 500
-    new_companies?: boolean; // TODO: nÃ£o estÃ¡ funcionando
-    recently_closed?: boolean;  // TODO: nÃ£o estÃ¡ funcionando
+    uf?: string; // TODO: corrigir, não está filtrando
+    city?: string; // TODO: corrigir, não está filtrando
+    branch_type?: number; // TODO: erro ao filtrar, está dando erro 500
+    new_companies?: boolean; // TODO: não está funcionando
+    recently_closed?: boolean;  // TODO: não está funcionando
     name?: string; // fantasy_name || business_name TODO: colocar para ser indiferente quando for maiusculo e minusculo
     tax_regime?: number; // 1 = Imenes e isentas; 2 = Lucro arbitrado; 3 = Lucro real; 4 = Lucro presumido
     size?: string;
     search_hash?: string;
-    status?: string; // TODO: NÃ£o estÃ¡ funcionando 
-    mei_option?: boolean; // TODO: nÃ£o estÃ¡ funcionando
-    nacimal_simple_option?: boolean;  // TODO: nÃ£o estÃ¡ funcionando
+    status?: string; // TODO: Não está funcionando 
+    mei_option?: boolean; // TODO: não está funcionando
+    nacimal_simple_option?: boolean;  // TODO: não está funcionando
 }
 
 @Injectable()
@@ -65,7 +65,7 @@ export class CompanyService {
     async list(
         page: number,
         limit: number,
-        userId: number,
+        userId: string,
         rows: ICompanyFields =
             {
                 cnpj: true,
@@ -298,7 +298,7 @@ export class CompanyService {
         }
     }
 
-    async count({ search_hash, user_id }: { search_hash: string, user_id: number }) {
+    async count({ search_hash, user_id }: { search_hash: string, user_id: string }) {
         try {
             const search = await this.searchRepository.findByHash(search_hash);
 
@@ -324,7 +324,7 @@ export class CompanyService {
 
     async export(
         start: number,
-        userId: number,
+        userId: string,
         searchHash: string,
         page: number
     ) {
@@ -377,7 +377,7 @@ export class CompanyService {
     }
 
     async processExport(
-        exportId: number
+        exportId: string
     ) {
         const fileName = randomBytes(32).toString('hex').slice(0, 32);
         const filePath = path.join(__dirname, '..', '..', '..', '..', 'temp', `${fileName}.csv`)
@@ -386,7 +386,7 @@ export class CompanyService {
             const companyExport = await this.companyRepository.findCompanyExportById(exportId);
 
             if (!companyExport.id) {
-                throw `Empresa buscada pelo ID ${exportId} nÃ£o foi encontrada pelo mÃ©todo findCompanyExportById`;
+                throw `Empresa buscada pelo ID ${exportId} não foi encontrada pelo método findCompanyExportById`;
             }
 
             const writeStream = createWriteStream(filePath);
@@ -453,21 +453,21 @@ export class CompanyService {
                 csvStream.write({
                     'CNPJ': company.cnpj,
                     'Tipo de Filial': company.branch_type,
-                    'RazÃ£o Social': company.business_name,
+                    'Razão Social': company.business_name,
                     'Status': company.status,
                     'Data do Status': company.date_status ? new Date(company.date_status).toLocaleDateString('pt-BR') : '',
-                    'CÃ³digo Detalhado do Status': company.code_detail_status,
+                    'Código Detalhado do Status': company.code_detail_status,
                     'Cidade Exterior': company.outer_city,
-                    'CÃ³digo do PaÃ­s': company.coutry_code,
-                    'Data de InÃ­cio': company.start_date ? new Date(company.start_date).toLocaleDateString('pt-BR') : '',
+                    'Código do País': company.coutry_code,
+                    'Data de Início': company.start_date ? new Date(company.start_date).toLocaleDateString('pt-BR') : '',
                     'Tipo de Logradouro': company.type_of_place,
                     'Logradouro': company.place,
-                    'NÃºmero': company.house_number,
+                    'Número': company.house_number,
                     'Complemento': company.address_complement,
                     'Bairro': company.district,
                     'CEP': company.cep,
                     'UF': company.uf,
-                    'CÃ³digo da Cidade': company.city_code,
+                    'Código da Cidade': company.city_code,
                     'DDD 1': company.ddd_1,
                     'Telefone 1': company.phone_1,
                     'DDD 2': company.ddd_2,
@@ -475,14 +475,14 @@ export class CompanyService {
                     'DDD Fax': company.ddd_fax,
                     'Fax': company.fax,
                     'Email': company.email,
-                    'CitaÃ§Ã£o Especial': company.special_citation,
-                    'Data da CitaÃ§Ã£o Especial': company.special_citation_date ? new Date(company.special_citation_date).toLocaleDateString('pt-BR') : '',
-                    'Data de AtualizaÃ§Ã£o': company.load_update_date ? new Date(company.load_update_date).toLocaleDateString('pt-BR') : '',
+                    'Citação Especial': company.special_citation,
+                    'Data da Citação Especial': company.special_citation_date ? new Date(company.special_citation_date).toLocaleDateString('pt-BR') : '',
+                    'Data de Atualização': company.load_update_date ? new Date(company.load_update_date).toLocaleDateString('pt-BR') : '',
                     'CNAE Principal': company.main_cnae,
-                    'CNAEs SecundÃ¡rios': company.secondary_cnae,
+                    'CNAEs Secundários': company.secondary_cnae,
                     'Nome Fantasia': company.fantasy_name,
-                    'Natureza JurÃ­dica': company.legal_nature,
-                    'QualificaÃ§Ã£o do Representante': company.qualification_representative_before_cnpj,
+                    'Natureza Jurídica': company.legal_nature,
+                    'Qualificação do Representante': company.qualification_representative_before_cnpj,
                     'Capital Social': company.social_capital,
                     'Porte': company.size,
                     'Entidade Federativa': company.federative_entity,
@@ -531,7 +531,7 @@ export class CompanyService {
         }
     }
 
-    async downloadExport(exportId: number, userId: number) {
+    async downloadExport(exportId: string, userId: string) {
         try {
             const companyExport = await this.companyRepository.findCompanyExportById(exportId);
     
@@ -572,7 +572,7 @@ export class CompanyService {
         }
     }
 
-    async exportFile(exportId: number, userId: number) {
+    async exportFile(exportId: string, userId: string) {
         try {
             const companyExport = await this.companyRepository.findCompanyExportById(exportId);
 

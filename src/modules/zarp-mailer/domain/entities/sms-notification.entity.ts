@@ -1,5 +1,5 @@
 export class SMSNotification {
-  public id?: number;
+  public id?: string;
   public webhook?: string;
   public name: string;
   public total_notifications: number;

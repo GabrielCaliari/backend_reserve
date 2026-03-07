@@ -4,7 +4,6 @@ import {
   Delete,
   Get,
   Param,
-  ParseIntPipe,
   Patch,
   Query,
   Res,
@@ -83,7 +82,7 @@ export class AdminUserController {
     summary: 'Get user by ID (super_admin only)',
     description: 'Returns detailed information about a specific user'
   })
-  @ApiParam({ name: 'id', type: Number, description: 'User ID' })
+  @ApiParam({ name: 'id', type: String, description: 'User ID' })
   @ApiResponse({ 
     status: 200, 
     description: 'User found',
@@ -91,7 +90,7 @@ export class AdminUserController {
   })
   @ApiResponse({ status: 403, description: 'Insufficient permissions' })
   @ApiResponse({ status: 404, description: 'User not found' })
-  async findById(@Param('id', ParseIntPipe) id: number, @Res() res: Response) {
+  async findById(@Param('id') id: string, @Res() res: Response) {
     const result = await this.userManagementService.findById(id);
     return res.status(result.status).json(result.data);
   }
@@ -103,7 +102,7 @@ export class AdminUserController {
     summary: 'Update user data (super_admin only)',
     description: 'Updates user name, email, or phone number'
   })
-  @ApiParam({ name: 'id', type: Number, description: 'User ID' })
+  @ApiParam({ name: 'id', type: String, description: 'User ID' })
   @ApiBody({ type: UpdateUserDTO })
   @ApiResponse({ 
     status: 200, 
@@ -121,7 +120,7 @@ export class AdminUserController {
   @ApiResponse({ status: 403, description: 'Insufficient permissions' })
   @ApiResponse({ status: 404, description: 'User not found' })
   async update(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: string,
     @Body() data: UpdateUserDTO,
     @Res() res: Response,
   ) {
@@ -136,7 +135,7 @@ export class AdminUserController {
     summary: 'Deactivate user (super_admin only)',
     description: 'Deactivates a user account by setting expiration date to now'
   })
-  @ApiParam({ name: 'id', type: Number, description: 'User ID' })
+  @ApiParam({ name: 'id', type: String, description: 'User ID' })
   @ApiResponse({ 
     status: 200, 
     description: 'User deactivated',
@@ -150,7 +149,7 @@ export class AdminUserController {
   @ApiResponse({ status: 403, description: 'Insufficient permissions' })
   @ApiResponse({ status: 404, description: 'User not found' })
   async deactivate(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: string,
     @Res() res: Response,
   ) {
     const result = await this.userManagementService.deactivate(id);
@@ -164,7 +163,7 @@ export class AdminUserController {
     summary: 'Delete user permanently (super_admin only)',
     description: 'Permanently deletes a user account and all associated data'
   })
-  @ApiParam({ name: 'id', type: Number, description: 'User ID' })
+  @ApiParam({ name: 'id', type: String, description: 'User ID' })
   @ApiResponse({ 
     status: 200, 
     description: 'User deleted',
@@ -176,7 +175,7 @@ export class AdminUserController {
   })
   @ApiResponse({ status: 403, description: 'Insufficient permissions' })
   @ApiResponse({ status: 404, description: 'User not found' })
-  async delete(@Param('id', ParseIntPipe) id: number, @Res() res: Response) {
+  async delete(@Param('id') id: string, @Res() res: Response) {
     const result = await this.userManagementService.delete(id);
     return res.status(result.status).json(result.data);
   }

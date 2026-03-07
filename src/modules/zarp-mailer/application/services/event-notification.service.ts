@@ -1,4 +1,4 @@
-﻿import { Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import SMSNotificationRepository from '../../infrastructure/repositories/sms-notification.repository';
 import { CreateEventNotificationDTO, CreateEventNotificationEventDTO, CreateEventNotificationEventParam, IdEventNotificationEventParam, IdNotificationEventNotificationEventParam } from '../dtos/event-notification.dto';
 import { errorResponse, renderTemplate, successResponse } from '../../../../shared/helpers';
@@ -60,10 +60,10 @@ export class EventNotificationService {
 
     async findByIdSMSNotification({ id }: IdEventNotificationEventParam) {
         try {
-            const smsNotifications = await this.smsNotificationRepository.selectById(+id);
+            const smsNotifications = await this.smsNotificationRepository.selectById(id);
 
             if (!smsNotifications) {
-                return errorResponse(ERROR_FIND_BY_ID_SMS_NOTIFICATION, 404, 'NÃ£o foi possÃ­vel encontrar nenhum SMS notification com o ID informado.');
+                return errorResponse(ERROR_FIND_BY_ID_SMS_NOTIFICATION, 404, 'Não foi possível encontrar nenhum SMS notification com o ID informado.');
             }
 
             return successResponse({
@@ -85,7 +85,7 @@ export class EventNotificationService {
                 return errorResponse(
                     ERROR_CREATE_SMS_NOTIFICATION_EVENT_NOTIFICATION_NOT_FOUND,
                     404,
-                    'NÃ£o foi possÃ­vel encontrar nenhum SMS notification com o webhook informado.'
+                    'Não foi possível encontrar nenhum SMS notification com o webhook informado.'
                 );
             }
 
@@ -147,7 +147,7 @@ export class EventNotificationService {
 
     async findByIdNotificationSMSNotificationEvent({ id_notification }: IdNotificationEventNotificationEventParam) {
         try {
-            const events = await this.smsNotificationEventRepository.selectBySMSNotification(+id_notification);
+            const events = await this.smsNotificationEventRepository.selectBySMSNotification(id_notification);
 
             return successResponse(events.map(raw => {
                 return {

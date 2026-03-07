@@ -36,13 +36,7 @@ export class AdminJwtGuard implements CanActivate {
     }
 
     const token = authHeader.replace('Bearer ', '');
-    const sessionIdNumber = parseInt(sessionId, 10);
-
-    if (isNaN(sessionIdNumber)) {
-      throw new UnauthorizedException('Invalid session-id format');
-    }
-
-    const result = await this.tokenValidator.validate(token, sessionIdNumber);
+    const result = await this.tokenValidator.validate(token, sessionId);
 
     if (!result.valid) {
       throw new UnauthorizedException('Invalid or expired token');
@@ -51,7 +45,7 @@ export class AdminJwtGuard implements CanActivate {
     // Attach to request for controllers
     request.admin_id = result.userId;
     request.token = token;
-    request['session-id'] = sessionIdNumber;
+    request['session-id'] = sessionId;
 
     return true;
   }

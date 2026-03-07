@@ -35,7 +35,7 @@ export class StatsService {
     this.externalProviders = externalProviders ?? [];
   }
 
-  async getDashboard(tenantId: number, dateRange?: DateRange): Promise<DashboardResponseDto> {
+  async getDashboard(tenantId: string, dateRange?: DateRange): Promise<DashboardResponseDto> {
     const groups: MetricGroupResponseDto[] = [];
 
     // Collect from all internal providers in parallel (errors are isolated per provider)

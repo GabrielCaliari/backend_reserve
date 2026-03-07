@@ -5,7 +5,7 @@ import { IPaginatedResult } from './media-asset.repository.interface';
 export const MEDIA_COLLECTION_REPOSITORY = Symbol('MEDIA_COLLECTION_REPOSITORY');
 
 export interface IFindCollectionsParams {
-  tenant_id: number;
+  tenant_id: string;
   type?: ECollectionType;
   page?: number;
   limit?: number;
@@ -35,7 +35,7 @@ export interface IMediaCollectionRepository {
    * @param tx - Optional transaction context
    * @returns The MediaCollection or null if not found
    */
-  findById(id: string, tenantId: number, tx?: any): Promise<MediaCollection | null>;
+  findById(id: string, tenantId: string, tx?: any): Promise<MediaCollection | null>;
 
   /**
    * Finds a MediaCollection by slug and tenant
@@ -44,7 +44,7 @@ export interface IMediaCollectionRepository {
    * @param tx - Optional transaction context
    * @returns The MediaCollection or null if not found
    */
-  findBySlug(slug: string, tenantId: number, tx?: any): Promise<MediaCollection | null>;
+  findBySlug(slug: string, tenantId: string, tx?: any): Promise<MediaCollection | null>;
 
   /**
    * Finds all MediaCollections matching the filter criteria
@@ -62,7 +62,7 @@ export interface IMediaCollectionRepository {
    * @param tx - Optional transaction context
    * @returns The updated MediaCollection
    */
-  update(id: string, data: Partial<MediaCollection>, tenantId: number, tx?: any): Promise<MediaCollection>;
+  update(id: string, data: Partial<MediaCollection>, tenantId: string, tx?: any): Promise<MediaCollection>;
 
   /**
    * Deletes a MediaCollection record
@@ -70,5 +70,5 @@ export interface IMediaCollectionRepository {
    * @param tenantId - The tenant ID for isolation
    * @param tx - Optional transaction context
    */
-  delete(id: string, tenantId: number, tx?: any): Promise<void>;
+  delete(id: string, tenantId: string, tx?: any): Promise<void>;
 }

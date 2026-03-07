@@ -53,7 +53,7 @@ export default class BrandAnalysisRepository implements IBrandAnalysisRepository
         }
     }
 
-    async invalidateBrandAnalysisRequest(id: number, tx?: PrismaClient) {
+    async invalidateBrandAnalysisRequest(id: string, tx?: PrismaClient) {
         try {
             const conn = tx ? tx : this.prisma;
 
@@ -70,7 +70,7 @@ export default class BrandAnalysisRepository implements IBrandAnalysisRepository
         }
     }
 
-    async validateBrandAnalysisRequest(id: number, brandAnalysisId: number, tx?: PrismaClient) {
+    async validateBrandAnalysisRequest(id: string, brandAnalysisId: string, tx?: PrismaClient) {
         try {
             const conn = tx ? tx : this.prisma;
 
@@ -88,7 +88,7 @@ export default class BrandAnalysisRepository implements IBrandAnalysisRepository
         }
     }
 
-    async countBrandAnalysisRequestMonth(userId: number, valid: boolean = true) {
+    async countBrandAnalysisRequestMonth(userId: string, valid: boolean = true) {
         try {
             const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
             const endOfMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0);
@@ -110,7 +110,7 @@ export default class BrandAnalysisRepository implements IBrandAnalysisRepository
         }
     }
 
-    async selectByUser(userId: number) {
+    async selectByUser(userId: string) {
         try {
             const raws = await this.prisma.brandAnalysis.findMany({
                 where: {
@@ -124,7 +124,7 @@ export default class BrandAnalysisRepository implements IBrandAnalysisRepository
         }
     }
 
-    async selectByUserAndId(id: number, userId: number) {
+    async selectByUserAndId(id: string, userId: string) {
         try {
             const raw = await this.prisma.brandAnalysis.findUnique({
                 where: {
@@ -139,7 +139,7 @@ export default class BrandAnalysisRepository implements IBrandAnalysisRepository
         }
     }
 
-    async countBrandAnalysisMonth(userId: number) {
+    async countBrandAnalysisMonth(userId: string) {
         try {
             const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
             const endOfMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0);
@@ -172,7 +172,7 @@ export default class BrandAnalysisRepository implements IBrandAnalysisRepository
         }
     }
 
-    async countBrandAnalysisTokens(userId: number, used?: boolean) {
+    async countBrandAnalysisTokens(userId: string, used?: boolean) {
         try {
             const count = await this.prisma.brandAnalysisToken.count({
                 where: {
@@ -192,7 +192,7 @@ export default class BrandAnalysisRepository implements IBrandAnalysisRepository
         }
     }
 
-    async selectBrandAnalysisToken(userId: number, used: boolean = false) {
+    async selectBrandAnalysisToken(userId: string, used: boolean = false) {
         try {
             const token = await this.prisma.brandAnalysisToken.findFirst({
                 where: {
@@ -212,7 +212,7 @@ export default class BrandAnalysisRepository implements IBrandAnalysisRepository
         }
     }
 
-    async useBrandAnalyticsToken(brandAnalysiId: number, tokenId: number, tx?: PrismaClient) {
+    async useBrandAnalyticsToken(brandAnalysiId: string, tokenId: string, tx?: PrismaClient) {
         try {
             const conn = tx ? tx : this.prisma;
 

@@ -25,7 +25,7 @@ export default class TenantRepository implements ITenantRepository {
     }
   }
 
-  async selectById(id: number) {
+  async selectById(id: string) {
     try {
       return await this.prisma.tenant.findUnique({
         where: { id },
@@ -61,7 +61,7 @@ export default class TenantRepository implements ITenantRepository {
     }
   }
 
-  async update(id: number, data: IUpdateTenant) {
+  async update(id: string, data: IUpdateTenant) {
     try {
       return await this.prisma.tenant.update({
         where: { id },
@@ -72,7 +72,7 @@ export default class TenantRepository implements ITenantRepository {
     }
   }
 
-  async deactivate(id: number) {
+  async deactivate(id: string) {
     try {
       return await this.prisma.tenant.update({
         where: { id },
@@ -83,7 +83,7 @@ export default class TenantRepository implements ITenantRepository {
     }
   }
 
-  async activate(id: number) {
+  async activate(id: string) {
     try {
       return await this.prisma.tenant.update({
         where: { id },
@@ -94,7 +94,7 @@ export default class TenantRepository implements ITenantRepository {
     }
   }
 
-  async delete(id: number) {
+  async delete(id: string) {
     try {
       await this.prisma.tenant.delete({
         where: { id },

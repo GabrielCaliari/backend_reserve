@@ -59,7 +59,7 @@ export class MediaCollectionService {
    */
   async createCollection(
     dto: CreateCollectionDTO,
-    tenantId: number,
+    tenantId: string,
   ): Promise<{ status: number; data: MediaCollection | { code: string } }> {
     // Check if slug already exists for tenant (Requirement 2.1)
     const existing = await this.collectionRepo.findBySlug(dto.slug, tenantId);
@@ -104,7 +104,7 @@ export class MediaCollectionService {
    */
   async getCollectionById(
     id: string,
-    tenantId: number,
+    tenantId: string,
   ): Promise<{ status: number; data: MediaCollection | { code: string } }> {
     // Validate collection UUID format (Requirement 15.7)
     if (!isValidUUID(id)) {
@@ -141,7 +141,7 @@ export class MediaCollectionService {
      * - Results are paginated with total count and page metadata
      */
     async listCollections(
-      tenantId: number,
+      tenantId: string,
       type?: ECollectionType,
       page: number = 1,
       limit: number = 20,
@@ -177,7 +177,7 @@ export class MediaCollectionService {
      */
     async getCollectionAssets(
       id: string,
-      tenantId: number,
+      tenantId: string,
       page: number = 1,
       limit: number = 20,
     ): Promise<{ status: number; data: IPaginatedResult<MediaAsset> | { code: string } }> {
@@ -225,7 +225,7 @@ export class MediaCollectionService {
     async updateCollection(
       id: string,
       data: Partial<MediaCollection>,
-      tenantId: number,
+      tenantId: string,
     ): Promise<{ status: number; data: MediaCollection | { code: string } }> {
       // Validate collection UUID format (Requirement 15.7)
       if (!isValidUUID(id)) {
@@ -265,7 +265,7 @@ export class MediaCollectionService {
      */
     async deleteCollection(
       id: string,
-      tenantId: number,
+      tenantId: string,
     ): Promise<{ status: number; data: { deleted: boolean } | { code: string } }> {
       // Validate collection UUID format (Requirement 15.7)
       if (!isValidUUID(id)) {

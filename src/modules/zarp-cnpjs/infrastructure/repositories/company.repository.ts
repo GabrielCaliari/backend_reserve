@@ -332,7 +332,7 @@ export default class CompanyRepository implements ICompanyRepository {
         }
     }
 
-    async findCompanyExportById(id: number) {
+    async findCompanyExportById(id: string) {
         try {
             const raw = await this.prisma.companyExport.findUnique({
                 where: {
@@ -346,7 +346,7 @@ export default class CompanyRepository implements ICompanyRepository {
         }
     }
 
-    async updateCompanyExport(id: number, data: Partial<ICreateCompanyExport>) {
+    async updateCompanyExport(id: string, data: Partial<ICreateCompanyExport>) {
         try {
             const raw = await this.prisma.companyExport.update({
                 where: {

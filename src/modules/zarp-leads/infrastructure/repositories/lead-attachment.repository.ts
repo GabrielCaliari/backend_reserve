@@ -9,11 +9,11 @@ import {
 export class PrismaLeadAttachmentRepository implements ILeadAttachmentRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(leadId: string, assetId: number, label?: string): Promise<LeadAttachmentData> {
+  async create(leadId: string, assetId: string, label?: string): Promise<LeadAttachmentData> {
     const attachment = await this.prisma.leadAttachment.create({
       data: {
         lead_id: leadId,
-        asset_id: String(assetId),
+        asset_id: assetId,
         label,
       },
     });
@@ -30,7 +30,7 @@ export class PrismaLeadAttachmentRepository implements ILeadAttachmentRepository
     return attachments.map(this.toDomain);
   }
 
-  async findById(id: number): Promise<LeadAttachmentData | null> {
+  async findById(id: string): Promise<LeadAttachmentData | null> {
     const attachment = await this.prisma.leadAttachment.findUnique({
       where: { id },
     });
@@ -38,7 +38,7 @@ export class PrismaLeadAttachmentRepository implements ILeadAttachmentRepository
     return attachment ? this.toDomain(attachment) : null;
   }
 
-  async delete(id: number): Promise<void> {
+  async delete(id: string): Promise<void> {
     await this.prisma.leadAttachment.delete({
       where: { id },
     });

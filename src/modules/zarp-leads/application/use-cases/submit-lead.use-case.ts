@@ -6,8 +6,8 @@ import Email from '../../../../shared/domain/value-objects/email.vo';
 import PhoneNumber from '../../../../shared/domain/value-objects/phone-number.vo';
 
 export interface TenantContext {
-  tenantId: number;
-  collectionId: number;
+  tenantId: string;
+  collectionId: string;
 }
 
 @Injectable()

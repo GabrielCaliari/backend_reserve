@@ -64,7 +64,7 @@ export default class BrandRepository implements IBrandRepository {
         }
     }
 
-    async findById(brandId: number, include: IBrandInclude = {
+    async findById(brandId: string, include: IBrandInclude = {
         BrandAlert: false
     }) {
         try {
@@ -81,7 +81,7 @@ export default class BrandRepository implements IBrandRepository {
         }
     }
 
-    async findByNameAndUser(name: string, userId: number) {
+    async findByNameAndUser(name: string, userId: string) {
         try {
             const raw = await this.prisma.brand.findFirst({
                 where: {

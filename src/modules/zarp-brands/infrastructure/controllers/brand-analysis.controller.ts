@@ -45,7 +45,7 @@ export class BrandAnalysisController {
     @ApiResponse({ status: 401, description: 'Invalid or expired token' })
     async findByUser(
         @Res() res: Response,
-        @Req() req: Request & { user_id: number }
+        @Req() req: Request & { user_id: string }
     ) {
         const userId = req.user_id;
         const result = await this.brandAnalysisService.findByUser(userId);
@@ -62,10 +62,10 @@ export class BrandAnalysisController {
     async findByUserAndId(
         @Param() params: FindByUserAndIdDTO,
         @Res() res: Response,
-        @Req() req: Request & { user_id: number }
+        @Req() req: Request & { user_id: string }
     ) {
         const userId = req.user_id;
-        const result = await this.brandAnalysisService.findByUserAndId(+params.id, userId);
+        const result = await this.brandAnalysisService.findByUserAndId(params.id, userId);
         return res.status(result.status).json(result.data);
     }
 }

@@ -30,5 +30,5 @@ export const METRIC_PROVIDERS = 'METRIC_PROVIDERS';
 export interface IMetricProvider {
   readonly moduleKey: string;
   readonly label: string;
-  getMetrics(tenantId?: number, dateRange?: DateRange): Promise<MetricGroup>;
+  getMetrics(tenantId?: string, dateRange?: DateRange): Promise<MetricGroup>;
 }

@@ -60,8 +60,8 @@ export class AuthorService {
    */
   async createAuthor(dto: CreateAuthorDTO): Promise<ServiceResponse<Author>> {
     try {
-      // Validate tenant_id is positive
-      if (dto.tenantId <= 0) {
+// Validate tenant_id is present
+        if (!dto.tenantId) {
         return errorResponse(ERROR_INVALID_TENANT, 400);
       }
 
@@ -313,7 +313,7 @@ export class AuthorService {
    * **Validates: Requirement 5.1**
    */
   async findByTenantId(
-    tenantId: number,
+    tenantId: string,
     filters?: { active?: boolean; page?: number; limit?: number },
   ): Promise<ServiceResponse<any>> {
     try {
@@ -336,7 +336,7 @@ export class AuthorService {
    */
   private async validateAvatar(
     avatarId: string,
-    tenantId: number,
+    tenantId: string,
   ): Promise<{ valid: boolean; error?: string; status?: number }> {
     try {
       // Validate avatar ID UUID format

@@ -77,26 +77,23 @@ export class TenantGuard implements CanActivate {
     return true;
   }
 
-  private resolveTenantId(request: any): number | null {
+  private resolveTenantId(request: any): string | null {
     // 1. Route param
     const paramId = request.params?.tenantId || request.params?.tenant_id;
     if (paramId) {
-      const parsed = parseInt(paramId, 10);
-      return isNaN(parsed) ? null : parsed;
+      return paramId ? String(paramId) : null;
     }
 
     // 2. Header
     const headerId = request.headers?.['x-tenant-id'];
     if (headerId) {
-      const parsed = parseInt(headerId, 10);
-      return isNaN(parsed) ? null : parsed;
+      return headerId ? String(headerId) : null;
     }
 
     // 3. Body
     const bodyId = request.body?.tenant_id;
     if (bodyId) {
-      const parsed = parseInt(bodyId, 10);
-      return isNaN(parsed) ? null : parsed;
+      return bodyId ? String(bodyId) : null;
     }
 
     return null;

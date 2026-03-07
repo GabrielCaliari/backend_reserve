@@ -4,7 +4,7 @@ import { EAssetStatus } from '../enums/asset-status.enum';
 export const MEDIA_ASSET_REPOSITORY = Symbol('MEDIA_ASSET_REPOSITORY');
 
 export interface IFindAssetsParams {
-  tenant_id: number;
+  tenant_id: string;
   collection_id?: string; // UUID reference to MediaCollection
   status?: EAssetStatus;
   mime_type?: string;
@@ -44,7 +44,7 @@ export interface IMediaAssetRepository {
    * @param tx - Optional transaction context
    * @returns The MediaAsset or null if not found
    */
-  findById(id: string, tenantId: number, tx?: any): Promise<MediaAsset | null>;
+  findById(id: string, tenantId: string, tx?: any): Promise<MediaAsset | null>;
 
   /**
    * Finds all MediaAssets matching the filter criteria
@@ -62,7 +62,7 @@ export interface IMediaAssetRepository {
    * @param tx - Optional transaction context
    * @returns The updated MediaAsset
    */
-  update(id: string, data: Partial<MediaAsset>, tenantId: number, tx?: any): Promise<MediaAsset>;
+  update(id: string, data: Partial<MediaAsset>, tenantId: string, tx?: any): Promise<MediaAsset>;
 
   /**
    * Deletes a MediaAsset record (cascade deletes relations)
@@ -70,7 +70,7 @@ export interface IMediaAssetRepository {
    * @param tenantId - The tenant ID for isolation
    * @param tx - Optional transaction context
    */
-  delete(id: string, tenantId: number, tx?: any): Promise<void>;
+  delete(id: string, tenantId: string, tx?: any): Promise<void>;
 
   /**
    * Counts assets in a collection
@@ -79,5 +79,5 @@ export interface IMediaAssetRepository {
    * @param tx - Optional transaction context
    * @returns The count of assets
    */
-  countByCollection(collectionId: string, tenantId: number, tx?: any): Promise<number>;
+  countByCollection(collectionId: string, tenantId: string, tx?: any): Promise<number>;
 }

@@ -1,24 +1,24 @@
 export class LeadCollection {
-  public readonly id?: number;
+  public readonly id?: string;
   public name: string;
   public slug: string;
   public source: string;
   public secretKeyHash: string;
   public secretKeySalt: string;
   public active: boolean;
-  public tenantId: number;
+  public tenantId: string;
   public readonly createdAt?: Date;
   public readonly updatedAt?: Date;
 
   constructor(data: {
-    id?: number;
+    id?: string;
     name: string;
     slug: string;
     source: string;
     secretKeyHash: string;
     secretKeySalt: string;
     active?: boolean;
-    tenantId: number;
+    tenantId: string;
     createdAt?: Date;
     updatedAt?: Date;
   }) {

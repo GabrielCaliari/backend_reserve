@@ -88,7 +88,7 @@ export class RolesGuard implements CanActivate {
     let effectiveRole: EAdminRole = admin.role as EAdminRole;
 
     // If tenant_id is present, use per-tenant role
-    const tenantId: number | undefined = request.tenant_id;
+    const tenantId: string | undefined = request.tenant_id;
     if (tenantId) {
       const tenantRole = await this.adminTenantRepository.findRoleInTenant(adminId, tenantId);
 

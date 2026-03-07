@@ -9,8 +9,8 @@ describe('MediaAsset Entity', () => {
     mime_type: 'image/webp',
     file_size: 1024,
     collection_id: '',
-    tenant_id: 1,
-    created_by: 1,
+    tenant_id: '1',
+    created_by: '1',
   };
 
   describe('Constructor Validation', () => {
@@ -81,12 +81,12 @@ describe('MediaAsset Entity', () => {
     });
 
     it('should throw error when tenant_id is zero or negative', () => {
-      const invalidData = { ...validAssetData, tenant_id: 0 };
+      const invalidData = { ...validAssetData, tenant_id: '0' };
       expect(() => new MediaAsset(invalidData)).toThrow('Tenant ID must be greater than 0');
     });
 
     it('should throw error when created_by is zero or negative', () => {
-      const invalidData = { ...validAssetData, created_by: 0 };
+      const invalidData = { ...validAssetData, created_by: '0' };
       expect(() => new MediaAsset(invalidData)).toThrow('Created by must be greater than 0');
     });
   });

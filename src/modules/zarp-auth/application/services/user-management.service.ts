@@ -36,7 +36,7 @@ export class UserManagementService {
     }
   }
 
-  async findById(id: number) {
+  async findById(id: string) {
     try {
       const user = await this.userRepository.findById(id);
       if (!user) {
@@ -61,7 +61,7 @@ export class UserManagementService {
     }
   }
 
-  async update(id: number, data: { name?: string; email?: string; phone_number?: string }) {
+  async update(id: string, data: { name?: string; email?: string; phone_number?: string }) {
     try {
       const user = await this.userRepository.findById(id);
       if (!user) {
@@ -87,7 +87,7 @@ export class UserManagementService {
     }
   }
 
-  async deactivate(id: number) {
+  async deactivate(id: string) {
     try {
       const user = await this.userRepository.findById(id);
       if (!user) {
@@ -108,7 +108,7 @@ export class UserManagementService {
     }
   }
 
-  async delete(id: number) {
+  async delete(id: string) {
     try {
       const user = await this.userRepository.findById(id);
       if (!user) {

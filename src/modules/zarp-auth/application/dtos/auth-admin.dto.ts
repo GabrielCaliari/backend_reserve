@@ -9,6 +9,6 @@ export default class AuthAdminDTO {
 }
 
 export interface IValidateAdminToken {
-    'session-id': number;
+    'session-id': string;
     token: string;
 }

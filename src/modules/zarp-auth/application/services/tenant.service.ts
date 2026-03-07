@@ -52,7 +52,7 @@ export class TenantService {
     }
   }
 
-  async findById(id: number) {
+  async findById(id: string) {
     try {
       const tenant = await this.tenantRepository.selectById(id);
       if (!tenant) {
@@ -64,7 +64,7 @@ export class TenantService {
     }
   }
 
-  async update(id: number, dto: UpdateTenantDTO) {
+  async update(id: string, dto: UpdateTenantDTO) {
     try {
       const tenant = await this.tenantRepository.selectById(id);
       if (!tenant) {
@@ -85,7 +85,7 @@ export class TenantService {
     }
   }
 
-  async assignAdmin(adminId: string, tenantId: number) {
+  async assignAdmin(adminId: string, tenantId: string) {
     try {
       const admin = await this.adminRepository.selectById(adminId);
       if (!admin) {
@@ -108,7 +108,7 @@ export class TenantService {
     }
   }
 
-  async unassignAdmin(adminId: string, tenantId: number) {
+  async unassignAdmin(adminId: string, tenantId: string) {
     try {
       await this.adminTenantRepository.unassign(adminId, tenantId);
       return successResponse({ removed: true });
@@ -137,7 +137,7 @@ export class TenantService {
     }
   }
 
-  async findAdminsByTenant(tenantId: number) {
+  async findAdminsByTenant(tenantId: string) {
     try {
       const tenant = await this.tenantRepository.selectById(tenantId);
       if (!tenant) {
@@ -151,7 +151,7 @@ export class TenantService {
     }
   }
 
-  async deactivate(id: number) {
+  async deactivate(id: string) {
     try {
       const tenant = await this.tenantRepository.selectById(id);
       if (!tenant) {
@@ -168,7 +168,7 @@ export class TenantService {
     }
   }
 
-  async activate(id: number) {
+  async activate(id: string) {
     try {
       const tenant = await this.tenantRepository.selectById(id);
       if (!tenant) {
@@ -185,7 +185,7 @@ export class TenantService {
     }
   }
 
-  async delete(id: number) {
+  async delete(id: string) {
     try {
       const tenant = await this.tenantRepository.selectById(id);
       if (!tenant) {
@@ -199,7 +199,7 @@ export class TenantService {
     }
   }
 
-  async updateAdminRole(adminId: string, tenantId: number, role: EAdminRole) {
+  async updateAdminRole(adminId: string, tenantId: string, role: EAdminRole) {
     try {
       const admin = await this.adminRepository.selectById(adminId);
       if (!admin) {

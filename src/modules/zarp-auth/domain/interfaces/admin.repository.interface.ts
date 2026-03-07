@@ -36,7 +36,7 @@ export interface ICreateAdminSessionToken {
 
 export interface IAdminSessionTokenRepository {
     create(data: ICreateAdminSessionToken): Promise<any>;
-    validateToken(sessionId: number, token: string): Promise<false | { admin_id: string }>;
+    validateToken(sessionId: string, token: string): Promise<false | { admin_id: string }>;
 }
 
 export const ADMIN_SESSION_TOKEN_REPOSITORY = Symbol('ADMIN_SESSION_TOKEN_REPOSITORY');

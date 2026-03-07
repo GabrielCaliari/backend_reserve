@@ -5,19 +5,19 @@ export interface ICreateArticleImage {
   display_order: number;
   file_size: number;
   original_format: string;
-  article_id: number;
+  article_id: string;
 }
 
 export interface IArticleImageRepository {
   create(data: ICreateArticleImage): Promise<any>;
-  findById(id: number): Promise<any>;
-  findAllByArticleId(articleId: number): Promise<any[]>;
-  countByArticleId(articleId: number): Promise<number>;
+  findById(id: string): Promise<any>;
+  findAllByArticleId(articleId: string): Promise<any[]>;
+  countByArticleId(articleId: string): Promise<number>;
   updateDisplayOrders(
-    items: { id: number; display_order: number }[],
+    items: { id: string; display_order: number }[],
   ): Promise<void>;
-  delete(id: number): Promise<void>;
-  deleteAllByArticleId(articleId: number): Promise<void>;
+  delete(id: string): Promise<void>;
+  deleteAllByArticleId(articleId: string): Promise<void>;
 }
 
 export const ARTICLE_IMAGE_REPOSITORY = Symbol('ARTICLE_IMAGE_REPOSITORY');

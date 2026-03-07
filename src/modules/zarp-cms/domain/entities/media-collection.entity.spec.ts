@@ -8,7 +8,7 @@ describe('MediaCollection Entity', () => {
         name: 'Test Collection',
         slug: 'test-collection',
         type: ECollectionType.image,
-        tenant_id: 1,
+        tenant_id: '1',
       });
 
       expect(collection.validateFileSize(1000000)).toBe(true);
@@ -21,7 +21,7 @@ describe('MediaCollection Entity', () => {
         slug: 'test-collection',
         type: ECollectionType.image,
         max_file_size: 5000000, // 5MB
-        tenant_id: 1,
+        tenant_id: '1',
       });
 
       expect(collection.validateFileSize(4999999)).toBe(true);
@@ -34,7 +34,7 @@ describe('MediaCollection Entity', () => {
         slug: 'test-collection',
         type: ECollectionType.image,
         max_file_size: 5000000, // 5MB
-        tenant_id: 1,
+        tenant_id: '1',
       });
 
       expect(collection.validateFileSize(5000001)).toBe(false);
@@ -48,7 +48,7 @@ describe('MediaCollection Entity', () => {
         name: 'Test Collection',
         slug: 'test-collection',
         type: ECollectionType.mixed,
-        tenant_id: 1,
+        tenant_id: '1',
       });
 
       expect(collection.validateMimeType('image/jpeg')).toBe(true);
@@ -62,7 +62,7 @@ describe('MediaCollection Entity', () => {
         slug: 'test-collection',
         type: ECollectionType.mixed,
         allowed_mime_types: [],
-        tenant_id: 1,
+        tenant_id: '1',
       });
 
       expect(collection.validateMimeType('image/jpeg')).toBe(true);
@@ -75,7 +75,7 @@ describe('MediaCollection Entity', () => {
         slug: 'test-collection',
         type: ECollectionType.image,
         allowed_mime_types: ['image/jpeg', 'image/png', 'image/webp'],
-        tenant_id: 1,
+        tenant_id: '1',
       });
 
       expect(collection.validateMimeType('image/jpeg')).toBe(true);
@@ -91,7 +91,7 @@ describe('MediaCollection Entity', () => {
         slug: 'test-collection',
         type: ECollectionType.mixed,
         allowed_mime_types: ['*'],
-        tenant_id: 1,
+        tenant_id: '1',
       });
 
       expect(collection.validateMimeType('image/jpeg')).toBe(true);
@@ -106,7 +106,7 @@ describe('MediaCollection Entity', () => {
         slug: 'test-collection',
         type: ECollectionType.image,
         allowed_mime_types: ['image/*'],
-        tenant_id: 1,
+        tenant_id: '1',
       });
 
       expect(collection.validateMimeType('image/jpeg')).toBe(true);
@@ -124,7 +124,7 @@ describe('MediaCollection Entity', () => {
         slug: 'test-collection',
         type: ECollectionType.mixed,
         allowed_mime_types: ['image/*', 'video/*'],
-        tenant_id: 1,
+        tenant_id: '1',
       });
 
       expect(collection.validateMimeType('image/jpeg')).toBe(true);
@@ -140,7 +140,7 @@ describe('MediaCollection Entity', () => {
         slug: 'test-collection',
         type: ECollectionType.mixed,
         allowed_mime_types: ['image/*', 'application/pdf', 'application/msword'],
-        tenant_id: 1,
+        tenant_id: '1',
       });
 
       expect(collection.validateMimeType('image/jpeg')).toBe(true);
@@ -158,7 +158,7 @@ describe('MediaCollection Entity', () => {
         name: 'Test Collection',
         slug: 'test-collection',
         type: ECollectionType.image,
-        tenant_id: 1,
+        tenant_id: '1',
       });
 
       expect(collection.canAddMoreItems(0)).toBe(true);
@@ -172,7 +172,7 @@ describe('MediaCollection Entity', () => {
         slug: 'test-collection',
         type: ECollectionType.image,
         max_items: 10,
-        tenant_id: 1,
+        tenant_id: '1',
       });
 
       expect(collection.canAddMoreItems(0)).toBe(true);
@@ -186,7 +186,7 @@ describe('MediaCollection Entity', () => {
         slug: 'test-collection',
         type: ECollectionType.image,
         max_items: 10,
-        tenant_id: 1,
+        tenant_id: '1',
       });
 
       expect(collection.canAddMoreItems(10)).toBe(false);
@@ -201,7 +201,7 @@ describe('MediaCollection Entity', () => {
         name: 'Test Collection',
         slug: 'test-collection',
         type: ECollectionType.image,
-        tenant_id: 1,
+        tenant_id: '1',
       });
 
       expect(collection.name).toBe('Test Collection');
@@ -222,7 +222,7 @@ describe('MediaCollection Entity', () => {
         max_file_size: 5000000,
         allowed_mime_types: ['image/*'],
         max_items: 20,
-        tenant_id: 1,
+        tenant_id: '1',
       });
 
       expect(collection.description).toBe('A test collection');

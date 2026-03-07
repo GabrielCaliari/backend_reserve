@@ -64,8 +64,8 @@ export class MediaAssetService {
   async uploadAsset(
     file: Express.Multer.File,
     dto: UploadMediaDTO,
-    tenantId: number,
-    userId: number,
+    tenantId: string,
+    userId: string,
   ) {
     try {
       // 0. Validate collection UUID format (Requirement 15.7)
@@ -183,7 +183,7 @@ export class MediaAssetService {
    * @returns ServiceResponse with paginated assets or error
    */
   async listAssets(
-    tenantId: number,
+    tenantId: string,
     collectionId?: string,
     status?: EAssetStatus,
     mimeType?: string,
@@ -215,7 +215,7 @@ export class MediaAssetService {
    * @param tenantId - Tenant ID for isolation
    * @returns ServiceResponse with asset or error
    */
-  async getAssetById(id: string, tenantId: number) {
+  async getAssetById(id: string, tenantId: string) {
     try {
       // Validate asset UUID format (Requirement 15.7)
       if (!isValidUUID(id)) {
@@ -249,7 +249,7 @@ export class MediaAssetService {
     id: string,
     altText?: string,
     metadata?: Record<string, any>,
-    tenantId?: number,
+    tenantId?: string,
   ) {
     try {
       // Validate asset UUID format (Requirement 15.7)
@@ -293,7 +293,7 @@ export class MediaAssetService {
    * @param tenantId - Tenant ID for isolation
    * @returns ServiceResponse with deletion confirmation or error
    */
-  async deleteAsset(id: string, tenantId: number) {
+  async deleteAsset(id: string, tenantId: string) {
     try {
       // Validate asset UUID format (Requirement 15.7)
       if (!isValidUUID(id)) {

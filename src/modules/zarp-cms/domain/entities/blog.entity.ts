@@ -4,7 +4,7 @@ export class Blog {
   public description: string | null;
   public secretKeyHash: string;
   public secretKeySalt: string;
-  public tenantId: number;
+  public tenantId: string;
   public active: boolean;
   public readonly createdAt?: Date;
   public readonly updatedAt?: Date;
@@ -15,7 +15,7 @@ export class Blog {
     description?: string | null;
     secretKeyHash: string;
     secretKeySalt: string;
-    tenantId: number;
+    tenantId: string;
     active?: boolean;
     createdAt?: Date;
     updatedAt?: Date;

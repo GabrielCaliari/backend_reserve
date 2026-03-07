@@ -23,7 +23,7 @@ export class BlogResponseDTO {
     description: 'Tenant ID',
     example: 1,
   })
-  tenantId: number;
+  tenantId: string;
 
   @ApiProperty({
     description: 'Active status',

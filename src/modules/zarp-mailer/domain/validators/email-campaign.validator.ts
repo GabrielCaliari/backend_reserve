@@ -7,8 +7,8 @@ export function isEmailCampaignDataValidToCreate(data: ICreateEmailCampaign): IC
     throw new Error('Name and smtp_server_id are required');
   }
 
-  if (typeof name !== 'string' || typeof smtp_server_id !== 'number') {
-    throw new Error('Name must be a string and smtp_server_id must be a number');
+  if (typeof name !== 'string' || typeof smtp_server_id !== 'string') {
+    throw new Error('Name must be a string and smtp_server_id must be a string');
   }
 
   return { ...data };

@@ -54,7 +54,7 @@ export class AssignAdminToTenantDTO {
 
   @ApiProperty({ description: 'Tenant ID to assign to', example: 1 })
   @IsNotEmpty()
-  tenant_id: number;
+  tenant_id: string;
 }
 
 export class UpdateAdminTenantRoleDTO {
@@ -65,7 +65,7 @@ export class UpdateAdminTenantRoleDTO {
 
 export class TenantResponseDTO {
   @ApiProperty({ example: 1 })
-  id: number;
+  id: string;
 
   @ApiProperty({ example: 'Acme Corp' })
   name: string;

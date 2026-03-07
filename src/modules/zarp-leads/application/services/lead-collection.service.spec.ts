@@ -34,7 +34,7 @@ describe('LeadCollectionService', () => {
   });
 
   describe('createCollection', () => {
-    const tenantId = 1;
+    const tenantId = '1';
     const dto: CreateCollectionDto = {
       name: 'Test Collection',
       source: 'landing-page',
@@ -45,7 +45,7 @@ describe('LeadCollectionService', () => {
       mockRepository.findBySlugAndTenantId.mockResolvedValue(null);
       mockRepository.create.mockResolvedValue(
         new LeadCollection({
-          id: 1,
+          id: '1',
           name: dto.name,
           slug,
           source: dto.source,
@@ -70,7 +70,7 @@ describe('LeadCollectionService', () => {
       const slug = 'test-collection';
       mockRepository.findBySlugAndTenantId.mockResolvedValue(
         new LeadCollection({
-          id: 2,
+          id: '2',
           name: 'Existing',
           slug,
           source: 'test',
@@ -86,10 +86,10 @@ describe('LeadCollectionService', () => {
 
   describe('findCollections', () => {
     it('should return paginated collections for tenant', async () => {
-      const tenantId = 1;
+      const tenantId = '1';
       const collections = [
         new LeadCollection({
-          id: 1,
+          id: '1',
           name: 'C1',
           slug: 'c1',
           source: 'test',
@@ -110,8 +110,8 @@ describe('LeadCollectionService', () => {
 
   describe('updateCollection', () => {
     it('should update collection if found', async () => {
-      const id = 1;
-      const tenantId = 1;
+      const id = '1';
+      const tenantId = '1';
       const existing = new LeadCollection({
         id,
         name: 'Old',
@@ -136,7 +136,7 @@ describe('LeadCollectionService', () => {
 
     it('should throw if collection not found', async () => {
       mockRepository.findById.mockResolvedValue(null);
-      await expect(service.updateCollection(999, {}, 1)).rejects.toThrow(CollectionNotFoundError);
+      await expect(service.updateCollection('999', {}, '1')).rejects.toThrow(CollectionNotFoundError);
     });
   });
 });

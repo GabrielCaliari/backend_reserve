@@ -4,6 +4,6 @@ export interface IAuthenticateUser {
 }
 
 export interface IValidateUserToken {
-    'session-id': number;
+    'session-id': string;
     token: string;
 }

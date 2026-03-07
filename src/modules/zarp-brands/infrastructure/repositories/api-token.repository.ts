@@ -36,7 +36,7 @@ export default class APITokenRepository implements IAPITokenRepository {
         }
     }
 
-    async update(id: number, data: IUpdateAPIToken) {
+    async update(id: string, data: IUpdateAPIToken) {
         try {
             const raw = await this.prisma.aPIToken.update({
                 data: isApiTokenDataValidToUpdate(data),

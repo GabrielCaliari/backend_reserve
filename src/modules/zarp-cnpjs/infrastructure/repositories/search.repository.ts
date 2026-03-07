@@ -39,7 +39,7 @@ export default class SearchRepository implements ISearchRepository {
         }
     }
 
-    async countUserMonth(userId: number) {
+    async countUserMonth(userId: string) {
         try {
             const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
             const endOfMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0);
@@ -60,7 +60,7 @@ export default class SearchRepository implements ISearchRepository {
         }
     }
 
-    async count(userId: number) {
+    async count(userId: string) {
         try {
             const count  = await this.prisma.search.count({
                 where: {

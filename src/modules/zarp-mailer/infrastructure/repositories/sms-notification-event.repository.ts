@@ -25,7 +25,7 @@ export default class SMSNotificationEventRepository {
                     sender_number: data.sender_number.toString(),
                     sms_provider: data.sms_provider,
                     status: data.status,
-                    sms_notification_id: data.sms_notification_id as number,
+                    sms_notification_id: data.sms_notification_id,
                     ...(data.payload_message ? { payload_message: JSON.parse(JSON.stringify(data.payload_message)) } : {}),
                     ...(data.payload_provider_response ? { payload_provider_response: JSON.parse(JSON.stringify(data.payload_provider_response)) } : {}),
                 }
@@ -36,7 +36,7 @@ export default class SMSNotificationEventRepository {
         }
     }
 
-    async selectById(id: number) {
+    async selectById(id: string) {
         try {
             const result = await this.prisma.sMSNotificationEvent.findUnique({
                 where: {
@@ -63,7 +63,7 @@ export default class SMSNotificationEventRepository {
         }
     }
 
-    async selectBySMSNotification(SMSnotification_id: number) {
+    async selectBySMSNotification(SMSnotification_id: string) {
         try {
             const result = await this.prisma.sMSNotificationEvent.findMany({
                 where: {

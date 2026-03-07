@@ -8,7 +8,7 @@ export interface ICreateMediaCollection {
   max_file_size?: number;
   allowed_mime_types?: string[];
   max_items?: number;
-  tenant_id: number;
+  tenant_id: string;
 }
 
 export class MediaCollection {
@@ -20,7 +20,7 @@ export class MediaCollection {
   public max_file_size?: number;
   public allowed_mime_types?: string[];
   public max_items?: number;
-  public tenant_id: number;
+  public tenant_id: string;
   public created_at?: Date;
   public updated_at?: Date;
 

@@ -53,7 +53,7 @@ export default class UserSessionTokenRepository implements IUserSessionTokenRepo
         }
     }
 
-    async validateToken(sessionId: number, token: string) {
+    async validateToken(sessionId: string, token: string) {
         try {
             const session = await this.prisma.userSessionToken.findUnique({
                 where: {

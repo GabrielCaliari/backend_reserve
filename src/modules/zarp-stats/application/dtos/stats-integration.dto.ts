@@ -52,10 +52,10 @@ export class UpdateStatsIntegrationDto {
 
 export class StatsIntegrationResponseDto {
   @ApiProperty({ example: 1 })
-  id: number;
+  id: string;
 
   @ApiProperty({ example: 3 })
-  tenant_id: number;
+  tenant_id: string;
 
   @ApiProperty({ example: 'google_search_console' })
   key: string;

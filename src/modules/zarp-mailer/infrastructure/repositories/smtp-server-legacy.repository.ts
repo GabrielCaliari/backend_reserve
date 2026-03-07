@@ -40,7 +40,7 @@ export default class SMTPServerRepository {
             throw new RepositoryException('Error selecting all SMTP servers', err);
         }
     }
-    async selectById(id: number) {
+    async selectById(id: string) {
         try {
             const smtpServer = await this.prisma.sMTPServer.findUnique({
                 where: { id }

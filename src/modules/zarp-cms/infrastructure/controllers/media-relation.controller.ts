@@ -95,13 +95,15 @@ export class MediaRelationController {
   @ApiResponse({ status: 200, description: 'Assets retrieved successfully' })
   async getEntityAssets(
     @Param('entityType') entityType: string,
-    @Param('entityId', ParseUUIDPipe) entityId: number,
+    @Param('entityId', ParseUUIDPipe) entityId: string,
     @Query('relation_type') relationType?: string,
+    @CurrentAdmin() admin?: CurrentAdminPayload,
   ) {
     const result = await this.relationService.getEntityAssets(
       entityType,
-      String(entityId),
+      entityId,
       relationType,
+      admin?.tenant_id,
     );
 
     return {

@@ -57,7 +57,7 @@ export default class AdminSessionTokenRepository implements IAdminSessionTokenRe
         }
     }
 
-    async validateToken(sessionId: number, token: string) {
+    async validateToken(sessionId: string, token: string) {
         try {
             const session = await this.prisma.adminSessionToken.findUnique({
                 where: {

@@ -25,18 +25,43 @@ interface LeadCollectionSeed {
   access_mode: ECollectionAccessMode;
   allowed_domains: string[];
   secret_key?: string;
+  metadata?: object;
   tenantSlug: string;
   active: boolean;
 }
 
 export async function seedLeadCollections() {
   const collections: LeadCollectionSeed[] = [
+    // ── Zarp Studio ──────────────────────────────────────────────────────────
+    {
+      name: 'Coleção Pública Geral',
+      slug: 'colecao-publica-geral',
+      source: 'website',
+      source_type: 'form',
+      source_channel: 'organic',
+      access_mode: ECollectionAccessMode.public,
+      allowed_domains: [],
+      tenantSlug: 'zarp-studio',
+      active: true,
+    },
     {
       name: 'Website Principal - Zarp Studio',
       slug: 'website-zarp-studio',
       source: 'website',
       source_type: 'organic',
       source_channel: 'direct',
+      access_mode: ECollectionAccessMode.public,
+      allowed_domains: [],
+      tenantSlug: 'zarp-studio',
+      active: true,
+    },
+    {
+      name: 'Landing Page Leads',
+      slug: 'landing-page-leads',
+      source: 'landing-page',
+      source_type: 'form',
+      source_channel: 'paid',
+      source_campaign: 'product-launch-2024',
       access_mode: ECollectionAccessMode.public,
       allowed_domains: [],
       tenantSlug: 'zarp-studio',
@@ -66,6 +91,7 @@ export async function seedLeadCollections() {
       tenantSlug: 'zarp-studio',
       active: true,
     },
+    // ── Empresa Teste ─────────────────────────────────────────────────────────
     {
       name: 'Formulário de Contato - Empresa Teste',
       slug: 'contato-empresa-teste',
@@ -78,6 +104,39 @@ export async function seedLeadCollections() {
       active: true,
     },
     {
+      name: 'Coleção Privada - Teste',
+      slug: 'colecao-privada-teste',
+      source: 'api',
+      source_type: 'integration',
+      source_channel: 'api',
+      access_mode: ECollectionAccessMode.private,
+      allowed_domains: [],
+      secret_key: 'secret-key-123',
+      tenantSlug: 'empresa-teste',
+      active: true,
+    },
+    {
+      name: 'Coleção Restrita - Domínios',
+      slug: 'colecao-restrita-dominios',
+      source: 'widget',
+      source_type: 'embedded',
+      source_channel: 'partner',
+      access_mode: ECollectionAccessMode.restricted,
+      allowed_domains: ['test-company.com', 'partner.example.com'],
+      tenantSlug: 'empresa-teste',
+      active: true,
+    },
+    {
+      name: 'Coleção Inativa - Teste',
+      slug: 'colecao-inativa-teste',
+      source: 'test',
+      access_mode: ECollectionAccessMode.public,
+      allowed_domains: [],
+      tenantSlug: 'empresa-teste',
+      active: false,
+    },
+    // ── Tech Innovations ──────────────────────────────────────────────────────
+    {
       name: 'Webinar - Tech Innovations',
       slug: 'webinar-tech-innovations',
       source: 'event',
@@ -89,14 +148,25 @@ export async function seedLeadCollections() {
       tenantSlug: 'tech-innovations',
       active: true,
     },
+    // ── All Brick Pavers ──────────────────────────────────────────────────────
     {
-      name: 'Coleção Inativa - Teste',
-      slug: 'colecao-inativa-teste',
-      source: 'test',
-      access_mode: ECollectionAccessMode.public,
-      allowed_domains: [],
-      tenantSlug: 'empresa-teste',
-      active: false,
+      name: 'All Brick Pavers Lead Collection',
+      slug: 'frontend_pages_allbrickpavers',
+      source: 'allbrickpavers.net',
+      source_type: 'form',
+      source_channel: 'website',
+      access_mode: ECollectionAccessMode.private,
+      allowed_domains: ['allbrickpavers.net', 'www.allbrickpavers.net'],
+      secret_key: 'abp_secret_2026_fl_pavers_secure',
+      metadata: {
+        description: 'Lead collection for All Brick Pavers website',
+        business_type: 'paver_installation',
+        service_area: 'South Florida',
+        auto_qualify: true,
+        notification_email: 'allbrickpaving@gmail.com',
+      },
+      tenantSlug: 'allbrickpavers',
+      active: true,
     },
   ];
 
@@ -128,15 +198,18 @@ export async function seedLeadCollections() {
       source_campaign: collection.source_campaign,
       access_mode: collection.access_mode,
       allowed_domains: collection.allowed_domains,
+      metadata: collection.metadata ?? null,
       tenant_id: tenant.id,
       active: collection.active,
     };
 
-    // Add secret key hash if provided
     if (collection.secret_key) {
       const { hash, salt } = hashSecretKey(collection.secret_key);
       data.secret_key_hash = hash;
       data.secret_key_salt = salt;
+    } else {
+      data.secret_key_hash = null;
+      data.secret_key_salt = null;
     }
 
     if (existing) {

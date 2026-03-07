@@ -1,17 +1,17 @@
 export const LEAD_ATTACHMENT_REPOSITORY = Symbol('LEAD_ATTACHMENT_REPOSITORY');
 
 export interface LeadAttachmentData {
-  id: number;
+  id: string;
   leadId: string;
-  assetId: number;
+  assetId: string;
   label?: string;
   createdAt: Date;
 }
 
 export interface ILeadAttachmentRepository {
-  create(leadId: string, assetId: number, label?: string): Promise<LeadAttachmentData>;
+  create(leadId: string, assetId: string, label?: string): Promise<LeadAttachmentData>;
   findByLeadId(leadId: string): Promise<LeadAttachmentData[]>;
-  findById(id: number): Promise<LeadAttachmentData | null>;
-  delete(id: number): Promise<void>;
+  findById(id: string): Promise<LeadAttachmentData | null>;
+  delete(id: string): Promise<void>;
   deleteByLeadId(leadId: string): Promise<void>;
 }

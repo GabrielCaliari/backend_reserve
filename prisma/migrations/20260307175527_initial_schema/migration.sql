@@ -9,7 +9,7 @@ CREATE TYPE "ECollectionAccessMode" AS ENUM ('public', 'private', 'restricted');
 
 -- CreateTable
 CREATE TABLE "User" (
-    "id" SERIAL NOT NULL,
+    "id" VARCHAR(25) NOT NULL,
     "email" TEXT NOT NULL,
     "name" VARCHAR(100) NOT NULL,
     "cpf" VARCHAR(11) NOT NULL,
@@ -17,7 +17,7 @@ CREATE TABLE "User" (
     "sex" SMALLINT DEFAULT 1,
     "date_of_birth" DATE,
     "date_expires_in" DATE,
-    "plan_id" INTEGER NOT NULL,
+    "plan_id" VARCHAR(25) NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
@@ -26,7 +26,7 @@ CREATE TABLE "User" (
 
 -- CreateTable
 CREATE TABLE "Plan" (
-    "id" SERIAL NOT NULL,
+    "id" VARCHAR(25) NOT NULL,
     "name" VARCHAR(100) NOT NULL,
     "slug" TEXT NOT NULL,
     "maximum_queries" INTEGER NOT NULL,
@@ -42,14 +42,14 @@ CREATE TABLE "Plan" (
 
 -- CreateTable
 CREATE TABLE "PibotMessages" (
-    "id" SERIAL NOT NULL,
+    "id" VARCHAR(25) NOT NULL,
     "chat_id" VARCHAR(100) NOT NULL,
     "choices" JSONB NOT NULL,
     "completion_tokens" INTEGER NOT NULL,
     "prompt_tokens" INTEGER NOT NULL,
     "total_tokens" INTEGER NOT NULL,
     "usage" JSONB NOT NULL,
-    "user_id" INTEGER NOT NULL,
+    "user_id" VARCHAR(25) NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
@@ -58,7 +58,7 @@ CREATE TABLE "PibotMessages" (
 
 -- CreateTable
 CREATE TABLE "Subscription" (
-    "id" SERIAL NOT NULL,
+    "id" VARCHAR(25) NOT NULL,
     "name" TEXT NOT NULL,
     "subscription_id" TEXT NOT NULL,
     "customer_id" TEXT NOT NULL,
@@ -90,15 +90,15 @@ CREATE TABLE "Subscription" (
     "event_history" JSONB,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
-    "plan_id" INTEGER NOT NULL,
-    "user_id" INTEGER NOT NULL,
+    "plan_id" VARCHAR(25) NOT NULL,
+    "user_id" VARCHAR(25) NOT NULL,
 
     CONSTRAINT "Subscription_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "AdditionalTokenPack" (
-    "id" SERIAL NOT NULL,
+    "id" VARCHAR(25) NOT NULL,
     "slug" TEXT NOT NULL,
     "external_id" TEXT NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -109,7 +109,7 @@ CREATE TABLE "AdditionalTokenPack" (
 
 -- CreateTable
 CREATE TABLE "Order" (
-    "id" SERIAL NOT NULL,
+    "id" VARCHAR(25) NOT NULL,
     "amount" INTEGER NOT NULL,
     "currency" TEXT NOT NULL,
     "product_name" TEXT NOT NULL,
@@ -120,14 +120,14 @@ CREATE TABLE "Order" (
     "customer_id" TEXT NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
-    "user_id" INTEGER NOT NULL,
+    "user_id" VARCHAR(25) NOT NULL,
 
     CONSTRAINT "Order_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "MonitoringPlan" (
-    "id" SERIAL NOT NULL,
+    "id" VARCHAR(25) NOT NULL,
     "plan_amount" MONEY NOT NULL,
     "status" SMALLINT NOT NULL,
     "checkout_status" TEXT NOT NULL,
@@ -142,10 +142,10 @@ CREATE TABLE "MonitoringPlan" (
     "canceled_at" TIMESTAMP(3),
     "ended_at" TIMESTAMP(3),
     "billing_cycle_anchor" TIMESTAMP(3) NOT NULL,
-    "plan_id" INTEGER,
-    "brand_id" INTEGER,
+    "plan_id" VARCHAR(25),
+    "brand_id" VARCHAR(25),
     "subscription_id" TEXT NOT NULL,
-    "user_id" INTEGER NOT NULL,
+    "user_id" VARCHAR(25) NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
@@ -154,10 +154,10 @@ CREATE TABLE "MonitoringPlan" (
 
 -- CreateTable
 CREATE TABLE "UserSessionToken" (
-    "id" SERIAL NOT NULL,
+    "id" VARCHAR(25) NOT NULL,
     "hash_token" TEXT NOT NULL,
     "salt" TEXT NOT NULL,
-    "user_id" INTEGER NOT NULL,
+    "user_id" VARCHAR(25) NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
@@ -166,8 +166,8 @@ CREATE TABLE "UserSessionToken" (
 
 -- CreateTable
 CREATE TABLE "UserCredential" (
-    "id" SERIAL NOT NULL,
-    "user_id" INTEGER NOT NULL,
+    "id" VARCHAR(25) NOT NULL,
+    "user_id" VARCHAR(25) NOT NULL,
     "hash" TEXT NOT NULL,
     "salt" TEXT NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -178,8 +178,8 @@ CREATE TABLE "UserCredential" (
 
 -- CreateTable
 CREATE TABLE "UserCredentialHistory" (
-    "id" SERIAL NOT NULL,
-    "user_id" INTEGER NOT NULL,
+    "id" VARCHAR(25) NOT NULL,
+    "user_id" VARCHAR(25) NOT NULL,
     "hash" TEXT NOT NULL,
     "salt" TEXT NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -190,7 +190,7 @@ CREATE TABLE "UserCredentialHistory" (
 
 -- CreateTable
 CREATE TABLE "UserPasswordChangeSession" (
-    "id" SERIAL NOT NULL,
+    "id" VARCHAR(25) NOT NULL,
     "slug" VARCHAR(64) NOT NULL,
     "status" SMALLINT NOT NULL,
     "hash_token" TEXT NOT NULL,
@@ -200,7 +200,7 @@ CREATE TABLE "UserPasswordChangeSession" (
     "device_ip" VARCHAR(16) NOT NULL,
     "expires_in" TIMESTAMP(3) NOT NULL,
     "expired_at" TIMESTAMP(3),
-    "user_id" INTEGER NOT NULL,
+    "user_id" VARCHAR(25) NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
@@ -209,7 +209,7 @@ CREATE TABLE "UserPasswordChangeSession" (
 
 -- CreateTable
 CREATE TABLE "Company" (
-    "id" SERIAL NOT NULL,
+    "id" VARCHAR(25) NOT NULL,
     "cnpj" VARCHAR(14) NOT NULL,
     "branch_type" SMALLINT NOT NULL,
     "business_name" VARCHAR(255),
@@ -247,7 +247,7 @@ CREATE TABLE "Company" (
 
 -- CreateTable
 CREATE TABLE "AuxiliaryCompanyInformation" (
-    "id" SERIAL NOT NULL,
+    "id" VARCHAR(25) NOT NULL,
     "cnpj" VARCHAR(14) NOT NULL,
     "fantasy_name" VARCHAR(150),
     "legal_nature" VARCHAR(4),
@@ -263,12 +263,12 @@ CREATE TABLE "AuxiliaryCompanyInformation" (
 
 -- CreateTable
 CREATE TABLE "Search" (
-    "id" SERIAL NOT NULL,
+    "id" VARCHAR(25) NOT NULL,
     "amount" INTEGER NOT NULL,
     "limit" SMALLINT NOT NULL,
     "hash" VARCHAR(100) NOT NULL,
     "filters" JSONB NOT NULL,
-    "user_id" INTEGER NOT NULL,
+    "user_id" VARCHAR(25) NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
@@ -277,13 +277,13 @@ CREATE TABLE "Search" (
 
 -- CreateTable
 CREATE TABLE "TaxRegime" (
-    "id" SERIAL NOT NULL,
+    "id" VARCHAR(25) NOT NULL,
     "cnpj" VARCHAR(14) NOT NULL,
     "year" DATE NOT NULL,
     "scp_cnpj" VARCHAR(115) NOT NULL,
     "type_of_taxation" SMALLINT NOT NULL,
     "taxation" VARCHAR(115) NOT NULL,
-    "company_id" INTEGER,
+    "company_id" VARCHAR(25),
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
@@ -292,7 +292,7 @@ CREATE TABLE "TaxRegime" (
 
 -- CreateTable
 CREATE TABLE "Partner" (
-    "id" SERIAL NOT NULL,
+    "id" VARCHAR(25) NOT NULL,
     "cnpj" VARCHAR(14) NOT NULL,
     "partner_type" VARCHAR(2) NOT NULL,
     "name" VARCHAR(150),
@@ -303,7 +303,7 @@ CREATE TABLE "Partner" (
     "cpf_representative" VARCHAR(11),
     "name_representative" VARCHAR(150),
     "representative_qualification" VARCHAR(2),
-    "company_id" INTEGER,
+    "company_id" VARCHAR(25),
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
@@ -312,12 +312,12 @@ CREATE TABLE "Partner" (
 
 -- CreateTable
 CREATE TABLE "Brand" (
-    "id" SERIAL NOT NULL,
+    "id" VARCHAR(25) NOT NULL,
     "name" TEXT NOT NULL,
     "identifier" VARCHAR(14),
     "email" TEXT NOT NULL,
     "phone_number" TEXT NOT NULL,
-    "user_id" INTEGER NOT NULL,
+    "user_id" VARCHAR(25) NOT NULL,
     "inpi_number" VARCHAR(30),
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
@@ -327,7 +327,7 @@ CREATE TABLE "Brand" (
 
 -- CreateTable
 CREATE TABLE "Cnae" (
-    "id" SERIAL NOT NULL,
+    "id" VARCHAR(25) NOT NULL,
     "code" VARCHAR(11) NOT NULL,
     "name" VARCHAR(255) NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -338,7 +338,7 @@ CREATE TABLE "Cnae" (
 
 -- CreateTable
 CREATE TABLE "Journal" (
-    "id" SERIAL NOT NULL,
+    "id" VARCHAR(25) NOT NULL,
     "name" TEXT NOT NULL,
     "extension" VARCHAR(10) NOT NULL,
     "size" TEXT NOT NULL,
@@ -351,7 +351,7 @@ CREATE TABLE "Journal" (
 
 -- CreateTable
 CREATE TABLE "JournalToFetch" (
-    "id" SERIAL NOT NULL,
+    "id" VARCHAR(25) NOT NULL,
     "zip_name" VARCHAR(100) NOT NULL,
     "name" VARCHAR(100) NOT NULL,
     "searched" BOOLEAN NOT NULL DEFAULT false,
@@ -363,7 +363,7 @@ CREATE TABLE "JournalToFetch" (
 
 -- CreateTable
 CREATE TABLE "BrandAlert" (
-    "id" SERIAL NOT NULL,
+    "id" VARCHAR(25) NOT NULL,
     "brand" TEXT,
     "deposit_date" TIMESTAMP(3),
     "conception_date" TIMESTAMP(3),
@@ -381,10 +381,10 @@ CREATE TABLE "BrandAlert" (
     "titular" JSONB NOT NULL,
     "despacho" JSONB NOT NULL,
     "sobrestador" JSONB NOT NULL,
-    "brand_id" INTEGER NOT NULL,
-    "brand_monitoring_id" INTEGER NOT NULL,
-    "user_id" INTEGER NOT NULL,
-    "jornal_to_fetch_id" INTEGER NOT NULL,
+    "brand_id" VARCHAR(25) NOT NULL,
+    "brand_monitoring_id" VARCHAR(25) NOT NULL,
+    "user_id" VARCHAR(25) NOT NULL,
+    "jornal_to_fetch_id" VARCHAR(25) NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
@@ -393,13 +393,13 @@ CREATE TABLE "BrandAlert" (
 
 -- CreateTable
 CREATE TABLE "BrandMonitoring" (
-    "id" SERIAL NOT NULL,
+    "id" VARCHAR(25) NOT NULL,
     "processed_last_analysis" INTEGER NOT NULL DEFAULT 0,
     "total_processed" INTEGER NOT NULL DEFAULT 0,
     "triggered_notifications" INTEGER NOT NULL DEFAULT 0,
     "status" SMALLINT NOT NULL,
-    "user_id" INTEGER NOT NULL,
-    "brand_id" INTEGER NOT NULL,
+    "user_id" VARCHAR(25) NOT NULL,
+    "brand_id" VARCHAR(25) NOT NULL,
     "inpi_number" VARCHAR(30),
     "last_magazine_searched" VARCHAR(20),
     "last_movement" TIMESTAMP(3),
@@ -413,7 +413,7 @@ CREATE TABLE "BrandMonitoring" (
 
 -- CreateTable
 CREATE TABLE "JournalAlert" (
-    "id" SERIAL NOT NULL,
+    "id" VARCHAR(25) NOT NULL,
     "brand" TEXT,
     "deposit_date" TIMESTAMP(3),
     "conception_date" TIMESTAMP(3),
@@ -431,7 +431,7 @@ CREATE TABLE "JournalAlert" (
     "titular" JSONB NOT NULL,
     "despacho" JSONB NOT NULL,
     "sobrestador" JSONB NOT NULL,
-    "jornal_to_fetch_id" INTEGER NOT NULL,
+    "jornal_to_fetch_id" VARCHAR(25) NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
@@ -440,7 +440,7 @@ CREATE TABLE "JournalAlert" (
 
 -- CreateTable
 CREATE TABLE "BrandAnalysis" (
-    "id" SERIAL NOT NULL,
+    "id" VARCHAR(25) NOT NULL,
     "user_message" JSONB NOT NULL,
     "response" JSONB NOT NULL,
     "json_data_response" JSONB NOT NULL,
@@ -449,7 +449,7 @@ CREATE TABLE "BrandAnalysis" (
     "brand" VARCHAR(255) NOT NULL,
     "niche" VARCHAR(155) NOT NULL,
     "description" VARCHAR(255) NOT NULL,
-    "user_id" INTEGER NOT NULL,
+    "user_id" VARCHAR(25) NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
@@ -458,23 +458,23 @@ CREATE TABLE "BrandAnalysis" (
 
 -- CreateTable
 CREATE TABLE "BrandAnalysisRequest" (
-    "id" SERIAL NOT NULL,
+    "id" VARCHAR(25) NOT NULL,
     "valid" BOOLEAN NOT NULL,
-    "brand_analysis_id" INTEGER,
-    "user_id" INTEGER NOT NULL,
+    "brand_analysis_id" VARCHAR(25),
+    "user_id" VARCHAR(25) NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
-    "brand_analysis_token_id" INTEGER NOT NULL,
+    "brand_analysis_token_id" VARCHAR(25) NOT NULL,
 
     CONSTRAINT "BrandAnalysisRequest_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "BrandAnalysisToken" (
-    "id" SERIAL NOT NULL,
+    "id" VARCHAR(25) NOT NULL,
     "status" SMALLINT NOT NULL,
-    "brand_analysis_id" INTEGER,
-    "user_id" INTEGER NOT NULL,
+    "brand_analysis_id" VARCHAR(25),
+    "user_id" VARCHAR(25) NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
@@ -483,10 +483,10 @@ CREATE TABLE "BrandAnalysisToken" (
 
 -- CreateTable
 CREATE TABLE "BrandNotification" (
-    "id" SERIAL NOT NULL,
-    "brand_id" INTEGER NOT NULL,
-    "user_id" INTEGER NOT NULL,
-    "brand_monitoring_id" INTEGER NOT NULL,
+    "id" VARCHAR(25) NOT NULL,
+    "brand_id" VARCHAR(25) NOT NULL,
+    "user_id" VARCHAR(25) NOT NULL,
+    "brand_monitoring_id" VARCHAR(25) NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
@@ -495,7 +495,7 @@ CREATE TABLE "BrandNotification" (
 
 -- CreateTable
 CREATE TABLE "CompanyExport" (
-    "id" SERIAL NOT NULL,
+    "id" VARCHAR(25) NOT NULL,
     "total_exported" INTEGER NOT NULL,
     "company_count" INTEGER NOT NULL,
     "status" SMALLINT NOT NULL,
@@ -504,7 +504,7 @@ CREATE TABLE "CompanyExport" (
     "public_link" TEXT,
     "deletion_date" TIMESTAMP(3),
     "filters" JSONB NOT NULL,
-    "user_id" INTEGER NOT NULL,
+    "user_id" VARCHAR(25) NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
@@ -513,7 +513,7 @@ CREATE TABLE "CompanyExport" (
 
 -- CreateTable
 CREATE TABLE "PublicBrandSearch" (
-    "id" SERIAL NOT NULL,
+    "id" VARCHAR(25) NOT NULL,
     "name" TEXT NOT NULL,
     "email" TEXT NOT NULL,
     "brand" TEXT NOT NULL,
@@ -526,7 +526,7 @@ CREATE TABLE "PublicBrandSearch" (
 
 -- CreateTable
 CREATE TABLE "APIToken" (
-    "id" SERIAL NOT NULL,
+    "id" VARCHAR(25) NOT NULL,
     "api_identifier" VARCHAR(25) NOT NULL,
     "hash_id_token" TEXT NOT NULL,
     "hash_acess_token" TEXT NOT NULL,
@@ -543,7 +543,7 @@ CREATE TABLE "APIToken" (
 
 -- CreateTable
 CREATE TABLE "Lead" (
-    "id" SERIAL NOT NULL,
+    "id" UUID NOT NULL,
     "name" VARCHAR(255),
     "email" TEXT,
     "phone_number" VARCHAR(14),
@@ -552,8 +552,13 @@ CREATE TABLE "Lead" (
     "description" TEXT,
     "data" JSONB,
     "status" SMALLINT DEFAULT 1,
-    "collection_id" INTEGER,
-    "tenant_id" INTEGER,
+    "collection_id" VARCHAR(25),
+    "tenant_id" VARCHAR(25),
+    "ip_address" VARCHAR(45),
+    "user_agent" TEXT,
+    "country" VARCHAR(100),
+    "city" VARCHAR(100),
+    "region" VARCHAR(100),
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
@@ -562,7 +567,7 @@ CREATE TABLE "Lead" (
 
 -- CreateTable
 CREATE TABLE "LeadQualificationMessage" (
-    "id" SERIAL NOT NULL,
+    "id" VARCHAR(25) NOT NULL,
     "analyzed" BOOLEAN NOT NULL DEFAULT false,
     "temperature" SMALLINT,
     "prompt_token" INTEGER NOT NULL,
@@ -597,7 +602,7 @@ CREATE TABLE "Admin" (
 
 -- CreateTable
 CREATE TABLE "Tenant" (
-    "id" SERIAL NOT NULL,
+    "id" VARCHAR(25) NOT NULL,
     "name" VARCHAR(100) NOT NULL,
     "slug" VARCHAR(50) NOT NULL,
     "domain" VARCHAR(255),
@@ -610,7 +615,7 @@ CREATE TABLE "Tenant" (
 
 -- CreateTable
 CREATE TABLE "LeadCollection" (
-    "id" SERIAL NOT NULL,
+    "id" VARCHAR(25) NOT NULL,
     "name" VARCHAR(150) NOT NULL,
     "slug" VARCHAR(100) NOT NULL,
     "source" VARCHAR(100) NOT NULL,
@@ -623,7 +628,7 @@ CREATE TABLE "LeadCollection" (
     "secret_key_salt" TEXT,
     "active" BOOLEAN NOT NULL DEFAULT true,
     "metadata" JSONB,
-    "tenant_id" INTEGER NOT NULL,
+    "tenant_id" VARCHAR(25) NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
@@ -632,9 +637,9 @@ CREATE TABLE "LeadCollection" (
 
 -- CreateTable
 CREATE TABLE "AdminTenant" (
-    "id" SERIAL NOT NULL,
+    "id" VARCHAR(25) NOT NULL,
     "admin_id" VARCHAR(25) NOT NULL,
-    "tenant_id" INTEGER NOT NULL,
+    "tenant_id" VARCHAR(25) NOT NULL,
     "role" "EAdminRole" NOT NULL DEFAULT 'manager',
     "active" BOOLEAN NOT NULL DEFAULT true,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -650,7 +655,7 @@ CREATE TABLE "Blog" (
     "description" TEXT,
     "secret_key_hash" TEXT NOT NULL,
     "secret_key_salt" TEXT NOT NULL,
-    "tenant_id" INTEGER NOT NULL,
+    "tenant_id" VARCHAR(25) NOT NULL,
     "active" BOOLEAN NOT NULL DEFAULT true,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
@@ -688,7 +693,7 @@ CREATE TABLE "Author" (
     "last_name" VARCHAR(100) NOT NULL,
     "biography" TEXT,
     "avatar_id" VARCHAR(25),
-    "tenant_id" INTEGER NOT NULL,
+    "tenant_id" VARCHAR(25) NOT NULL,
     "active" BOOLEAN NOT NULL DEFAULT true,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
@@ -698,7 +703,7 @@ CREATE TABLE "Author" (
 
 -- CreateTable
 CREATE TABLE "article_images_deprecated" (
-    "id" SERIAL NOT NULL,
+    "id" VARCHAR(25) NOT NULL,
     "url" TEXT NOT NULL,
     "storage_key" TEXT NOT NULL,
     "alt_text" VARCHAR(255),
@@ -714,7 +719,7 @@ CREATE TABLE "article_images_deprecated" (
 
 -- CreateTable
 CREATE TABLE "AdminSessionToken" (
-    "id" SERIAL NOT NULL,
+    "id" VARCHAR(25) NOT NULL,
     "hash_token" TEXT NOT NULL,
     "salt" TEXT NOT NULL,
     "admin_id" VARCHAR(25) NOT NULL,
@@ -726,7 +731,7 @@ CREATE TABLE "AdminSessionToken" (
 
 -- CreateTable
 CREATE TABLE "AdminCredential" (
-    "id" SERIAL NOT NULL,
+    "id" VARCHAR(25) NOT NULL,
     "admin_id" VARCHAR(25) NOT NULL,
     "hash" TEXT NOT NULL,
     "salt" TEXT NOT NULL,
@@ -738,7 +743,7 @@ CREATE TABLE "AdminCredential" (
 
 -- CreateTable
 CREATE TABLE "SMSNotification" (
-    "id" SERIAL NOT NULL,
+    "id" VARCHAR(25) NOT NULL,
     "webhook" VARCHAR(255) NOT NULL,
     "name" TEXT NOT NULL,
     "total_notifications" SMALLINT NOT NULL,
@@ -750,7 +755,7 @@ CREATE TABLE "SMSNotification" (
 
 -- CreateTable
 CREATE TABLE "SMSNotificationEvent" (
-    "id" SERIAL NOT NULL,
+    "id" VARCHAR(25) NOT NULL,
     "message" VARCHAR(160) NOT NULL,
     "destination_number" VARCHAR(18) NOT NULL,
     "sender_number" VARCHAR(18) NOT NULL,
@@ -759,7 +764,7 @@ CREATE TABLE "SMSNotificationEvent" (
     "payload_provider_response" JSONB,
     "payload_message" JSONB,
     "status" SMALLINT NOT NULL,
-    "sms_notification_id" INTEGER NOT NULL,
+    "sms_notification_id" VARCHAR(25) NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
@@ -768,7 +773,7 @@ CREATE TABLE "SMSNotificationEvent" (
 
 -- CreateTable
 CREATE TABLE "Config" (
-    "id" SERIAL NOT NULL,
+    "id" VARCHAR(25) NOT NULL,
     "name" TEXT NOT NULL,
     "value" TEXT NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -779,7 +784,7 @@ CREATE TABLE "Config" (
 
 -- CreateTable
 CREATE TABLE "EmailCampaign" (
-    "id" SERIAL NOT NULL,
+    "id" VARCHAR(25) NOT NULL,
     "name" TEXT NOT NULL,
     "total_leads" INTEGER NOT NULL,
     "open_rate" INTEGER NOT NULL,
@@ -788,11 +793,11 @@ CREATE TABLE "EmailCampaign" (
     "uploaded_leads" BOOLEAN NOT NULL DEFAULT false,
     "copy_variation_type" SMALLINT,
     "funnel_campaign" BOOLEAN NOT NULL DEFAULT false,
-    "main_email_id" INTEGER,
+    "main_email_id" VARCHAR(25),
     "status" SMALLINT NOT NULL,
     "started_at" TIMESTAMP(3),
     "finished_at" TIMESTAMP(3),
-    "smtp_server_id" INTEGER NOT NULL,
+    "smtp_server_id" VARCHAR(25) NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
@@ -801,7 +806,7 @@ CREATE TABLE "EmailCampaign" (
 
 -- CreateTable
 CREATE TABLE "Email" (
-    "id" SERIAL NOT NULL,
+    "id" VARCHAR(25) NOT NULL,
     "type" SMALLINT NOT NULL,
     "name" TEXT NOT NULL,
     "html_content" TEXT NOT NULL,
@@ -825,10 +830,10 @@ CREATE TABLE "Email" (
 
 -- CreateTable
 CREATE TABLE "Delivery" (
-    "id" SERIAL NOT NULL,
-    "email_lead_id" INTEGER NOT NULL,
-    "campaign_batch_id" INTEGER NOT NULL,
-    "email_id" INTEGER NOT NULL,
+    "id" VARCHAR(25) NOT NULL,
+    "email_lead_id" VARCHAR(25) NOT NULL,
+    "campaign_batch_id" VARCHAR(25) NOT NULL,
+    "email_id" VARCHAR(25) NOT NULL,
     "server_response" JSONB,
     "send_date" TIMESTAMP(3),
     "server_response_date" TIMESTAMP(3),
@@ -850,8 +855,8 @@ CREATE TABLE "Delivery" (
 
 -- CreateTable
 CREATE TABLE "OpenTracking" (
-    "id" SERIAL NOT NULL,
-    "delivery_id" INTEGER NOT NULL,
+    "id" VARCHAR(25) NOT NULL,
+    "delivery_id" VARCHAR(25) NOT NULL,
     "bot_chance" SMALLINT NOT NULL,
     "open_date" TIMESTAMP(3) NOT NULL,
     "request_open_json" JSONB,
@@ -863,8 +868,8 @@ CREATE TABLE "OpenTracking" (
 
 -- CreateTable
 CREATE TABLE "ClickTracking" (
-    "id" SERIAL NOT NULL,
-    "delivery_id" INTEGER NOT NULL,
+    "id" VARCHAR(25) NOT NULL,
+    "delivery_id" VARCHAR(25) NOT NULL,
     "bot_chance" SMALLINT NOT NULL,
     "link_clicked" TEXT NOT NULL,
     "link_clicked_date" TIMESTAMP(3) NOT NULL,
@@ -877,9 +882,9 @@ CREATE TABLE "ClickTracking" (
 
 -- CreateTable
 CREATE TABLE "EmailLead" (
-    "id" SERIAL NOT NULL,
+    "id" VARCHAR(25) NOT NULL,
     "email" TEXT NOT NULL,
-    "email_campaign_id" INTEGER NOT NULL,
+    "email_campaign_id" VARCHAR(25) NOT NULL,
     "status" SMALLINT NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
@@ -889,16 +894,16 @@ CREATE TABLE "EmailLead" (
 
 -- CreateTable
 CREATE TABLE "CampaignBatch" (
-    "id" SERIAL NOT NULL,
+    "id" VARCHAR(25) NOT NULL,
     "total_leads" INTEGER NOT NULL,
     "un_open_rate" INTEGER NOT NULL DEFAULT 0,
     "un_click_rate" INTEGER NOT NULL DEFAULT 0,
     "un_unsubscribe" INTEGER NOT NULL DEFAULT 0,
     "un_success_rate" INTEGER,
     "un_failed_rate" INTEGER,
-    "email_campaign_id" INTEGER NOT NULL,
+    "email_campaign_id" VARCHAR(25) NOT NULL,
     "status" SMALLINT NOT NULL,
-    "email_id" INTEGER,
+    "email_id" VARCHAR(25),
     "started_at" TIMESTAMP(3),
     "finished_at" TIMESTAMP(3),
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -909,7 +914,7 @@ CREATE TABLE "CampaignBatch" (
 
 -- CreateTable
 CREATE TABLE "SMTPServer" (
-    "id" SERIAL NOT NULL,
+    "id" VARCHAR(25) NOT NULL,
     "name" VARCHAR(255) NOT NULL,
     "email" VARCHAR(255) NOT NULL,
     "domain" VARCHAR(255) NOT NULL,
@@ -938,7 +943,7 @@ CREATE TABLE "media_collections" (
     "max_file_size" INTEGER,
     "allowed_mime_types" TEXT,
     "max_items" INTEGER,
-    "tenant_id" INTEGER NOT NULL,
+    "tenant_id" VARCHAR(25) NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
@@ -959,8 +964,8 @@ CREATE TABLE "media_assets" (
     "metadata" JSONB,
     "status" VARCHAR(20) NOT NULL DEFAULT 'ready',
     "collection_id" VARCHAR(25) NOT NULL,
-    "tenant_id" INTEGER NOT NULL,
-    "created_by" INTEGER NOT NULL,
+    "tenant_id" VARCHAR(25) NOT NULL,
+    "created_by" VARCHAR(25) NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
@@ -984,13 +989,27 @@ CREATE TABLE "media_asset_relations" (
 
 -- CreateTable
 CREATE TABLE "lead_attachments" (
-    "id" SERIAL NOT NULL,
-    "lead_id" INTEGER NOT NULL,
+    "id" VARCHAR(25) NOT NULL,
+    "lead_id" UUID NOT NULL,
     "asset_id" VARCHAR(25) NOT NULL,
     "label" VARCHAR(100),
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "lead_attachments_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "stats_integrations" (
+    "id" VARCHAR(25) NOT NULL,
+    "tenant_id" VARCHAR(25) NOT NULL,
+    "key" VARCHAR(50) NOT NULL,
+    "label" VARCHAR(100) NOT NULL,
+    "config" JSONB NOT NULL,
+    "active" BOOLEAN NOT NULL DEFAULT true,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "stats_integrations_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
@@ -1046,6 +1065,15 @@ CREATE UNIQUE INDEX "APIToken_api_identifier_key" ON "APIToken"("api_identifier"
 
 -- CreateIndex
 CREATE INDEX "Lead_tenant_id_idx" ON "Lead"("tenant_id");
+
+-- CreateIndex
+CREATE INDEX "Lead_country_idx" ON "Lead"("country");
+
+-- CreateIndex
+CREATE INDEX "Lead_city_idx" ON "Lead"("city");
+
+-- CreateIndex
+CREATE INDEX "Lead_created_at_idx" ON "Lead"("created_at");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Admin_email_key" ON "Admin"("email");
@@ -1133,6 +1161,12 @@ CREATE INDEX "lead_attachments_lead_id_idx" ON "lead_attachments"("lead_id");
 
 -- CreateIndex
 CREATE INDEX "lead_attachments_asset_id_idx" ON "lead_attachments"("asset_id");
+
+-- CreateIndex
+CREATE INDEX "stats_integrations_tenant_id_idx" ON "stats_integrations"("tenant_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "stats_integrations_tenant_id_key_key" ON "stats_integrations"("tenant_id", "key");
 
 -- AddForeignKey
 ALTER TABLE "User" ADD CONSTRAINT "User_plan_id_fkey" FOREIGN KEY ("plan_id") REFERENCES "Plan"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -1316,3 +1350,6 @@ ALTER TABLE "lead_attachments" ADD CONSTRAINT "lead_attachments_lead_id_fkey" FO
 
 -- AddForeignKey
 ALTER TABLE "lead_attachments" ADD CONSTRAINT "lead_attachments_asset_id_fkey" FOREIGN KEY ("asset_id") REFERENCES "media_assets"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "stats_integrations" ADD CONSTRAINT "stats_integrations_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "Tenant"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

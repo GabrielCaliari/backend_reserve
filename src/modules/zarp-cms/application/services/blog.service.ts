@@ -31,7 +31,7 @@ export class BlogService {
    * Validates that a blog name is unique within a tenant
    * Requirement 1.2: Blog name uniqueness per tenant
    */
-  async validateNameUniqueness(name: string, tenantId: number): Promise<boolean> {
+  async validateNameUniqueness(name: string, tenantId: string): Promise<boolean> {
     const existing = await this.blogRepository.findByNameAndTenantId(name, tenantId);
     return existing === null;
   }
@@ -40,7 +40,7 @@ export class BlogService {
    * Creates a new blog with a generated secret key
    * Validates name uniqueness per tenant before creation
    */
-  async create(tenantId: number, data: CreateBlogDTO): Promise<ServiceResponse> {
+  async create(tenantId: string, data: CreateBlogDTO): Promise<ServiceResponse> {
     try {
       // Validate name uniqueness within tenant (Requirement 1.2)
       const isUnique = await this.validateNameUniqueness(data.name, tenantId);
@@ -85,7 +85,7 @@ export class BlogService {
    * Retrieves all blogs for a tenant
    * Strips sensitive data (secret key hash and salt)
    */
-  async findAll(tenantId: number): Promise<ServiceResponse> {
+  async findAll(tenantId: string): Promise<ServiceResponse> {
     try {
       const blogs = await this.blogRepository.findByTenantId(tenantId);
       
@@ -110,7 +110,7 @@ export class BlogService {
    * Updates a blog's information
    * Validates name uniqueness if name is being changed
    */
-  async update(tenantId: number, blogId: string, data: UpdateBlogDTO): Promise<ServiceResponse> {
+  async update(tenantId: string, blogId: string, data: UpdateBlogDTO): Promise<ServiceResponse> {
     try {
       const blog = await this.blogRepository.findById(blogId);
 
@@ -154,7 +154,7 @@ export class BlogService {
   /**
    * Soft deletes a blog
    */
-  async delete(tenantId: number, blogId: string): Promise<ServiceResponse> {
+  async delete(tenantId: string, blogId: string): Promise<ServiceResponse> {
     try {
       const blog = await this.blogRepository.findById(blogId);
 
@@ -178,7 +178,7 @@ export class BlogService {
    * Regenerates the secret key for a blog
    * Returns the new plain secret key (only time it's visible)
    */
-  async regenerateSecretKey(tenantId: number, blogId: string): Promise<ServiceResponse> {
+  async regenerateSecretKey(tenantId: string, blogId: string): Promise<ServiceResponse> {
     try {
       const blog = await this.blogRepository.findById(blogId);
 

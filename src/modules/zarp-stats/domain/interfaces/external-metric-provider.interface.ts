@@ -21,7 +21,7 @@ export interface IExternalMetricProvider {
   readonly configSchema: Record<string, ConfigFieldSchema>;
   getMetrics(
     config: Record<string, any>,
-    tenantId: number,
+    tenantId: string,
     dateRange?: DateRange,
   ): Promise<MetricGroup>;
   validateConfig(config: Record<string, any>): boolean;

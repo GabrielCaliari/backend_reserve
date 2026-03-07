@@ -8,7 +8,7 @@ import { IPlanRepository } from '../../domain/interfaces';
 @Injectable()
 export default class PlanRepository implements IPlanRepository {
     constructor(private readonly prisma: PrismaService) {}
-    async linkMonitoringPlanWithBrand(monitoringPlanId: number, brandId: number, tx: PrismaClient) {
+    async linkMonitoringPlanWithBrand(monitoringPlanId: string, brandId: string, tx: PrismaClient) {
         try {
             const cc = tx ?? this.prisma;
 
@@ -28,7 +28,7 @@ export default class PlanRepository implements IPlanRepository {
         }
     }
 
-    async countMonitoringPlans(userId: number) {
+    async countMonitoringPlans(userId: string) {
         try {
             const countUsed = await this.prisma.monitoringPlan.count({
                 where: {
@@ -71,7 +71,7 @@ export default class PlanRepository implements IPlanRepository {
         }
     }
 
-    async selectActiveByBrandId(brandId: number) {
+    async selectActiveByBrandId(brandId: string) {
         try {
             const raw = await this.prisma.monitoringPlan.findFirst({
                 where: {
@@ -86,7 +86,7 @@ export default class PlanRepository implements IPlanRepository {
         }
     }
 
-    async selectAvailableMonitoringPlanByUser(userId: number) {
+    async selectAvailableMonitoringPlanByUser(userId: string) {
         try {
             const raws = await this.prisma.monitoringPlan.findMany({
                 where: {

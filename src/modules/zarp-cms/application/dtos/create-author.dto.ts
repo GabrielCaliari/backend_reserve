@@ -45,5 +45,5 @@ export class CreateAuthorDTO {
   @IsInt()
   @IsNotEmpty()
   @Min(1)
-  tenantId: number;
+  tenantId: string;
 }

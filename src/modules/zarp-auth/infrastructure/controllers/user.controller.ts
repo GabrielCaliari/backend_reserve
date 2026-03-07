@@ -78,7 +78,7 @@ export class UserController {
     @ApiResponse({ status: 401, description: 'Invalid or expired token' })
     async feed(
         @Res() res: Response,
-        @Req() req: Request & { user_id: number },
+        @Req() req: Request & { user_id: string },
     ) {
         const userId = req.user_id;
         const result = await this.userService.feed(userId);
@@ -93,7 +93,7 @@ export class UserController {
     @ApiResponse({ status: 401, description: 'Invalid or expired token' })
     async me(
         @Res() res: Response,
-        @Req() req: Request & { user_id: number },
+        @Req() req: Request & { user_id: string },
     ) {
         const userId = req.user_id;
         const result = await this.userService.me(userId);
@@ -108,7 +108,7 @@ export class UserController {
     @ApiResponse({ status: 401, description: 'Invalid or expired token' })
     async generatePaymentAccountLink(
         @Res() res: Response,
-        @Req() req: Request & { user_id: number; },
+        @Req() req: Request & { user_id: string; },
     ) {
         const result = await this.userService.generatePaymentAccountLink(
             req.user_id
@@ -127,7 +127,7 @@ export class UserController {
     @ApiResponse({ status: 401, description: 'Invalid or expired token' })
     async checkout(
         @Res() res: Response,
-        @Req() req: Request & { user_id: number; },
+        @Req() req: Request & { user_id: string; },
         @Param('period') period: string,
         @Param('slug') slug: string,
     ) {
@@ -153,7 +153,7 @@ export class UserController {
     @ApiResponse({ status: 401, description: 'Invalid or expired token' })
     async checkoutOrderBrandAnalysis(
         @Res() res: Response,
-        @Req() req: Request & { user_id: number; },
+        @Req() req: Request & { user_id: string; },
         @Param('slug') slug: string,
     ) {
         const result = await this.userService.checkoutOrderBrandAnalysis(slug, req.user_id);
@@ -178,7 +178,7 @@ export class UserController {
         const result = await this.userService.generateTokens(
             key,
             +tokens,
-            +userId,
+            userId,
         );
         return res.status(result.status).json(result.data);
     }

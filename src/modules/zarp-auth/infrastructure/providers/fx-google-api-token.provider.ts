@@ -45,7 +45,7 @@ export class FXGoogleAPITokenProvider implements IAPIToken {
         const refreshToken = this.encryptProvider.encrypt(data.refresh_token, pv);
 
         const expiresIn = new Date(new Date().getTime() + 24 * 60 * 60 * 1000);
-        let idRaw: number | undefined = raw?.id;
+        let idRaw: string | undefined = raw?.id;
 
         if (!raw) {
           const APITokenCreation = await this.apiTokenRepository.create({

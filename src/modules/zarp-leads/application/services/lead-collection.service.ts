@@ -23,7 +23,7 @@ export class LeadCollectionService {
     return { key, hash, salt };
   }
 
-  async createCollection(dto: CreateCollectionDto, tenantId: number): Promise<LeadCollection & { secretKey: string }> {
+  async createCollection(dto: CreateCollectionDto, tenantId: string): Promise<LeadCollection & { secretKey: string }> {
     const slug = generateSlug(dto.name);
     
     const existing = await this.repository.findBySlugAndTenantId(slug, tenantId);
@@ -49,7 +49,7 @@ export class LeadCollectionService {
     return Object.assign(created, { secretKey: key });
   }
 
-  async findCollections(query: CollectionQueryDto, tenantId: number): Promise<{ data: LeadCollection[]; meta: { total: number; page: number; limit: number } }> {
+  async findCollections(query: CollectionQueryDto, tenantId: string): Promise<{ data: LeadCollection[]; meta: { total: number; page: number; limit: number } }> {
     const { collections, total } = await this.repository.findAllByTenantId(tenantId, query);
     return {
       data: collections,
@@ -61,7 +61,7 @@ export class LeadCollectionService {
     };
   }
 
-  async findCollectionById(id: number, tenantId: number): Promise<LeadCollection> {
+  async findCollectionById(id: string, tenantId: string): Promise<LeadCollection> {
     const collection = await this.repository.findById(id, tenantId);
     if (!collection) {
       throw new CollectionNotFoundError(id);
@@ -77,7 +77,7 @@ export class LeadCollectionService {
     return this.repository.findBySecretKey(hash);
   }
 
-  async updateCollection(id: number, dto: UpdateCollectionDto, tenantId: number): Promise<LeadCollection> {
+  async updateCollection(id: string, dto: UpdateCollectionDto, tenantId: string): Promise<LeadCollection> {
     const collection = await this.findCollectionById(id, tenantId);
 
     // Apply updates
@@ -90,13 +90,13 @@ export class LeadCollectionService {
     return updated;
   }
 
-  async deactivateCollection(id: number, tenantId: number): Promise<LeadCollection> {
+  async deactivateCollection(id: string, tenantId: string): Promise<LeadCollection> {
     const collection = await this.findCollectionById(id, tenantId);
     collection.active = false;
     return this.repository.update(id, collection);
   }
 
-  async regenerateSecretKey(id: number, tenantId: number): Promise<{ secretKey: string }> {
+  async regenerateSecretKey(id: string, tenantId: string): Promise<{ secretKey: string }> {
     const collection = await this.findCollectionById(id, tenantId);
 
     const { key, hash, salt } = this.generateSecretKey();

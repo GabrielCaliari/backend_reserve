@@ -9,7 +9,7 @@ datasource db {
 }
 
 model User {
-  id                        Int                         @id @default(autoincrement())
+  id                        String                         @id @default(cuid()) @db.VarChar(25)
   email                     String                      @unique
   name                      String                      @db.VarChar(100)
   cpf                       String                      @db.VarChar(11)
@@ -17,7 +17,7 @@ model User {
   sex                       Int?                        @default(1) @db.SmallInt
   date_of_birth             DateTime?                   @db.Date
   date_expires_in           DateTime?                   @db.Date
-  plan_id                   Int
+  plan_id                   String @db.VarChar(25)
   created_at                DateTime                    @default(now())
   updated_at                DateTime                    @updatedAt
   Brand                     Brand[]
@@ -40,7 +40,7 @@ model User {
 }
 
 model Plan {
-  id                        Int              @id @default(autoincrement())
+  id                        String              @id @default(cuid()) @db.VarChar(25)
   name                      String           @db.VarChar(100)
   slug                      String           @unique
   maximum_queries           Int
@@ -102,8 +102,8 @@ model Plan {
 //     LEFT(c.cnpj, 8) = a.cnpj
 
 view ViewCompany {
-  company_id                               Int
-  auxiliary_company_information_id         Int
+  company_id                               String @db.VarChar(25)
+  auxiliary_company_information_id         String @db.VarChar(25)
   cnpj                                     String?
   branch_type                              Int?
   business_name                            String?
@@ -148,21 +148,21 @@ view ViewCompany {
 }
 
 model PibotMessages {
-  id                Int      @id @default(autoincrement())
+  id                String      @id @default(cuid()) @db.VarChar(25)
   chat_id           String   @db.VarChar(100)
   choices           Json
   completion_tokens Int
   prompt_tokens     Int
   total_tokens      Int
   usage             Json
-  user_id           Int
+  user_id           String @db.VarChar(25)
   created_at        DateTime @default(now())
   updated_at        DateTime @updatedAt
   User              User     @relation(fields: [user_id], references: [id])
 }
 
 model Subscription {
-  id                     Int       @id @default(autoincrement())
+  id                     String       @id @default(cuid()) @db.VarChar(25)
   name                   String
   subscription_id        String    @unique
   customer_id            String
@@ -194,8 +194,8 @@ model Subscription {
   event_history          Json?
   created_at             DateTime  @default(now())
   updated_at             DateTime  @updatedAt
-  plan_id                Int
-  user_id                Int
+  plan_id                String @db.VarChar(25)
+  user_id                String @db.VarChar(25)
   Plan                   Plan      @relation(fields: [plan_id], references: [id])
   User                   User      @relation(fields: [user_id], references: [id])
 
@@ -204,7 +204,7 @@ model Subscription {
 }
 
 model AdditionalTokenPack {
-  id          Int      @id @default(autoincrement())
+  id          String      @id @default(cuid()) @db.VarChar(25)
   slug        String
   external_id String
   created_at  DateTime @default(now())
@@ -212,7 +212,7 @@ model AdditionalTokenPack {
 }
 
 model Order {
-  id                   Int      @id @default(autoincrement())
+  id                   String      @id @default(cuid()) @db.VarChar(25)
   amount               Int
   currency             String
   product_name         String
@@ -223,14 +223,14 @@ model Order {
   customer_id          String
   created_at           DateTime @default(now())
   updated_at           DateTime @updatedAt
-  user_id              Int
+  user_id              String @db.VarChar(25)
   User                 User     @relation(fields: [user_id], references: [id])
 
   @@index([customer_id])
 }
 
 model MonitoringPlan {
-  id                   Int       @id @default(autoincrement())
+  id                   String       @id @default(cuid()) @db.VarChar(25)
   plan_amount          Decimal   @db.Money
   status               Int       @db.SmallInt
   checkout_status      String
@@ -245,10 +245,10 @@ model MonitoringPlan {
   canceled_at          DateTime?
   ended_at             DateTime?
   billing_cycle_anchor DateTime
-  plan_id              Int?
-  brand_id             Int?
+  plan_id              String? @db.VarChar(25)
+  brand_id             String? @db.VarChar(25)
   subscription_id      String    @unique
-  user_id              Int
+  user_id              String @db.VarChar(25)
   created_at           DateTime  @default(now())
   updated_at           DateTime  @updatedAt
   Brand                Brand?    @relation(fields: [brand_id], references: [id])
@@ -257,18 +257,18 @@ model MonitoringPlan {
 }
 
 model UserSessionToken {
-  id         Int      @id @default(autoincrement())
+  id         String      @id @default(cuid()) @db.VarChar(25)
   hash_token String
   salt       String
-  user_id    Int
+  user_id    String @db.VarChar(25)
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
   User       User     @relation(fields: [user_id], references: [id])
 }
 
 model UserCredential {
-  id         Int      @id @default(autoincrement())
-  user_id    Int      @unique
+  id         String      @id @default(cuid()) @db.VarChar(25)
+  user_id    String @db.VarChar(25)      @unique
   hash       String
   salt       String
   created_at DateTime @default(now())
@@ -277,8 +277,8 @@ model UserCredential {
 }
 
 model UserCredentialHistory {
-  id         Int      @id @default(autoincrement())
-  user_id    Int
+  id         String      @id @default(cuid()) @db.VarChar(25)
+  user_id    String @db.VarChar(25)
   hash       String
   salt       String
   created_at DateTime @default(now())
@@ -286,7 +286,7 @@ model UserCredentialHistory {
 }
 
 model UserPasswordChangeSession {
-  id         Int       @id @default(autoincrement())
+  id         String       @id @default(cuid()) @db.VarChar(25)
   slug       String    @db.VarChar(64)
   status     Int       @db.SmallInt
   hash_token String
@@ -296,14 +296,14 @@ model UserPasswordChangeSession {
   device_ip  String    @db.VarChar(16)
   expires_in DateTime
   expired_at DateTime?
-  user_id    Int
+  user_id    String @db.VarChar(25)
   created_at DateTime  @default(now())
   updated_at DateTime  @updatedAt
   User       User      @relation(fields: [user_id], references: [id])
 }
 
 model Company {
-  id                    Int       @id @default(autoincrement())
+  id                    String       @id @default(cuid()) @db.VarChar(25)
   cnpj                  String    @unique @db.VarChar(14)
   branch_type           Int       @db.SmallInt
   business_name         String?   @db.VarChar(255)
@@ -340,7 +340,7 @@ model Company {
 }
 
 model AuxiliaryCompanyInformation {
-  id                                       Int      @id @default(autoincrement())
+  id                                       String      @id @default(cuid()) @db.VarChar(25)
   cnpj                                     String   @unique @db.VarChar(14)
   fantasy_name                             String?  @db.VarChar(150)
   legal_nature                             String?  @db.VarChar(4)
@@ -353,31 +353,31 @@ model AuxiliaryCompanyInformation {
 }
 
 model Search {
-  id         Int      @id @default(autoincrement())
+  id         String      @id @default(cuid()) @db.VarChar(25)
   amount     Int
   limit      Int      @db.SmallInt
   hash       String   @unique @db.VarChar(100)
   filters    Json
-  user_id    Int
+  user_id    String @db.VarChar(25)
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
   User       User     @relation(fields: [user_id], references: [id])
 }
 
 model TaxRegime {
-  id               Int      @id @default(autoincrement())
+  id               String      @id @default(cuid()) @db.VarChar(25)
   cnpj             String   @db.VarChar(14)
   year             DateTime @db.Date
   scp_cnpj         String   @db.VarChar(115)
   type_of_taxation Int      @db.SmallInt
   taxation         String   @db.VarChar(115)
-  company_id       Int?
+  company_id       String? @db.VarChar(25)
   created_at       DateTime @default(now())
   updated_at       DateTime @updatedAt
 }
 
 model Partner {
-  id                           Int       @id @default(autoincrement())
+  id                           String       @id @default(cuid()) @db.VarChar(25)
   cnpj                         String    @db.VarChar(14)
   partner_type                 String    @db.VarChar(2)
   name                         String?   @db.VarChar(150)
@@ -388,18 +388,18 @@ model Partner {
   cpf_representative           String?   @db.VarChar(11)
   name_representative          String?   @db.VarChar(150)
   representative_qualification String?   @db.VarChar(2)
-  company_id                   Int?
+  company_id                   String? @db.VarChar(25)
   created_at                   DateTime  @default(now())
   updated_at                   DateTime  @updatedAt
 }
 
 model Brand {
-  id                Int                 @id @default(autoincrement())
+  id                String                 @id @default(cuid()) @db.VarChar(25)
   name              String
   identifier        String?             @db.VarChar(14)
   email             String
   phone_number      String
-  user_id           Int
+  user_id           String @db.VarChar(25)
   inpi_number       String?             @db.VarChar(30)
   created_at        DateTime            @default(now())
   updated_at        DateTime            @updatedAt
@@ -411,7 +411,7 @@ model Brand {
 }
 
 model Cnae {
-  id         Int      @id @default(autoincrement())
+  id         String      @id @default(cuid()) @db.VarChar(25)
   code       String   @db.VarChar(11)
   name       String   @db.VarChar(255)
   created_at DateTime @default(now())
@@ -419,7 +419,7 @@ model Cnae {
 }
 
 model Journal {
-  id         Int      @id @default(autoincrement())
+  id         String      @id @default(cuid()) @db.VarChar(25)
   name       String   @unique
   extension  String   @db.VarChar(10)
   size       String
@@ -429,7 +429,7 @@ model Journal {
 }
 
 model JournalToFetch {
-  id           Int            @id @default(autoincrement())
+  id           String            @id @default(cuid()) @db.VarChar(25)
   zip_name     String         @unique @db.VarChar(100)
   name         String         @db.VarChar(100)
   searched     Boolean        @default(false)
@@ -440,7 +440,7 @@ model JournalToFetch {
 }
 
 model BrandAlert {
-  id                   Int             @id @default(autoincrement())
+  id                   String             @id @default(cuid()) @db.VarChar(25)
   brand                String?
   deposit_date         DateTime?
   conception_date      DateTime?
@@ -458,10 +458,10 @@ model BrandAlert {
   titular              Json
   despacho             Json
   sobrestador          Json
-  brand_id             Int
-  brand_monitoring_id  Int
-  user_id              Int
-  jornal_to_fetch_id   Int
+  brand_id             String @db.VarChar(25)
+  brand_monitoring_id  String @db.VarChar(25)
+  user_id              String @db.VarChar(25)
+  jornal_to_fetch_id   String @db.VarChar(25)
   created_at           DateTime        @default(now())
   updated_at           DateTime        @updatedAt
   Brand                Brand           @relation(fields: [brand_id], references: [id])
@@ -471,13 +471,13 @@ model BrandAlert {
 }
 
 model BrandMonitoring {
-  id                      Int                 @id @default(autoincrement())
+  id                      String                 @id @default(cuid()) @db.VarChar(25)
   processed_last_analysis Int                 @default(0)
   total_processed         Int                 @default(0)
   triggered_notifications Int                 @default(0)
   status                  Int                 @db.SmallInt
-  user_id                 Int
-  brand_id                Int
+  user_id                 String @db.VarChar(25)
+  brand_id                String @db.VarChar(25)
   inpi_number             String?             @db.VarChar(30)
   last_magazine_searched  String?             @db.VarChar(20)
   last_movement           DateTime?
@@ -492,7 +492,7 @@ model BrandMonitoring {
 }
 
 model JournalAlert {
-  id                   Int            @id @default(autoincrement())
+  id                   String            @id @default(cuid()) @db.VarChar(25)
   brand                String?
   deposit_date         DateTime?
   conception_date      DateTime?
@@ -510,7 +510,7 @@ model JournalAlert {
   titular              Json
   despacho             Json
   sobrestador          Json
-  jornal_to_fetch_id   Int
+  jornal_to_fetch_id   String @db.VarChar(25)
   created_at           DateTime       @default(now())
   updated_at           DateTime       @updatedAt
   Journal_to_fetch     JournalToFetch @relation(fields: [jornal_to_fetch_id], references: [id])
@@ -519,7 +519,7 @@ model JournalAlert {
 }
 
 model BrandAnalysis {
-  id                   Int                    @id @default(autoincrement())
+  id                   String                    @id @default(cuid()) @db.VarChar(25)
   user_message         Json
   response             Json
   json_data_response   Json
@@ -528,7 +528,7 @@ model BrandAnalysis {
   brand                String                 @db.VarChar(255)
   niche                String                 @db.VarChar(155)
   description          String                 @db.VarChar(255)
-  user_id              Int
+  user_id              String @db.VarChar(25)
   created_at           DateTime               @default(now())
   updated_at           DateTime               @updatedAt
   User                 User                   @relation(fields: [user_id], references: [id])
@@ -539,23 +539,23 @@ model BrandAnalysis {
 }
 
 model BrandAnalysisRequest {
-  id                      Int                @id @default(autoincrement())
+  id                      String                @id @default(cuid()) @db.VarChar(25)
   valid                   Boolean
-  brand_analysis_id       Int?
-  user_id                 Int
+  brand_analysis_id       String? @db.VarChar(25)
+  user_id                 String @db.VarChar(25)
   created_at              DateTime           @default(now())
   updated_at              DateTime           @updatedAt
-  brand_analysis_token_id Int
+  brand_analysis_token_id String @db.VarChar(25)
   Brand_analysis          BrandAnalysis?     @relation(fields: [brand_analysis_id], references: [id])
   Brand_analysis_token    BrandAnalysisToken @relation(fields: [brand_analysis_token_id], references: [id])
   User                    User               @relation(fields: [user_id], references: [id])
 }
 
 model BrandAnalysisToken {
-  id                   Int                    @id @default(autoincrement())
+  id                   String                    @id @default(cuid()) @db.VarChar(25)
   status               Int                    @db.SmallInt
-  brand_analysis_id    Int?
-  user_id              Int
+  brand_analysis_id    String? @db.VarChar(25)
+  user_id              String @db.VarChar(25)
   created_at           DateTime               @default(now())
   updated_at           DateTime               @updatedAt
   BrandAnalysisRequest BrandAnalysisRequest[]
@@ -564,10 +564,10 @@ model BrandAnalysisToken {
 }
 
 model BrandNotification {
-  id                  Int             @id @default(autoincrement())
-  brand_id            Int
-  user_id             Int
-  brand_monitoring_id Int
+  id                  String             @id @default(cuid()) @db.VarChar(25)
+  brand_id            String @db.VarChar(25)
+  user_id             String @db.VarChar(25)
+  brand_monitoring_id String @db.VarChar(25)
   created_at          DateTime        @default(now())
   updated_at          DateTime        @updatedAt
   Brand               Brand           @relation(fields: [brand_id], references: [id])
@@ -576,7 +576,7 @@ model BrandNotification {
 }
 
 model CompanyExport {
-  id             Int       @id @default(autoincrement())
+  id             String       @id @default(cuid()) @db.VarChar(25)
   total_exported Int
   company_count  Int
   status         Int       @db.SmallInt
@@ -585,14 +585,14 @@ model CompanyExport {
   public_link    String?
   deletion_date  DateTime?
   filters        Json
-  user_id        Int
+  user_id        String @db.VarChar(25)
   created_at     DateTime  @default(now())
   updated_at     DateTime  @updatedAt
   User           User      @relation(fields: [user_id], references: [id])
 }
 
 model PublicBrandSearch {
-  id         Int      @id @default(autoincrement())
+  id         String      @id @default(cuid()) @db.VarChar(25)
   name       String
   email      String
   brand      String
@@ -602,7 +602,7 @@ model PublicBrandSearch {
 }
 
 model APIToken {
-  id                 Int      @id @default(autoincrement())
+  id                 String      @id @default(cuid()) @db.VarChar(25)
   api_identifier     String   @unique @db.VarChar(25)
   hash_id_token      String
   hash_acess_token   String
@@ -625,8 +625,8 @@ model Lead {
   description    String?
   data           Json?
   status         Int?             @default(1) @db.SmallInt
-  collection_id  Int?
-  tenant_id      Int?
+  collection_id  String? @db.VarChar(25)
+  tenant_id      String? @db.VarChar(25)
   ip_address     String?          @db.VarChar(45)
   user_agent     String?          @db.Text
   country        String?          @db.VarChar(100)
@@ -645,7 +645,7 @@ model Lead {
 }
 
 model LeadQualificationMessage {
-  id                 Int      @id @default(autoincrement())
+  id                 String      @id @default(cuid()) @db.VarChar(25)
   analyzed           Boolean  @default(false)
   temperature        Int?     @db.SmallInt
   prompt_token       Int
@@ -700,7 +700,7 @@ model Admin {
 }
 
 model Tenant {
-  id             Int              @id @default(autoincrement())
+  id             String              @id @default(cuid()) @db.VarChar(25)
   name           String           @db.VarChar(100)
   slug           String           @unique @db.VarChar(50)
   domain         String?          @db.VarChar(255)
@@ -716,7 +716,7 @@ model Tenant {
 }
 
 model LeadCollection {
-  id              Int                   @id @default(autoincrement())
+  id              String                   @id @default(cuid()) @db.VarChar(25)
   name            String                @db.VarChar(150)
   slug            String                @db.VarChar(100)
   source          String                @db.VarChar(100)
@@ -729,7 +729,7 @@ model LeadCollection {
   secret_key_salt String?
   active          Boolean               @default(true)
   metadata        Json?
-  tenant_id       Int
+  tenant_id       String @db.VarChar(25)
   created_at      DateTime              @default(now())
   updated_at      DateTime              @updatedAt
   Tenant          Tenant                @relation(fields: [tenant_id], references: [id])
@@ -740,9 +740,9 @@ model LeadCollection {
 }
 
 model AdminTenant {
-  id         Int        @id @default(autoincrement())
+  id         String        @id @default(cuid()) @db.VarChar(25)
   admin_id   String     @db.VarChar(25)
-  tenant_id  Int
+  tenant_id  String @db.VarChar(25)
   role       EAdminRole @default(manager)
   active     Boolean    @default(true)
   created_at DateTime   @default(now())
@@ -759,7 +759,7 @@ model Blog {
   description     String?
   secret_key_hash String
   secret_key_salt String
-  tenant_id       Int
+  tenant_id       String @db.VarChar(25)
   active          Boolean   @default(true)
   created_at      DateTime  @default(now())
   updated_at      DateTime  @updatedAt
@@ -809,7 +809,7 @@ model Author {
   last_name  String   @db.VarChar(100)
   biography  String?  @db.Text
   avatar_id  String?  @db.VarChar(25)
-  tenant_id  Int
+  tenant_id  String @db.VarChar(25)
   active     Boolean  @default(true)
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -823,7 +823,7 @@ model Author {
 }
 
 model ArticleImage {
-  id              Int      @id @default(autoincrement())
+  id              String      @id @default(cuid()) @db.VarChar(25)
   url             String
   storage_key     String
   alt_text        String?  @db.VarChar(255)
@@ -840,7 +840,7 @@ model ArticleImage {
 }
 
 model AdminSessionToken {
-  id         Int      @id @default(autoincrement())
+  id         String      @id @default(cuid()) @db.VarChar(25)
   hash_token String
   salt       String
   admin_id   String   @db.VarChar(25)
@@ -850,7 +850,7 @@ model AdminSessionToken {
 }
 
 model AdminCredential {
-  id         Int      @id @default(autoincrement())
+  id         String      @id @default(cuid()) @db.VarChar(25)
   admin_id   String   @unique @db.VarChar(25)
   hash       String
   salt       String
@@ -860,7 +860,7 @@ model AdminCredential {
 }
 
 model SMSNotification {
-  id                   Int                    @id @default(autoincrement())
+  id                   String                    @id @default(cuid()) @db.VarChar(25)
   webhook              String                 @unique @db.VarChar(255)
   name                 String
   total_notifications  Int                    @db.SmallInt
@@ -870,7 +870,7 @@ model SMSNotification {
 }
 
 model SMSNotificationEvent {
-  id                        Int             @id @default(autoincrement())
+  id                        String             @id @default(cuid()) @db.VarChar(25)
   message                   String          @db.VarChar(160)
   destination_number        String          @db.VarChar(18)
   sender_number             String          @db.VarChar(18)
@@ -880,13 +880,13 @@ model SMSNotificationEvent {
   payload_message           Json?
   status                    Int             @db.SmallInt
   SMSNotification           SMSNotification @relation(fields: [sms_notification_id], references: [id])
-  sms_notification_id       Int
+  sms_notification_id       String @db.VarChar(25)
   created_at                DateTime        @default(now())
   updated_at                DateTime        @updatedAt
 }
 
 model Config {
-  id         Int      @id @default(autoincrement())
+  id         String      @id @default(cuid()) @db.VarChar(25)
   name       String   @unique
   value      String
   created_at DateTime @default(now())
@@ -904,12 +904,12 @@ model EmailCampaign {
   copy_variation_type Int?            @db.SmallInt
   funnel_campaign     Boolean         @default(false)
   main_email          Email?          @relation(fields: [main_email_id], references: [id])
-  main_email_id       Int?
+  main_email_id       String? @db.VarChar(25)
   status              Int             @db.SmallInt
   started_at          DateTime?
   finished_at         DateTime?
   smtp_server         SMTPServer      @relation(fields: [smtp_server_id], references: [id])
-  smtp_server_id      Int
+  smtp_server_id      String @db.VarChar(25)
   created_at          DateTime        @default(now())
   updated_at          DateTime        @updatedAt
   EmailLead           EmailLead[]
@@ -917,7 +917,7 @@ model EmailCampaign {
 }
 
 model Email {
-  id                Int             @id @default(autoincrement())
+  id                String             @id @default(cuid()) @db.VarChar(25)
   type              Int             @db.SmallInt
   name              String
   html_content      String
@@ -941,13 +941,13 @@ model Email {
 }
 
 model Delivery {
-  id                   Int             @id @default(autoincrement())
-  email_lead_id        Int
+  id                   String             @id @default(cuid()) @db.VarChar(25)
+  email_lead_id        String @db.VarChar(25)
   email_lead           EmailLead       @relation(fields: [email_lead_id], references: [id])
   email                Email           @relation(fields: [email_id], references: [id])
-  campaign_batch_id    Int
+  campaign_batch_id    String @db.VarChar(25)
   campaign_batch       CampaignBatch   @relation(fields: [campaign_batch_id], references: [id])
-  email_id             Int
+  email_id             String @db.VarChar(25)
   server_response      Json?
   send_date            DateTime?
   server_response_date DateTime?
@@ -968,8 +968,8 @@ model Delivery {
 }
 
 model OpenTracking {
-  id                Int      @id @default(autoincrement())
-  delivery_id       Int
+  id                String      @id @default(cuid()) @db.VarChar(25)
+  delivery_id       String @db.VarChar(25)
   delivery          Delivery @relation(fields: [delivery_id], references: [id])
   bot_chance        Int      @db.SmallInt
   open_date         DateTime
@@ -979,8 +979,8 @@ model OpenTracking {
 }
 
 model ClickTracking {
-  id                 Int      @id @default(autoincrement())
-  delivery_id        Int
+  id                 String      @id @default(cuid()) @db.VarChar(25)
+  delivery_id        String @db.VarChar(25)
   delivery           Delivery @relation(fields: [delivery_id], references: [id])
   bot_chance         Int      @db.SmallInt
   link_clicked       String
@@ -991,7 +991,7 @@ model ClickTracking {
 }
 
 model EmailLead {
-  id                Int           @id @default(autoincrement())
+  id                String           @id @default(cuid()) @db.VarChar(25)
   email             String
   EmailCampaign     EmailCampaign @relation(fields: [email_campaign_id], references: [id])
   email_campaign_id String        @db.VarChar(25)
@@ -1002,7 +1002,7 @@ model EmailLead {
 }
 
 model CampaignBatch {
-  id                Int           @id @default(autoincrement())
+  id                String           @id @default(cuid()) @db.VarChar(25)
   total_leads       Int
   un_open_rate      Int           @default(0)
   un_click_rate     Int           @default(0)
@@ -1013,7 +1013,7 @@ model CampaignBatch {
   email_campaign_id String        @db.VarChar(25)
   status            Int           @db.SmallInt
   email             Email?        @relation(fields: [email_id], references: [id])
-  email_id          Int?
+  email_id          String? @db.VarChar(25)
   started_at        DateTime?
   finished_at       DateTime?
   created_at        DateTime      @default(now())
@@ -1022,7 +1022,7 @@ model CampaignBatch {
 }
 
 model SMTPServer {
-  id                 Int             @id @default(autoincrement())
+  id                 String             @id @default(cuid()) @db.VarChar(25)
   name               String          @db.VarChar(255)
   email              String          @db.VarChar(255)
   domain             String          @db.VarChar(255)
@@ -1053,7 +1053,7 @@ model MediaCollection {
   max_file_size      Int? // bytes
   allowed_mime_types String?  @db.Text // JSON array
   max_items          Int?
-  tenant_id          Int
+  tenant_id          String @db.VarChar(25)
   created_at         DateTime @default(now())
   updated_at         DateTime @updatedAt
 
@@ -1077,8 +1077,8 @@ model MediaAsset {
   metadata      Json? // Flexible metadata
   status        String   @default("ready") @db.VarChar(20)
   collection_id String   @db.VarChar(25)
-  tenant_id     Int
-  created_by    Int
+  tenant_id     String @db.VarChar(25)
+  created_by    String @db.VarChar(25)
   created_at    DateTime @default(now())
   updated_at    DateTime @updatedAt
 
@@ -1115,7 +1115,7 @@ model MediaAssetRelation {
 }
 
 model LeadAttachment {
-  id         Int      @id @default(autoincrement())
+  id         String      @id @default(cuid()) @db.VarChar(25)
   lead_id    String   @db.Uuid
   asset_id   String   @db.VarChar(25)
   label      String?  @db.VarChar(100)
@@ -1134,8 +1134,8 @@ model LeadAttachment {
 // ============================================
 
 model StatsIntegration {
-  id         Int      @id @default(autoincrement())
-  tenant_id  Int
+  id         String      @id @default(cuid()) @db.VarChar(25)
+  tenant_id  String @db.VarChar(25)
   key        String   @db.VarChar(50) // e.g. 'google_search_console'
   label      String   @db.VarChar(100)
   config     Json // Provider-specific config (API keys, site URLs, etc.)

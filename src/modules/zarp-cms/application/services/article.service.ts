@@ -359,7 +359,7 @@ export class ArticleService {
    */
   async validateAuthorTenant(
     authorId: string,
-    blogTenantId: number,
+    blogtenantId: string,
   ): Promise<{ valid: boolean; message?: string }> {
     const author = await this.authorRepository.findById(authorId);
 
@@ -370,7 +370,7 @@ export class ArticleService {
       };
     }
 
-    if (author.tenantId !== blogTenantId) {
+    if (author.tenantId !== blogtenantId) {
       return {
         valid: false,
         message: 'Author must belong to the same tenant as the blog',
@@ -387,7 +387,7 @@ export class ArticleService {
    */
   async validateImageReferences(
     content: string,
-    tenantId: number,
+    tenantId: string,
   ): Promise<{ valid: boolean; invalidReferences?: string[] }> {
     // Extract image references from markdown: ![alt](storage_key) or ![alt](url)
     const imageRegex = /!\[([^\]]*)\]\(([^)]+)\)/g;

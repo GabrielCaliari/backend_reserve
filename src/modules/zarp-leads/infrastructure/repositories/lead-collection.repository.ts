@@ -39,7 +39,7 @@ export class LeadCollectionRepository implements ILeadCollectionRepository {
     return this.toEntity(created);
   }
 
-  async findById(id: number, tenantId?: number): Promise<LeadCollection | null> {
+  async findById(id: string, tenantId?: string): Promise<LeadCollection | null> {
     const where: Prisma.LeadCollectionWhereInput = { id };
     if (tenantId) where.tenant_id = tenantId;
 
@@ -47,7 +47,7 @@ export class LeadCollectionRepository implements ILeadCollectionRepository {
     return record ? this.toEntity(record) : null;
   }
 
-  async findBySlugAndTenantId(slug: string, tenantId: number): Promise<LeadCollection | null> {
+  async findBySlugAndTenantId(slug: string, tenantId: string): Promise<LeadCollection | null> {
     const record = await this.prisma.leadCollection.findFirst({
       where: { slug, tenant_id: tenantId },
     });
@@ -68,7 +68,7 @@ export class LeadCollectionRepository implements ILeadCollectionRepository {
     return record ? this.toEntity(record) : null;
   }
 
-  async findAllByTenantId(tenantId: number, query?: CollectionQueryDto): Promise<{ collections: LeadCollection[]; total: number }> {
+  async findAllByTenantId(tenantId: string, query?: CollectionQueryDto): Promise<{ collections: LeadCollection[]; total: number }> {
     const where: Prisma.LeadCollectionWhereInput = { tenant_id: tenantId };
     if (query?.active !== undefined) where.active = query.active;
 
@@ -88,7 +88,7 @@ export class LeadCollectionRepository implements ILeadCollectionRepository {
     };
   }
 
-  async findAll(query?: CollectionQueryDto & { tenant_id?: number }): Promise<{ collections: LeadCollection[]; total: number }> {
+  async findAll(query?: CollectionQueryDto & { tenant_id?: string }): Promise<{ collections: LeadCollection[]; total: number }> {
     const where: Prisma.LeadCollectionWhereInput = {};
     if (query?.tenant_id) where.tenant_id = query.tenant_id;
     if (query?.active !== undefined) where.active = query.active;
@@ -109,7 +109,7 @@ export class LeadCollectionRepository implements ILeadCollectionRepository {
     };
   }
 
-  async update(id: number, updates: Partial<LeadCollection>): Promise<LeadCollection> {
+  async update(id: string, updates: Partial<LeadCollection>): Promise<LeadCollection> {
     const data: Prisma.LeadCollectionUncheckedUpdateInput = {};
     
     if (updates.name !== undefined) data.name = updates.name;
@@ -125,7 +125,7 @@ export class LeadCollectionRepository implements ILeadCollectionRepository {
     return this.toEntity(updated);
   }
 
-  async count(tenantId: number): Promise<number> {
+  async count(tenantId: string): Promise<number> {
     return this.prisma.leadCollection.count({ where: { tenant_id: tenantId } });
   }
 }

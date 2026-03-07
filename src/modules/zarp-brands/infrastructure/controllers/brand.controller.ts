@@ -28,7 +28,7 @@ export class BrandController {
     async create(
         @Body() body: CreateBrandDTO,
         @Res() res: Response,
-        @Req() req: Request & { user_id: number }
+        @Req() req: Request & { user_id: string }
     ) {
         const userId = req.user_id;
         const result = await this.brandService.create({
@@ -73,7 +73,7 @@ export class BrandController {
     @ApiResponse({ status: 401, description: 'Invalid or expired token' })
     async findUserBrands(
         @Res() res: Response,
-        @Req() req: Request & { user_id: number }
+        @Req() req: Request & { user_id: string }
     ) {
         const userId = req.user_id;
         const result = await this.brandService.findUserBrands(userId);
@@ -116,10 +116,10 @@ export class BrandController {
     async findBrand(
         @Param() { brand_id }: FindBrandDTO,
         @Res() res: Response,
-        @Req() req: Request & { user_id: number }
+        @Req() req: Request & { user_id: string }
     ) {
         const userId = req.user_id;
-        const result = await this.brandService.findBrand(+brand_id, userId);
+        const result = await this.brandService.findBrand(brand_id, userId);
         return res.status(result.status).json(result.data);
     }
 
@@ -134,10 +134,10 @@ export class BrandController {
     async findAlertsByBrandName(
         @Param() { brand_id }: AlertsByBrandNameDTO,
         @Res() res: Response,
-        @Req() req: Request & { user_id: number }
+        @Req() req: Request & { user_id: string }
     ) {
-        const userId = +req.user_id;
-        const result = await this.brandService.findAlertsByBrandName(+brand_id, userId);
+        const userId = req.user_id;
+        const result = await this.brandService.findAlertsByBrandName(brand_id, userId);
 
         return res.status(result.status).json(result.data);
     }

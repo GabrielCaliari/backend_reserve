@@ -35,7 +35,7 @@ export class AuthorResponseDTO {
     description: 'Tenant ID',
     example: 1,
   })
-  tenantId: number;
+  tenantId: string;
 
   @ApiProperty({
     description: 'Active status',

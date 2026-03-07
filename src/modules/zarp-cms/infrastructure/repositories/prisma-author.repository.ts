@@ -55,7 +55,7 @@ export class PrismaAuthorRepository implements IAuthorRepository {
   }
 
   async findByTenantId(
-    tenantId: number,
+    tenantId: string,
     filters?: AuthorFilters,
   ): Promise<PaginatedResult<Author>> {
     try {

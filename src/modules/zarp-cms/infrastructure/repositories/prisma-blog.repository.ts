@@ -52,7 +52,7 @@ export class PrismaBlogRepository implements IBlogRepository {
     }
   }
 
-  async findByNameAndTenantId(name: string, tenantId: number): Promise<Blog | null> {
+  async findByNameAndTenantId(name: string, tenantId: string): Promise<Blog | null> {
     try {
       const record = await this.prisma.blog.findUnique({
         where: {
@@ -68,7 +68,7 @@ export class PrismaBlogRepository implements IBlogRepository {
     }
   }
 
-  async findByTenantId(tenantId: number): Promise<Blog[]> {
+  async findByTenantId(tenantId: string): Promise<Blog[]> {
     try {
       const records = await this.prisma.blog.findMany({
         where: {

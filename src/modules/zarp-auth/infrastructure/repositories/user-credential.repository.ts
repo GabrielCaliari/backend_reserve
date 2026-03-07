@@ -10,7 +10,7 @@ export default class UserCredentialRepository implements IUserCredentialReposito
         private readonly prisma: PrismaService,
         private readonly hashProvider: HashProvider,
     ) {}
-    async compareHashByUserId(value: string, userId: number) {
+    async compareHashByUserId(value: string, userId: string) {
         try {
             const credential = await this.prisma.userCredential.findUnique({
                 where: {

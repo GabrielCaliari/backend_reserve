@@ -21,12 +21,12 @@ export class InMemoryBlogRepository implements IBlogRepository {
     return blog || null;
   }
 
-  async findByNameAndTenantId(name: string, tenantId: number): Promise<Blog | null> {
+  async findByNameAndTenantId(name: string, tenantId: string): Promise<Blog | null> {
     const blog = this.blogs.find((b) => b.name === name && b.tenantId === tenantId && b.active);
     return blog || null;
   }
 
-  async findByTenantId(tenantId: number): Promise<Blog[]> {
+  async findByTenantId(tenantId: string): Promise<Blog[]> {
     return this.blogs.filter((b) => b.tenantId === tenantId && b.active);
   }
 
@@ -55,7 +55,7 @@ export class InMemoryBlogRepository implements IBlogRepository {
     const blog = new Blog({
       id: createId(),
       name: 'Test Blog',
-      tenantId: 1,
+      tenantId: '1',
       secretKeyHash: 'hash',
       secretKeySalt: 'salt',
       description: null,

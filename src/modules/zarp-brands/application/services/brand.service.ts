@@ -1,4 +1,4 @@
-﻿import { errorTypes } from '../../../../shared/constants/error-types';
+import { errorTypes } from '../../../../shared/constants/error-types';
 import { errorResponse, separarPorPropriedade } from '../../../../shared/helpers';
 import {
     IBrandRepository,
@@ -98,7 +98,7 @@ export class BrandService {
     //     }
     // }
 
-    async findUserBrands(userId: number) {
+    async findUserBrands(userId: string) {
         try {
             const brands = await this.brandRepository.find(
                 {
@@ -120,7 +120,7 @@ export class BrandService {
         }
     }
 
-    async findAlertsByBrandName(brandId: number, userId: number, lastMagazine: string | null = null) {
+    async findAlertsByBrandName(brandId: string, userId: string, lastMagazine: string | null = null) {
         try {
             const brand = await this.brandRepository.findById(brandId);
 
@@ -147,7 +147,7 @@ export class BrandService {
         }
     }
 
-    async findBrand(brandId: number, userId: number) {
+    async findBrand(brandId: string, userId: string) {
         try {
             const brand = await this.brandRepository.findById(brandId, {
                 BrandAlert: true
@@ -174,7 +174,7 @@ export class BrandService {
     }
 
     // @Cron(CronExpression.EVERY_10_SECONDS)
-    async brandMonitoring(userId: number) {
+    async brandMonitoring(userId: string) {
         try {
             const brands = await this.brandRepository.find({
                 MonitoringPlan: {

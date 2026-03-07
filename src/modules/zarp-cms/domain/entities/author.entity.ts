@@ -10,7 +10,7 @@ export class Author {
   public lastName: string;
   public biography: string | null;
   public avatarId: string | null; // UUID reference to MediaAsset
-  public tenantId: number;
+  public tenantId: string;
   public active: boolean;
   public readonly createdAt?: Date;
   public readonly updatedAt?: Date;
@@ -21,7 +21,7 @@ export class Author {
     lastName: string;
     biography?: string | null;
     avatarId?: string | null;
-    tenantId: number;
+    tenantId: string;
     active?: boolean;
     createdAt?: Date;
     updatedAt?: Date;

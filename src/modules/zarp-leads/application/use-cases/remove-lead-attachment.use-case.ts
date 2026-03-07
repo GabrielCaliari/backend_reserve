@@ -13,7 +13,7 @@ export class RemoveLeadAttachmentUseCase {
     private readonly attachmentRepository: ILeadAttachmentRepository,
   ) {}
 
-  async execute(attachmentId: number) {
+  async execute(attachmentId: string) {
     try {
       // Verify attachment exists
       const attachment = await this.attachmentRepository.findById(attachmentId);

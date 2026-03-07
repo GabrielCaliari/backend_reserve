@@ -9,7 +9,7 @@ export class InMemoryArticleImageRepository implements IArticleImageRepository {
 
   async create(data: ICreateArticleImage): Promise<any> {
     const image = {
-      id: this.idCounter++,
+      id: String(this.idCounter++),
       ...data,
       created_at: new Date(),
       updated_at: new Date(),
@@ -18,21 +18,21 @@ export class InMemoryArticleImageRepository implements IArticleImageRepository {
     return image;
   }
 
-  async findById(id: number): Promise<any> {
+  async findById(id: string): Promise<any> {
     return this.images.find((img) => img.id === id) || null;
   }
 
-  async findAllByArticleId(articleId: number): Promise<any[]> {
+  async findAllByArticleId(articleId: string): Promise<any[]> {
     return this.images
       .filter((img) => img.article_id === articleId)
       .sort((a, b) => a.display_order - b.display_order);
   }
 
-  async countByArticleId(articleId: number): Promise<number> {
+  async countByArticleId(articleId: string): Promise<number> {
     return this.images.filter((img) => img.article_id === articleId).length;
   }
 
-  async updateDisplayOrders(items: { id: number; display_order: number }[]): Promise<void> {
+  async updateDisplayOrders(items: { id: string; display_order: number }[]): Promise<void> {
     items.forEach((item) => {
       const image = this.images.find((img) => img.id === item.id);
       if (image) {
@@ -42,14 +42,14 @@ export class InMemoryArticleImageRepository implements IArticleImageRepository {
     });
   }
 
-  async delete(id: number): Promise<void> {
+  async delete(id: string): Promise<void> {
     const index = this.images.findIndex((img) => img.id === id);
     if (index !== -1) {
       this.images.splice(index, 1);
     }
   }
 
-  async deleteAllByArticleId(articleId: number): Promise<void> {
+  async deleteAllByArticleId(articleId: string): Promise<void> {
     this.images = this.images.filter((img) => img.article_id !== articleId);
   }
 

@@ -24,15 +24,19 @@ import { seedLeads } from './seeds/zarp-leads/leads.seed';
 // Mailer module seeds
 import { seedSMTPServers } from './seeds/zarp-mailer/smtp-servers.seed';
 
+// CNPJs module seeds
+import { seedCNAEs } from './seeds/zarp-cnpjs/cnaes.seed';
+
 /**
  * Main seed orchestrator
- * 
+ *
  * Execution order follows dependency hierarchy:
  * 1. Auth: Tenants → Admins (foundation)
  * 2. Shared: Plans, Token Packs
- * 3. CMS: Authors → Blogs → Storage Collections → Articles
- * 4. Leads: Collections → Leads
- * 5. Mailer: SMTP Servers
+ * 3. CNPJs: CNAEs (lookup data)
+ * 4. CMS: Authors → Blogs → Storage Collections → Articles
+ * 5. Leads: Collections → Leads
+ * 6. Mailer: SMTP Servers
  */
 (async function main() {
   const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
@@ -64,12 +68,21 @@ import { seedSMTPServers } from './seeds/zarp-mailer/smtp-servers.seed';
     await seedTokenPacks();
 
     // ========================================
-    // 3. CMS MODULE
+    // 3. CNPJS MODULE (lookup data)
+    // ========================================
+    console.log('\n┌─────────────────────────────────────┐');
+    console.log('│  MÓDULO: ZARP-CNPJS                 │');
+    console.log('└─────────────────────────────────────┘');
+
+    await seedCNAEs();
+
+    // ========================================
+    // 4. CMS MODULE
     // ========================================
     console.log('\n┌─────────────────────────────────────┐');
     console.log('│  MÓDULO: ZARP-CMS                   │');
     console.log('└─────────────────────────────────────┘');
-    
+
     await seedAuthors();
     await seedBlogs();
     await seedAuthorAvatarsCollection();
@@ -77,22 +90,22 @@ import { seedSMTPServers } from './seeds/zarp-mailer/smtp-servers.seed';
     await seedArticles();
 
     // ========================================
-    // 4. LEADS MODULE
+    // 5. LEADS MODULE
     // ========================================
     console.log('\n┌─────────────────────────────────────┐');
     console.log('│  MÓDULO: ZARP-LEADS                 │');
     console.log('└─────────────────────────────────────┘');
-    
+
     await seedLeadCollections();
     await seedLeads();
 
     // ========================================
-    // 5. MAILER MODULE
+    // 6. MAILER MODULE
     // ========================================
     console.log('\n┌─────────────────────────────────────┐');
     console.log('│  MÓDULO: ZARP-MAILER                │');
     console.log('└─────────────────────────────────────┘');
-    
+
     await seedSMTPServers();
 
     // ========================================

@@ -1,11 +1,11 @@
 export interface IBrandFields {
-    id?: number;
+    id?: string;
     name: string;
     identifier?: string;
     email: string;
     phone_number: string;
     inpi_number?: string;
-    user_id: number;
+    user_id: string;
 }
 
 export interface IBrandInclude {
@@ -15,8 +15,8 @@ export interface IBrandInclude {
 export interface IBrandRepository {
     create(data: Omit<IBrandFields, 'id'>, rx?: any): Promise<any>;
     find(where?: any, options?: { pag?: { page: number; limit: number }; include?: any }): Promise<any[]>;
-    findById(brandId: number, include?: IBrandInclude): Promise<any>;
-    findByNameAndUser(name: string, userId: number): Promise<any>;
+    findById(brandId: string, include?: IBrandInclude): Promise<any>;
+    findByNameAndUser(name: string, userId: string): Promise<any>;
 }
 
 export const BRAND_REPOSITORY = Symbol('BRAND_REPOSITORY');
@@ -39,28 +39,28 @@ export interface IBrandAlert {
     titular: object;
     despacho: object;
     sobrestador: object;
-    brand_id: number;
-    brand_monitoring_id: number;
-    user_id: number;
-    jornal_to_fetch_id: number;
+    brand_id: string;
+    brand_monitoring_id: string;
+    user_id: string;
+    jornal_to_fetch_id: string;
 }
 
 export interface IBrandAlertRepository {
     createMany(data: IBrandAlert[], tx?: any): Promise<any>;
-    findByBrand(brandId: number, limit?: number): Promise<any[]>;
-    findLastMoves(userId: number, limit?: number): Promise<any[]>;
+    findByBrand(brandId: string, limit?: number): Promise<any[]>;
+    findLastMoves(userId: string, limit?: number): Promise<any[]>;
 }
 
 export const BRAND_ALERT_REPOSITORY = Symbol('BRAND_ALERT_REPOSITORY');
 
 export interface IBrandMonitoring {
-    id?: number;
+    id?: string;
     processed_last_analysis?: number;
     total_processed?: number;
     triggered_notifications?: number;
     status: number;
-    user_id?: number;
-    brand_id?: number;
+    user_id?: string;
+    brand_id?: string;
     inpi_number?: string;
     last_magazine_searched?: string;
     last_movement?: Date;

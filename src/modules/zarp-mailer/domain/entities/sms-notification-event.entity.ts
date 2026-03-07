@@ -11,7 +11,7 @@ export enum ESMSProvider {
 }
 
 export default class SMSNotificationEvent {
-  public id?: number;
+  public id?: string;
   public message: string;
   public destination_number: PhoneNumber;
   public sender_number: PhoneNumber;
@@ -20,7 +20,7 @@ export default class SMSNotificationEvent {
   public payload_provider_response?: Object;
   public payload_message?: Object;
   public status: ESMSNotificationEventStatus;
-  public sms_notification_id?: number;
+  public sms_notification_id?: string;
   public sms_notification?: unknown;
   public created_at?: Date;
   public updated_at?: Date;

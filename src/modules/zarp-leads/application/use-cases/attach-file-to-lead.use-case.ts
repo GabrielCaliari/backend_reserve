@@ -15,7 +15,7 @@ export class AttachFileToLeadUseCase {
     private readonly attachmentRepository: ILeadAttachmentRepository,
   ) {}
 
-  async execute(leadId: string, assetId: number, label?: string) {
+  async execute(leadId: string, assetId: string, label?: string) {
     try {
       // Verify lead exists
       const lead = await this.leadRepository.findById(leadId);

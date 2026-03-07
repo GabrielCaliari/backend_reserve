@@ -51,7 +51,7 @@ export default class UserRepository implements IUserRepository {
         }
     }
 
-    async selectById(id: number, include: IUserFindInclude = {}) {
+    async selectById(id: string, include: IUserFindInclude = {}) {
         try {
             const user = await this.prisma.user.findUnique({
                 where: { id },
@@ -117,7 +117,7 @@ export default class UserRepository implements IUserRepository {
         }
     }
 
-    async findById(id: number) {
+    async findById(id: string) {
         try {
             return await this.prisma.user.findUnique({
                 where: { id },
@@ -137,7 +137,7 @@ export default class UserRepository implements IUserRepository {
         }
     }
 
-    async update(id: number, data: any) {
+    async update(id: string, data: any) {
         try {
             return await this.prisma.user.update({
                 where: { id },
@@ -148,7 +148,7 @@ export default class UserRepository implements IUserRepository {
         }
     }
 
-    async delete(id: number) {
+    async delete(id: string) {
         try {
             await this.prisma.user.delete({
                 where: { id },

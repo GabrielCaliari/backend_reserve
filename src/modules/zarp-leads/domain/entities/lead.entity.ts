@@ -28,8 +28,8 @@ export class Lead {
   public status: ELeadStatus;
   public created_at?: Date;
   public updated_at?: Date;
-  public collectionId?: number;
-  public tenantId?: number;
+  public collectionId?: string;
+  public tenantId?: string;
   public ipAddress?: string;
   public userAgent?: string;
   public country?: string;

@@ -29,7 +29,7 @@ describe('BlogService', () => {
   describe('create', () => {
     it('should create a blog with generated secret key', async () => {
       const dto: CreateBlogDTO = { name: 'My Tech Blog', description: 'Tech stuff' };
-      const tenantId = 1;
+      const tenantId = '1';
 
       // Mock randomBytes for predictable secret key
       // 32 bytes hex = 64 chars
@@ -63,18 +63,18 @@ describe('BlogService', () => {
 
   describe('findAll', () => {
     it('should return only blogs for the given tenant', async () => {
-      repo.seed({ name: 'T1 Blog', tenantId: 1 });
-      repo.seed({ name: 'T2 Blog', tenantId: 2 });
+      repo.seed({ name: 'T1 Blog', tenantId: '1' });
+      repo.seed({ name: 'T2 Blog', tenantId: '2' });
 
-      const response = await service.findAll(1);
+      const response = await service.findAll('1');
       expect(response.status).toBe(200);
       expect(response.data).toHaveLength(1);
       expect(response.data[0].name).toBe('T1 Blog');
     });
 
     it('should not expose secret keys in list', async () => {
-       repo.seed({ name: 'Safe Blog', tenantId: 1 });
-       const response = await service.findAll(1);
+       repo.seed({ name: 'Safe Blog', tenantId: '1' });
+       const response = await service.findAll('1');
        expect(response.status).toBe(200);
        expect(response.data[0]).not.toHaveProperty('secret_key');
        expect(response.data[0]).not.toHaveProperty('secretKeyHash');
@@ -84,10 +84,10 @@ describe('BlogService', () => {
 
   describe('update', () => {
     it('should update blog metadata', async () => {
-      const blog = repo.seed({ name: 'Old Name', tenantId: 1 });
+      const blog = repo.seed({ name: 'Old Name', tenantId: '1' });
       const dto = { name: 'New Name' };
 
-      const response = await service.update(1, blog.id, dto);
+      const response = await service.update('1', blog.id, dto);
       expect(response.status).toBe(200);
       expect(response.data.name).toBe('New Name');
       
@@ -96,21 +96,21 @@ describe('BlogService', () => {
     });
 
     it('should throw BlogNotFoundError if blog does not exist', async () => {
-      const response = await service.update(1, '999', { name: 'Ghost' });
+      const response = await service.update('1', '999', { name: 'Ghost' });
       expect(response.status).toBe(404);
     });
 
     it('should throw BlogNotFoundError if blog belongs to another tenant', async () => {
-      const blog = repo.seed({ name: 'Other Tenant', tenantId: 2 });
-      const response = await service.update(1, blog.id, { name: 'Hacker' });
+      const blog = repo.seed({ name: 'Other Tenant', tenantId: '2' });
+      const response = await service.update('1', blog.id, { name: 'Hacker' });
       expect(response.status).toBe(404);
     });
   });
 
   describe('delete', () => {
     it('should soft delete the blog', async () => {
-      const blog = repo.seed({ name: 'To Delete', tenantId: 1 });
-      const response = await service.delete(1, blog.id);
+      const blog = repo.seed({ name: 'To Delete', tenantId: '1' });
+      const response = await service.delete('1', blog.id);
       expect(response.status).toBe(200);
 
       const stored = await repo.findById(blog.id);
@@ -118,8 +118,8 @@ describe('BlogService', () => {
     });
 
     it('should throw BlogNotFoundError if blog belongs to another tenant', async () => {
-       const blog = repo.seed({ name: 'Other Tenant', tenantId: 2 });
-       const response = await service.delete(1, blog.id);
+       const blog = repo.seed({ name: 'Other Tenant', tenantId: '2' });
+       const response = await service.delete('1', blog.id);
        expect(response.status).toBe(404);
     });
   });
@@ -128,7 +128,7 @@ describe('BlogService', () => {
     it('should generate a new secret key and update the hash', async () => {
       const blog = repo.seed({ 
         name: 'Test Blog', 
-        tenantId: 1,
+        tenantId: '1',
         secretKeyHash: 'old_hash',
         secretKeySalt: 'old_salt',
       });
@@ -144,7 +144,7 @@ describe('BlogService', () => {
       };
       jest.spyOn(crypto, 'createHash').mockReturnValue(mockHash as any);
 
-      const response = await service.regenerateSecretKey(1, blog.id);
+      const response = await service.regenerateSecretKey('1', blog.id);
 
       expect(response.status).toBe(200);
       expect(response.data).toBeDefined();
@@ -158,13 +158,13 @@ describe('BlogService', () => {
     });
 
     it('should throw BlogNotFoundError if blog does not exist', async () => {
-      const response = await service.regenerateSecretKey(1, '999');
+      const response = await service.regenerateSecretKey('1', '999');
       expect(response.status).toBe(404);
     });
 
     it('should throw BlogNotFoundError if blog belongs to another tenant', async () => {
-      const blog = repo.seed({ name: 'Other Tenant', tenantId: 2 });
-      const response = await service.regenerateSecretKey(1, blog.id);
+      const blog = repo.seed({ name: 'Other Tenant', tenantId: '2' });
+      const response = await service.regenerateSecretKey('1', blog.id);
       expect(response.status).toBe(404);
     });
   });

@@ -1,8 +1,8 @@
 export const STATS_INTEGRATION_REPOSITORY = 'STATS_INTEGRATION_REPOSITORY';
 
 export interface IStatsIntegration {
-  id: number;
-  tenant_id: number;
+  id: string;
+  tenant_id: string;
   key: string;
   label: string;
   config: Record<string, any>;
@@ -12,20 +12,20 @@ export interface IStatsIntegration {
 }
 
 export interface IStatsIntegrationRepository {
-  findByTenant(tenantId: number): Promise<IStatsIntegration[]>;
+  findByTenant(tenantId: string): Promise<IStatsIntegration[]>;
   findByTenantAndKey(
-    tenantId: number,
+    tenantId: string,
     key: string,
   ): Promise<IStatsIntegration | null>;
-  findById(id: number): Promise<IStatsIntegration | null>;
+  findById(id: string): Promise<IStatsIntegration | null>;
   create(
     data: Omit<IStatsIntegration, 'id' | 'created_at' | 'updated_at'>,
   ): Promise<IStatsIntegration>;
   update(
-    id: number,
+    id: string,
     data: Partial<
       Omit<IStatsIntegration, 'id' | 'tenant_id' | 'key' | 'created_at' | 'updated_at'>
     >,
   ): Promise<IStatsIntegration>;
-  delete(id: number): Promise<void>;
+  delete(id: string): Promise<void>;
 }

@@ -11,7 +11,7 @@ import { ISMTPServerRepository } from '../../domain/interfaces';
 export class PrismaSMTPServerRepository implements ISMTPServerRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findDefault(): Promise<{ id: number; host: string; port: number; user: string; password: string } | null> {
+  async findDefault(): Promise<{ id: string; host: string; port: number; user: string; password: string } | null> {
     try {
       const result = await this.prisma.sMTPServer.findFirst({
         where: { default: true },
@@ -31,7 +31,7 @@ export class PrismaSMTPServerRepository implements ISMTPServerRepository {
     }
   }
 
-  async findById(id: number): Promise<{ id: number; host: string; port: number; user: string; password: string } | null> {
+  async findById(id: string): Promise<{ id: string; host: string; port: number; user: string; password: string } | null> {
     try {
       const result = await this.prisma.sMTPServer.findUnique({
         where: { id },

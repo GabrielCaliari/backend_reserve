@@ -49,7 +49,7 @@ describe('AuthorService', () => {
         firstName: 'John',
         lastName: 'Doe',
         biography: 'Test bio',
-        tenantId: 1,
+        tenantId: '1',
       };
 
       const createdAuthor = new Author({
@@ -57,7 +57,7 @@ describe('AuthorService', () => {
         firstName: 'John',
         lastName: 'Doe',
         biography: 'Test bio',
-        tenantId: 1,
+        tenantId: '1',
         active: true,
       });
 
@@ -72,7 +72,7 @@ describe('AuthorService', () => {
           firstName: 'John',
           lastName: 'Doe',
           biography: 'Test bio',
-          tenantId: 1,
+          tenantId: '1',
         }),
       );
     });
@@ -81,7 +81,7 @@ describe('AuthorService', () => {
       const dto: CreateAuthorDTO = {
         firstName: 'John',
         lastName: 'Doe',
-        tenantId: 0,
+        tenantId: '0',
       };
 
       const result = await service.createAuthor(dto);
@@ -94,7 +94,7 @@ describe('AuthorService', () => {
       const dto: CreateAuthorDTO = {
         firstName: 'John',
         lastName: 'Doe',
-        tenantId: 1,
+        tenantId: '1',
         avatarId: '',
       };
 
@@ -105,8 +105,8 @@ describe('AuthorService', () => {
         mime_type: 'image/jpeg',
         file_size: 1024,
         collection_id: '',
-        tenant_id: 1,
-        created_by: 1,
+        tenant_id: '1',
+        created_by: '1',
       });
       // Manually set id after construction (simulating DB return)
       (avatar as any).id = 100;
@@ -117,7 +117,7 @@ describe('AuthorService', () => {
         id: '',
         firstName: 'John',
         lastName: 'Doe',
-        tenantId: 1,
+        tenantId: '1',
         avatarId: '',
         active: true,
       });
@@ -134,7 +134,7 @@ describe('AuthorService', () => {
       const dto: CreateAuthorDTO = {
         firstName: 'John',
         lastName: 'Doe',
-        tenantId: 1,
+        tenantId: '1',
         avatarId: '',
       };
 
@@ -153,7 +153,7 @@ describe('AuthorService', () => {
         id: '',
         firstName: 'John',
         lastName: 'Doe',
-        tenantId: 1,
+        tenantId: '1',
         active: true,
       });
 
@@ -167,7 +167,7 @@ describe('AuthorService', () => {
         firstName: 'Jane',
         lastName: 'Doe',
         biography: 'Updated bio',
-        tenantId: 1,
+        tenantId: '1',
         active: true,
       });
 
@@ -196,7 +196,7 @@ describe('AuthorService', () => {
         id: '',
         firstName: 'John',
         lastName: 'Doe',
-        tenantId: 1,
+        tenantId: '1',
         active: true,
       });
 
@@ -215,7 +215,7 @@ describe('AuthorService', () => {
         id: '',
         firstName: 'John',
         lastName: 'Doe',
-        tenantId: 1,
+        tenantId: '1',
         active: true,
       });
 
@@ -248,7 +248,7 @@ describe('AuthorService', () => {
         id: '',
         firstName: 'John',
         lastName: 'Doe',
-        tenantId: 1,
+        tenantId: '1',
         active: true,
       });
 
@@ -259,8 +259,8 @@ describe('AuthorService', () => {
         mime_type: 'image/jpeg',
         file_size: 1024,
         collection_id: '',
-        tenant_id: 1,
-        created_by: 1,
+        tenant_id: '1',
+        created_by: '1',
       });
       // Manually set id after construction (simulating DB return)
       (avatar as any).id = 100;
@@ -286,7 +286,7 @@ describe('AuthorService', () => {
         id: '',
         firstName: 'John',
         lastName: 'Doe',
-        tenantId: 1,
+        tenantId: '1',
         active: true,
       });
 
@@ -297,8 +297,8 @@ describe('AuthorService', () => {
         mime_type: 'image/jpeg',
         file_size: 1024,
         collection_id: '',
-        tenant_id: 2, // Different tenant
-        created_by: 1,
+        tenant_id: '2', // Different tenant
+        created_by: '1',
       });
       // Manually set id after construction (simulating DB return)
       (avatar as any).id = 100;

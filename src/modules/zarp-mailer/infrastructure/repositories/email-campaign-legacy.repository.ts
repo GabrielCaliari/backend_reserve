@@ -39,7 +39,7 @@ export default class EmailCampaignRepository {
 
     async update(id: string, data: {
         name?: string;
-        smtp_server_id?: number;
+        smtp_server_id?: string;
         total_leads?: number;
         click_rate?: number;
         open_rate?: number;
@@ -55,7 +55,7 @@ export default class EmailCampaignRepository {
         }
     }
 
-    async updateMainEmail(id: string, main_email_id: number, tx?: PrismaService) {
+    async updateMainEmail(id: string, main_email_id: string, tx?: PrismaService) {
         try {
             const conn = tx ?? this.prisma;
 

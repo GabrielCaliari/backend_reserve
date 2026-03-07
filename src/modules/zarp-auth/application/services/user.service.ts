@@ -1,4 +1,4 @@
-﻿import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { errorTypes } from '../../../../shared/constants/error-types';
 import { errorResponse, gerarSenha } from '../../../../shared/helpers';
 import { IAuthenticateUser, IValidateUserToken } from '../../domain/interfaces/authenticate-user.interface';
@@ -104,7 +104,7 @@ export class UserService {
         }
     }
 
-    async generatePaymentAccountLink(vetId: number) {
+    async generatePaymentAccountLink(vetId: string) {
         try {
             const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -136,7 +136,7 @@ export class UserService {
         }
     }
 
-    async feed(userId: number) {
+    async feed(userId: string) {
         try {
             const user = await this.userRepository.selectById(userId, {
                 Plan: true
@@ -274,7 +274,7 @@ export class UserService {
         }
     }
 
-    async me(userId: number) {
+    async me(userId: string) {
         try {
             const user = await this.userRepository.selectById(userId, {
                 Plan: true,
@@ -328,7 +328,7 @@ export class UserService {
 
     async checkout(
         slug: string,
-        userId: number,
+        userId: string,
         period: string,
     ) {
         try {
@@ -370,7 +370,7 @@ export class UserService {
         }
     }
 
-    async generateTokens(key: string, tokens: number, userId: number) {
+    async generateTokens(key: string, tokens: number, userId: string) {
         try {
             if (!(key === process.env.WEBHOOK_AT_KEY)) {
                 return errorResponse(errorTypes._401.wh_token_in, 401);

@@ -113,8 +113,7 @@ export class AuthorController {
     @Query('limit') limit?: string,
     @Res() res?: Response,
   ) {
-    const tenantIdNum = parseInt(tenantId, 10);
-    if (isNaN(tenantIdNum)) {
+    if (!tenantId) {
       return res.status(400).json({
         code: '400:Invalid tenant ID',
         message: 'Tenant ID must be a valid number',
@@ -127,7 +126,7 @@ export class AuthorController {
       limit: limit ? parseInt(limit, 10) : 30,
     };
 
-    const result = await this.authorService.findByTenantId(tenantIdNum, filters);
+    const result = await this.authorService.findByTenantId(tenantId, filters);
 
     if (result.status !== 200) {
       return res.status(result.status).json(result.data);

@@ -10,7 +10,7 @@ import { CreateLeadWithAttachmentsUseCase } from '../../application/use-cases/cr
 import { AttachFileToLeadUseCase } from '../../application/use-cases/attach-file-to-lead.use-case';
 import { RemoveLeadAttachmentUseCase } from '../../application/use-cases/remove-lead-attachment.use-case';
 import { ILeadAttachmentRepository, LEAD_ATTACHMENT_REPOSITORY } from '../../domain/interfaces/lead-attachment.repository.interface';
-import { Inject, ParseIntPipe } from '@nestjs/common';
+import { Inject } from '@nestjs/common';
 import { ParseUUIDPipe } from '../../../../shared/pipes/parse-uuid.pipe';
 
 @ApiTags('Leads')
@@ -120,7 +120,7 @@ export class LeadController {
   @ApiResponse({ status: 404, description: 'Attachment not found' })
   async removeAttachment(
     @Param('id', ParseUUIDPipe) leadId: string,
-    @Param('attachmentId', ParseIntPipe) attachmentId: number,
+    @Param('attachmentId') attachmentId: string,
   ) {
     return this.removeLeadAttachmentUseCase.execute(attachmentId);
   }

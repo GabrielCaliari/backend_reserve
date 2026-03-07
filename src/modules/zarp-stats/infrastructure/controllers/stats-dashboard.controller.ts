@@ -39,7 +39,7 @@ export class StatsDashboardController {
     @Req() req: any,
     @Query() query: DateRangeQueryDto,
   ): Promise<DashboardResponseDto> {
-    const tenantId: number = req.tenant_id;
+    const tenantId: string = req.tenant_id;
 
     let dateRange: DateRange | undefined;
     if (query.from || query.to) {

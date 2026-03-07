@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, Query, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, Query, Req, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { LeadCollectionService } from '../../application/services/lead-collection.service';
 import { LeadService } from '../../application/services/lead.service';
@@ -52,7 +52,7 @@ export class LeadCollectionController {
   @ApiResponse({ status: 400, description: 'Validation error or slug conflict' })
   @ApiResponse({ status: 401, description: 'Unauthorized - invalid or missing JWT token' })
   @ApiResponse({ status: 403, description: 'Forbidden - insufficient role (requires manager+)' })
-  async create(@Body() dto: CreateCollectionDto, @GetTenantId() tenantId: number) {
+  async create(@Body() dto: CreateCollectionDto, @GetTenantId() tenantId: string) {
     const result = await this.service.createCollection(dto, tenantId);
     return successResponse(result);
   }
@@ -92,7 +92,7 @@ export class LeadCollectionController {
       }
     }
   })
-  async findAll(@Query() query: CollectionQueryDto, @GetTenantId() tenantId: number) {
+  async findAll(@Query() query: CollectionQueryDto, @GetTenantId() tenantId: string) {
     const { data, meta } = await this.service.findCollections(query, tenantId);
     return successResponse({ collections: data, meta });
   }
@@ -105,7 +105,7 @@ export class LeadCollectionController {
   })
   @ApiResponse({ status: 200, description: 'Collection found' })
   @ApiResponse({ status: 404, description: 'Collection not found or does not belong to tenant' })
-  async findOne(@Param('id', ParseIntPipe) id: number, @GetTenantId() tenantId: number) {
+  async findOne(@Param('id') id: string, @GetTenantId() tenantId: string) {
     const result = await this.service.findCollectionById(id, tenantId);
     return successResponse(result);
   }
@@ -138,9 +138,9 @@ export class LeadCollectionController {
   })
   @ApiResponse({ status: 404, description: 'Collection not found' })
   async update(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: string,
     @Body() dto: UpdateCollectionDto,
-    @GetTenantId() tenantId: number,
+    @GetTenantId() tenantId: string,
   ) {
     const result = await this.service.updateCollection(id, dto, tenantId);
     return successResponse(result);
@@ -165,7 +165,7 @@ export class LeadCollectionController {
     }
   })
   @ApiResponse({ status: 404, description: 'Collection not found' })
-  async regenerateSecretKey(@Param('id', ParseIntPipe) id: number, @GetTenantId() tenantId: number) {
+  async regenerateSecretKey(@Param('id') id: string, @GetTenantId() tenantId: string) {
     const result = await this.service.regenerateSecretKey(id, tenantId);
     return successResponse(result);
   }
@@ -179,7 +179,7 @@ export class LeadCollectionController {
   })
   @ApiResponse({ status: 200, description: 'Collection deactivated successfully' })
   @ApiResponse({ status: 404, description: 'Collection not found' })
-  async remove(@Param('id', ParseIntPipe) id: number, @GetTenantId() tenantId: number) {
+  async remove(@Param('id') id: string, @GetTenantId() tenantId: string) {
     const result = await this.service.deactivateCollection(id, tenantId);
     return successResponse(result);
   }
@@ -220,10 +220,10 @@ export class LeadCollectionController {
   })
   @ApiResponse({ status: 404, description: 'Collection not found or does not belong to tenant' })
   async getCollectionLeads(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: string,
     @Query('page') page: number = 1,
     @Query('limit') limit: number = 30,
-    @GetTenantId() tenantId: number,
+    @GetTenantId() tenantId: string,
   ) {
     // Verify collection exists and belongs to tenant
     await this.service.findCollectionById(id, tenantId);

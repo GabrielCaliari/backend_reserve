@@ -33,13 +33,13 @@ export interface IAPITokenCreate {
 }
 
 export interface IAPITokenCreateReturn {
-    id: number;
+    id: string;
 }
 
 export interface IAPITokenRepository {
     create(data: ICreateAPIToken): Promise<any>;
     findByIdentifier(identifier: string): Promise<any>;
-    update(id: number, data: IUpdateAPIToken): Promise<any>;
+    update(id: string, data: IUpdateAPIToken): Promise<any>;
 }
 
 export const API_TOKEN_REPOSITORY = Symbol('API_TOKEN_REPOSITORY');

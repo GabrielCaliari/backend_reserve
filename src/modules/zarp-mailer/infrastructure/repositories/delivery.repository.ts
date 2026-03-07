@@ -7,12 +7,12 @@ import { RepositoryException } from '../../../../shared/exceptions';
 export class DeliveryRepository {
     constructor(private readonly prisma: PrismaService) {}
     async createInBatch(deliveries: {
-        email_id: number,
-        email_lead_id: number,
+        email_id: string,
+        email_lead_id: string,
         email_provider: string,
         email_sent_to: string,
         status: number,
-        campaign_batch_id: number,
+        campaign_batch_id: string,
         tracking_code: string,
     }[], tx?: PrismaClient) {
         try {
@@ -28,7 +28,7 @@ export class DeliveryRepository {
         }
     }
 
-    async selectAllByCampaignBatchId(campaignBatchId: number, prisma?: PrismaClient) {
+    async selectAllByCampaignBatchId(campaignBatchId: string, prisma?: PrismaClient) {
         try {
             const conn = prisma ?? this.prisma;
             const deliveries = await conn.delivery.findMany({
@@ -59,7 +59,7 @@ export class DeliveryRepository {
         }
     }
 
-    async update(id: number, data: Partial<Delivery>, tx?: PrismaClient) {
+    async update(id: string, data: Partial<Delivery>, tx?: PrismaClient) {
         try {
             const prisma = tx || this.prisma;
             const result = await prisma.delivery.update({
@@ -74,7 +74,7 @@ export class DeliveryRepository {
     }
 
     async createOpenTracking(data: {
-        delivery_id: number,
+        delivery_id: string,
         open_date: Date,
         bot_chance: number,
         request_open_json: any

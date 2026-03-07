@@ -60,7 +60,7 @@ export class MediaRelationService {
    */
   async attachAsset(
     dto: AttachMediaDTO,
-    tenantId: number,
+    tenantId: string,
   ): Promise<{ status: number; data: MediaAssetRelation | { code: string } }> {
     // Validate asset exists and belongs to tenant (Requirement 3.1)
     const asset = await this.assetRepo.findById(dto.asset_id, tenantId);
@@ -144,6 +144,7 @@ export class MediaRelationService {
     entityType: string,
     entityId: string,
     relationType?: string,
+    tenantId?: string,
   ): Promise<{ status: number; data: MediaAsset[] }> {
     const relations = await this.relationRepo.findByEntity(
       entityType,
@@ -159,7 +160,7 @@ export class MediaRelationService {
     const assetIds = relations.map((r) => r.asset_id);
     const assets = await Promise.all(
       assetIds.map((id) =>
-        this.assetRepo.findById(id, Number(relations[0]?.asset_id) || 0),
+        this.assetRepo.findById(id, tenantId || ''),
       ),
     );
 

@@ -8,7 +8,6 @@ import {
   Param,
   Query,
   UseGuards,
-  ParseIntPipe,
   DefaultValuePipe,
 } from '@nestjs/common';
 import {
@@ -79,8 +78,8 @@ export class MediaCollectionController {
   @ApiResponse({ status: 200, description: 'Collections retrieved successfully' })
   async list(
     @Query('type') type?: ECollectionType,
-    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page?: number,
-    @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit?: number,
+    @Query('page', new DefaultValuePipe(1)) page?: number,
+    @Query('limit', new DefaultValuePipe(20)) limit?: number,
     @CurrentAdmin() admin?: CurrentAdminPayload,
   ) {
     const result = await this.collectionService.listCollections(
@@ -130,8 +129,8 @@ export class MediaCollectionController {
   @ApiResponse({ status: 404, description: 'Collection not found' })
   async getAssets(
     @Param('id') id: string,
-    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page?: number,
-    @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit?: number,
+    @Query('page', new DefaultValuePipe(1)) page?: number,
+    @Query('limit', new DefaultValuePipe(20)) limit?: number,
     @CurrentAdmin() admin?: CurrentAdminPayload,
   ) {
     const result = await this.collectionService.getCollectionAssets(

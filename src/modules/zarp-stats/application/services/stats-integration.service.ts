@@ -35,12 +35,12 @@ export class StatsIntegrationService {
     this.externalProviders = externalProviders ?? [];
   }
 
-  async listByTenant(tenantId: number): Promise<StatsIntegrationResponseDto[]> {
+  async listByTenant(tenantId: string): Promise<StatsIntegrationResponseDto[]> {
     const integrations = await this.repository.findByTenant(tenantId);
     return integrations.map((i) => this.maskSecrets(i));
   }
 
-  async getById(id: number, tenantId: number): Promise<StatsIntegrationResponseDto> {
+  async getById(id: string, tenantId: string): Promise<StatsIntegrationResponseDto> {
     const integration = await this.repository.findById(id);
     if (!integration || integration.tenant_id !== tenantId) {
       throw new NotFoundException(`Stats integration #${id} not found`);
@@ -49,7 +49,7 @@ export class StatsIntegrationService {
   }
 
   async create(
-    tenantId: number,
+    tenantId: string,
     dto: CreateStatsIntegrationDto,
   ): Promise<StatsIntegrationResponseDto> {
     const provider = this.externalProviders.find((p) => p.integrationKey === dto.key);
@@ -84,8 +84,8 @@ export class StatsIntegrationService {
   }
 
   async update(
-    id: number,
-    tenantId: number,
+    id: string,
+    tenantId: string,
     dto: UpdateStatsIntegrationDto,
   ): Promise<StatsIntegrationResponseDto> {
     const existing = await this.repository.findById(id);
@@ -108,7 +108,7 @@ export class StatsIntegrationService {
     return this.maskSecrets(updated);
   }
 
-  async delete(id: number, tenantId: number): Promise<void> {
+  async delete(id: string, tenantId: string): Promise<void> {
     const existing = await this.repository.findById(id);
     if (!existing || existing.tenant_id !== tenantId) {
       throw new NotFoundException(`Stats integration #${id} not found`);

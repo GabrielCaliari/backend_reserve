@@ -20,7 +20,7 @@ export class LeadService {
         return this.createCollectionLead(data);
     }
 
-    async createCollectionLead(data: CreateLeadDto, collection?: { id: number; tenantId: number; ipAddress?: string; userAgent?: string }) {
+    async createCollectionLead(data: CreateLeadDto, collection?: { id: string; tenantId: string; ipAddress?: string; userAgent?: string }) {
         try {
             const lead = new Lead({
                 ...(data.phone_number ? { phone_number: new PhoneNumber(data.phone_number) } : {}),
@@ -164,7 +164,7 @@ export class LeadService {
         }
     }
 
-    async findLeadsByCollection(collectionId: number, { page = 1, limit = 30 }) {
+    async findLeadsByCollection(collectionId: string, { page = 1, limit = 30 }) {
         try {
             const { raws, count } = await this.leadRepository.find({
                 page,

@@ -35,13 +35,13 @@ export class ArticleImageService {
   ) {}
 
   async upload(
-    articleId: number,
+    articleId: string,
     buffer: Buffer,
     originalFormat: string,
     altText?: string,
   ): Promise<any> {
     // Verify article exists
-    const article = await this.articleRepository.findById(String(articleId));
+    const article = await this.articleRepository.findById(articleId);
     if (!article) {
       throw new ArticleNotFoundError();
     }
@@ -81,12 +81,12 @@ export class ArticleImageService {
     });
   }
 
-  async findAllByArticleId(articleId: number): Promise<any[]> {
+  async findAllByArticleId(articleId: string): Promise<any[]> {
     return this.imageRepository.findAllByArticleId(articleId);
   }
 
   async delete(id: string): Promise<void> {
-    const image = await this.imageRepository.findById(Number(id));
+    const image = await this.imageRepository.findById(id);
     if (!image) {
       throw new NotFoundException('Image not found');
     }
@@ -95,14 +95,14 @@ export class ArticleImageService {
     await this.storageProvider.delete(image.storage_key);
 
     // Delete from database
-    await this.imageRepository.delete(Number(id));
+    await this.imageRepository.delete(id);
   }
 
   async reorderImages(
-    articleId: number,
+    articleId: string,
     items: { id: string; display_order: number }[],
   ): Promise<void> {
     // TODO: Validate that all image IDs belong to the article
-    await this.imageRepository.updateDisplayOrders(items.map(item => ({ id: Number(item.id), display_order: item.display_order })));
+    await this.imageRepository.updateDisplayOrders(items.map(item => ({ id: item.id, display_order: item.display_order })));
   }
 }

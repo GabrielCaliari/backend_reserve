@@ -94,7 +94,7 @@ export class PrismaMediaCollectionRepository implements IMediaCollectionReposito
     }
   }
 
-  async findById(id: string, tenantId: number): Promise<MediaCollection | null> {
+  async findById(id: string, tenantId: string): Promise<MediaCollection | null> {
     try {
       // Validate UUID format (12-character cuid)
       if (!id || typeof id !== 'string' || id.length !== 12) {
@@ -124,7 +124,7 @@ export class PrismaMediaCollectionRepository implements IMediaCollectionReposito
     }
   }
 
-  async findBySlug(slug: string, tenantId: number): Promise<MediaCollection | null> {
+  async findBySlug(slug: string, tenantId: string): Promise<MediaCollection | null> {
     try {
       const record = await this.prisma.mediaCollection.findFirst({
         where: {
@@ -188,7 +188,7 @@ export class PrismaMediaCollectionRepository implements IMediaCollectionReposito
   async update(
     id: string,
     data: Partial<MediaCollection>,
-    tenantId: number,
+    tenantId: string,
   ): Promise<MediaCollection> {
     try {
       // Validate UUID format (12-character cuid)
@@ -248,7 +248,7 @@ export class PrismaMediaCollectionRepository implements IMediaCollectionReposito
     }
   }
 
-  async delete(id: string, tenantId: number): Promise<void> {
+  async delete(id: string, tenantId: string): Promise<void> {
     try {
       // Validate UUID format (12-character cuid)
       if (!id || typeof id !== 'string' || id.length !== 12) {

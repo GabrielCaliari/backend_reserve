@@ -72,7 +72,7 @@ export class GoogleSearchConsoleProvider implements IExternalMetricProvider {
 
   async getMetrics(
     config: Record<string, any>,
-    _tenantId: number,
+    _tenantId: string,
     dateRange?: DateRange,
   ): Promise<MetricGroup> {
     const now = new Date();

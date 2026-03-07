@@ -9,7 +9,6 @@ import {
   UseGuards,
   UseInterceptors,
   UploadedFile,
-  ParseIntPipe,
   BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -79,7 +78,7 @@ export class ArticleImageController {
   @ApiResponse({ status: 413, description: 'File exceeds 10 MB limit' })
   @ApiResponse({ status: 422, description: 'Article already has 20 images (maximum limit)' })
   async upload(
-    @Param('articleId', ParseIntPipe) articleId: number,
+    @Param('articleId') articleId: string,
     @UploadedFile() file: Express.Multer.File,
     @Body('alt_text') altText?: string,
   ): Promise<any> {
@@ -107,7 +106,7 @@ export class ArticleImageController {
   @Roles(EAdminRole.viewer)
   @ApiOperation({ summary: 'List all images for an article' })
   @ApiResponse({ status: 200, description: 'Images retrieved successfully' })
-  async findAll(@Param('articleId', ParseIntPipe) articleId: number): Promise<any[]> {
+  async findAll(@Param('articleId') articleId: string): Promise<any[]> {
     return this.imageService.findAllByArticleId(articleId);
   }
 
@@ -117,7 +116,7 @@ export class ArticleImageController {
   @ApiResponse({ status: 200, description: 'Image deleted successfully' })
   @ApiResponse({ status: 403, description: 'Insufficient role' })
   @ApiResponse({ status: 404, description: 'Image or article not found' })
-  async delete(@Param('imageId', ParseIntPipe) imageId: number): Promise<any> {
+  async delete(@Param('imageId') imageId: string): Promise<any> {
     await this.imageService.delete(String(imageId));
     return { message: 'Image deleted successfully' };
   }
@@ -129,7 +128,7 @@ export class ArticleImageController {
   @ApiResponse({ status: 400, description: 'Invalid image IDs' })
   @ApiResponse({ status: 403, description: 'Insufficient role' })
   async reorder(
-    @Param('articleId', ParseIntPipe) articleId: number,
+    @Param('articleId') articleId: string,
     @Body() dto: ReorderImagesDTO,
   ): Promise<any> {
     await this.imageService.reorderImages(articleId, dto.order.map(item => ({ id: String(item.id), display_order: item.display_order })));

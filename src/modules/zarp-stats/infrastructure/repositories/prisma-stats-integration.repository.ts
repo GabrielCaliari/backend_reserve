@@ -10,7 +10,7 @@ import {
 export class PrismaStatsIntegrationRepository implements IStatsIntegrationRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findByTenant(tenantId: number): Promise<IStatsIntegration[]> {
+  async findByTenant(tenantId: string): Promise<IStatsIntegration[]> {
     try {
       return await this.prisma.statsIntegration.findMany({
         where: { tenant_id: tenantId },
@@ -22,7 +22,7 @@ export class PrismaStatsIntegrationRepository implements IStatsIntegrationReposi
   }
 
   async findByTenantAndKey(
-    tenantId: number,
+    tenantId: string,
     key: string,
   ): Promise<IStatsIntegration | null> {
     try {
@@ -34,7 +34,7 @@ export class PrismaStatsIntegrationRepository implements IStatsIntegrationReposi
     }
   }
 
-  async findById(id: number): Promise<IStatsIntegration | null> {
+  async findById(id: string): Promise<IStatsIntegration | null> {
     try {
       return await this.prisma.statsIntegration.findUnique({
         where: { id },
@@ -63,7 +63,7 @@ export class PrismaStatsIntegrationRepository implements IStatsIntegrationReposi
   }
 
   async update(
-    id: number,
+    id: string,
     data: Partial<
       Omit<IStatsIntegration, 'id' | 'tenant_id' | 'key' | 'created_at' | 'updated_at'>
     >,
@@ -82,7 +82,7 @@ export class PrismaStatsIntegrationRepository implements IStatsIntegrationReposi
     }
   }
 
-  async delete(id: number): Promise<void> {
+  async delete(id: string): Promise<void> {
     try {
       await this.prisma.statsIntegration.delete({ where: { id } });
     } catch (error) {

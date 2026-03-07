@@ -29,14 +29,14 @@ export class CompanyController {
         @Query() params: ListingQueryParamsValidator,
         @Body() rows: ListingParamsDTO,
         @Res() res: Response,
-        @Req() req: Request & { user_id: number }
+        @Req() req: Request & { user_id: string }
     ) {
         const userId = req.user_id;
 
         const result = await this.companyService.list(
             +params.page || 1,
             +params.limit || 1000,
-            +userId,
+            userId,
             {
                 cnpj: true,
                 branch_type: rows.branch_type ? rows.branch_type : false,
@@ -108,7 +108,7 @@ export class CompanyController {
     async count(
         @Param() params: ExportCountDTO,
         @Res() res: Response,
-        @Req() req: Request & { user_id: number }
+        @Req() req: Request & { user_id: string }
     ) {
         const userId = req.user_id;
         const result = await this.companyService.count({
@@ -130,7 +130,7 @@ export class CompanyController {
         @Param() { search_hash }: ExportCountDTO,
         @Body() { start }: ExportDTO,
         @Res() res: Response,
-        @Req() req: Request & { user_id: number }
+        @Req() req: Request & { user_id: string }
     ) {
         const userId = req.user_id;
         const result = await this.companyService.export(
@@ -152,9 +152,9 @@ export class CompanyController {
     async exportFile(
         @Param() params: IdValidator,
         @Res() res: Response,
-        @Req() req: Request & { user_id: number }
+        @Req() req: Request & { user_id: string }
     ) {
-        const result = await this.companyService.exportFile(+params.id, req.user_id);
+        const result = await this.companyService.exportFile(params.id, req.user_id);
         return res.status(result.status).json(result.data);
     }
     @Get('/export/download/:id')
@@ -167,9 +167,9 @@ export class CompanyController {
     async downloadExport(
         @Param() params: IdValidator,
         @Res() res: Response,
-        @Req() req: Request & { user_id: number }
+        @Req() req: Request & { user_id: string }
     ) {
-        const result = await this.companyService.downloadExport(+params.id, req.user_id);
+        const result = await this.companyService.downloadExport(params.id, req.user_id);
         
         if (result.status === 200 && 'filename' in result.data && 'stream' in result.data) {
             try {

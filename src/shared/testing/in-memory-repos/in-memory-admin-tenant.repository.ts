@@ -5,9 +5,9 @@ import {
 import { EAdminRole } from '../../../modules/zarp-auth/domain/enums/admin-role.enum';
 
 interface StoredAdminTenant {
-  id: number;
+  id: string;
   admin_id: string;
-  tenant_id: number;
+  tenant_id: string;
   role: EAdminRole;
   active: boolean;
   created_at: Date;
@@ -35,7 +35,7 @@ export class InMemoryAdminTenantRepository implements IAdminTenantRepository {
     }
 
     const record: StoredAdminTenant = {
-      id: this.idCounter++,
+      id: String(this.idCounter++),
       admin_id: data.admin_id,
       tenant_id: data.tenant_id,
       role: data.role ?? EAdminRole.manager,
@@ -48,7 +48,7 @@ export class InMemoryAdminTenantRepository implements IAdminTenantRepository {
     return { ...record };
   }
 
-  async unassign(adminId: string, tenantId: number): Promise<void> {
+  async unassign(adminId: string, tenantId: string): Promise<void> {
     const record = this.records.find(
       (r) => r.admin_id === adminId && r.tenant_id === tenantId,
     );
@@ -64,13 +64,13 @@ export class InMemoryAdminTenantRepository implements IAdminTenantRepository {
       .map((r) => ({ id: r.tenant_id }));
   }
 
-  async findAdminsByTenantId(tenantId: number): Promise<any[]> {
+  async findAdminsByTenantId(tenantId: string): Promise<any[]> {
     return this.records
       .filter((r) => r.tenant_id === tenantId && r.active)
       .map((r) => ({ id: r.admin_id, role: r.role }));
   }
 
-  async isAdminInTenant(adminId: string, tenantId: number): Promise<boolean> {
+  async isAdminInTenant(adminId: string, tenantId: string): Promise<boolean> {
     const record = this.records.find(
       (r) => r.admin_id === adminId && r.tenant_id === tenantId,
     );
@@ -79,7 +79,7 @@ export class InMemoryAdminTenantRepository implements IAdminTenantRepository {
 
   async findRoleInTenant(
     adminId: string,
-    tenantId: number,
+    tenantId: string,
   ): Promise<EAdminRole | null> {
     const record = this.records.find(
       (r) => r.admin_id === adminId && r.tenant_id === tenantId,
@@ -92,7 +92,7 @@ export class InMemoryAdminTenantRepository implements IAdminTenantRepository {
     return record.role;
   }
 
-  async updateRole(adminId: string, tenantId: number, role: EAdminRole): Promise<any> {
+  async updateRole(adminId: string, tenantId: string, role: EAdminRole): Promise<any> {
     const record = this.records.find(
       (r) => r.admin_id === adminId && r.tenant_id === tenantId,
     );
@@ -109,12 +109,12 @@ export class InMemoryAdminTenantRepository implements IAdminTenantRepository {
   /** Test helper: seed a record directly */
   seed(data: {
     admin_id: string;
-    tenant_id: number;
+    tenant_id: string;
     role?: EAdminRole;
     active?: boolean;
   }): void {
     this.records.push({
-      id: this.idCounter++,
+      id: String(this.idCounter++),
       admin_id: data.admin_id,
       tenant_id: data.tenant_id,
       role: data.role ?? EAdminRole.manager,

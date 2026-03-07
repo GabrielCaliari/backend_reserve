@@ -19,7 +19,7 @@ export class CreateLeadWithAttachmentsUseCase {
     private readonly attachmentRepository: ILeadAttachmentRepository,
   ) {}
 
-  async execute(dto: CreateLeadWithAttachmentsDto, collection?: { id: number; tenantId: number }) {
+  async execute(dto: CreateLeadWithAttachmentsDto, collection?: { id: string; tenantId: string }) {
     try {
       // Create lead entity
       const lead = new Lead({

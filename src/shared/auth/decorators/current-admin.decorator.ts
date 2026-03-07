@@ -5,9 +5,9 @@ export interface CurrentAdminPayload {
   id: string; // UUID (12-character cuid)
   admin_id: string; // Deprecated: use 'id' instead
   token: string;
-  'session-id': number;
+  'session-id': string;
   admin_role?: EAdminRole;
-  tenant_id?: number;
+  tenant_id?: string;
   /** Per-tenant role resolved by RolesGuard (from AdminTenant.role) */
   tenant_role?: EAdminRole;
 }

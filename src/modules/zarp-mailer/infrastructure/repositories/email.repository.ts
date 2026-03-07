@@ -59,7 +59,7 @@ export default class EmailRepository {
         }
     }
 
-    public async selectById(id: number, prisma?: PrismaClient) {
+    public async selectById(id: string, prisma?: PrismaClient) {
         try {
             const conn = prisma ?? this.prisma;
 

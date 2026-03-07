@@ -11,7 +11,7 @@ export class EmailCampaign {
     public readonly id: string,
     public name: string,
     public status: EmailCampaignStatus,
-    public smtpServerId: number,
+    public smtpServerId: string,
     public copyVariationType: CopyVariationType,
     public campaignBatchSize: BatchSize,
     public readonly createdAt: Date,
@@ -21,7 +21,7 @@ export class EmailCampaign {
   /**
    * Factory method to create a new draft campaign
    */
-  static createDraft(name: string, smtpServerId: number): Omit<EmailCampaign, 'id' | 'createdAt' | 'updatedAt'> {
+  static createDraft(name: string, smtpServerId: string): Omit<EmailCampaign, 'id' | 'createdAt' | 'updatedAt'> {
     return {
       name,
       status: EmailCampaignStatus.DRAFT,
@@ -38,7 +38,7 @@ export class EmailCampaign {
     id: string;
     name: string;
     status: number;
-    smtp_server_id: number;
+    smtp_server_id: string;
     copy_variation_type: number;
     campaign_batch_size: number;
     created_at: Date;

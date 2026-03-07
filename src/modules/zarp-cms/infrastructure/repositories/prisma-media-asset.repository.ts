@@ -100,7 +100,7 @@ export class PrismaMediaAssetRepository implements IMediaAssetRepository {
     }
   }
 
-  async findById(id: string, tenantId: number): Promise<MediaAsset | null> {
+  async findById(id: string, tenantId: string): Promise<MediaAsset | null> {
     try {
       // Validate UUID format
       if (!this.isValidUUID(id)) {
@@ -167,7 +167,7 @@ export class PrismaMediaAssetRepository implements IMediaAssetRepository {
   async update(
     id: string,
     data: Partial<MediaAsset>,
-    tenantId: number,
+    tenantId: string,
   ): Promise<MediaAsset> {
     try {
       // Validate UUID format
@@ -205,7 +205,7 @@ export class PrismaMediaAssetRepository implements IMediaAssetRepository {
     }
   }
 
-  async delete(id: string, tenantId: number): Promise<void> {
+  async delete(id: string, tenantId: string): Promise<void> {
     try {
       // Validate UUID format
       if (!this.isValidUUID(id)) {
@@ -223,7 +223,7 @@ export class PrismaMediaAssetRepository implements IMediaAssetRepository {
     }
   }
 
-  async countByCollection(collectionId: string, tenantId: number): Promise<number> {
+  async countByCollection(collectionId: string, tenantId: string): Promise<number> {
     try {
       // Validate UUID format
       if (!this.isValidUUID(collectionId)) {

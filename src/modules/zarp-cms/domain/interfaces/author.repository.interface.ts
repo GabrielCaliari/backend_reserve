@@ -20,7 +20,7 @@ export interface IAuthorRepository {
   create(author: Author): Promise<Author>;
   findById(id: string): Promise<Author | null>;
   findByTenantId(
-    tenantId: number,
+    tenantId: string,
     filters?: AuthorFilters,
   ): Promise<PaginatedResult<Author>>;
   update(id: string, data: Partial<Author>): Promise<Author>;

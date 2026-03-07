@@ -10,7 +10,7 @@ export enum EEmailCampaignStatus {
 
 export interface ICreateEmailCampaign {
     name: string;
-    smtp_server_id: number;
+    smtp_server_id: string;
 }
 
 export enum ECopyVariationType {

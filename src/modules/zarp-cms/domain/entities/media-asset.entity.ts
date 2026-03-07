@@ -12,8 +12,8 @@ export interface ICreateMediaAsset {
   metadata?: Record<string, any>;
   status?: EAssetStatus;
   collection_id: string; // UUID reference to MediaCollection
-  tenant_id: number;
-  created_by: number;
+  tenant_id: string;
+  created_by: string;
 }
 
 export class MediaAsset {
@@ -29,8 +29,8 @@ export class MediaAsset {
   public metadata?: Record<string, any>;
   public status: EAssetStatus;
   public collection_id: string; // UUID reference to MediaCollection
-  public tenant_id: number;
-  public created_by: number;
+  public tenant_id: string;
+  public created_by: string;
   public created_at?: Date;
   public updated_at?: Date;
 
@@ -54,11 +54,11 @@ export class MediaAsset {
     if (!data.collection_id || data.collection_id.trim().length === 0) {
       throw new Error('Collection ID is required');
     }
-    if (data.tenant_id <= 0) {
-      throw new Error('Tenant ID must be greater than 0');
+    if (!data.tenant_id || data.tenant_id.trim().length === 0) {
+      throw new Error('Tenant ID is required');
     }
-    if (data.created_by <= 0) {
-      throw new Error('Created by must be greater than 0');
+    if (!data.created_by || data.created_by.trim().length === 0) {
+      throw new Error('Created by is required');
     }
 
     this.url = data.url;
