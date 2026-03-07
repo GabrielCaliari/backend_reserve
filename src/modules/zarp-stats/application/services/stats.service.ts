@@ -4,6 +4,8 @@ import {
   METRIC_PROVIDERS,
   DateRange,
   MetricGroup,
+  TimeSeriesGranularity,
+  TimeSeriesGroup,
 } from '../../domain/interfaces/metric-provider.interface';
 import {
   IExternalMetricProvider,
@@ -13,7 +15,7 @@ import {
   IStatsIntegrationRepository,
   STATS_INTEGRATION_REPOSITORY,
 } from '../../domain/interfaces/stats-integration.repository.interface';
-import { DashboardResponseDto, MetricGroupResponseDto } from '../dtos/stats.dto';
+import { DashboardResponseDto, MetricGroupResponseDto, TimeSeriesGroupResponseDto, TimeSeriesResponseDto } from '../dtos/stats.dto';
 
 @Injectable()
 export class StatsService {
@@ -116,5 +118,74 @@ export class StatsService {
       description: p.description,
       configSchema: p.configSchema,
     }));
+  }
+
+  /**
+   * Returns metrics from a single internal provider by moduleKey.
+   */
+  async getModuleMetrics(
+    moduleKey: string,
+    tenantId: string,
+    dateRange?: DateRange,
+  ): Promise<MetricGroupResponseDto | null> {
+    const provider = this.metricProviders.find((p) => p.moduleKey === moduleKey);
+    if (!provider) return null;
+
+    try {
+      return await provider.getMetrics(tenantId, dateRange);
+    } catch (err) {
+      this.logger.error(
+        `Metric provider "${moduleKey}" failed: ${(err as Error).message}`,
+      );
+      return {
+        moduleKey: provider.moduleKey,
+        label: provider.label,
+        metrics: [],
+        fetchedAt: new Date(),
+        error: `Failed to fetch metrics: ${(err as Error).message ?? 'Unknown error'}`,
+      };
+    }
+  }
+
+  /**
+   * Returns time-series data from a single provider (or all providers that support it).
+   */
+  async getTimeSeries(
+    tenantId: string,
+    dateRange: DateRange,
+    granularity: TimeSeriesGranularity,
+    moduleKey?: string,
+  ): Promise<TimeSeriesResponseDto> {
+    const providers = moduleKey
+      ? this.metricProviders.filter((p) => p.moduleKey === moduleKey && p.getTimeSeries)
+      : this.metricProviders.filter((p) => p.getTimeSeries);
+
+    const results = await Promise.allSettled(
+      providers.map((p) => p.getTimeSeries!(tenantId, dateRange, granularity)),
+    );
+
+    const allSeries: TimeSeriesGroupResponseDto[] = [];
+    for (let i = 0; i < results.length; i++) {
+      const result = results[i];
+      if (result.status === 'fulfilled') {
+        allSeries.push(...result.value);
+      } else {
+        this.logger.error(
+          `TimeSeries provider "${providers[i].moduleKey}" failed: ${result.reason?.message}`,
+        );
+      }
+    }
+
+    return {
+      series: allSeries,
+      generatedAt: new Date(),
+    };
+  }
+
+  /**
+   * Returns the list of internal module keys currently registered.
+   */
+  getAvailableModuleKeys(): string[] {
+    return this.metricProviders.map((p) => p.moduleKey);
   }
 }

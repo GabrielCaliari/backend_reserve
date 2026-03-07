@@ -4,6 +4,8 @@ import {
   IMetricProvider,
   MetricGroup,
   DateRange,
+  TimeSeriesGranularity,
+  TimeSeriesGroup,
 } from '../../domain/interfaces/metric-provider.interface';
 
 /**
@@ -45,7 +47,7 @@ export class LeadsMetricProvider implements IMetricProvider {
     const prevFrom = new Date(from.getTime() - periodMs);
     const prevTo = new Date(from.getTime());
 
-    const [total, periodCount, prevCount, byStatus] = await Promise.all([
+    const [total, periodCount, prevCount, byStatus, byCollectionRaw] = await Promise.all([
       this.prisma.lead.count({ where }),
       this.prisma.lead.count({ where: wherePeriod }),
       this.prisma.lead.count({ where: { ...where, created_at: { gte: prevFrom, lte: prevTo } } }),
@@ -54,9 +56,41 @@ export class LeadsMetricProvider implements IMetricProvider {
         where: wherePeriod,
         _count: { _all: true },
       }),
+      this.prisma.lead.groupBy({
+        by: ['collection_id'],
+        where: wherePeriod,
+        _count: { _all: true },
+      }),
     ]);
 
     const trend = prevCount > 0 ? ((periodCount - prevCount) / prevCount) * 100 : null;
+
+    // Fetch collection names for the breakdown
+    const collectionIds = byCollectionRaw
+      .map((r) => r.collection_id)
+      .filter((id): id is string => id !== null);
+
+    const collections =
+      collectionIds.length > 0
+        ? await this.prisma.leadCollection.findMany({
+            where: { id: { in: collectionIds } },
+            select: { id: true, name: true },
+          })
+        : [];
+
+    const collectionNameById = Object.fromEntries(collections.map((c) => [c.id, c.name]));
+
+    const byCollectionMetrics = byCollectionRaw.map((r) => {
+      const colId = r.collection_id ?? 'unknown';
+      const colName = collectionNameById[colId] ?? `Collection ${colId}`;
+      return {
+        key: `leads.collection.${colId}`,
+        label: `Collection: ${colName}`,
+        value: r._count._all,
+        unit: 'count',
+        metadata: { collection_id: colId, collection_name: colName },
+      };
+    });
 
     return {
       moduleKey: this.moduleKey,
@@ -83,7 +117,47 @@ export class LeadsMetricProvider implements IMetricProvider {
           value: s._count._all,
           unit: 'count',
         })),
+        ...byCollectionMetrics,
       ],
     };
+  }
+
+  async getTimeSeries(
+    tenantId: string,
+    dateRange: DateRange,
+    granularity: TimeSeriesGranularity,
+  ): Promise<TimeSeriesGroup[]> {
+    const { from, to } = dateRange;
+    const trunc = granularity === 'week' ? 'week' : granularity === 'month' ? 'month' : 'day';
+
+    const rows = await this.prisma.$queryRawUnsafe<{ bucket: Date; count: bigint }[]>(
+      `SELECT DATE_TRUNC($1, "created_at") AS bucket, COUNT(*)::bigint AS count
+       FROM "Lead"
+       WHERE ($2::text IS NULL OR "tenant_id" = $2)
+         AND "created_at" >= $3
+         AND "created_at" <= $4
+       GROUP BY bucket
+       ORDER BY bucket`,
+      trunc,
+      tenantId ?? null,
+      from,
+      to,
+    );
+
+    return [
+      {
+        moduleKey: this.moduleKey,
+        label: this.label,
+        metricKey: 'leads.created',
+        metricLabel: 'Leads created',
+        granularity,
+        from,
+        to,
+        series: rows.map((r) => ({
+          date: r.bucket.toISOString().slice(0, 10),
+          value: Number(r.count),
+        })),
+      },
+    ];
   }
 }

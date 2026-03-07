@@ -4,6 +4,8 @@ import {
   IMetricProvider,
   MetricGroup,
   DateRange,
+  TimeSeriesGranularity,
+  TimeSeriesGroup,
 } from '../../domain/interfaces/metric-provider.interface';
 
 /**
@@ -121,6 +123,45 @@ export class StorageMetricProvider implements IMetricProvider {
         })),
       ],
     };
+  }
+
+  async getTimeSeries(
+    tenantId: string,
+    dateRange: DateRange,
+    granularity: TimeSeriesGranularity,
+  ): Promise<TimeSeriesGroup[]> {
+    const { from, to } = dateRange;
+    const trunc = granularity === 'week' ? 'week' : granularity === 'month' ? 'month' : 'day';
+
+    const rows = await this.prisma.$queryRawUnsafe<{ bucket: Date; count: bigint }[]>(
+      `SELECT DATE_TRUNC($1, "created_at") AS bucket, COUNT(*)::bigint AS count
+       FROM "media_assets"
+       WHERE ($2::text IS NULL OR "tenant_id" = $2)
+         AND "created_at" >= $3
+         AND "created_at" <= $4
+       GROUP BY bucket
+       ORDER BY bucket`,
+      trunc,
+      tenantId ?? null,
+      from,
+      to,
+    );
+
+    return [
+      {
+        moduleKey: this.moduleKey,
+        label: this.label,
+        metricKey: 'storage.uploads',
+        metricLabel: 'Uploads',
+        granularity,
+        from,
+        to,
+        series: rows.map((r) => ({
+          date: r.bucket.toISOString().slice(0, 10),
+          value: Number(r.count),
+        })),
+      },
+    ];
   }
 }
 

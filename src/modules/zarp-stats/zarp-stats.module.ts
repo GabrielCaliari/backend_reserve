@@ -16,6 +16,7 @@ import { PrismaStatsIntegrationRepository } from './infrastructure/repositories/
 import { LeadsMetricProvider } from './infrastructure/providers/leads-metric.provider';
 import { CmsMetricProvider } from './infrastructure/providers/cms-metric.provider';
 import { UsersMetricProvider } from './infrastructure/providers/users-metric.provider';
+import { StorageMetricProvider } from './infrastructure/providers/storage-metric.provider';
 
 // Infrastructure - External metric providers
 import { GoogleSearchConsoleProvider } from './infrastructure/providers/google-search-console.provider';
@@ -73,6 +74,7 @@ import { ZarpAuthModule } from '../zarp-auth/zarp-auth.module';
     { provide: METRIC_PROVIDERS, useClass: LeadsMetricProvider, multi: true } as any,
     { provide: METRIC_PROVIDERS, useClass: CmsMetricProvider, multi: true } as any,
     { provide: METRIC_PROVIDERS, useClass: UsersMetricProvider, multi: true } as any,
+    { provide: METRIC_PROVIDERS, useClass: StorageMetricProvider, multi: true } as any,
 
     // ── External metric providers (multi-token) ───────────────────────────
     { provide: EXTERNAL_METRIC_PROVIDERS, useClass: GoogleSearchConsoleProvider, multi: true } as any,
