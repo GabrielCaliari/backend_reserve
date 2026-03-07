@@ -69,6 +69,7 @@ export class ArticleController {
   @ApiResponse({ status: 200, description: 'Articles retrieved successfully' })
   @ApiResponse({ status: 400, description: 'Invalid filter parameters' })
   async findAll(
+    @CurrentAdmin() admin: CurrentAdminPayload,
     @Query('blogId') blogId?: string,
     @Query('status') status?: string,
     @Query('page') page?: string,
@@ -88,7 +89,7 @@ export class ArticleController {
       limit: limit ? parseInt(limit, 10) : 30,
     };
 
-    const result = await this.articleService.findByBlogId(blogId, filters);
+    const result = await this.articleService.findByBlogId(blogId, filters, admin.tenant_id);
     
     if (result.status !== 200) {
       return res.status(result.status).json(result.data);
@@ -105,10 +106,11 @@ export class ArticleController {
   @ApiResponse({ status: 200, description: 'Article retrieved successfully' })
   @ApiResponse({ status: 404, description: 'Article not found' })
   async findOne(
+    @CurrentAdmin() admin: CurrentAdminPayload,
     @Param('id') id: string,
     @Res() res: Response,
   ) {
-    const result = await this.articleService.findById(id);
+    const result = await this.articleService.findById(id, admin.tenant_id);
     
     if (result.status !== 200) {
       return res.status(result.status).json(result.data);
@@ -149,10 +151,11 @@ export class ArticleController {
   @ApiResponse({ status: 403, description: 'Insufficient role' })
   @ApiResponse({ status: 404, description: 'Article not found' })
   async delete(
+    @CurrentAdmin() admin: CurrentAdminPayload,
     @Param('id') id: string,
     @Res() res: Response,
   ) {
-    const result = await this.articleService.delete(id);
+    const result = await this.articleService.delete(id, admin.tenant_id);
     
     if (result.status === 204) {
       return res.status(200).json({ message: 'Article deleted successfully' });
@@ -190,8 +193,13 @@ export class ArticleController {
   @ApiResponse({ status: 403, description: 'Insufficient role' })
   @ApiResponse({ status: 404, description: 'Article not found' })
   @ApiResponse({ status: 409, description: 'Article is not in published status' })
-  async archive(@Param('articleId') articleId: string): Promise<any> {
-    return this.articleService.archive(articleId);
+  async archive(
+    @CurrentAdmin() admin: CurrentAdminPayload,
+    @Param('articleId') articleId: string,
+    @Res() res: Response,
+  ) {
+    const result = await this.articleService.archive(articleId, admin.tenant_id);
+    return res.status(result.status).json(result.data);
   }
 
   @Put('reorder')

@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { createSign } from 'crypto';
 import axios from 'axios';
 import {
   IExternalMetricProvider,
@@ -184,8 +185,6 @@ export class GoogleSearchConsoleProvider implements IExternalMetricProvider {
     client_email: string;
     private_key: string;
   }): Promise<string> {
-    const { createSign } = await import('crypto');
-
     const now = Math.floor(Date.now() / 1000);
     const scope = 'https://www.googleapis.com/auth/webmasters.readonly';
     const audience = 'https://oauth2.googleapis.com/token';

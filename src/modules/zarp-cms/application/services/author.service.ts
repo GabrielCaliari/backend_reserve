@@ -193,7 +193,7 @@ export class AuthorService {
    *
    * **Validates: Requirement 5.7, 14.7**
    */
-  async deleteAuthor(id: string): Promise<ServiceResponse<void>> {
+  async deleteAuthor(id: string, tenantId?: string): Promise<ServiceResponse<void>> {
     try {
       // Validate author ID UUID format
       if (!isValidUUID(id)) {
@@ -203,6 +203,11 @@ export class AuthorService {
       // Check if author exists
       const existing = await this.authorRepository.findById(id);
       if (!existing) {
+        return errorResponse(ERROR_AUTHOR_NOT_FOUND, 404);
+      }
+
+      // Validate tenant isolation
+      if (tenantId && existing.tenantId !== tenantId) {
         return errorResponse(ERROR_AUTHOR_NOT_FOUND, 404);
       }
 
@@ -286,7 +291,7 @@ export class AuthorService {
    *
    * **Validates: Requirement 5.1, 14.7**
    */
-  async findById(id: string): Promise<ServiceResponse<Author>> {
+  async findById(id: string, tenantId?: string): Promise<ServiceResponse<Author>> {
     try {
       // Validate author ID UUID format
       if (!isValidUUID(id)) {
@@ -297,6 +302,12 @@ export class AuthorService {
       if (!author) {
         return errorResponse(ERROR_AUTHOR_NOT_FOUND, 404);
       }
+
+      // Validate tenant isolation
+      if (tenantId && author.tenantId !== tenantId) {
+        return errorResponse(ERROR_AUTHOR_NOT_FOUND, 404);
+      }
+
       return successResponse(author, 200);
     } catch (error) {
       return errorResponse('500:Failed to retrieve author', 500, error);

@@ -1,8 +1,9 @@
-import { Controller, Post, Param, Body, HttpCode, HttpStatus, NotFoundException, GoneException, UseGuards, Req } from '@nestjs/common';
+import { Controller, Post, Param, Body, HttpCode, HttpStatus, BadRequestException, NotFoundException, GoneException, UseGuards, Req } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiHeader } from '@nestjs/swagger';
 import { LeadService } from '../../application/services/lead.service';
 import { CreateLeadDto } from '../../application/dtos/lead.dto';
 import { CollectionSecretKeyGuard } from '../guards/collection-secret-key.guard';
+import { successResponse } from '../../../../shared/helpers/response.helper';
 
 @ApiTags('Lead Capture')
 @Controller('collect')
@@ -33,10 +34,10 @@ export class LeadCaptureController {
     @Param('slug') slug: string,
     @Body() dto: CreateLeadDto,
     @Req() request: any,
-  ): Promise<{ success: boolean; data: { id: string } }> {
+  ) {
     // Validate that at least one of name, email, or phone_number is provided
     if (!dto.name && !dto.email && !dto.phone_number) {
-      throw new NotFoundException('At least one of name, email, or phone_number is required');
+      throw new BadRequestException('At least one of name, email, or phone_number is required');
     }
 
     // Get collection from request (set by CollectionSecretKeyGuard)
@@ -73,10 +74,7 @@ export class LeadCaptureController {
       throw new NotFoundException(result.data);
     }
 
-    return {
-      success: true,
-      data: { id: (result.data as any).id },
-    };
+    return successResponse({ id: (result.data as any).id }, 201);
   }
 
   private extractIpAddress(request: any): string | null {

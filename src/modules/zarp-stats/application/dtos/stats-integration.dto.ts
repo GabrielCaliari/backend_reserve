@@ -4,6 +4,7 @@ import {
   IsBoolean,
   IsObject,
   IsOptional,
+  IsNotEmpty,
   MaxLength,
 } from 'class-validator';
 
@@ -13,6 +14,7 @@ export class CreateStatsIntegrationDto {
     example: 'google_search_console',
   })
   @IsString()
+  @IsNotEmpty()
   @MaxLength(50)
   key: string;
 
@@ -21,6 +23,7 @@ export class CreateStatsIntegrationDto {
     example: 'GSC - zarp.com.br',
   })
   @IsString()
+  @IsNotEmpty()
   @MaxLength(100)
   label: string;
 

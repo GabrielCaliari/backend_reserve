@@ -3,6 +3,7 @@ import { ApiHeader, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { SubmitLeadUseCase } from '../../application/use-cases/submit-lead.use-case';
 import { SubmitLeadDto } from '../../application/dtos/submit-lead.dto';
 import { TenantKeyGuard } from '../guards/tenant-key.guard';
+import { successResponse } from '../../../../shared/helpers/response.helper';
 
 @ApiTags('Public Lead Submission')
 @Controller()
@@ -30,15 +31,17 @@ export class PublicLeadController {
     schema: {
       type: 'object',
       properties: {
-        leadId: { 
-          type: 'string', 
-          format: 'uuid', 
-          example: '550e8400-e29b-41d4-a716-446655440000' 
+        data: {
+          type: 'object',
+          properties: {
+            leadId: { 
+              type: 'string', 
+              format: 'uuid', 
+              example: '550e8400-e29b-41d4-a716-446655440000' 
+            },
+          },
         },
-        message: { 
-          type: 'string', 
-          example: 'Lead submitted successfully' 
-        },
+        status: { type: 'number', example: 200 },
       },
     },
   })
@@ -85,13 +88,10 @@ export class PublicLeadController {
   async submit(
     @Body() dto: SubmitLeadDto,
     @Req() request: any,
-  ): Promise<{ leadId: string; message: string }> {
+  ) {
     const tenantContext = request.tenantContext;
     const result = await this.submitLeadUseCase.execute(dto, tenantContext);
     
-    return {
-      leadId: result.leadId,
-      message: 'Lead submitted successfully',
-    };
+    return successResponse({ leadId: result.leadId });
   }
 }

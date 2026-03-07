@@ -15,6 +15,7 @@ import { seedAuthors } from './seeds/zarp-cms/authors.seed';
 import { seedBlogs } from './seeds/zarp-cms/blogs.seed';
 import { seedAuthorAvatarsCollection } from './seeds/zarp-cms/storage/author-avatars-collection.seed';
 import { seedArticleImagesCollection } from './seeds/zarp-cms/storage/article-images-collection.seed';
+import { seedCvUploadsCollection } from './seeds/zarp-cms/storage/cv-uploads-collection.seed';
 import { seedArticles } from './seeds/zarp-cms/articles.seed';
 
 // Leads module seeds
@@ -87,6 +88,7 @@ import { seedCNAEs } from './seeds/zarp-cnpjs/cnaes.seed';
     await seedBlogs();
     await seedAuthorAvatarsCollection();
     await seedArticleImagesCollection();
+    await seedCvUploadsCollection();
     await seedArticles();
 
     // ========================================

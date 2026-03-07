@@ -14,6 +14,8 @@ import { AttachFileToLeadUseCase } from '../../application/use-cases/attach-file
 import { RemoveLeadAttachmentUseCase } from '../../application/use-cases/remove-lead-attachment.use-case';
 import { ILeadAttachmentRepository, LEAD_ATTACHMENT_REPOSITORY } from '../../domain/interfaces/lead-attachment.repository.interface';
 import { ParseUUIDPipe } from '../../../../shared/pipes/parse-uuid.pipe';
+import { TenantGuard } from '../../../../shared/auth/guards/tenant.guard';
+import { GetTenantId } from '../../../../shared/decorators/get-tenant-id.decorator';
 
 @ApiTags('Leads')
 @Controller()
@@ -44,7 +46,7 @@ export class LeadController {
   // --- Admin-only endpoints (authentication required) ---
 
   @Get('/')
-  @UseGuards(AdminJwtGuard, RolesGuard)
+  @UseGuards(AdminJwtGuard, TenantGuard, RolesGuard)
   @Roles(EAdminRole.viewer)
   @ApiBearerAuth()
   @ApiOperation({
@@ -53,15 +55,15 @@ export class LeadController {
   })
   @ApiResponse({ status: 200, description: 'Paginated lead list' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async findLeads(@Query() query: LeadQueryDto) {
+  async findLeads(@Query() query: LeadQueryDto, @GetTenantId() tenantId: string) {
     const page = query.page ? parseInt(query.page, 10) : 1;
     const limit = query.limit ? parseInt(query.limit, 10) : 30;
 
-    return this.leadService.findLeads({ page, limit });
+    return this.leadService.findLeads({ page, limit }, tenantId);
   }
 
   @Get('/:id')
-  @UseGuards(AdminJwtGuard, RolesGuard)
+  @UseGuards(AdminJwtGuard, TenantGuard, RolesGuard)
   @Roles(EAdminRole.viewer)
   @ApiBearerAuth()
   @ApiOperation({
@@ -72,12 +74,12 @@ export class LeadController {
   @ApiResponse({ status: 200, description: 'Lead details' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 404, description: 'Lead not found' })
-  async findLeadById(@Param('id', ParseUUIDPipe) id: string) {
-    return this.leadService.findLeadById(id);
+  async findLeadById(@Param('id', ParseUUIDPipe) id: string, @GetTenantId() tenantId: string) {
+    return this.leadService.findLeadById(id, tenantId);
   }
 
   @Get('/:id/attachments')
-  @UseGuards(AdminJwtGuard, RolesGuard)
+  @UseGuards(AdminJwtGuard, TenantGuard, RolesGuard)
   @Roles(EAdminRole.viewer)
   @ApiBearerAuth()
   @ApiOperation({
@@ -87,13 +89,15 @@ export class LeadController {
   @ApiParam({ name: 'id', description: 'Lead UUID', type: 'string' })
   @ApiResponse({ status: 200, description: 'List of attachments' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async getLeadAttachments(@Param('id', ParseUUIDPipe) id: string) {
+  async getLeadAttachments(@Param('id', ParseUUIDPipe) id: string, @GetTenantId() tenantId: string) {
+    const leadCheck = await this.leadService.findLeadById(id, tenantId);
+    if (leadCheck.status !== 200) return leadCheck;
     const attachments = await this.attachmentRepository.findByLeadId(id);
     return { data: attachments };
   }
 
   @Post('/:id/attachments')
-  @UseGuards(AdminJwtGuard, RolesGuard)
+  @UseGuards(AdminJwtGuard, TenantGuard, RolesGuard)
   @Roles(EAdminRole.editor)
   @ApiBearerAuth()
   @HttpCode(HttpStatus.CREATED)
@@ -108,12 +112,15 @@ export class LeadController {
   async addAttachment(
     @Param('id', ParseUUIDPipe) leadId: string,
     @Body() dto: AttachmentDto,
+    @GetTenantId() tenantId: string,
   ) {
+    const leadCheck = await this.leadService.findLeadById(leadId, tenantId);
+    if (leadCheck.status !== 200) return leadCheck;
     return this.attachFileToLeadUseCase.execute(leadId, dto.asset_id, dto.label);
   }
 
   @Delete('/:id/attachments/:attachmentId')
-  @UseGuards(AdminJwtGuard, RolesGuard)
+  @UseGuards(AdminJwtGuard, TenantGuard, RolesGuard)
   @Roles(EAdminRole.editor)
   @ApiBearerAuth()
   @ApiOperation({
@@ -128,12 +135,15 @@ export class LeadController {
   async removeAttachment(
     @Param('id', ParseUUIDPipe) leadId: string,
     @Param('attachmentId') attachmentId: string,
+    @GetTenantId() tenantId: string,
   ) {
+    const leadCheck = await this.leadService.findLeadById(leadId, tenantId);
+    if (leadCheck.status !== 200) return leadCheck;
     return this.removeLeadAttachmentUseCase.execute(attachmentId);
   }
 
   @Patch('/:id')
-  @UseGuards(AdminJwtGuard, RolesGuard)
+  @UseGuards(AdminJwtGuard, TenantGuard, RolesGuard)
   @Roles(EAdminRole.editor)
   @ApiBearerAuth()
   @ApiOperation({
@@ -147,12 +157,13 @@ export class LeadController {
   async updateLead(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateLeadDto,
+    @GetTenantId() tenantId: string,
   ) {
-    return this.leadService.updateLead(id, dto);
+    return this.leadService.updateLead(id, dto, tenantId);
   }
 
   @Put('/:id/status')
-  @UseGuards(AdminJwtGuard, RolesGuard)
+  @UseGuards(AdminJwtGuard, TenantGuard, RolesGuard)
   @Roles(EAdminRole.editor)
   @ApiBearerAuth()
   @ApiOperation({
@@ -166,12 +177,13 @@ export class LeadController {
   async updateLeadStatus(
     @Param('id', ParseUUIDPipe) id: string,
     @Body('status') status: ELeadStatus,
+    @GetTenantId() tenantId: string,
   ) {
-    return this.leadService.updateLeadStatus(id, status);
+    return this.leadService.updateLeadStatus(id, status, tenantId);
   }
 
   @Delete('/:id')
-  @UseGuards(AdminJwtGuard, RolesGuard)
+  @UseGuards(AdminJwtGuard, TenantGuard, RolesGuard)
   @Roles(EAdminRole.manager)
   @ApiBearerAuth()
   @ApiOperation({
@@ -182,7 +194,7 @@ export class LeadController {
   @ApiResponse({ status: 200, description: 'Lead deleted' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 404, description: 'Lead not found' })
-  async deleteLead(@Param('id', ParseUUIDPipe) id: string) {
-    return this.leadService.deleteLead(id);
+  async deleteLead(@Param('id', ParseUUIDPipe) id: string, @GetTenantId() tenantId: string) {
+    return this.leadService.deleteLead(id, tenantId);
   }
 }

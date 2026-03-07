@@ -33,61 +33,63 @@ interface LeadCollectionSeed {
 export async function seedLeadCollections() {
   const collections: LeadCollectionSeed[] = [
     // ── Zarp Studio ──────────────────────────────────────────────────────────
+    // Landing page principal: formulário "Vamos conversar?" para captar clientes
     {
-      name: 'Coleção Pública Geral',
-      slug: 'colecao-publica-geral',
-      source: 'website',
+      name: 'Landing Page - Contato Comercial',
+      slug: 'landing-page-contato-zarp',
+      source: 'zarpstudio.com',
       source_type: 'form',
       source_channel: 'organic',
       access_mode: ECollectionAccessMode.public,
-      allowed_domains: [],
+      allowed_domains: ['zarpstudio.com', 'www.zarpstudio.com'],
+      metadata: {
+        description: 'Formulário principal da landing page para captura de potenciais clientes',
+        page: 'home',
+        form_id: 'hero-cta-form',
+        notification_email: 'comercial@zarpstudio.com',
+        auto_reply: true,
+      },
       tenantSlug: 'zarp-studio',
       active: true,
     },
+    // Newsletter do blog: captura emails de leitores interessados em conteúdo de marketing
     {
-      name: 'Website Principal - Zarp Studio',
-      slug: 'website-zarp-studio',
-      source: 'website',
-      source_type: 'organic',
-      source_channel: 'direct',
+      name: 'Blog - Newsletter Semanal',
+      slug: 'blog-newsletter-zarp',
+      source: 'blog.zarpstudio.com',
+      source_type: 'newsletter',
+      source_channel: 'organic',
       access_mode: ECollectionAccessMode.public,
-      allowed_domains: [],
+      allowed_domains: ['blog.zarpstudio.com', 'zarpstudio.com'],
+      metadata: {
+        description: 'Inscrição na newsletter do blog Zarp Studio',
+        page: 'blog',
+        frequency: 'weekly',
+        topics: ['marketing digital', 'SEO', 'redes sociais', 'branding'],
+        notification_email: 'conteudo@zarpstudio.com',
+      },
       tenantSlug: 'zarp-studio',
       active: true,
     },
+    // Página de Careers: coleta candidaturas com dados de CV (privada, requer chave)
     {
-      name: 'Landing Page Leads',
-      slug: 'landing-page-leads',
-      source: 'landing-page',
+      name: 'Careers - Candidaturas Abertas',
+      slug: 'careers-candidaturas-zarp',
+      source: 'zarpstudio.com/careers',
       source_type: 'form',
-      source_channel: 'paid',
-      source_campaign: 'product-launch-2024',
-      access_mode: ECollectionAccessMode.public,
-      allowed_domains: [],
-      tenantSlug: 'zarp-studio',
-      active: true,
-    },
-    {
-      name: 'Landing Page - Campanha Black Friday',
-      slug: 'lp-black-friday-2024',
-      source: 'landing-page',
-      source_type: 'paid',
-      source_channel: 'google-ads',
-      source_campaign: 'black-friday-2024',
-      access_mode: ECollectionAccessMode.restricted,
-      allowed_domains: ['zarpstudio.com', 'lp.zarpstudio.com'],
-      tenantSlug: 'zarp-studio',
-      active: true,
-    },
-    {
-      name: 'API Integração - Parceiros',
-      slug: 'api-parceiros-zarp',
-      source: 'api',
-      source_type: 'integration',
-      source_channel: 'api',
+      source_channel: 'organic',
       access_mode: ECollectionAccessMode.private,
-      allowed_domains: [],
-      secret_key: 'zarp-api-partners-secret-2024',
+      allowed_domains: ['zarpstudio.com', 'www.zarpstudio.com'],
+      secret_key: 'zarp-careers-form-secret-2025',
+      metadata: {
+        description: 'Candidaturas para vagas abertas na Zarp Studio',
+        page: 'careers',
+        accepts_cv: true,
+        cv_storage_collection: 'cv-uploads-zarp-studio',
+        notification_email: 'rh@zarpstudio.com',
+        auto_reply: true,
+        auto_reply_template: 'careers-received',
+      },
       tenantSlug: 'zarp-studio',
       active: true,
     },
@@ -185,8 +187,8 @@ export async function seedLeadCollections() {
       continue;
     }
 
-    const existing = await prisma.leadCollection.findUnique({
-      where: { slug: collection.slug },
+    const existing = await prisma.leadCollection.findFirst({
+      where: { slug: collection.slug, tenant_id: tenant.id },
     });
 
     const data: any = {

@@ -5,6 +5,7 @@ import {
   IStatsIntegration,
   IStatsIntegrationRepository,
 } from '../../domain/interfaces/stats-integration.repository.interface';
+import { StatsIntegration as PrismaStatsIntegration } from '../../../../generated/prisma/client';
 
 @Injectable()
 export class PrismaStatsIntegrationRepository implements IStatsIntegrationRepository {
@@ -12,10 +13,11 @@ export class PrismaStatsIntegrationRepository implements IStatsIntegrationReposi
 
   async findByTenant(tenantId: string): Promise<IStatsIntegration[]> {
     try {
-      return await this.prisma.statsIntegration.findMany({
+      const records = await this.prisma.statsIntegration.findMany({
         where: { tenant_id: tenantId },
         orderBy: { created_at: 'asc' },
-      }) as unknown as IStatsIntegration[];
+      });
+      return records.map((r) => this.toDomain(r));
     } catch (error) {
       throw new RepositoryException('Erro ao listar integrações de stats', error);
     }
@@ -26,9 +28,10 @@ export class PrismaStatsIntegrationRepository implements IStatsIntegrationReposi
     key: string,
   ): Promise<IStatsIntegration | null> {
     try {
-      return await this.prisma.statsIntegration.findUnique({
+      const record = await this.prisma.statsIntegration.findUnique({
         where: { tenant_id_key: { tenant_id: tenantId, key } },
-      }) as unknown as IStatsIntegration | null;
+      });
+      return record ? this.toDomain(record) : null;
     } catch (error) {
       throw new RepositoryException('Erro ao buscar integração de stats', error);
     }
@@ -36,9 +39,10 @@ export class PrismaStatsIntegrationRepository implements IStatsIntegrationReposi
 
   async findById(id: string): Promise<IStatsIntegration | null> {
     try {
-      return await this.prisma.statsIntegration.findUnique({
+      const record = await this.prisma.statsIntegration.findUnique({
         where: { id },
-      }) as unknown as IStatsIntegration | null;
+      });
+      return record ? this.toDomain(record) : null;
     } catch (error) {
       throw new RepositoryException('Erro ao buscar integração de stats', error);
     }
@@ -48,7 +52,7 @@ export class PrismaStatsIntegrationRepository implements IStatsIntegrationReposi
     data: Omit<IStatsIntegration, 'id' | 'created_at' | 'updated_at'>,
   ): Promise<IStatsIntegration> {
     try {
-      return await this.prisma.statsIntegration.create({
+      const record = await this.prisma.statsIntegration.create({
         data: {
           tenant_id: data.tenant_id,
           key: data.key,
@@ -56,7 +60,8 @@ export class PrismaStatsIntegrationRepository implements IStatsIntegrationReposi
           config: data.config,
           active: data.active,
         },
-      }) as unknown as IStatsIntegration;
+      });
+      return this.toDomain(record);
     } catch (error) {
       throw new RepositoryException('Erro ao criar integração de stats', error);
     }
@@ -69,14 +74,15 @@ export class PrismaStatsIntegrationRepository implements IStatsIntegrationReposi
     >,
   ): Promise<IStatsIntegration> {
     try {
-      return await this.prisma.statsIntegration.update({
+      const record = await this.prisma.statsIntegration.update({
         where: { id },
         data: {
           ...(data.label !== undefined ? { label: data.label } : {}),
           ...(data.config !== undefined ? { config: data.config } : {}),
           ...(data.active !== undefined ? { active: data.active } : {}),
         },
-      }) as unknown as IStatsIntegration;
+      });
+      return this.toDomain(record);
     } catch (error) {
       throw new RepositoryException('Erro ao atualizar integração de stats', error);
     }
@@ -88,5 +94,18 @@ export class PrismaStatsIntegrationRepository implements IStatsIntegrationReposi
     } catch (error) {
       throw new RepositoryException('Erro ao deletar integração de stats', error);
     }
+  }
+
+  private toDomain(raw: PrismaStatsIntegration): IStatsIntegration {
+    return {
+      id: raw.id,
+      tenant_id: raw.tenant_id,
+      key: raw.key,
+      label: raw.label,
+      config: (raw.config as Record<string, any>) ?? {},
+      active: raw.active,
+      created_at: raw.created_at,
+      updated_at: raw.updated_at,
+    };
   }
 }

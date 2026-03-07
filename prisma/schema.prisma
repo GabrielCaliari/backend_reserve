@@ -735,7 +735,7 @@ model LeadCollection {
   Tenant          Tenant                @relation(fields: [tenant_id], references: [id])
   Lead            Lead[]
 
-  @@unique([slug])
+  @@unique([slug, tenant_id])
   @@index([tenant_id])
 }
 

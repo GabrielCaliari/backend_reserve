@@ -6,11 +6,13 @@ import {
   Get,
   Body,
   Param,
+  Res,
   UseGuards,
   UseInterceptors,
   UploadedFile,
   BadRequestException,
 } from '@nestjs/common';
+import { Response } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
   ApiTags,
@@ -27,6 +29,7 @@ import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
 import { TenantGuard } from '../../../../shared/auth/guards/tenant.guard';
 import { RolesGuard } from '../../../../shared/auth/guards/roles.guard';
 import { Roles } from '../../../../shared/auth/decorators/roles.decorator';
+import { CurrentAdmin, CurrentAdminPayload } from '../../../../shared/auth/decorators/current-admin.decorator';
 import { EAdminRole } from '../../../zarp-auth/domain/enums/admin-role.enum';
 
 @ApiTags('CMS Image Management')
@@ -106,8 +109,14 @@ export class ArticleImageController {
   @Roles(EAdminRole.viewer)
   @ApiOperation({ summary: 'List all images for an article' })
   @ApiResponse({ status: 200, description: 'Images retrieved successfully' })
-  async findAll(@Param('articleId') articleId: string): Promise<any[]> {
-    return this.imageService.findAllByArticleId(articleId);
+  @ApiResponse({ status: 404, description: 'Article not found' })
+  async findAll(
+    @CurrentAdmin() admin: CurrentAdminPayload,
+    @Param('articleId') articleId: string,
+    @Res() res: Response,
+  ) {
+    const result = await this.imageService.findAllByArticleId(articleId, admin.tenant_id);
+    return res.status(200).json(result);
   }
 
   @Delete(':imageId')

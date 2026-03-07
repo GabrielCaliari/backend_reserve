@@ -97,6 +97,54 @@ export class LeadCollectionController {
     return successResponse({ collections: data, meta });
   }
 
+  @Get('leads')
+  @Roles(EAdminRole.viewer)
+  @ApiOperation({
+    summary: 'List all leads across all tenant collections',
+    description: 'Returns a paginated list of all leads from every collection belonging to the authenticated tenant, ordered by creation timestamp (newest first). Enforces tenant isolation - admins can only view leads from their own tenant.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Leads listed successfully',
+    schema: {
+      example: {
+        success: true,
+        data: {
+          leads: [
+            {
+              id: '550e8400-e29b-41d4-a716-446655440000',
+              name: 'John Doe',
+              email: 'john@example.com',
+              phone_number: '+5511999999999',
+              origin: 6,
+              status: 1,
+              collectionId: 'abc123',
+              tenantId: 'tenant-uuid',
+              country: 'BR',
+              city: 'São Paulo',
+              region: 'SP',
+              created_at: '2026-03-07T10:00:00Z',
+              updated_at: '2026-03-07T10:00:00Z',
+            },
+          ],
+          page: {
+            count: 100,
+            count_pages: 4,
+            current_page: 1,
+            limit: 30,
+          },
+        },
+      },
+    },
+  })
+  async getAllTenantLeads(
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 30,
+    @GetTenantId() tenantId: string,
+  ) {
+    return this.leadService.findLeadsByTenant(tenantId, { page, limit });
+  }
+
   @Get(':id')
   @Roles(EAdminRole.viewer)
   @ApiOperation({ 

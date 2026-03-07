@@ -7,6 +7,7 @@ import {
   ParseIntPipe,
   DefaultValuePipe,
   Req,
+  NotFoundException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiHeader, ApiQuery } from '@nestjs/swagger';
 import { ArticleService } from '../../application/services/article.service';
@@ -179,6 +180,10 @@ export class PublicBlogController {
     const blogId = req.blog.id;
 
     const article = await this.articleService.findPublishedBySlug(slug, blogId);
+
+    if (!article) {
+      throw new NotFoundException('Article not found or not in published status');
+    }
 
     // Format response
     return {

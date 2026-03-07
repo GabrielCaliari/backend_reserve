@@ -31,8 +31,8 @@ export class StatsService {
     @Inject(STATS_INTEGRATION_REPOSITORY)
     private readonly integrationRepository: IStatsIntegrationRepository,
   ) {
-    this.metricProviders = metricProviders ?? [];
-    this.externalProviders = externalProviders ?? [];
+    this.metricProviders = Array.isArray(metricProviders) ? metricProviders : metricProviders ? [metricProviders] : [];
+    this.externalProviders = Array.isArray(externalProviders) ? externalProviders : externalProviders ? [externalProviders] : [];
   }
 
   async getDashboard(tenantId: string, dateRange?: DateRange): Promise<DashboardResponseDto> {

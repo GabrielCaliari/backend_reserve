@@ -121,7 +121,7 @@ export default class LeadRepository implements ILeadRepository {
                     orderBy: { created_at: 'desc' },
                     where
                 }),
-                this.prisma.lead.count(),
+                this.prisma.lead.count({ where }),
             ]);
 
             return {
@@ -138,6 +138,13 @@ export default class LeadRepository implements ILeadRepository {
                         status: raw.status,
                         created_at: raw.created_at,
                         updated_at: raw.updated_at,
+                        ...(raw.collection_id ? { collectionId: raw.collection_id } : {}),
+                        ...(raw.tenant_id ? { tenantId: raw.tenant_id } : {}),
+                        ...(raw.ip_address ? { ipAddress: raw.ip_address } : {}),
+                        ...(raw.user_agent ? { userAgent: raw.user_agent } : {}),
+                        ...(raw.country ? { country: raw.country } : {}),
+                        ...(raw.city ? { city: raw.city } : {}),
+                        ...(raw.region ? { region: raw.region } : {}),
                     });
                 }),
                 count: count,

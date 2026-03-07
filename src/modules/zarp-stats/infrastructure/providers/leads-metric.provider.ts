@@ -15,6 +15,15 @@ export class LeadsMetricProvider implements IMetricProvider {
   readonly moduleKey = 'leads';
   readonly label = 'Lead Management';
 
+  private readonly statusLabels: Record<number, string> = {
+    1: 'New',
+    2: 'Contacted',
+    3: 'Qualified',
+    4: 'Converted',
+    5: 'Lost',
+    8: 'Archived',
+  };
+
   constructor(private readonly prisma: PrismaService) {}
 
   async getMetrics(tenantId?: string, dateRange?: DateRange): Promise<MetricGroup> {
@@ -70,7 +79,7 @@ export class LeadsMetricProvider implements IMetricProvider {
         },
         ...byStatus.map((s) => ({
           key: `leads.status.${s.status ?? 'unknown'}`,
-          label: `Status ${s.status ?? 'N/A'}`,
+          label: `Status: ${this.statusLabels[s.status as number] ?? `Unknown (${s.status})`}`,
           value: s._count._all,
           unit: 'count',
         })),

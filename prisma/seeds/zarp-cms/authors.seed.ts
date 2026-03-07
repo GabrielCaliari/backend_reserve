@@ -15,22 +15,32 @@ interface AuthorSeed {
 
 export async function seedAuthors() {
   const authors: AuthorSeed[] = [
+    // ── Zarp Studio ──────────────────────────────────────────────────────────
     {
       first_name: 'Diego',
       last_name: 'Kelme',
       biography:
-        'Fundador e CTO da Zarp Studio. Especialista em arquitetura de software e desenvolvimento full-stack com mais de 10 anos de experiência.',
+        'Fundador da Zarp Studio e estrategista de marketing digital com mais de 12 anos de experiência. Especialista em growth hacking, branding e construção de presença digital para marcas de alto impacto.',
       tenantSlug: 'zarp-studio',
       active: true,
     },
     {
-      first_name: 'Ana',
-      last_name: 'Silva',
+      first_name: 'Mariana',
+      last_name: 'Rocha',
       biography:
-        'Desenvolvedora sênior especializada em React e Node.js. Apaixonada por criar experiências de usuário excepcionais.',
+        'Head de Marketing de Conteúdo da Zarp Studio. Especialista em inbound marketing, copywriting e estratégia de redes sociais. Já ajudou mais de 80 marcas a construírem audiências engajadas do zero.',
       tenantSlug: 'zarp-studio',
       active: true,
     },
+    {
+      first_name: 'Felipe',
+      last_name: 'Duarte',
+      biography:
+        'Especialista em SEO e performance digital na Zarp Studio. Certificado pelo Google e HubSpot, com histórico comprovado de aumento de tráfego orgânico e conversão para e-commerces e SaaS.',
+      tenantSlug: 'zarp-studio',
+      active: true,
+    },
+    // ── Empresa Teste ─────────────────────────────────────────────────────────
     {
       first_name: 'Carlos',
       last_name: 'Mendes',
@@ -47,6 +57,7 @@ export async function seedAuthors() {
       tenantSlug: 'empresa-teste',
       active: true,
     },
+    // ── Tech Innovations ──────────────────────────────────────────────────────
     {
       first_name: 'Roberto',
       last_name: 'Santos',

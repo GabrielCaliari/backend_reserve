@@ -8,6 +8,10 @@ import {
   IArticleRepository,
 } from '../../domain/interfaces/article.repository.interface';
 import {
+  BLOG_REPOSITORY,
+  IBlogRepository,
+} from '../../domain/interfaces/blog.repository.interface';
+import {
   STORAGE_PROVIDER,
   IStorageProvider,
 } from '../../domain/interfaces/storage.interface';
@@ -28,6 +32,8 @@ export class ArticleImageService {
     private readonly imageRepository: IArticleImageRepository,
     @Inject(ARTICLE_REPOSITORY)
     private readonly articleRepository: IArticleRepository,
+    @Inject(BLOG_REPOSITORY)
+    private readonly blogRepository: IBlogRepository,
     @Inject(STORAGE_PROVIDER)
     private readonly storageProvider: IStorageProvider,
     @Inject(IMAGE_PROCESSOR)
@@ -81,7 +87,19 @@ export class ArticleImageService {
     });
   }
 
-  async findAllByArticleId(articleId: string): Promise<any[]> {
+  async findAllByArticleId(articleId: string, tenantId?: string): Promise<any[]> {
+    // Validate article exists and belongs to tenant
+    if (tenantId) {
+      const article = await this.articleRepository.findById(articleId);
+      if (!article) {
+        throw new NotFoundException('Article not found');
+      }
+      const blog = await this.blogRepository.findById(article.blogId);
+      if (!blog || blog.tenantId !== tenantId) {
+        throw new NotFoundException('Article not found');
+      }
+    }
+
     return this.imageRepository.findAllByArticleId(articleId);
   }
 
@@ -102,7 +120,15 @@ export class ArticleImageService {
     articleId: string,
     items: { id: string; display_order: number }[],
   ): Promise<void> {
-    // TODO: Validate that all image IDs belong to the article
+    // Validate that all image IDs belong to the article
+    const existingImages = await this.imageRepository.findAllByArticleId(articleId);
+    const validIds = new Set(existingImages.map((img: any) => img.id));
+    for (const item of items) {
+      if (!validIds.has(item.id)) {
+        throw new NotFoundException(`Image ${item.id} not found in article ${articleId}`);
+      }
+    }
+
     await this.imageRepository.updateDisplayOrders(items.map(item => ({ id: item.id, display_order: item.display_order })));
   }
 }

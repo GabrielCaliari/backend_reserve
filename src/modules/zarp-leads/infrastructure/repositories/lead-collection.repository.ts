@@ -55,7 +55,7 @@ export class LeadCollectionRepository implements ILeadCollectionRepository {
   }
 
   async findBySlug(slug: string): Promise<LeadCollection | null> {
-    const record = await this.prisma.leadCollection.findUnique({
+    const record = await this.prisma.leadCollection.findFirst({
       where: { slug },
     });
     return record ? this.toEntity(record) : null;

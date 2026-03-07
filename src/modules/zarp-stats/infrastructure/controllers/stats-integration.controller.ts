@@ -64,7 +64,7 @@ export class StatsIntegrationController {
   @Get('/:id')
   @Roles(EAdminRole.viewer)
   @ApiOperation({ summary: 'Get integration by ID' })
-  @ApiParam({ name: 'id', type: 'number' })
+  @ApiParam({ name: 'id', type: 'string' })
   @ApiResponse({ status: 200, description: 'Integration details', type: StatsIntegrationResponseDto })
   @ApiResponse({ status: 404, description: 'Not found' })
   async getById(
@@ -97,7 +97,7 @@ export class StatsIntegrationController {
     summary: 'Update integration',
     description: 'Updates label, config, or active status of an existing integration.',
   })
-  @ApiParam({ name: 'id', type: 'number' })
+  @ApiParam({ name: 'id', type: 'string' })
   @ApiResponse({ status: 200, description: 'Integration updated', type: StatsIntegrationResponseDto })
   @ApiResponse({ status: 400, description: 'Invalid config' })
   @ApiResponse({ status: 404, description: 'Not found' })
@@ -113,7 +113,7 @@ export class StatsIntegrationController {
   @Roles(EAdminRole.manager)
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Delete integration' })
-  @ApiParam({ name: 'id', type: 'number' })
+  @ApiParam({ name: 'id', type: 'string' })
   @ApiResponse({ status: 204, description: 'Integration deleted' })
   @ApiResponse({ status: 404, description: 'Not found' })
   async delete(

@@ -65,11 +65,14 @@ export class LeadService {
         }
     }
 
-    async findLeads({ page = 1, limit = 30 }) {
+    async findLeads({ page = 1, limit = 30 }, tenantId?: string) {
         try {
+            const where: any = {};
+            if (tenantId) where.tenant_id = tenantId;
             const { raws, count } = await this.leadRepository.find({
                 page,
                 limit,
+                where,
             });
 
             return successResponse({
@@ -92,11 +95,11 @@ export class LeadService {
         }
     }
 
-    async findLeadById(leadId: string) {
+    async findLeadById(leadId: string, tenantId?: string) {
         try {
             const lead = await this.leadRepository.findById(leadId);
 
-            if (!lead) {
+            if (!lead || (tenantId && lead.tenant_id !== tenantId)) {
                 return errorResponse('404:Lead not found', 404);
             }
 
@@ -106,11 +109,11 @@ export class LeadService {
         }
     }
 
-    async updateLeadStatus(leadId: string, status: ELeadStatus) {
+    async updateLeadStatus(leadId: string, status: ELeadStatus, tenantId?: string) {
         try {
             const lead = await this.leadRepository.findById(leadId);
 
-            if (!lead) {
+            if (!lead || (tenantId && lead.tenant_id !== tenantId)) {
                 return errorResponse('404:Lead not found', 404);
             }
 
@@ -124,11 +127,11 @@ export class LeadService {
         }
     }
 
-    async updateLead(leadId: string, dto: UpdateLeadDto) {
+    async updateLead(leadId: string, dto: UpdateLeadDto, tenantId?: string) {
         try {
             const lead = await this.leadRepository.findById(leadId);
 
-            if (!lead) {
+            if (!lead || (tenantId && lead.tenant_id !== tenantId)) {
                 return errorResponse('404:Lead not found', 404);
             }
 
@@ -148,11 +151,11 @@ export class LeadService {
         }
     }
 
-    async deleteLead(leadId: string) {
+    async deleteLead(leadId: string, tenantId?: string) {
         try {
             const lead = await this.leadRepository.findById(leadId);
 
-            if (!lead) {
+            if (!lead || (tenantId && lead.tenant_id !== tenantId)) {
                 return errorResponse('404:Lead not found', 404);
             }
 
@@ -161,6 +164,34 @@ export class LeadService {
             return successResponse({ id: leadId });
         } catch (error) {
             return errorResponse('500:Erro ao deletar o lead', 500, error);
+        }
+    }
+
+    async findLeadsByTenant(tenantId: string, { page = 1, limit = 30 }: { page?: number; limit?: number }) {
+        try {
+            const { raws, count } = await this.leadRepository.find({
+                page,
+                limit,
+                where: {
+                    tenant_id: tenantId,
+                },
+            });
+
+            return successResponse({
+                leads: raws.map(raw => ({
+                    ...raw,
+                    ...(raw.phone_number ? { phone_number: raw.phone_number.toString() } : {}),
+                    ...(raw.email ? { email: raw.email.toString() } : {}),
+                })),
+                page: {
+                    count,
+                    count_pages: Math.ceil(count / limit),
+                    current_page: page,
+                    limit,
+                },
+            });
+        } catch (error) {
+            return errorResponse(ERROR_FIND_LEAD, 500, error);
         }
     }
 

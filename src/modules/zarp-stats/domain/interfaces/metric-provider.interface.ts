@@ -13,6 +13,7 @@ export interface MetricGroup {
   description?: string;
   metrics: MetricValue[];
   fetchedAt: Date;
+  error?: string;
 }
 
 export interface DateRange {

@@ -31,6 +31,7 @@ import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
 import { TenantGuard } from '../../../../shared/auth/guards/tenant.guard';
 import { RolesGuard } from '../../../../shared/auth/guards/roles.guard';
 import { Roles } from '../../../../shared/auth/decorators/roles.decorator';
+import { CurrentAdmin, CurrentAdminPayload } from '../../../../shared/auth/decorators/current-admin.decorator';
 import { EAdminRole } from '../../../zarp-auth/domain/enums/admin-role.enum';
 
 @ApiTags('CMS Author Management')
@@ -90,8 +91,12 @@ export class AuthorController {
   @ApiOperation({ summary: 'Get a single author by ID' })
   @ApiResponse({ status: 200, description: 'Author retrieved successfully' })
   @ApiResponse({ status: 404, description: 'Author not found' })
-  async findOne(@Param('id') id: string, @Res() res: Response) {
-    const result = await this.authorService.findById(id);
+  async findOne(
+    @CurrentAdmin() admin: CurrentAdminPayload,
+    @Param('id') id: string,
+    @Res() res: Response,
+  ) {
+    const result = await this.authorService.findById(id, admin.tenant_id);
 
     if (result.status !== 200) {
       return res.status(result.status).json(result.data);
@@ -107,16 +112,17 @@ export class AuthorController {
   @ApiResponse({ status: 200, description: 'Authors retrieved successfully' })
   @ApiResponse({ status: 400, description: 'Invalid filter parameters' })
   async findAll(
-    @Query('tenantId') tenantId: string,
+    @CurrentAdmin() admin: CurrentAdminPayload,
     @Query('active') active?: string,
     @Query('page') page?: string,
     @Query('limit') limit?: string,
     @Res() res?: Response,
   ) {
+    const tenantId = admin.tenant_id;
     if (!tenantId) {
       return res.status(400).json({
         code: '400:Invalid tenant ID',
-        message: 'Tenant ID must be a valid number',
+        message: 'Tenant ID is required',
       });
     }
 
@@ -148,8 +154,12 @@ export class AuthorController {
   })
   @ApiResponse({ status: 403, description: 'Insufficient role' })
   @ApiResponse({ status: 404, description: 'Author not found' })
-  async delete(@Param('id') id: string, @Res() res: Response) {
-    const result = await this.authorService.deleteAuthor(id);
+  async delete(
+    @CurrentAdmin() admin: CurrentAdminPayload,
+    @Param('id') id: string,
+    @Res() res: Response,
+  ) {
+    const result = await this.authorService.deleteAuthor(id, admin.tenant_id);
 
     if (result.status === 204) {
       return res.status(200).json({ message: 'Author deleted successfully' });

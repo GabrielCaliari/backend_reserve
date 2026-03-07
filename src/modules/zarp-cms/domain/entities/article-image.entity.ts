@@ -1,12 +1,12 @@
 export class ArticleImage {
-  id: number;
+  id: string;
   url: string;
   storage_key: string;
   alt_text: string | null;
   display_order: number;
   file_size: number;
   original_format: string;
-  article_id: number;
+  article_id: string;
   created_at: Date;
   updated_at: Date;
 

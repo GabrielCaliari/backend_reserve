@@ -483,26 +483,52 @@ export class ArticleService {
   }
 
   // Legacy methods for backward compatibility
-  async findById(id: string): Promise<ServiceResponse<Article>> {
+  async findById(id: string, tenantId?: string): Promise<ServiceResponse<Article>> {
     const article = await this.articleRepository.findById(id);
     if (!article) {
       return errorResponse(ERROR_ARTICLE_NOT_FOUND, 404);
     }
+
+    // Validate tenant isolation via blog ownership
+    if (tenantId) {
+      const blog = await this.blogRepository.findById(article.blogId);
+      if (!blog || blog.tenantId !== tenantId) {
+        return errorResponse(ERROR_ARTICLE_NOT_FOUND, 404);
+      }
+    }
+
     return successResponse(article, 200);
   }
 
   async findByBlogId(
     blogId: string,
     filters?: { status?: EArticleStatus; page?: number; limit?: number },
+    tenantId?: string,
   ): Promise<ServiceResponse> {
+    // Validate blog belongs to tenant
+    if (tenantId) {
+      const blog = await this.blogRepository.findById(blogId);
+      if (!blog || blog.tenantId !== tenantId) {
+        return errorResponse(ERROR_BLOG_NOT_FOUND, 404);
+      }
+    }
+
     const result = await this.articleRepository.findByBlogId(blogId, filters);
     return successResponse(result, 200);
   }
 
-  async delete(id: string): Promise<ServiceResponse<void>> {
+  async delete(id: string, tenantId?: string): Promise<ServiceResponse<void>> {
     const article = await this.articleRepository.findById(id);
     if (!article) {
       return errorResponse(ERROR_ARTICLE_NOT_FOUND, 404);
+    }
+
+    // Validate tenant isolation via blog ownership
+    if (tenantId) {
+      const blog = await this.blogRepository.findById(article.blogId);
+      if (!blog || blog.tenantId !== tenantId) {
+        return errorResponse(ERROR_ARTICLE_NOT_FOUND, 404);
+      }
     }
 
     await this.articleRepository.delete(id);
@@ -513,11 +539,19 @@ export class ArticleService {
    * Archives a published article
    * Transitions article status from published to archived
    */
-  async archive(articleId: string): Promise<ServiceResponse<Article>> {
+  async archive(articleId: string, tenantId?: string): Promise<ServiceResponse<Article>> {
     try {
       const article = await this.articleRepository.findById(articleId);
       if (!article) {
         return errorResponse(ERROR_ARTICLE_NOT_FOUND, 404);
+      }
+
+      // Validate tenant isolation via blog ownership
+      if (tenantId) {
+        const blog = await this.blogRepository.findById(article.blogId);
+        if (!blog || blog.tenantId !== tenantId) {
+          return errorResponse(ERROR_ARTICLE_NOT_FOUND, 404);
+        }
       }
 
       if (article.status !== EArticleStatus.published) {
