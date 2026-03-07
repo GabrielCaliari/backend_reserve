@@ -1,5 +1,10 @@
-import { Controller, Get, Post, Put, Body, Param, Query, HttpCode, HttpStatus } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
+import { Controller, Get, Post, Put, Body, Param, Query, HttpCode, HttpStatus, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBearerAuth } from '@nestjs/swagger';
+import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
+import { TenantGuard } from '../../../../shared/auth/guards/tenant.guard';
+import { RolesGuard } from '../../../../shared/auth/guards/roles.guard';
+import { Roles } from '../../../../shared/auth/decorators/roles.decorator';
+import { EAdminRole } from '../../../zarp-auth/domain/enums/admin-role.enum';
 import { EmailCampaignService } from '../../application/services';
 import {
   CreateEmailCampaignDto,
@@ -9,6 +14,9 @@ import {
 } from '../../application/dtos';
 
 @ApiTags('Email Campaign')
+@ApiBearerAuth()
+@UseGuards(AdminJwtGuard, TenantGuard, RolesGuard)
+@Roles(EAdminRole.manager)
 @Controller()
 export class EmailCampaignController {
   constructor(private readonly emailCampaignService: EmailCampaignService) {}

@@ -27,6 +27,9 @@ import {
 } from '@nestjs/swagger';
 import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
 import { TenantGuard } from '../../../../shared/auth/guards/tenant.guard';
+import { RolesGuard } from '../../../../shared/auth/guards/roles.guard';
+import { Roles } from '../../../../shared/auth/decorators/roles.decorator';
+import { EAdminRole } from '../../../zarp-auth/domain/enums/admin-role.enum';
 import { CurrentAdmin, CurrentAdminPayload } from '../../../../shared/auth/decorators/current-admin.decorator';
 import { MediaAssetService } from '../../application/services/media-asset.service';
 import { UploadMediaDTO } from '../../application/dtos/upload-media.dto';
@@ -46,8 +49,8 @@ import { EAssetStatus } from '../../domain/enums/asset-status.enum';
  */
 @ApiTags('CMS - Media Assets')
 @ApiBearerAuth()
-@Controller('cms/assets')
-@UseGuards(AdminJwtGuard, TenantGuard)
+@Controller('assets')
+@UseGuards(AdminJwtGuard, TenantGuard, RolesGuard)
 export class MediaAssetController {
   constructor(private readonly assetService: MediaAssetService) {}
 
@@ -56,6 +59,7 @@ export class MediaAssetController {
    * POST /api/cms/assets
    */
   @Post()
+  @Roles(EAdminRole.editor)
   @UseInterceptors(
     FileInterceptor('file', {
       limits: { fileSize: 50 * 1024 * 1024 }, // 50 MB
@@ -119,6 +123,7 @@ export class MediaAssetController {
    * GET /api/cms/assets
    */
   @Get()
+  @Roles(EAdminRole.viewer)
   @ApiOperation({ summary: 'List media assets with filtering' })
   @ApiQuery({ name: 'collection_id', required: false, type: Number })
   @ApiQuery({ name: 'status', required: false, enum: EAssetStatus })
@@ -154,8 +159,9 @@ export class MediaAssetController {
    * GET /api/cms/assets/:id
    */
   @Get(':id')
+  @Roles(EAdminRole.viewer)
   @ApiOperation({ summary: 'Get media asset by ID' })
-  @ApiParam({ name: 'id', type: Number, description: 'Asset ID' })
+  @ApiParam({ name: 'id', type: String, description: 'Asset UUID' })
   @ApiResponse({ status: 200, description: 'Asset retrieved successfully' })
   @ApiResponse({ status: 404, description: 'Asset not found' })
   async findOne(
@@ -175,8 +181,9 @@ export class MediaAssetController {
    * PATCH /api/cms/assets/:id
    */
   @Patch(':id')
+  @Roles(EAdminRole.editor)
   @ApiOperation({ summary: 'Update asset metadata (alt_text, metadata)' })
-  @ApiParam({ name: 'id', type: Number, description: 'Asset ID' })
+  @ApiParam({ name: 'id', type: String, description: 'Asset UUID' })
   @ApiBody({
     schema: {
       type: 'object',
@@ -211,8 +218,9 @@ export class MediaAssetController {
    * DELETE /api/cms/assets/:id
    */
   @Delete(':id')
+  @Roles(EAdminRole.editor)
   @ApiOperation({ summary: 'Delete media asset' })
-  @ApiParam({ name: 'id', type: Number, description: 'Asset ID' })
+  @ApiParam({ name: 'id', type: String, description: 'Asset UUID' })
   @ApiResponse({ status: 200, description: 'Asset deleted successfully' })
   @ApiResponse({ status: 404, description: 'Asset not found' })
   async remove(

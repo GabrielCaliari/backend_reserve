@@ -16,7 +16,7 @@ import { successResponse } from '../../../../shared/helpers/response.helper';
 @ApiTags('Lead Collections')
 @ApiBearerAuth()
 @UseGuards(AdminJwtGuard, TenantGuard, RolesGuard)
-@Controller('leads/collections')
+@Controller('collections')
 export class LeadCollectionController {
   constructor(
     private readonly service: LeadCollectionService,
@@ -24,7 +24,7 @@ export class LeadCollectionController {
   ) {}
 
   @Post()
-  @Roles(EAdminRole.manager, EAdminRole.owner, EAdminRole.super_admin)
+  @Roles(EAdminRole.manager)
   @ApiOperation({ 
     summary: 'Create a new lead collection',
     description: 'Creates a new lead collection for the authenticated tenant. A unique slug is auto-generated from the name. A secret key is generated and returned (only shown once).'
@@ -58,7 +58,7 @@ export class LeadCollectionController {
   }
 
   @Get()
-  @Roles(EAdminRole.viewer, EAdminRole.editor, EAdminRole.manager, EAdminRole.owner, EAdminRole.super_admin)
+  @Roles(EAdminRole.viewer)
   @ApiOperation({ 
     summary: 'List all collections for the tenant',
     description: 'Returns paginated list of collections. Tenant admins see only their tenant\'s collections. Super admins see all collections across all tenants.'
@@ -98,7 +98,7 @@ export class LeadCollectionController {
   }
 
   @Get(':id')
-  @Roles(EAdminRole.viewer, EAdminRole.editor, EAdminRole.manager, EAdminRole.owner, EAdminRole.super_admin)
+  @Roles(EAdminRole.viewer)
   @ApiOperation({ 
     summary: 'Get a collection by ID',
     description: 'Returns detailed information about a specific collection. Enforces tenant isolation unless user is super admin.'
@@ -111,7 +111,7 @@ export class LeadCollectionController {
   }
 
   @Put(':id')
-  @Roles(EAdminRole.manager, EAdminRole.owner, EAdminRole.super_admin)
+  @Roles(EAdminRole.manager)
   @ApiOperation({ 
     summary: 'Update a collection',
     description: 'Updates collection metadata and access mode. When changing to "restricted" mode, a new secret key is generated and returned. When changing from "restricted" to another mode, the key is cleared.'
@@ -147,7 +147,7 @@ export class LeadCollectionController {
   }
   
   @Post(':id/regenerate-key')
-  @Roles(EAdminRole.manager, EAdminRole.owner, EAdminRole.super_admin)
+  @Roles(EAdminRole.manager)
   @ApiOperation({ 
     summary: 'Regenerate collection secret key',
     description: 'Generates a new secret key for the collection. The old key will be invalidated. The new key is only shown once.',
@@ -172,7 +172,7 @@ export class LeadCollectionController {
 
 
   @Delete(':id')
-  @Roles(EAdminRole.manager, EAdminRole.owner, EAdminRole.super_admin)
+  @Roles(EAdminRole.manager)
   @ApiOperation({ 
     summary: 'Deactivate a collection',
     description: 'Marks a collection as inactive. The collection stops accepting new leads immediately, but existing leads are preserved. The collection can be reactivated by updating its active status.'
@@ -185,7 +185,7 @@ export class LeadCollectionController {
   }
 
   @Get(':id/leads')
-  @Roles(EAdminRole.viewer, EAdminRole.editor, EAdminRole.manager, EAdminRole.owner, EAdminRole.super_admin)
+  @Roles(EAdminRole.viewer)
   @ApiOperation({ 
     summary: 'List leads within a specific collection',
     description: 'Returns paginated list of leads captured through this collection. Enforces tenant isolation - admins can only view leads from their tenant\'s collections.'

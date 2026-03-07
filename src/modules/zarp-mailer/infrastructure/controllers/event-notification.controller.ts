@@ -2,11 +2,14 @@ import { Body, Controller, Get, Param, Post, Req, Res, UseGuards } from '@nestjs
 import { EventNotificationService } from '../../application/services/event-notification.service';
 import { CreateEventNotificationDTO, CreateEventNotificationEventDTO, CreateEventNotificationEventParam, IdEventNotificationEventParam, IdNotificationEventNotificationEventParam } from '../../application/dtos/event-notification.dto';
 import { Request, Response } from 'express';
-import { AdminJwtGuard } from '../../../../shared/auth/guards';
+import { AdminJwtGuard, RolesGuard } from '../../../../shared/auth/guards';
+import { Roles } from '../../../../shared/auth/decorators/roles.decorator';
+import { EAdminRole } from '../../../zarp-auth/domain/enums/admin-role.enum';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiBody } from '@nestjs/swagger';
 
 @ApiTags('Event Notification (SMS)')
 @ApiBearerAuth()
+@UseGuards(AdminJwtGuard, RolesGuard)
 @Controller()
 export class EventNotificationController {
     constructor(
@@ -14,7 +17,7 @@ export class EventNotificationController {
     ) { }
 
     @Post('/sms/create')
-    @UseGuards(AdminJwtGuard)
+    @Roles(EAdminRole.manager)
     @ApiOperation({ summary: 'Create SMS notification', description: 'Creates a new SMS notification and returns a unique webhook UUID' })
     @ApiResponse({ status: 200, description: 'SMS notification created successfully' })
     @ApiResponse({ status: 500, description: 'Failed to create SMS notification' })
@@ -31,7 +34,7 @@ export class EventNotificationController {
     }
 
     @Get('/sms')
-    @UseGuards(AdminJwtGuard)
+    @Roles(EAdminRole.viewer)
     @ApiOperation({ summary: 'List SMS notifications', description: 'Returns all registered SMS notifications' })
     @ApiResponse({ status: 200, description: 'SMS notification list' })
     @ApiResponse({ status: 500, description: 'Failed to fetch notifications' })
@@ -45,7 +48,7 @@ export class EventNotificationController {
     }
 
     @Post('/sms/webhook/:uuid')
-    @UseGuards(AdminJwtGuard)
+    @Roles(EAdminRole.manager)
     @ApiOperation({ summary: 'Send SMS via webhook', description: 'Sends an SMS through the notification webhook. Supports templates with dynamic parameters.' })
     @ApiParam({ name: 'uuid', description: 'Notification webhook UUID', type: 'string' })
     @ApiResponse({ status: 200, description: 'SMS sent successfully' })
@@ -68,7 +71,7 @@ export class EventNotificationController {
     }
 
     @Get('/sms/webhook/:id_notification')
-    @UseGuards(AdminJwtGuard)
+    @Roles(EAdminRole.viewer)
     @ApiOperation({ summary: 'List events by notification', description: 'Returns all SMS events for a specific notification' })
     @ApiParam({ name: 'id_notification', description: 'SMS notification ID', type: 'string' })
     @ApiResponse({ status: 200, description: 'SMS event list' })
@@ -83,7 +86,7 @@ export class EventNotificationController {
     }
 
     @Get('/sms/:id')
-    @UseGuards(AdminJwtGuard)
+    @Roles(EAdminRole.viewer)
     @ApiOperation({ summary: 'Get SMS notification by ID', description: 'Returns a specific SMS notification by ID' })
     @ApiParam({ name: 'id', description: 'SMS notification ID', type: 'string' })
     @ApiResponse({ status: 200, description: 'SMS notification found' })

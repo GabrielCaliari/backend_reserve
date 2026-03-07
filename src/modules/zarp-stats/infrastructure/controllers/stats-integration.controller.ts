@@ -26,17 +26,20 @@ import {
   StatsIntegrationResponseDto,
   AvailableIntegrationDto,
 } from '../../application/dtos/stats-integration.dto';
-import { AdminJwtGuard, TenantGuard } from '@/shared/auth/guards';
+import { AdminJwtGuard, TenantGuard, RolesGuard } from '@/shared/auth/guards';
+import { Roles } from '@/shared/auth/decorators/roles.decorator';
+import { EAdminRole } from '@/modules/zarp-auth/domain/enums/admin-role.enum';
 
 @ApiTags('Stats - Integrations')
 @ApiBearerAuth()
 @ApiHeader({ name: 'x-tenant-id', required: true, description: 'Tenant ID' })
-@UseGuards(AdminJwtGuard, TenantGuard)
+@UseGuards(AdminJwtGuard, TenantGuard, RolesGuard)
 @Controller('/integrations')
 export class StatsIntegrationController {
   constructor(private readonly integrationService: StatsIntegrationService) {}
 
   @Get('/')
+  @Roles(EAdminRole.viewer)
   @ApiOperation({
     summary: 'List tenant integrations',
     description: 'Returns all external metric integrations configured for the current tenant.',
@@ -48,6 +51,7 @@ export class StatsIntegrationController {
   }
 
   @Get('/providers')
+  @Roles(EAdminRole.viewer)
   @ApiOperation({
     summary: 'List available providers',
     description: 'Returns all registered external metric providers with config schemas.',
@@ -58,6 +62,7 @@ export class StatsIntegrationController {
   }
 
   @Get('/:id')
+  @Roles(EAdminRole.viewer)
   @ApiOperation({ summary: 'Get integration by ID' })
   @ApiParam({ name: 'id', type: 'number' })
   @ApiResponse({ status: 200, description: 'Integration details', type: StatsIntegrationResponseDto })
@@ -70,6 +75,7 @@ export class StatsIntegrationController {
   }
 
   @Post('/')
+  @Roles(EAdminRole.manager)
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({
     summary: 'Create integration',
@@ -86,6 +92,7 @@ export class StatsIntegrationController {
   }
 
   @Patch('/:id')
+  @Roles(EAdminRole.manager)
   @ApiOperation({
     summary: 'Update integration',
     description: 'Updates label, config, or active status of an existing integration.',
@@ -103,6 +110,7 @@ export class StatsIntegrationController {
   }
 
   @Delete('/:id')
+  @Roles(EAdminRole.manager)
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Delete integration' })
   @ApiParam({ name: 'id', type: 'number' })

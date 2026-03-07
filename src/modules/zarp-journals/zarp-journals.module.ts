@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ZarpAuthModule } from '../zarp-auth/zarp-auth.module';
 import { JournalService } from './application/services/journal.service';
 import { JournalController } from './infrastructure/controllers/journal.controller';
 import { JournalAlertService } from './application/services/journal-alert.service';
@@ -24,6 +25,7 @@ import {
  * Route prefix: /api/journals
  */
 @Module({
+  imports: [ZarpAuthModule],
   controllers: [
     JournalController,
     JournalAlertController,

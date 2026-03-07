@@ -21,6 +21,9 @@ import {
 } from '@nestjs/swagger';
 import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
 import { TenantGuard } from '../../../../shared/auth/guards/tenant.guard';
+import { RolesGuard } from '../../../../shared/auth/guards/roles.guard';
+import { Roles } from '../../../../shared/auth/decorators/roles.decorator';
+import { EAdminRole } from '../../../zarp-auth/domain/enums/admin-role.enum';
 import { CurrentAdmin, CurrentAdminPayload } from '../../../../shared/auth/decorators/current-admin.decorator';
 import { MediaCollectionService } from '../../application/services/media-collection.service';
 import { CreateCollectionDTO } from '../../application/dtos/create-collection.dto';
@@ -40,8 +43,8 @@ import { ECollectionType } from '../../domain/enums/collection-type.enum';
  */
 @ApiTags('CMS - Media Collections')
 @ApiBearerAuth()
-@Controller('cms/collections')
-@UseGuards(AdminJwtGuard, TenantGuard)
+@Controller('collections')
+@UseGuards(AdminJwtGuard, TenantGuard, RolesGuard)
 export class MediaCollectionController {
   constructor(private readonly collectionService: MediaCollectionService) {}
 
@@ -50,6 +53,7 @@ export class MediaCollectionController {
    * POST /api/cms/collections
    */
   @Post()
+  @Roles(EAdminRole.editor)
   @ApiOperation({ summary: 'Create a new media collection' })
   @ApiBody({ type: CreateCollectionDTO })
   @ApiResponse({ status: 201, description: 'Collection created successfully' })
@@ -71,6 +75,7 @@ export class MediaCollectionController {
    * GET /api/cms/collections
    */
   @Get()
+  @Roles(EAdminRole.viewer)
   @ApiOperation({ summary: 'List media collections with filtering' })
   @ApiQuery({ name: 'type', required: false, enum: ECollectionType })
   @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
@@ -100,6 +105,7 @@ export class MediaCollectionController {
    * GET /api/cms/collections/:id
    */
   @Get(':id')
+  @Roles(EAdminRole.viewer)
   @ApiOperation({ summary: 'Get media collection by ID' })
   @ApiParam({ name: 'id', type: String, description: 'Collection ID (UUID)', example: 'abc123def456' })
   @ApiResponse({ status: 200, description: 'Collection retrieved successfully' })
@@ -121,6 +127,7 @@ export class MediaCollectionController {
    * GET /api/cms/collections/:id/assets
    */
   @Get(':id/assets')
+  @Roles(EAdminRole.viewer)
   @ApiOperation({ summary: 'List all assets in a collection' })
   @ApiParam({ name: 'id', type: String, description: 'Collection ID (UUID)', example: 'abc123def456' })
   @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
@@ -151,6 +158,7 @@ export class MediaCollectionController {
    * PUT /api/cms/collections/:id
    */
   @Put(':id')
+  @Roles(EAdminRole.editor)
   @ApiOperation({ summary: 'Update media collection' })
   @ApiParam({ name: 'id', type: String, description: 'Collection ID (UUID)', example: 'abc123def456' })
   @ApiBody({
@@ -186,6 +194,7 @@ export class MediaCollectionController {
    * DELETE /api/cms/collections/:id
    */
   @Delete(':id')
+  @Roles(EAdminRole.editor)
   @ApiOperation({ summary: 'Delete media collection (only if empty)' })
   @ApiParam({ name: 'id', type: String, description: 'Collection ID (UUID)', example: 'abc123def456' })
   @ApiResponse({ status: 200, description: 'Collection deleted successfully' })

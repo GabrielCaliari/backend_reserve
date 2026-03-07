@@ -121,7 +121,7 @@ export class AdminController {
         summary: 'Update admin role (super_admin only)',
         description: 'Changes the role of an administrator'
     })
-    @ApiParam({ name: 'id', type: Number, description: 'Admin ID' })
+    @ApiParam({ name: 'id', type: String, description: 'Admin UUID' })
     @ApiBody({ type: UpdateAdminRoleDTO })
     @ApiResponse({ 
         status: 200, 
@@ -153,7 +153,7 @@ export class AdminController {
         summary: 'Deactivate an admin (super_admin only)',
         description: 'Deactivates an administrator account. Cannot deactivate yourself.'
     })
-    @ApiParam({ name: 'id', type: Number, description: 'Admin ID' })
+    @ApiParam({ name: 'id', type: String, description: 'Admin UUID' })
     @ApiResponse({ 
         status: 200, 
         description: 'Admin deactivated',
@@ -184,7 +184,7 @@ export class AdminController {
         summary: 'Activate an admin (super_admin only)',
         description: 'Reactivates a previously deactivated administrator account'
     })
-    @ApiParam({ name: 'id', type: Number, description: 'Admin ID' })
+    @ApiParam({ name: 'id', type: String, description: 'Admin UUID' })
     @ApiResponse({ 
         status: 200, 
         description: 'Admin activated',
@@ -213,7 +213,7 @@ export class AdminController {
         summary: 'Get admin by ID (super_admin only)',
         description: 'Returns detailed information about a specific administrator'
     })
-    @ApiParam({ name: 'id', type: Number, description: 'Admin ID' })
+    @ApiParam({ name: 'id', type: String, description: 'Admin UUID' })
     @ApiResponse({ 
         status: 200, 
         description: 'Admin found',
@@ -237,7 +237,7 @@ export class AdminController {
         summary: 'Update admin data (super_admin only)',
         description: 'Updates administrator name and/or email'
     })
-    @ApiParam({ name: 'id', type: Number, description: 'Admin ID' })
+    @ApiParam({ name: 'id', type: String, description: 'Admin UUID' })
     @ApiBody({ type: UpdateAdminDTO })
     @ApiResponse({ 
         status: 200, 
@@ -270,7 +270,7 @@ export class AdminController {
         summary: 'Delete admin permanently (super_admin only)',
         description: 'Permanently deletes an administrator account. Cannot delete yourself.'
     })
-    @ApiParam({ name: 'id', type: Number, description: 'Admin ID' })
+    @ApiParam({ name: 'id', type: String, description: 'Admin UUID' })
     @ApiResponse({ 
         status: 200, 
         description: 'Admin deleted',

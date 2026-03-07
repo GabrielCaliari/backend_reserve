@@ -1,11 +1,17 @@
 import { Body, Controller, Get, Post, Query, Req, Res, UseGuards } from '@nestjs/common';
-import { AdminJwtGuard } from '../../../../shared/auth/guards';
+import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
+import { TenantGuard } from '../../../../shared/auth/guards/tenant.guard';
+import { RolesGuard } from '../../../../shared/auth/guards/roles.guard';
+import { Roles } from '../../../../shared/auth/decorators/roles.decorator';
+import { EAdminRole } from '../../../zarp-auth/domain/enums/admin-role.enum';
 import { LeadService } from '../../application/services/lead.service';
 import { Response } from 'express';
 import { CreateLead, LeadQuery } from '../../application/dtos/lead.dto';
-import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
 
 @ApiTags('Lead Management')
+@ApiBearerAuth()
+@UseGuards(AdminJwtGuard, TenantGuard, RolesGuard)
 @Controller()
 export class LeadController {
     constructor(
@@ -13,7 +19,7 @@ export class LeadController {
     ) { }
 
     @Get('/')
-    // @UseGuards(AdminJwtGuard)
+    @Roles(EAdminRole.viewer)
     @ApiOperation({ summary: 'List leads', description: 'Returns a paginated list of leads' })
     @ApiResponse({ status: 200, description: 'Paginated lead list' })
     @ApiResponse({ status: 500, description: 'Failed to fetch leads' })
@@ -29,7 +35,7 @@ export class LeadController {
     }
 
     @Post('/')
-    // @UseGuards(AdminJwtGuard)
+    @Roles(EAdminRole.manager)
     @ApiOperation({ summary: 'Create lead', description: 'Creates a new lead in the system' })
     @ApiResponse({ status: 201, description: 'Lead created successfully' })
     @ApiResponse({ status: 400, description: 'Invalid data' })

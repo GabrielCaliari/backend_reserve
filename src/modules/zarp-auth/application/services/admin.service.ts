@@ -13,6 +13,10 @@ import {
     ADMIN_TENANT_REPOSITORY,
     IAdminTenantRepository,
 } from '../../domain/interfaces/admin-tenant.repository.interface';
+import {
+    TENANT_REPOSITORY,
+    ITenantRepository,
+} from '../../domain/interfaces/tenant.repository.interface';
 import { EAdminRole } from '../../domain/enums/admin-role.enum';
 import { errorTypes } from '../../../../shared/constants/error-types';
 import { errorResponse, successResponse } from '../../../../shared/helpers';
@@ -24,6 +28,7 @@ export class AdminService {
         @Inject(ADMIN_CREDENTIAL_REPOSITORY) private readonly adminCredentialRepository: IAdminCredentialRepository,
         @Inject(ADMIN_SESSION_TOKEN_REPOSITORY) private readonly adminSessionTokenRepository: IAdminSessionTokenRepository,
         @Inject(ADMIN_TENANT_REPOSITORY) private readonly adminTenantRepository: IAdminTenantRepository,
+        @Inject(TENANT_REPOSITORY) private readonly tenantRepository: ITenantRepository,
     ) { }
 
     async authenticate(data: AuthAdminDTO) {
@@ -113,12 +118,23 @@ export class AdminService {
                 return errorResponse(errorTypes._404.admin_nf, 404);
             }
 
-            const tenants = admin.AdminTenant?.map((at: any) => ({
-                id: at.Tenant.id,
-                name: at.Tenant.name,
-                slug: at.Tenant.slug,
-                domain: at.Tenant.domain,
-            })) ?? [];
+            let tenants: any[];
+            if (admin.role === EAdminRole.super_admin) {
+                const all = await this.tenantRepository.selectAll();
+                tenants = all.map((t: any) => ({
+                    id: t.id,
+                    name: t.name,
+                    slug: t.slug,
+                    domain: t.domain,
+                }));
+            } else {
+                tenants = admin.AdminTenant?.map((at: any) => ({
+                    id: at.Tenant.id,
+                    name: at.Tenant.name,
+                    slug: at.Tenant.slug,
+                    domain: at.Tenant.domain,
+                })) ?? [];
+            }
 
             return {
                 status: 200,
@@ -163,6 +179,12 @@ export class AdminService {
     async listAll() {
         try {
             const admins = await this.adminRepository.selectAll();
+            const allTenants = await this.tenantRepository.selectAll();
+            const allTenantsSlim = allTenants.map((t: any) => ({
+                id: t.id,
+                name: t.name,
+                slug: t.slug,
+            }));
 
             const mapped = admins.map((admin: any) => ({
                 id: admin.id,
@@ -170,11 +192,13 @@ export class AdminService {
                 email: admin.email,
                 role: admin.role,
                 active: admin.active,
-                tenants: admin.AdminTenant?.map((at: any) => ({
-                    id: at.Tenant.id,
-                    name: at.Tenant.name,
-                    slug: at.Tenant.slug,
-                })) ?? [],
+                tenants: admin.role === EAdminRole.super_admin
+                    ? allTenantsSlim
+                    : admin.AdminTenant?.map((at: any) => ({
+                        id: at.Tenant.id,
+                        name: at.Tenant.name,
+                        slug: at.Tenant.slug,
+                    })) ?? [],
                 created_at: admin.created_at,
             }));
 
@@ -272,13 +296,25 @@ export class AdminService {
                 return errorResponse(errorTypes._404.admin_nf, 404);
             }
 
-            const tenants = admin.AdminTenant?.map((at: any) => ({
-                id: at.Tenant.id,
-                name: at.Tenant.name,
-                slug: at.Tenant.slug,
-                domain: at.Tenant.domain,
-                role: at.role,
-            })) ?? [];
+            let tenants: any[];
+            if (admin.role === EAdminRole.super_admin) {
+                const all = await this.tenantRepository.selectAll();
+                tenants = all.map((t: any) => ({
+                    id: t.id,
+                    name: t.name,
+                    slug: t.slug,
+                    domain: t.domain,
+                    role: EAdminRole.super_admin,
+                }));
+            } else {
+                tenants = admin.AdminTenant?.map((at: any) => ({
+                    id: at.Tenant.id,
+                    name: at.Tenant.name,
+                    slug: at.Tenant.slug,
+                    domain: at.Tenant.domain,
+                    role: at.role,
+                })) ?? [];
+            }
 
             return successResponse({
                 id: admin.id,

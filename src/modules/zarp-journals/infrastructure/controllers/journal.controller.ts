@@ -1,10 +1,17 @@
-import { Body, Controller, Get, Post, Query, Res } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, Res, UseGuards } from '@nestjs/common';
 import { JournalService } from '../../application/services/journal.service';
 import { Response } from 'express';
 import SyncQueryParamsDTO from '../../application/dtos/sync-query-params.dto';
-import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
+import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
+import { RolesGuard } from '../../../../shared/auth/guards/roles.guard';
+import { Roles } from '../../../../shared/auth/decorators/roles.decorator';
+import { EAdminRole } from '../../../zarp-auth/domain/enums/admin-role.enum';
 
 @ApiTags('Journal')
+@ApiBearerAuth()
+@UseGuards(AdminJwtGuard, RolesGuard)
+@Roles(EAdminRole.super_admin)
 @Controller('journal')
 export class JournalController {
     constructor(

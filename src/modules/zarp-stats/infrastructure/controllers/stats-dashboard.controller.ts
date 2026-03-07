@@ -15,18 +15,21 @@ import {
 import { StatsService } from '../../application/services/stats.service';
 import { DateRangeQueryDto, DashboardResponseDto } from '../../application/dtos/stats.dto';
 import { AvailableIntegrationDto } from '../../application/dtos/stats-integration.dto';
-import { AdminJwtGuard, TenantGuard } from '@/shared/auth/guards';
+import { AdminJwtGuard, TenantGuard, RolesGuard } from '@/shared/auth/guards';
+import { Roles } from '@/shared/auth/decorators/roles.decorator';
+import { EAdminRole } from '@/modules/zarp-auth/domain/enums/admin-role.enum';
 import { DateRange } from '../../domain/interfaces/metric-provider.interface';
 
 @ApiTags('Stats - Dashboard')
 @ApiBearerAuth()
 @ApiHeader({ name: 'x-tenant-id', required: true, description: 'Tenant ID' })
-@UseGuards(AdminJwtGuard, TenantGuard)
+@UseGuards(AdminJwtGuard, TenantGuard, RolesGuard)
 @Controller()
 export class StatsDashboardController {
   constructor(private readonly statsService: StatsService) {}
 
   @Get('/dashboard')
+  @Roles(EAdminRole.viewer)
   @ApiOperation({
     summary: 'Get stats dashboard',
     description:
@@ -53,6 +56,7 @@ export class StatsDashboardController {
   }
 
   @Get('/available-integrations')
+  @Roles(EAdminRole.viewer)
   @ApiOperation({
     summary: 'List available external integrations',
     description: 'Returns all registered external metric providers with their config schemas.',

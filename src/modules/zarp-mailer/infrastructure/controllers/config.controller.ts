@@ -1,10 +1,17 @@
-import { Body, Controller, Get, Post, Req, Res } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req, Res, UseGuards } from '@nestjs/common';
 import { ConfigService } from '../../application/services/config.service';
 import { CreateSmtpServerDTO } from '../../application/dtos/config.dto';
 import { Request, Response } from 'express';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
+import { RolesGuard } from '../../../../shared/auth/guards/roles.guard';
+import { Roles } from '../../../../shared/auth/decorators/roles.decorator';
+import { EAdminRole } from '../../../zarp-auth/domain/enums/admin-role.enum';
 
 @ApiTags('Config (SMTP Server)')
+@ApiBearerAuth()
+@UseGuards(AdminJwtGuard, RolesGuard)
+@Roles(EAdminRole.super_admin)
 @Controller()
 export class ConfigController {
     public constructor(

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Patch, Delete, Body, Param, Query, HttpCode, HttpStatus, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Put, Patch, Delete, Body, Param, Query, HttpCode, HttpStatus, UseGuards, Inject } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBearerAuth } from '@nestjs/swagger';
 import { LeadService } from '../../application/services/lead.service';
 import { LeadQueryDto, UpdateLeadDto } from '../../application/dtos/lead.dto';
@@ -6,11 +6,13 @@ import { CreateLeadWithAttachmentsDto } from '../../application/dtos/create-lead
 import { AttachmentDto } from '../../application/dtos/attachment.dto';
 import { ELeadStatus } from '../../domain/entities/lead.entity';
 import { AdminJwtGuard } from '../../../../shared/auth/guards';
+import { RolesGuard } from '../../../../shared/auth/guards/roles.guard';
+import { Roles } from '../../../../shared/auth/decorators/roles.decorator';
+import { EAdminRole } from '../../../zarp-auth/domain/enums/admin-role.enum';
 import { CreateLeadWithAttachmentsUseCase } from '../../application/use-cases/create-lead-with-attachments.use-case';
 import { AttachFileToLeadUseCase } from '../../application/use-cases/attach-file-to-lead.use-case';
 import { RemoveLeadAttachmentUseCase } from '../../application/use-cases/remove-lead-attachment.use-case';
 import { ILeadAttachmentRepository, LEAD_ATTACHMENT_REPOSITORY } from '../../domain/interfaces/lead-attachment.repository.interface';
-import { Inject } from '@nestjs/common';
 import { ParseUUIDPipe } from '../../../../shared/pipes/parse-uuid.pipe';
 
 @ApiTags('Leads')
@@ -42,7 +44,8 @@ export class LeadController {
   // --- Admin-only endpoints (authentication required) ---
 
   @Get('/')
-  @UseGuards(AdminJwtGuard)
+  @UseGuards(AdminJwtGuard, RolesGuard)
+  @Roles(EAdminRole.viewer)
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'List leads',
@@ -58,7 +61,8 @@ export class LeadController {
   }
 
   @Get('/:id')
-  @UseGuards(AdminJwtGuard)
+  @UseGuards(AdminJwtGuard, RolesGuard)
+  @Roles(EAdminRole.viewer)
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Get lead by ID',
@@ -73,7 +77,8 @@ export class LeadController {
   }
 
   @Get('/:id/attachments')
-  @UseGuards(AdminJwtGuard)
+  @UseGuards(AdminJwtGuard, RolesGuard)
+  @Roles(EAdminRole.viewer)
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'List lead attachments',
@@ -88,7 +93,8 @@ export class LeadController {
   }
 
   @Post('/:id/attachments')
-  @UseGuards(AdminJwtGuard)
+  @UseGuards(AdminJwtGuard, RolesGuard)
+  @Roles(EAdminRole.editor)
   @ApiBearerAuth()
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({
@@ -107,7 +113,8 @@ export class LeadController {
   }
 
   @Delete('/:id/attachments/:attachmentId')
-  @UseGuards(AdminJwtGuard)
+  @UseGuards(AdminJwtGuard, RolesGuard)
+  @Roles(EAdminRole.editor)
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Remove attachment from lead',
@@ -126,7 +133,8 @@ export class LeadController {
   }
 
   @Patch('/:id')
-  @UseGuards(AdminJwtGuard)
+  @UseGuards(AdminJwtGuard, RolesGuard)
+  @Roles(EAdminRole.editor)
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Update lead',
@@ -144,7 +152,8 @@ export class LeadController {
   }
 
   @Put('/:id/status')
-  @UseGuards(AdminJwtGuard)
+  @UseGuards(AdminJwtGuard, RolesGuard)
+  @Roles(EAdminRole.editor)
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Update lead status',
@@ -162,7 +171,8 @@ export class LeadController {
   }
 
   @Delete('/:id')
-  @UseGuards(AdminJwtGuard)
+  @UseGuards(AdminJwtGuard, RolesGuard)
+  @Roles(EAdminRole.manager)
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Delete lead',
