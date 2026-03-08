@@ -4,6 +4,7 @@ import {
   Body,
   Get,
   Put,
+  Patch,
   Param,
   Delete,
   UseGuards,
@@ -220,8 +221,8 @@ export class BlogController {
   @Put(':blogId')
   @Roles(EAdminRole.editor)
   @ApiOperation({ 
-    summary: 'Update blog metadata',
-    description: 'Updates blog name and/or description. Name must remain unique within the tenant.',
+    summary: 'Replace blog metadata',
+    description: 'Updates blog fields such as name, description, mediaCollectionId, and active. Name must remain unique within the tenant.',
   })
   @ApiParam({
     name: 'blogId',
@@ -239,6 +240,47 @@ export class BlogController {
         description: 'Updated description',
         tenantId: 1,
         active: true,
+        createdAt: '2024-01-01T00:00:00.000Z',
+        updatedAt: '2024-01-01T00:00:00.000Z',
+      },
+    },
+  })
+  @ApiResponse({ status: 403, description: 'Insufficient role.' })
+  @ApiResponse({ status: 404, description: 'Blog not found.' })
+  @ApiResponse({ status: 409, description: 'Blog name already exists for this tenant.' })
+  async replace(
+    @CurrentAdmin() admin: CurrentAdminPayload,
+    @Param('blogId') blogId: string,
+    @Body() updateDto: UpdateBlogDTO,
+    @Res() res: Response,
+  ) {
+    const result = await this.blogService.update(admin.tenant_id!, blogId, updateDto);
+    return res.status(result.status).json(result.data);
+  }
+
+  @Patch(':blogId')
+  @Roles(EAdminRole.editor)
+  @ApiOperation({
+    summary: 'Partially update blog metadata',
+    description: 'Partially updates blog fields such as name, description, mediaCollectionId, and active.',
+  })
+  @ApiParam({
+    name: 'blogId',
+    description: 'Blog UUID (12-character string)',
+    example: 'abc123def456',
+    type: String,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Blog updated successfully.',
+    schema: {
+      example: {
+        id: 'abc123def456',
+        name: 'Updated Tech Blog',
+        description: 'Updated description',
+        mediaCollectionId: 'cm8abc123def456ghi789jklm',
+        active: true,
+        tenantId: 1,
         createdAt: '2024-01-01T00:00:00.000Z',
         updatedAt: '2024-01-01T00:00:00.000Z',
       },

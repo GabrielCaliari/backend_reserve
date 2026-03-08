@@ -1,4 +1,4 @@
-import { IsString, IsOptional, MaxLength } from 'class-validator';
+import { IsString, IsOptional, MaxLength, IsBoolean } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
 export class UpdateBlogDTO {
@@ -27,4 +27,12 @@ export class UpdateBlogDTO {
   @IsString()
   @IsOptional()
   mediaCollectionId?: string;
+
+  @ApiPropertyOptional({
+    description: 'Whether the blog is active and can be consumed by the public API',
+    example: true,
+  })
+  @IsBoolean()
+  @IsOptional()
+  active?: boolean;
 }

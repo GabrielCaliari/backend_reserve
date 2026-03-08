@@ -178,6 +178,7 @@ export class BlogService {
         name: data.name,
         description: data.description,
         mediaCollectionId: data.mediaCollectionId,
+        active: data.active,
       });
 
       return successResponse(this.presentBlog(updated), 200);

@@ -109,6 +109,39 @@ describe('BlogService', () => {
       expect(stored!.name).toBe('New Name');
     });
 
+    it('should update media collection and active flag', async () => {
+      const blog = repo.seed({
+        name: 'Configurable Blog',
+        tenantId: '1',
+        mediaCollectionId: 'cm8collection123456789abcde',
+        active: true,
+      });
+
+      const response = await service.update('1', blog.id, {
+        mediaCollectionId: 'cm8collection999999999xyzab',
+        active: false,
+      });
+
+      expect(response.status).toBe(200);
+      expect(response.data.mediaCollectionId).toBe('cm8collection999999999xyzab');
+      expect(response.data.active).toBe(false);
+
+      const stored = repo.blogs.find((candidate) => candidate.id === blog.id);
+      expect(stored?.mediaCollectionId).toBe('cm8collection999999999xyzab');
+      expect(stored?.active).toBe(false);
+    });
+
+    it('should reject update when media collection does not exist', async () => {
+      const blog = repo.seed({ name: 'Old Name', tenantId: '1' });
+      mediaCollectionRepository.findById.mockResolvedValueOnce(null);
+
+      const response = await service.update('1', blog.id, {
+        mediaCollectionId: 'cm8missingcollection000000000',
+      });
+
+      expect(response.status).toBe(404);
+    });
+
     it('should throw BlogNotFoundError if blog does not exist', async () => {
       const response = await service.update('1', '999', { name: 'Ghost' });
       expect(response.status).toBe(404);
