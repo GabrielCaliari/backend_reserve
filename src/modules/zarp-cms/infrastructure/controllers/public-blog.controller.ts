@@ -30,7 +30,7 @@ export class PublicBlogController {
   @ApiOperation({
     summary: 'List published articles for a blog',
     description:
-      'Returns only published articles. Draft and archived articles are excluded. Results are ordered by display_order ascending.',
+      'Returns only published articles. Draft and archived articles are excluded. Results are ordered by published_at descending.',
   })
   @ApiQuery({
     name: 'page',
@@ -60,10 +60,21 @@ export class PublicBlogController {
               id: { type: 'string' },
               title: { type: 'string' },
               language: { type: 'string', example: 'en_us' },
+              meta_title: { type: 'string' },
+              meta_description: { type: 'string', nullable: true },
+              focus_keyword: { type: 'string', nullable: true },
               slug: { type: 'string' },
               content: { type: 'string' },
               published_at: { type: 'string', format: 'date-time' },
-              display_order: { type: 'number' },
+              cover_image: {
+                type: 'object',
+                nullable: true,
+                properties: {
+                  id: { type: 'string' },
+                  url: { type: 'string' },
+                  alt_text: { type: 'string', nullable: true },
+                },
+              },
               author: {
                 type: 'object',
                 nullable: true,
@@ -147,12 +158,24 @@ export class PublicBlogController {
         id: { type: 'string' },
         title: { type: 'string' },
         language: { type: 'string', example: 'en_us' },
+        meta_title: { type: 'string' },
+        meta_description: { type: 'string', nullable: true },
+        focus_keyword: { type: 'string', nullable: true },
         slug: { type: 'string' },
         content: { type: 'string' },
         status: { type: 'string', enum: ['published'] },
         published_at: { type: 'string', format: 'date-time' },
         created_at: { type: 'string', format: 'date-time' },
         updated_at: { type: 'string', format: 'date-time' },
+        cover_image: {
+          type: 'object',
+          nullable: true,
+          properties: {
+            id: { type: 'string' },
+            url: { type: 'string' },
+            alt_text: { type: 'string', nullable: true },
+          },
+        },
         author: {
           type: 'object',
           nullable: true,

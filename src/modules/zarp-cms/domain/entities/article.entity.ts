@@ -19,7 +19,6 @@ export class Article {
   public content: string;
   public slug: string;
   public status: EArticleStatus;
-  public displayOrder: number;
   public publishedAt: Date | null;
   public coverImageId: string | null; // UUID reference to MediaAsset
   public authorId: string; // UUID reference to Author
@@ -39,7 +38,6 @@ export class Article {
     content: string;
     slug: string;
     status?: EArticleStatus;
-    displayOrder?: number;
     publishedAt?: Date | null;
     coverImageId?: string | null;
     authorId: string;
@@ -58,7 +56,6 @@ export class Article {
     this.content = data.content;
     this.slug = data.slug;
     this.status = data.status ?? EArticleStatus.draft;
-    this.displayOrder = data.displayOrder ?? 0;
     this.publishedAt = data.publishedAt ?? null;
     this.coverImageId = data.coverImageId ?? null;
     this.authorId = data.authorId;

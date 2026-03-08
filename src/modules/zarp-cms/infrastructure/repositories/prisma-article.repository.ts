@@ -26,7 +26,6 @@ export class PrismaArticleRepository implements IArticleRepository {
           content: article.content,
           slug: article.slug,
           status: article.status,
-          display_order: article.displayOrder,
           published_at: article.publishedAt,
           cover_image_id: article.coverImageId,
           author_id: article.authorId,
@@ -97,7 +96,10 @@ export class PrismaArticleRepository implements IArticleRepository {
           where,
           skip,
           take: limit,
-          orderBy: { display_order: 'asc' },
+          orderBy:
+            filters?.status === EArticleStatus.published
+              ? [{ published_at: 'desc' }, { created_at: 'desc' }]
+              : { created_at: 'desc' },
         }),
         this.prisma.article.count({ where }),
       ]);
@@ -174,7 +176,6 @@ export class PrismaArticleRepository implements IArticleRepository {
       if (data.content !== undefined) updateData.content = data.content;
       if (data.slug !== undefined) updateData.slug = data.slug;
       if (data.status !== undefined) updateData.status = data.status;
-      if (data.displayOrder !== undefined) updateData.display_order = data.displayOrder;
       if (data.publishedAt !== undefined) updateData.published_at = data.publishedAt;
       if (data.coverImageId !== undefined) updateData.cover_image_id = data.coverImageId;
       if (data.authorId !== undefined) updateData.author_id = data.authorId;
@@ -236,7 +237,6 @@ export class PrismaArticleRepository implements IArticleRepository {
       content: raw.content,
       slug: raw.slug,
       status: raw.status as EArticleStatus,
-      displayOrder: raw.display_order,
       publishedAt: raw.published_at,
       coverImageId: raw.cover_image_id,
       authorId: raw.author_id,

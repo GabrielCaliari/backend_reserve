@@ -1,7 +1,6 @@
 import {
   IArticleRepository,
 } from '../../../modules/zarp-cms/domain/interfaces/article.repository.interface';
-import { Article } from '../../../modules/zarp-cms/domain/entities/article.entity';
 
 export class InMemoryArticleRepository implements IArticleRepository {
   private articles: any[] = [];
@@ -12,7 +11,6 @@ export class InMemoryArticleRepository implements IArticleRepository {
       id: String(this.idCounter++),
       ...data,
       status: 'draft',
-      displayOrder: 0,
       publishedAt: null,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -44,23 +42,27 @@ export class InMemoryArticleRepository implements IArticleRepository {
   }
 
   async existsBySlugAndBlogId(slug: string, blogId: string): Promise<boolean> {
-    return this.articles.some((a) => a.slug === slug && a.blog_id === blogId);
+    return this.articles.some((a) => a.slug === slug && a.blogId === blogId);
   }
 
   async findAllByBlogId(blogId: string): Promise<any[]> {
-    return this.articles.filter((a) => a.blog_id === blogId);
+    return this.articles.filter((a) => a.blogId === blogId);
   }
 
   async findPublishedByBlogId(blogId: string): Promise<any[]> {
     return this.articles
-      .filter((a) => a.blog_id === blogId && a.status === 'published')
-      .sort((a, b) => a.display_order - b.display_order);
+      .filter((a) => a.blogId === blogId && a.status === 'published')
+      .sort((a, b) => {
+        const left = a.publishedAt ? new Date(a.publishedAt).getTime() : 0;
+        const right = b.publishedAt ? new Date(b.publishedAt).getTime() : 0;
+        return right - left;
+      });
   }
 
   async findPublishedBySlugAndBlogId(slug: string, blogId: string): Promise<any> {
     return (
       this.articles.find(
-        (a) => a.slug === slug && a.blog_id === blogId && a.status === 'published',
+        (a) => a.slug === slug && a.blogId === blogId && a.status === 'published',
       ) || null
     );
   }
@@ -72,7 +74,7 @@ export class InMemoryArticleRepository implements IArticleRepository {
     this.articles[index] = {
       ...this.articles[index],
       ...data,
-      updated_at: new Date(),
+      updatedAt: new Date(),
     };
     return this.articles[index];
   }
@@ -81,8 +83,7 @@ export class InMemoryArticleRepository implements IArticleRepository {
     items.forEach((item) => {
       const article = this.articles.find((a) => a.id === item.id);
       if (article) {
-        article.display_order = item.display_order;
-        article.updated_at = new Date();
+        article.updatedAt = new Date();
       }
     });
   }

@@ -194,13 +194,21 @@ describe('ArticleService', () => {
         id: 'article-1',
         displayTitle: 'Published Article',
         language: 'pt_br',
+        metaTitle: 'Meta title',
+        metaDescription: 'Meta description',
+        focusKeyword: 'keyword',
         slug: 'published-article',
         content: 'content',
         status: EArticleStatus.published,
         publishedAt: new Date('2026-03-08T12:00:00.000Z'),
-        displayOrder: 3,
+        coverImageId: 'cover-1',
         authorId: 'author-1',
       };
+
+      blogRepository.findById.mockResolvedValue({
+        id: 'blog-1',
+        tenantId: 'tenant-1',
+      } as any);
 
       authorRepository.findById.mockResolvedValue({
         id: 'author-1',
@@ -211,11 +219,25 @@ describe('ArticleService', () => {
         tenantId: 'tenant-1',
         getFullName: () => 'Jane Doe',
       } as any);
-      mediaAssetRepository.findById.mockResolvedValue({
-        id: 'asset-1',
-        url: 'https://cdn.example.com/avatar.jpg',
-        alt_text: 'Jane Doe',
-      } as any);
+      mediaAssetRepository.findById.mockImplementation(async id => {
+        if (id === 'asset-1') {
+          return {
+            id: 'asset-1',
+            url: 'https://cdn.example.com/avatar.jpg',
+            alt_text: 'Jane Doe',
+          } as any;
+        }
+
+        if (id === 'cover-1') {
+          return {
+            id: 'cover-1',
+            url: 'https://cdn.example.com/cover.jpg',
+            alt_text: 'Published Article',
+          } as any;
+        }
+
+        return null;
+      });
 
       articleRepository.findByBlogId.mockResolvedValue({
         data: [publishedArticle as any],
@@ -238,10 +260,17 @@ describe('ArticleService', () => {
           id: 'article-1',
           title: 'Published Article',
           language: 'pt_br',
+          meta_title: 'Meta title',
+          meta_description: 'Meta description',
+          focus_keyword: 'keyword',
           slug: 'published-article',
           content: 'content',
           published_at: publishedArticle.publishedAt,
-          display_order: 3,
+          cover_image: {
+            id: 'cover-1',
+            url: 'https://cdn.example.com/cover.jpg',
+            alt_text: 'Published Article',
+          },
           author: {
             id: 'author-1',
             first_name: 'Jane',
@@ -269,13 +298,21 @@ describe('ArticleService', () => {
         id: 'article-1',
         displayTitle: 'Published Article',
         language: 'pt_br',
+        metaTitle: 'Meta title',
+        metaDescription: 'Meta description',
+        focusKeyword: 'keyword',
         slug: 'published-article',
         content: 'content',
         status: EArticleStatus.published,
         publishedAt,
         createdAt,
         updatedAt,
+        coverImageId: 'cover-1',
         authorId: 'author-1',
+      } as any);
+      blogRepository.findById.mockResolvedValue({
+        id: 'blog-1',
+        tenantId: 'tenant-1',
       } as any);
       authorRepository.findById.mockResolvedValue({
         id: 'author-1',
@@ -286,6 +323,11 @@ describe('ArticleService', () => {
         tenantId: 'tenant-1',
         getFullName: () => 'Jane Doe',
       } as any);
+      mediaAssetRepository.findById.mockResolvedValue({
+        id: 'cover-1',
+        url: 'https://cdn.example.com/cover.jpg',
+        alt_text: 'Published Article',
+      } as any);
 
       const result = await service.findPublishedBySlug('published-article', 'blog-1');
 
@@ -293,12 +335,20 @@ describe('ArticleService', () => {
         id: 'article-1',
         title: 'Published Article',
         language: 'pt_br',
+        meta_title: 'Meta title',
+        meta_description: 'Meta description',
+        focus_keyword: 'keyword',
         slug: 'published-article',
         content: 'content',
         status: EArticleStatus.published,
         published_at: publishedAt,
         created_at: createdAt,
         updated_at: updatedAt,
+        cover_image: {
+          id: 'cover-1',
+          url: 'https://cdn.example.com/cover.jpg',
+          alt_text: 'Published Article',
+        },
         author: {
           id: 'author-1',
           first_name: 'Jane',

@@ -38,6 +38,12 @@ export interface PublicAuthorAvatarResponse {
   alt_text?: string;
 }
 
+export interface PublicCoverImageResponse {
+  id: string;
+  url: string;
+  alt_text?: string;
+}
+
 export interface PublicAuthorResponse {
   id: string;
   first_name: string;
@@ -51,10 +57,13 @@ export interface PublicArticleListItem {
   id: string;
   title: string;
   language: string;
+  meta_title: string;
+  meta_description: string | null;
+  focus_keyword: string | null;
   slug: string;
   content: string;
   published_at: Date | null;
-  display_order: number;
+  cover_image: PublicCoverImageResponse | null;
   author: PublicAuthorResponse | null;
 }
 
@@ -62,12 +71,16 @@ export interface PublicArticleDetail {
   id: string;
   title: string;
   language: string;
+  meta_title: string;
+  meta_description: string | null;
+  focus_keyword: string | null;
   slug: string;
   content: string;
   status: EArticleStatus;
   published_at: Date | null;
   created_at?: Date;
   updated_at?: Date;
+  cover_image: PublicCoverImageResponse | null;
   author: PublicAuthorResponse | null;
 }
 
@@ -157,17 +170,19 @@ export class ArticleService {
         return errorResponse(ERROR_ARTICLE_SLUG_DUPLICATE, 409);
       }
 
+      const normalizedLanguage =
+        dto.language !== undefined ? Article.normalizeLanguage(dto.language) : undefined;
+
       // Create article entity
       const article = new Article({
         displayTitle: dto.displayTitle,
-        language: dto.language !== undefined ? Article.normalizeLanguage(dto.language) : undefined,
+        language: normalizedLanguage,
         metaTitle: dto.metaTitle,
         metaDescription: dto.metaDescription,
         focusKeyword: dto.focusKeyword,
         content: dto.content,
         slug: dto.slug,
         status: EArticleStatus.draft,
-        displayOrder: 0,
         coverImageId: dto.coverImageId ?? null,
         authorId: dto.authorId,
         blogId: blogId,
@@ -229,6 +244,26 @@ export class ArticleService {
             alt_text: avatar.alt_text,
           }
         : null,
+    };
+  }
+
+  private async buildPublicCoverImage(
+    coverImageId: string | null,
+    tenantId: string,
+  ): Promise<PublicCoverImageResponse | null> {
+    if (!coverImageId) {
+      return null;
+    }
+
+    const asset = await this.mediaAssetRepository.findById(coverImageId, tenantId);
+    if (!asset) {
+      return null;
+    }
+
+    return {
+      id: asset.id!,
+      url: asset.url,
+      alt_text: asset.alt_text,
     };
   }
 
@@ -724,35 +759,6 @@ export class ArticleService {
   }
 
   /**
-   * Reorders articles within a blog
-   */
-  async reorderArticles(
-    blogId: string,
-    order: { id: string; display_order: number }[],
-  ): Promise<ServiceResponse<void>> {
-    try {
-      // Verify all articles belong to the blog
-      for (const item of order) {
-        const article = await this.articleRepository.findById(item.id);
-        if (!article || article.blogId !== blogId) {
-          return errorResponse('400:Invalid article ID or article does not belong to this blog', 400);
-        }
-      }
-
-      // Update display_order for each article
-      for (const item of order) {
-        await this.articleRepository.update(item.id, {
-          displayOrder: item.display_order,
-        });
-      }
-
-      return successResponse(undefined, 200);
-    } catch (error) {
-      return errorResponse('500:Failed to reorder articles', 500, error);
-    }
-  }
-
-  /**
    * Finds all published articles for a blog (public API)
    */
   async findPublishedByBlogId(
@@ -760,6 +766,17 @@ export class ArticleService {
     page = 1,
     limit = 10,
   ): Promise<PaginatedResult<PublicArticleListItem>> {
+    const blog = await this.blogRepository.findById(blogId);
+    if (!blog) {
+      return {
+        data: [],
+        total: 0,
+        page,
+        limit,
+        totalPages: 0,
+      };
+    }
+
     const result = await this.articleRepository.findByBlogId(blogId, {
       status: EArticleStatus.published,
       page,
@@ -767,6 +784,14 @@ export class ArticleService {
     });
 
     const authorsById = await this.buildPublicAuthorMap(result.data);
+    const coverImagesByArticleId = new Map(
+      await Promise.all(
+        result.data.map(async (article) => [
+          article.id!,
+          await this.buildPublicCoverImage(article.coverImageId, blog.tenantId),
+        ] as const),
+      ),
+    );
 
     return {
       ...result,
@@ -774,10 +799,13 @@ export class ArticleService {
         id: article.id!,
         title: article.displayTitle,
         language: article.language,
+        meta_title: article.metaTitle,
+        meta_description: article.metaDescription,
+        focus_keyword: article.focusKeyword,
         slug: article.slug,
         content: article.content,
         published_at: article.publishedAt,
-        display_order: article.displayOrder,
+        cover_image: coverImagesByArticleId.get(article.id!) ?? null,
         author: authorsById.get(article.authorId) ?? null,
       })),
     };
@@ -788,8 +816,9 @@ export class ArticleService {
    */
   async findPublishedBySlug(slug: string, blogId: string): Promise<PublicArticleDetail | null> {
     const article = await this.articleRepository.findBySlugAndBlogId(slug, blogId);
+    const blog = await this.blogRepository.findById(blogId);
     
-    if (!article || article.status !== EArticleStatus.published) {
+    if (!article || !blog || article.status !== EArticleStatus.published) {
       return null;
     }
 
@@ -797,12 +826,16 @@ export class ArticleService {
       id: article.id!,
       title: article.displayTitle,
       language: article.language,
+      meta_title: article.metaTitle,
+      meta_description: article.metaDescription,
+      focus_keyword: article.focusKeyword,
       slug: article.slug,
       content: article.content,
       status: article.status,
       published_at: article.publishedAt,
       created_at: article.createdAt,
       updated_at: article.updatedAt,
+      cover_image: await this.buildPublicCoverImage(article.coverImageId, blog.tenantId),
       author: await this.buildPublicAuthor(article.authorId),
     };
   }

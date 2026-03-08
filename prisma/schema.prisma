@@ -823,7 +823,6 @@ model Article {
   content          String
   slug             String         @db.VarChar(255)
   status           EArticleStatus @default(draft)
-  display_order    Int            @default(0)
   published_at     DateTime?
   cover_image_id   String?        @db.VarChar(25)
   author_id        String?        @db.VarChar(25)
@@ -841,7 +840,7 @@ model Article {
   ArticleImage      ArticleImage[]
 
   @@unique([slug, blog_id])
-  @@index([blog_id, status, display_order])
+  @@index([blog_id, status, published_at])
   @@index([author_id])
   @@index([created_by])
   @@index([last_edited_by])

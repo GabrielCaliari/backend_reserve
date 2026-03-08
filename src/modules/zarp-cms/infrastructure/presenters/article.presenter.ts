@@ -45,7 +45,6 @@ export class ArticlePresenter {
       content: article.content,
       slug: article.slug,
       status: article.status,
-      display_order: article.displayOrder,
       published_at: article.publishedAt,
       cover_image_id: article.coverImageId, // string (UUID) | null
       author_id: article.authorId, // string (UUID)

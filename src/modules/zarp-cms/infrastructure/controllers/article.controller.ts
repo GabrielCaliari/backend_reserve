@@ -9,7 +9,6 @@ import {
   Query,
   UseGuards,
   Res,
-  HttpStatus,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiHeader } from '@nestjs/swagger';
@@ -201,19 +200,5 @@ export class ArticleController {
   ) {
     const result = await this.articleService.archive(articleId, admin.tenant_id);
     return res.status(result.status).json(result.data);
-  }
-
-  @Put('reorder')
-  @Roles(EAdminRole.editor)
-  @ApiOperation({ summary: 'Reorder articles within a blog' })
-  @ApiResponse({ status: 200, description: 'Articles reordered successfully' })
-  @ApiResponse({ status: 400, description: 'Invalid article IDs' })
-  @ApiResponse({ status: 403, description: 'Insufficient role' })
-  async reorder(
-    @Param('blogId') blogId: string,
-    @Body() body: { order: { id: string; display_order: number }[] },
-  ): Promise<any> {
-    await this.articleService.reorderArticles(blogId, body.order);
-    return { message: 'Articles reordered successfully' };
   }
 }

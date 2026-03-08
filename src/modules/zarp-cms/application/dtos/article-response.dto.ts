@@ -57,12 +57,6 @@ export class ArticleResponseDTO {
   })
   status: EArticleStatus;
 
-  @ApiProperty({
-    description: 'Display order',
-    example: 0,
-  })
-  displayOrder: number;
-
   @ApiPropertyOptional({
     description: 'Published date',
     example: '2026-02-19T10:00:00Z',
