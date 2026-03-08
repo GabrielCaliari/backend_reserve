@@ -759,15 +759,18 @@ model Blog {
   description     String?
   secret_key_hash String
   secret_key_salt String
+  media_collection_id String? @db.VarChar(25)
   tenant_id       String @db.VarChar(25)
   active          Boolean   @default(true)
   created_at      DateTime  @default(now())
   updated_at      DateTime  @updatedAt
   Tenant          Tenant    @relation(fields: [tenant_id], references: [id])
+  MediaCollection MediaCollection? @relation(fields: [media_collection_id], references: [id], onDelete: SetNull)
   Article         Article[]
 
   @@unique([name, tenant_id])
   @@index([tenant_id])
+  @@index([media_collection_id])
 }
 
 model Article {
@@ -1058,6 +1061,7 @@ model MediaCollection {
   updated_at         DateTime @updatedAt
 
   assets MediaAsset[]
+  blogs  Blog[]
 
   @@unique([tenant_id, slug])
   @@index([tenant_id])

@@ -19,4 +19,12 @@ export class UpdateBlogDTO {
   @IsString()
   @IsOptional()
   description?: string;
+
+  @ApiPropertyOptional({
+    description: 'Media collection ID used by this blog for article uploads',
+    example: 'cm8abc123def456ghi789jklm',
+  })
+  @IsString()
+  @IsOptional()
+  mediaCollectionId?: string;
 }

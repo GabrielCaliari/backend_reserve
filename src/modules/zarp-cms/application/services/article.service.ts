@@ -26,6 +26,11 @@ import { UpdateArticleDTO } from '../dtos/update-article.dto';
 import { EArticleStatus } from '../../domain/enums/article-status.enum';
 import { ServiceResponse, successResponse, errorResponse } from '../utils/service-response.util';
 import { generateSlug } from '../../domain/utils/slug.util';
+import { isValidUUID } from '../../domain/utils/uuid.util';
+import {
+  ERROR_ASSET_NOT_IN_BLOG_COLLECTION,
+  ERROR_BLOG_MEDIA_COLLECTION_NOT_CONFIGURED,
+} from '../../domain/constants/error-constants';
 
 // Error constants
 const ERROR_ARTICLE_NOT_FOUND = '404:Article not found';
@@ -80,6 +85,10 @@ export class ArticleService {
         return errorResponse(ERROR_BLOG_NOT_FOUND, 404);
       }
 
+      if (!blog.mediaCollectionId) {
+        return errorResponse(ERROR_BLOG_MEDIA_COLLECTION_NOT_CONFIGURED, 400);
+      }
+
       // Verify author exists
       const author = await this.authorRepository.findById(dto.authorId);
       if (!author) {
@@ -90,6 +99,18 @@ export class ArticleService {
       const authorTenantMatch = await this.validateAuthorTenant(dto.authorId, blog.tenantId);
       if (!authorTenantMatch.valid) {
         return errorResponse(ERROR_AUTHOR_TENANT_MISMATCH, 400);
+      }
+
+      if (dto.coverImageId) {
+        const coverImageValidation = await this.validateAssetBelongsToBlogCollection(
+          dto.coverImageId,
+          blog.tenantId,
+          blog.mediaCollectionId,
+        );
+
+        if (!coverImageValidation.valid) {
+          return errorResponse(ERROR_ASSET_NOT_IN_BLOG_COLLECTION, 400);
+        }
       }
 
       // Generate unique slug (Requirement 2.2, 2.3)
@@ -162,6 +183,15 @@ export class ArticleService {
         return errorResponse(ERROR_ARTICLE_NOT_FOUND, 404);
       }
 
+      const blog = await this.blogRepository.findById(existingArticle.blogId);
+      if (!blog) {
+        return errorResponse(ERROR_BLOG_NOT_FOUND, 404);
+      }
+
+      if (!blog.mediaCollectionId) {
+        return errorResponse(ERROR_BLOG_MEDIA_COLLECTION_NOT_CONFIGURED, 400);
+      }
+
       // Prevent slug changes for published articles (Requirement 2.4)
       if (existingArticle.slug) {
         if (existingArticle.status === EArticleStatus.published) {
@@ -181,14 +211,21 @@ export class ArticleService {
 
       // Validate author tenant if author is being changed
       if (dto.authorId && dto.authorId !== existingArticle.authorId) {
-        const blog = await this.blogRepository.findById(existingArticle.blogId);
-        if (!blog) {
-          return errorResponse(ERROR_BLOG_NOT_FOUND, 404);
-        }
-
         const authorTenantMatch = await this.validateAuthorTenant(dto.authorId, blog.tenantId);
         if (!authorTenantMatch.valid) {
           return errorResponse(ERROR_AUTHOR_TENANT_MISMATCH, 400);
+        }
+      }
+
+      if (dto.coverImageId) {
+        const coverImageValidation = await this.validateAssetBelongsToBlogCollection(
+          dto.coverImageId,
+          blog.tenantId,
+          blog.mediaCollectionId,
+        );
+
+        if (!coverImageValidation.valid) {
+          return errorResponse(ERROR_ASSET_NOT_IN_BLOG_COLLECTION, 400);
         }
       }
 
@@ -278,6 +315,10 @@ export class ArticleService {
         return errorResponse(ERROR_BLOG_NOT_FOUND, 404);
       }
 
+      if (!blog.mediaCollectionId) {
+        return errorResponse(ERROR_BLOG_MEDIA_COLLECTION_NOT_CONFIGURED, 400);
+      }
+
       // Validate all required fields for publishing
       if (!article.canPublish()) {
         const missingFields: string[] = [];
@@ -307,11 +348,27 @@ export class ArticleService {
       }
 
       // Validate image references in markdown (Requirement 7.4)
-      const imageValidation = await this.validateImageReferences(article.content, blog.tenantId);
+      const imageValidation = await this.validateImageReferences(
+        article.content,
+        blog.tenantId,
+        blog.mediaCollectionId,
+      );
       if (!imageValidation.valid) {
         return errorResponse(ERROR_INVALID_IMAGE_REFERENCE, 400, {
           invalidReferences: imageValidation.invalidReferences,
         });
+      }
+
+      if (article.coverImageId) {
+        const coverImageValidation = await this.validateAssetBelongsToBlogCollection(
+          article.coverImageId,
+          blog.tenantId,
+          blog.mediaCollectionId,
+        );
+
+        if (!coverImageValidation.valid) {
+          return errorResponse(ERROR_ASSET_NOT_IN_BLOG_COLLECTION, 400);
+        }
       }
 
       // Publish the article
@@ -388,6 +445,7 @@ export class ArticleService {
   async validateImageReferences(
     content: string,
     tenantId: string,
+    collectionId?: string,
   ): Promise<{ valid: boolean; invalidReferences?: string[] }> {
     // Extract image references from markdown: ![alt](storage_key) or ![alt](url)
     const imageRegex = /!\[([^\]]*)\]\(([^)]+)\)/g;
@@ -403,10 +461,10 @@ export class ArticleService {
       const reference = match[2]; // storage_key or url
 
       // Check if reference is a CUID2 (25-character string)
-      if (/^[a-z0-9]{25}$/.test(reference)) {
+      if (isValidUUID(reference)) {
         // Validate that the asset exists
         const asset = await this.mediaAssetRepository.findById(reference, tenantId);
-        if (!asset) {
+        if (!asset || (collectionId && asset.collection_id !== collectionId)) {
           invalidReferences.push(reference);
         }
       }
@@ -467,7 +525,7 @@ export class ArticleService {
       const reference = match[2]; // storage_key or url
 
       // For UUID references (12-character strings), assume they're asset IDs
-      if (/^[a-z0-9]{12}$/.test(reference)) {
+      if (isValidUUID(reference)) {
         await this.createMediaAssetRelations(
           articleId,
           reference,
@@ -498,6 +556,22 @@ export class ArticleService {
     }
 
     return successResponse(article, 200);
+  }
+
+  private async validateAssetBelongsToBlogCollection(
+    assetId: string,
+    tenantId: string,
+    collectionId: string,
+  ): Promise<{ valid: boolean }> {
+    const asset = await this.mediaAssetRepository.findById(assetId, tenantId);
+
+    if (!asset) {
+      return { valid: false };
+    }
+
+    return {
+      valid: asset.collection_id === collectionId,
+    };
   }
 
   async findByBlogId(

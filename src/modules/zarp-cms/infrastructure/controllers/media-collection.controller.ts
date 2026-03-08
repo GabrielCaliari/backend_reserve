@@ -136,7 +136,7 @@ export class MediaCollectionController {
   @ApiParam({ name: 'id', type: String, description: 'Collection ID (UUID)', example: 'abc123def456' })
   @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
   @ApiQuery({ name: 'limit', required: false, type: Number, example: 20 })
-  @ApiResponse({ status: 200, description: 'Assets retrieved successfully' })
+  @ApiResponse({ status: 200, description: 'Assets retrieved successfully, including delete action metadata per item' })
   @ApiResponse({ status: 404, description: 'Collection not found' })
   async getAssets(
     @Param('id') id: string,
@@ -166,7 +166,7 @@ export class MediaCollectionController {
   @ApiOperation({ summary: 'Delete a specific asset from a collection' })
   @ApiParam({ name: 'id', type: String, description: 'Collection ID (UUID)', example: 'abc123def456' })
   @ApiParam({ name: 'assetId', type: String, description: 'Asset UUID' })
-  @ApiResponse({ status: 200, description: 'Asset deleted successfully' })
+  @ApiResponse({ status: 200, description: 'Asset deleted successfully with deleted asset and collection identifiers' })
   @ApiResponse({ status: 404, description: 'Collection or asset not found' })
   async removeAsset(
     @Param('id') id: string,

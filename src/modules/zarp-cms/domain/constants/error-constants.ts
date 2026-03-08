@@ -16,6 +16,8 @@ export const ERROR_COLLECTION_NOT_FOUND = '404:Media collection not found';
 export const ERROR_COLLECTION_SLUG_EXISTS = '409:Collection slug already exists for this tenant';
 export const ERROR_COLLECTION_LIMIT_EXCEEDED = '400:Collection has reached its maximum item limit';
 export const ERROR_COLLECTION_NOT_EMPTY = '400:Cannot delete collection that contains assets';
+export const ERROR_BLOG_MEDIA_COLLECTION_NOT_CONFIGURED = '400:Blog must have a media collection configured';
+export const ERROR_ASSET_NOT_IN_BLOG_COLLECTION = '400:Asset must belong to the blog media collection';
 
 // Validation Errors
 export const ERROR_INVALID_FILE_TYPE = '422:File type not allowed for this collection';

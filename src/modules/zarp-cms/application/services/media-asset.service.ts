@@ -3,6 +3,8 @@ import { MEDIA_ASSET_REPOSITORY } from '../../domain/interfaces/media-asset.repo
 import { IMediaAssetRepository } from '../../domain/interfaces/media-asset.repository.interface';
 import { MEDIA_COLLECTION_REPOSITORY } from '../../domain/interfaces/media-collection.repository.interface';
 import { IMediaCollectionRepository } from '../../domain/interfaces/media-collection.repository.interface';
+import { BLOG_REPOSITORY } from '../../domain/interfaces/blog.repository.interface';
+import { IBlogRepository } from '../../domain/interfaces/blog.repository.interface';
 import { STORAGE_PROVIDER } from '../../domain/interfaces/storage.interface';
 import { IStorageProvider } from '../../domain/interfaces/storage.interface';
 import { IMAGE_PROCESSOR } from '../../domain/interfaces/image-processor.interface';
@@ -19,6 +21,7 @@ import {
   ERROR_COLLECTION_LIMIT_EXCEEDED,
   ERROR_STORAGE_PROVIDER_ERROR,
   ERROR_ASSET_NOT_FOUND,
+  ERROR_BLOG_MEDIA_COLLECTION_NOT_CONFIGURED,
   ERROR_INVALID_UUID,
 } from '../../domain/constants/error-constants';
 
@@ -43,6 +46,8 @@ export class MediaAssetService {
     private readonly assetRepo: IMediaAssetRepository,
     @Inject(MEDIA_COLLECTION_REPOSITORY)
     private readonly collectionRepo: IMediaCollectionRepository,
+    @Inject(BLOG_REPOSITORY)
+    private readonly blogRepo: IBlogRepository,
     @Inject(STORAGE_PROVIDER)
     private readonly storageProvider: IStorageProvider,
     @Inject(IMAGE_PROCESSOR)
@@ -157,6 +162,34 @@ export class MediaAssetService {
     }
   }
 
+  async uploadAssetToBlog(
+    blogId: string,
+    file: Express.Multer.File,
+    data: { alt_text?: string; metadata?: Record<string, any> },
+    tenantId: string,
+    userId: string,
+  ) {
+    const blog = await this.blogRepo.findById(blogId);
+    if (!blog || blog.tenantId !== tenantId || !blog.active) {
+      return errorResponse('404:Blog not found', 404);
+    }
+
+    if (!blog.mediaCollectionId) {
+      return errorResponse(ERROR_BLOG_MEDIA_COLLECTION_NOT_CONFIGURED, 400);
+    }
+
+    return this.uploadAsset(
+      file,
+      {
+        collection_id: blog.mediaCollectionId,
+        alt_text: data.alt_text,
+        metadata: data.metadata,
+      },
+      tenantId,
+      userId,
+    );
+  }
+
   /**
    * Sanitize filename to prevent path traversal and special characters
    * 
@@ -217,6 +250,33 @@ export class MediaAssetService {
     } catch (err) {
       return errorResponse(ERROR_STORAGE_PROVIDER_ERROR, 500, err);
     }
+  }
+
+  async listAssetsByBlog(
+    blogId: string,
+    tenantId: string,
+    status?: EAssetStatus,
+    mimeType?: string,
+    page: number = 1,
+    limit: number = 20,
+  ) {
+    const blog = await this.blogRepo.findById(blogId);
+    if (!blog || blog.tenantId !== tenantId || !blog.active) {
+      return errorResponse('404:Blog not found', 404);
+    }
+
+    if (!blog.mediaCollectionId) {
+      return errorResponse(ERROR_BLOG_MEDIA_COLLECTION_NOT_CONFIGURED, 400);
+    }
+
+    return this.listAssets(
+      tenantId,
+      blog.mediaCollectionId,
+      status,
+      mimeType,
+      page,
+      limit,
+    );
   }
 
   /**
@@ -327,7 +387,7 @@ export class MediaAssetService {
       // Delete from database (cascade deletes relations - Requirement 3.6)
       await this.assetRepo.delete(id, tenantId);
 
-      return successResponse({ deleted: true }, 200);
+      return successResponse({ deleted: true, assetId: id, collectionId: asset.collection_id }, 200);
     } catch (err) {
       return errorResponse(ERROR_STORAGE_PROVIDER_ERROR, 500, err);
     }
@@ -366,7 +426,7 @@ export class MediaAssetService {
       await this.storageProvider.delete(asset.url);
       await this.assetRepo.delete(assetId, tenantId);
 
-      return successResponse({ deleted: true }, 200);
+      return successResponse({ deleted: true, assetId, collectionId }, 200);
     } catch (err) {
       return errorResponse(ERROR_STORAGE_PROVIDER_ERROR, 500, err);
     }

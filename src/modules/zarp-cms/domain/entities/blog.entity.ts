@@ -4,6 +4,7 @@ export class Blog {
   public description: string | null;
   public secretKeyHash: string;
   public secretKeySalt: string;
+  public mediaCollectionId: string | null;
   public tenantId: string;
   public active: boolean;
   public readonly createdAt?: Date;
@@ -15,6 +16,7 @@ export class Blog {
     description?: string | null;
     secretKeyHash: string;
     secretKeySalt: string;
+    mediaCollectionId?: string | null;
     tenantId: string;
     active?: boolean;
     createdAt?: Date;
@@ -25,6 +27,7 @@ export class Blog {
     this.description = data.description ?? null;
     this.secretKeyHash = data.secretKeyHash;
     this.secretKeySalt = data.secretKeySalt;
+    this.mediaCollectionId = data.mediaCollectionId ?? null;
     this.tenantId = data.tenantId;
     this.active = data.active ?? true;
     this.createdAt = data.createdAt;

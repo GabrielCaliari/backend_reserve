@@ -10,25 +10,37 @@ import {
   HttpCode,
   HttpStatus,
   Res,
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
+  Query,
+  DefaultValuePipe,
 } from '@nestjs/common';
 import { Response } from 'express';
-import { ApiBearerAuth, ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags, ApiOperation, ApiResponse, ApiParam, ApiConsumes, ApiBody, ApiQuery } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { BlogService } from '../../application/services/blog.service';
 import { CreateBlogDTO } from '../../application/dtos/create-blog.dto';
 import { UpdateBlogDTO } from '../../application/dtos/update-blog.dto';
+import { MediaAssetService } from '../../application/services/media-asset.service';
+import { MediaAssetPresenter } from '../presenters/media-asset.presenter';
 import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
 import { TenantGuard } from '../../../../shared/auth/guards/tenant.guard';
 import { RolesGuard } from '../../../../shared/auth/guards/roles.guard';
 import { Roles } from '../../../../shared/auth/decorators/roles.decorator';
 import { EAdminRole } from '../../../zarp-auth/domain/enums/admin-role.enum';
 import { CurrentAdmin, CurrentAdminPayload } from '../../../../shared/auth/decorators/current-admin.decorator';
+import { EAssetStatus } from '../../domain/enums/asset-status.enum';
 
 @ApiTags('CMS Blogs')
 @ApiBearerAuth()
 @UseGuards(AdminJwtGuard, TenantGuard, RolesGuard)
 @Controller('blogs')
 export class BlogController {
-  constructor(private readonly blogService: BlogService) {}
+  constructor(
+    private readonly blogService: BlogService,
+    private readonly mediaAssetService: MediaAssetService,
+  ) {}
 
   @Post()
   @Roles(EAdminRole.manager)
@@ -93,6 +105,116 @@ export class BlogController {
   ) {
     const result = await this.blogService.findAll(admin.tenant_id!);
     return res.status(result.status).json(result.data);
+  }
+
+  @Get(':blogId/assets')
+  @Roles(EAdminRole.viewer)
+  @ApiOperation({
+    summary: 'List assets available for articles of a blog',
+    description: 'Lists assets from the media collection configured on the blog.',
+  })
+  @ApiParam({
+    name: 'blogId',
+    description: 'Blog UUID (25-character CUID)',
+    example: 'cm8abc123def456ghi789jklm',
+    type: String,
+  })
+  @ApiQuery({ name: 'status', required: false, enum: EAssetStatus })
+  @ApiQuery({ name: 'mime_type', required: false, type: String })
+  @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
+  @ApiQuery({ name: 'limit', required: false, type: Number, example: 20 })
+  @ApiResponse({ status: 200, description: 'Blog media assets retrieved successfully' })
+  async listAssets(
+    @CurrentAdmin() admin: CurrentAdminPayload,
+    @Param('blogId') blogId: string,
+    @Query('status') status?: EAssetStatus,
+    @Query('mime_type') mimeType?: string,
+    @Query('page', new DefaultValuePipe(1)) page?: number,
+    @Query('limit', new DefaultValuePipe(20)) limit?: number,
+    @Res() res?: Response,
+  ) {
+    const result = await this.mediaAssetService.listAssetsByBlog(
+      blogId,
+      admin.tenant_id!,
+      status,
+      mimeType,
+      page,
+      limit,
+    );
+
+    if (result.status !== 200) {
+      return res.status(result.status).json(result.data);
+    }
+
+    return res.status(200).json(MediaAssetPresenter.presentPaginated(result.data as any));
+  }
+
+  @Post(':blogId/assets')
+  @Roles(EAdminRole.editor)
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: { fileSize: 50 * 1024 * 1024 },
+    }),
+  )
+  @ApiConsumes('multipart/form-data')
+  @ApiOperation({
+    summary: 'Upload an asset to the blog media collection',
+    description: 'Uploads cover or content images to the media collection configured on the blog.',
+  })
+  @ApiParam({
+    name: 'blogId',
+    description: 'Blog UUID (25-character CUID)',
+    example: 'cm8abc123def456ghi789jklm',
+    type: String,
+  })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['file'],
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+          description: 'File to upload (max 50MB)',
+        },
+        alt_text: {
+          type: 'string',
+          description: 'Alternative text for accessibility',
+        },
+        metadata: {
+          type: 'object',
+          description: 'Additional metadata as JSON',
+        },
+      },
+    },
+  })
+  @ApiResponse({ status: 201, description: 'Asset uploaded successfully to the blog media collection' })
+  async uploadAsset(
+    @CurrentAdmin() admin: CurrentAdminPayload,
+    @Param('blogId') blogId: string,
+    @UploadedFile() file: Express.Multer.File,
+    @Body() body: { alt_text?: string; metadata?: Record<string, any> },
+    @Res() res: Response,
+  ) {
+    if (!file) {
+      throw new BadRequestException('File is required');
+    }
+
+    if (!file.buffer || file.size === 0) {
+      throw new BadRequestException('Uploaded file is empty');
+    }
+
+    const result = await this.mediaAssetService.uploadAssetToBlog(
+      blogId,
+      file,
+      body,
+      admin.tenant_id!,
+      admin.admin_id,
+    );
+
+    return res.status(result.status).json(
+      result.status === 201 ? MediaAssetPresenter.present(result.data as any) : result.data,
+    );
   }
 
   @Put(':blogId')

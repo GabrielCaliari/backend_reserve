@@ -17,6 +17,7 @@ export class PrismaBlogRepository implements IBlogRepository {
           description: blog.description,
           secret_key_hash: blog.secretKeyHash,
           secret_key_salt: blog.secretKeySalt,
+          media_collection_id: blog.mediaCollectionId,
           tenant_id: blog.tenantId,
           active: blog.active,
         },
@@ -93,6 +94,7 @@ export class PrismaBlogRepository implements IBlogRepository {
       if (data.description !== undefined) updateData.description = data.description;
       if (data.secretKeyHash !== undefined) updateData.secret_key_hash = data.secretKeyHash;
       if (data.secretKeySalt !== undefined) updateData.secret_key_salt = data.secretKeySalt;
+      if (data.mediaCollectionId !== undefined) updateData.media_collection_id = data.mediaCollectionId;
       if (data.active !== undefined) updateData.active = data.active;
 
       const record = await this.prisma.blog.update({
@@ -124,6 +126,7 @@ export class PrismaBlogRepository implements IBlogRepository {
       description: raw.description,
       secretKeyHash: raw.secret_key_hash,
       secretKeySalt: raw.secret_key_salt,
+      mediaCollectionId: raw.media_collection_id,
       tenantId: raw.tenant_id,
       active: raw.active,
       createdAt: raw.created_at,

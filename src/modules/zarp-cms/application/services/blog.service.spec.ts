@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { BlogService } from './blog.service';
 import { InMemoryBlogRepository } from '../../../../shared/testing/in-memory-repos/in-memory-blog.repository';
 import { BLOG_REPOSITORY } from '../../domain/interfaces/blog.repository.interface';
+import { MEDIA_COLLECTION_REPOSITORY } from '../../domain/interfaces/media-collection.repository.interface';
 import { CreateBlogDTO } from '../dtos/create-blog.dto';
 import { BlogNotFoundError } from '../../domain/errors/blog-not-found.error';
 import * as crypto from 'crypto';
@@ -9,9 +10,13 @@ import * as crypto from 'crypto';
 describe('BlogService', () => {
   let service: BlogService;
   let repo: InMemoryBlogRepository;
+  let mediaCollectionRepository: { findById: jest.Mock };
 
   beforeEach(async () => {
     repo = new InMemoryBlogRepository();
+    mediaCollectionRepository = {
+      findById: jest.fn().mockResolvedValue({ id: 'cm8collection123456789abcde' }),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -19,6 +24,10 @@ describe('BlogService', () => {
         {
           provide: BLOG_REPOSITORY,
           useValue: repo,
+        },
+        {
+          provide: MEDIA_COLLECTION_REPOSITORY,
+          useValue: mediaCollectionRepository,
         },
       ],
     }).compile();
@@ -28,7 +37,11 @@ describe('BlogService', () => {
 
   describe('create', () => {
     it('should create a blog with generated secret key', async () => {
-      const dto: CreateBlogDTO = { name: 'My Tech Blog', description: 'Tech stuff' };
+      const dto: CreateBlogDTO = {
+        name: 'My Tech Blog',
+        description: 'Tech stuff',
+        mediaCollectionId: 'cm8collection123456789abcde',
+      };
       const tenantId = '1';
 
       // Mock randomBytes for predictable secret key
@@ -49,6 +62,7 @@ describe('BlogService', () => {
       expect(response.data).toBeDefined();
       expect(response.data.name).toBe(dto.name);
       expect(response.data.tenantId).toBe(tenantId);
+      expect(response.data.mediaCollectionId).toBe(dto.mediaCollectionId);
       // The service should return the PLAIN secret key for the client
       expect(response.data.secret_key).toBe(mockBuffer.toString('hex'));
       

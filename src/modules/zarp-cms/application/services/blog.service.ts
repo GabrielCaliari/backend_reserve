@@ -1,9 +1,17 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { BLOG_REPOSITORY, IBlogRepository } from '../../domain/interfaces/blog.repository.interface';
+import {
+  MEDIA_COLLECTION_REPOSITORY,
+  IMediaCollectionRepository,
+} from '../../domain/interfaces/media-collection.repository.interface';
 import { CreateBlogDTO } from '../dtos/create-blog.dto';
 import { UpdateBlogDTO } from '../dtos/update-blog.dto';
 import { ServiceResponse, successResponse, errorResponse } from '../utils/service-response.util';
 import { Blog } from '../../domain/entities/blog.entity';
+import {
+  ERROR_BLOG_MEDIA_COLLECTION_NOT_CONFIGURED,
+  ERROR_COLLECTION_NOT_FOUND,
+} from '../../domain/constants/error-constants';
 import * as crypto from 'crypto';
 
 // Error constants
@@ -25,7 +33,45 @@ export class BlogService {
   constructor(
     @Inject(BLOG_REPOSITORY)
     private readonly blogRepository: IBlogRepository,
+    @Inject(MEDIA_COLLECTION_REPOSITORY)
+    private readonly mediaCollectionRepository: IMediaCollectionRepository,
   ) {}
+
+  private async validateMediaCollection(
+    mediaCollectionId: string,
+    tenantId: string,
+  ): Promise<boolean> {
+    const collection = await this.mediaCollectionRepository.findById(mediaCollectionId, tenantId);
+    return collection !== null;
+  }
+
+  private presentBlog(blog: Blog, secretKey?: string) {
+    return {
+      id: blog.id,
+      name: blog.name,
+      description: blog.description,
+      tenantId: blog.tenantId,
+      mediaCollectionId: blog.mediaCollectionId,
+      active: blog.active,
+      createdAt: blog.createdAt,
+      updatedAt: blog.updatedAt,
+      ...(secretKey ? { secret_key: secretKey } : {}),
+      media_upload: blog.id && blog.mediaCollectionId
+        ? {
+            method: 'POST',
+            href: `/api/cms/blogs/${blog.id}/assets`,
+            collectionId: blog.mediaCollectionId,
+          }
+        : undefined,
+      media_list: blog.id && blog.mediaCollectionId
+        ? {
+            method: 'GET',
+            href: `/api/cms/blogs/${blog.id}/assets`,
+            collectionId: blog.mediaCollectionId,
+          }
+        : undefined,
+    };
+  }
 
   /**
    * Validates that a blog name is unique within a tenant
@@ -42,6 +88,11 @@ export class BlogService {
    */
   async create(tenantId: string, data: CreateBlogDTO): Promise<ServiceResponse> {
     try {
+      const hasValidCollection = await this.validateMediaCollection(data.mediaCollectionId, tenantId);
+      if (!hasValidCollection) {
+        return errorResponse(ERROR_COLLECTION_NOT_FOUND, 404);
+      }
+
       // Validate name uniqueness within tenant (Requirement 1.2)
       const isUnique = await this.validateNameUniqueness(data.name, tenantId);
       if (!isUnique) {
@@ -58,6 +109,7 @@ export class BlogService {
       const blog = new Blog({
         name: data.name,
         description: data.description,
+        mediaCollectionId: data.mediaCollectionId,
         tenantId,
         secretKeyHash: sha256Hash,
         secretKeySalt: salt,
@@ -66,16 +118,7 @@ export class BlogService {
       const created = await this.blogRepository.create(blog);
 
       // Return the blog with the PLAIN secret key (only once)
-      return successResponse({
-        id: created.id,
-        name: created.name,
-        description: created.description,
-        tenantId: created.tenantId,
-        active: created.active,
-        createdAt: created.createdAt,
-        updatedAt: created.updatedAt,
-        secret_key: secretKey, // Only returned on creation
-      }, 201);
+      return successResponse(this.presentBlog(created, secretKey), 201);
     } catch (error) {
       return errorResponse(ERROR_CREATE_BLOG, 500, error);
     }
@@ -88,19 +131,8 @@ export class BlogService {
   async findAll(tenantId: string): Promise<ServiceResponse> {
     try {
       const blogs = await this.blogRepository.findByTenantId(tenantId);
-      
-      // Strip sensitive data
-      const sanitized = blogs.map((blog) => ({
-        id: blog.id,
-        name: blog.name,
-        description: blog.description,
-        tenantId: blog.tenantId,
-        active: blog.active,
-        createdAt: blog.createdAt,
-        updatedAt: blog.updatedAt,
-      }));
 
-      return successResponse(sanitized, 200);
+      return successResponse(blogs.map((blog) => this.presentBlog(blog)), 200);
     } catch (error) {
       return errorResponse(ERROR_CREATE_BLOG, 500, error);
     }
@@ -122,6 +154,17 @@ export class BlogService {
         return errorResponse(ERROR_BLOG_NOT_FOUND, 404);
       }
 
+      if (data.mediaCollectionId !== undefined) {
+        if (!data.mediaCollectionId) {
+          return errorResponse(ERROR_BLOG_MEDIA_COLLECTION_NOT_CONFIGURED, 400);
+        }
+
+        const hasValidCollection = await this.validateMediaCollection(data.mediaCollectionId, tenantId);
+        if (!hasValidCollection) {
+          return errorResponse(ERROR_COLLECTION_NOT_FOUND, 404);
+        }
+      }
+
       // If name is being changed, validate uniqueness
       if (data.name && data.name !== blog.name) {
         const isUnique = await this.validateNameUniqueness(data.name, tenantId);
@@ -134,18 +177,10 @@ export class BlogService {
       const updated = await this.blogRepository.update(blogId, {
         name: data.name,
         description: data.description,
+        mediaCollectionId: data.mediaCollectionId,
       });
 
-      // Strip sensitive data
-      return successResponse({
-        id: updated.id,
-        name: updated.name,
-        description: updated.description,
-        tenantId: updated.tenantId,
-        active: updated.active,
-        createdAt: updated.createdAt,
-        updatedAt: updated.updatedAt,
-      }, 200);
+      return successResponse(this.presentBlog(updated), 200);
     } catch (error) {
       return errorResponse(ERROR_UPDATE_BLOG, 500, error);
     }

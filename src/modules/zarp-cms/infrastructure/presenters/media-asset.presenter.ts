@@ -15,6 +15,25 @@ import { MediaAsset } from '../../domain/entities/media-asset.entity';
  * Pattern: Static methods for stateless transformation
  */
 export class MediaAssetPresenter {
+  private static buildActions(asset: MediaAsset) {
+    if (!asset.id) {
+      return {};
+    }
+
+    return {
+      delete: {
+        method: 'DELETE',
+        href: `/api/cms/assets/${asset.id}`,
+      },
+      delete_from_collection: asset.collection_id
+        ? {
+            method: 'DELETE',
+            href: `/api/cms/collections/${asset.collection_id}/assets/${asset.id}`,
+          }
+        : undefined,
+    };
+  }
+
   /**
    * Formats a single MediaAsset entity for API response
    * 
@@ -39,6 +58,7 @@ export class MediaAssetPresenter {
       created_by: asset.created_by,
       created_at: asset.created_at,
       updated_at: asset.updated_at,
+      actions: this.buildActions(asset),
     };
   }
 

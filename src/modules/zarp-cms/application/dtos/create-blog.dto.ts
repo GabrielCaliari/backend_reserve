@@ -19,4 +19,12 @@ export class CreateBlogDTO {
   @IsString()
   @IsOptional()
   description?: string;
+
+  @ApiProperty({
+    description: 'Media collection ID used by this blog for article uploads',
+    example: 'cm8abc123def456ghi789jklm',
+  })
+  @IsString()
+  @IsNotEmpty()
+  mediaCollectionId: string;
 }
