@@ -2,6 +2,7 @@ import { Injectable, Inject } from '@nestjs/common';
 import {
   ARTICLE_REPOSITORY,
   IArticleRepository,
+  PaginatedResult,
 } from '../../domain/interfaces/article.repository.interface';
 import {
   AUTHOR_REPOSITORY,
@@ -674,11 +675,16 @@ export class ArticleService {
   /**
    * Finds all published articles for a blog (public API)
    */
-  async findPublishedByBlogId(blogId: string): Promise<Article[]> {
-    const result = await this.articleRepository.findByBlogId(blogId, {
+  async findPublishedByBlogId(
+    blogId: string,
+    page = 1,
+    limit = 10,
+  ): Promise<PaginatedResult<Article>> {
+    return this.articleRepository.findByBlogId(blogId, {
       status: EArticleStatus.published,
+      page,
+      limit,
     });
-    return result.data || [];
   }
 
   /**

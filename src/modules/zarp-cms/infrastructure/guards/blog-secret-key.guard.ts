@@ -14,11 +14,11 @@ export class BlogSecretKeyGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const secretKey = request.headers['x-blog-secret-key'];
 
-    if (!secretKey) {
+    if (typeof secretKey !== 'string' || secretKey.trim().length === 0) {
       throw new UnauthorizedException('Missing x-blog-secret-key header');
     }
 
-    const hash = crypto.createHash('sha256').update(secretKey as string).digest('hex');
+    const hash = crypto.createHash('sha256').update(secretKey).digest('hex');
 
     const blog = await this.blogRepository.findBySecretKey(hash);
 

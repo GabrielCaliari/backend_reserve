@@ -8,6 +8,7 @@ import {
   DefaultValuePipe,
   Req,
   NotFoundException,
+  BadRequestException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiHeader, ApiQuery } from '@nestjs/swagger';
 import { ArticleService } from '../../application/services/article.service';
@@ -56,24 +57,12 @@ export class PublicBlogController {
           items: {
             type: 'object',
             properties: {
-              id: { type: 'number' },
+              id: { type: 'string' },
               title: { type: 'string' },
               slug: { type: 'string' },
               content: { type: 'string' },
               published_at: { type: 'string', format: 'date-time' },
               display_order: { type: 'number' },
-              images: {
-                type: 'array',
-                items: {
-                  type: 'object',
-                  properties: {
-                    id: { type: 'number' },
-                    url: { type: 'string' },
-                    alt_text: { type: 'string' },
-                    display_order: { type: 'number' },
-                  },
-                },
-              },
             },
           },
         },
@@ -89,8 +78,8 @@ export class PublicBlogController {
       },
     },
   })
+  @ApiResponse({ status: 400, description: 'Invalid page or limit query parameter' })
   @ApiResponse({ status: 401, description: 'Missing or invalid x-blog-secret-key header' })
-  @ApiResponse({ status: 404, description: 'Blog not found' })
   async listArticles(
     @Req() req: Request & { blog: any },
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
@@ -99,24 +88,23 @@ export class PublicBlogController {
     // TODO(CACHE): Add Cache-Control: public, max-age=300
     // TODO(CACHE): Add ETag based on latest article updated_at
 
-    // Limit max items per page
-    const maxLimit = Math.min(limit, 50);
+    const validatedPage = this.ensurePositiveInteger(page, 'page');
+    const validatedLimit = this.ensurePositiveInteger(limit, 'limit');
+    const maxLimit = Math.min(validatedLimit, 50);
 
     // Get blog ID from request (set by BlogSecretKeyGuard)
     const blogId = req.blog.id;
 
-    const articles = await this.articleService.findPublishedByBlogId(blogId);
-
-    // Pagination
-    const total = articles.length;
-    const totalPages = Math.ceil(total / maxLimit);
-    const startIndex = (page - 1) * maxLimit;
-    const endIndex = startIndex + maxLimit;
-    const paginatedArticles = articles.slice(startIndex, endIndex);
+    const articles = await this.articleService.findPublishedByBlogId(
+      blogId,
+      validatedPage,
+      maxLimit,
+    );
 
     // Format response
-    const data = paginatedArticles.map((article) => ({
+    const data = articles.data.map((article) => ({
       id: article.id,
+      title: article.displayTitle,
       slug: article.slug,
       content: article.content,
       published_at: article.publishedAt,
@@ -126,10 +114,10 @@ export class PublicBlogController {
     return {
       data,
       meta: {
-        page,
-        limit: maxLimit,
-        total,
-        total_pages: totalPages,
+        page: articles.page,
+        limit: articles.limit,
+        total: articles.total,
+        total_pages: articles.totalPages,
       },
     };
   }
@@ -145,24 +133,12 @@ export class PublicBlogController {
     schema: {
       type: 'object',
       properties: {
-        id: { type: 'number' },
+        id: { type: 'string' },
         title: { type: 'string' },
         slug: { type: 'string' },
         content: { type: 'string' },
         status: { type: 'string', enum: ['published'] },
         published_at: { type: 'string', format: 'date-time' },
-        images: {
-          type: 'array',
-          items: {
-            type: 'object',
-            properties: {
-              id: { type: 'number' },
-              url: { type: 'string' },
-              alt_text: { type: 'string' },
-              display_order: { type: 'number' },
-            },
-          },
-        },
         created_at: { type: 'string', format: 'date-time' },
         updated_at: { type: 'string', format: 'date-time' },
       },
@@ -188,6 +164,7 @@ export class PublicBlogController {
     // Format response
     return {
       id: article.id,
+      title: article.displayTitle,
       slug: article.slug,
       content: article.content,
       status: article.status,
@@ -195,5 +172,13 @@ export class PublicBlogController {
       created_at: article.createdAt,
       updated_at: article.updatedAt,
     };
+  }
+
+  private ensurePositiveInteger(value: number, fieldName: 'page' | 'limit'): number {
+    if (value < 1) {
+      throw new BadRequestException(`${fieldName} must be greater than 0`);
+    }
+
+    return value;
   }
 }

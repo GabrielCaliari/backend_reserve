@@ -1,13 +1,17 @@
 import { IBlogRepository } from '../../../modules/zarp-cms/domain/interfaces/blog.repository.interface';
 import { Blog } from '../../../modules/zarp-cms/domain/entities/blog.entity';
-import { createId } from '@paralleldrive/cuid2';
 
 export class InMemoryBlogRepository implements IBlogRepository {
   public blogs: Blog[] = [];
+  private idCounter = 1;
+
+  private nextId(): string {
+    return `blog-${this.idCounter++}`;
+  }
 
   async create(data: Blog): Promise<Blog> {
     const blog = new Blog({
-      id: createId(),
+      id: this.nextId(),
       ...data,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -53,7 +57,7 @@ export class InMemoryBlogRepository implements IBlogRepository {
   // Test helpers
   seed(data: Partial<Blog>): Blog {
     const blog = new Blog({
-      id: createId(),
+      id: this.nextId(),
       name: 'Test Blog',
       tenantId: '1',
       secretKeyHash: 'hash',
@@ -67,5 +71,6 @@ export class InMemoryBlogRepository implements IBlogRepository {
 
   clear(): void {
     this.blogs = [];
+    this.idCounter = 1;
   }
 }
