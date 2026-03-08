@@ -28,29 +28,29 @@ export async function seedBlogs() {
     {
       name: 'Blog Zarp Studio',
       description:
-        'Insights sobre desenvolvimento de software, arquitetura de sistemas e as últimas tendências em tecnologia.',
+        'Insights on software development, systems architecture, and the latest technology trends.',
       secret_key: 'zarp-blog-secret-2024',
       tenantSlug: 'zarp-studio',
       active: true,
     },
     {
       name: 'Tech Insights',
-      description: 'Artigos técnicos e tutoriais para desenvolvedores de todos os níveis.',
+      description: 'Technical articles and tutorials for developers at every level.',
       secret_key: 'tech-insights-secret-2024',
-      tenantSlug: 'empresa-teste',
+      tenantSlug: 'florida-exam-prep',
       active: true,
     },
     {
       name: 'Innovation Hub',
-      description: 'Explorando o futuro da tecnologia e inovação digital.',
+      description: 'Exploring the future of technology and digital innovation.',
       secret_key: 'innovation-hub-secret-2024',
-      tenantSlug: 'tech-innovations',
+      tenantSlug: 'gen3-construction',
       active: true,
     },
   ];
 
-  let inseridos = 0;
-  let atualizados = 0;
+  let inserted = 0;
+  let updated = 0;
 
   console.log('\n[BLOGS SEED]');
 
@@ -60,7 +60,7 @@ export async function seedBlogs() {
     });
 
     if (!tenant) {
-      console.log(`  ⚠ SKIP: Tenant "${blog.tenantSlug}" não encontrado para blog "${blog.name}"`);
+      console.log(`  ⚠ SKIP: Tenant "${blog.tenantSlug}" not found for blog "${blog.name}"`);
       continue;
     }
 
@@ -87,16 +87,16 @@ export async function seedBlogs() {
         where: { id: existing.id },
         data,
       });
-      atualizados++;
-      console.log(`  ↻ Blog atualizado: ${blog.name}`);
+      updated++;
+      console.log(`  ↻ Blog updated: ${blog.name}`);
     } else {
       await prisma.blog.create({ data });
-      inseridos++;
-      console.log(`  ✓ Blog criado: ${blog.name}`);
+      inserted++;
+      console.log(`  ✓ Blog created: ${blog.name}`);
     }
   }
 
-  console.log(`\n  Resumo: ${inseridos} criados, ${atualizados} atualizados\n`);
+  console.log(`\n  Summary: ${inserted} created, ${updated} updated\n`);
 
   await prisma.$disconnect();
 }

@@ -60,8 +60,8 @@ export async function seedPlans() {
     },
   ];
 
-  let inseridos = 0;
-  let atualizados = 0;
+  let inserted = 0;
+  let updated = 0;
 
   console.log('\n[PLANS SEED]');
 
@@ -85,16 +85,16 @@ export async function seedPlans() {
         where: { id: existing.id },
         data,
       });
-      atualizados++;
+      updated++;
       console.log(`  ↻ Plan updated: ${plan.name}`);
     } else {
       await prisma.plan.create({ data });
-      inseridos++;
+      inserted++;
       console.log(`  ✓ Plan created: ${plan.name}`);
     }
   }
 
-  console.log(`\n  Summary: ${inseridos} created, ${atualizados} updated\n`);
+  console.log(`\n  Summary: ${inserted} created, ${updated} updated\n`);
 
   await prisma.$disconnect();
 }

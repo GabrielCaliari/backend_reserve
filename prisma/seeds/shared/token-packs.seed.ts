@@ -34,8 +34,8 @@ export async function seedTokenPacks() {
     },
   ];
 
-  let inseridos = 0;
-  let atualizados = 0;
+  let inserted = 0;
+  let updated = 0;
 
   console.log('\n[TOKEN PACKS SEED]');
 
@@ -54,16 +54,16 @@ export async function seedTokenPacks() {
         where: { id: existing.id },
         data,
       });
-      atualizados++;
+      updated++;
       console.log(`  ↻ Token pack updated: ${pack.slug}`);
     } else {
       await prisma.additionalTokenPack.create({ data });
-      inseridos++;
+      inserted++;
       console.log(`  ✓ Token pack created: ${pack.slug}`);
     }
   }
 
-  console.log(`\n  Summary: ${inseridos} created, ${atualizados} updated\n`);
+  console.log(`\n  Summary: ${inserted} created, ${updated} updated\n`);
 
   await prisma.$disconnect();
 }

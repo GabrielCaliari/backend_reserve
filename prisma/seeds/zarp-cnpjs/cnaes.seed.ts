@@ -15,29 +15,29 @@ const prisma = new PrismaClient({ adapter });
  */
 export async function seedCNAEs() {
   const cnaes = [
-    { code: '6201500', name: 'Desenvolvimento de programas de computador sob encomenda' },
-    { code: '6202300', name: 'Desenvolvimento e licenciamento de programas de computador customizáveis' },
-    { code: '6203100', name: 'Desenvolvimento e licenciamento de programas de computador não-customizáveis' },
-    { code: '6204000', name: 'Consultoria em tecnologia da informação' },
-    { code: '6209100', name: 'Suporte técnico, manutenção e outros serviços em tecnologia da informação' },
-    { code: '6311900', name: 'Tratamento de dados, provedores de serviços de aplicação e serviços de hospedagem na internet' },
-    { code: '6319400', name: 'Portais, provedores de conteúdo e outros serviços de informação na internet' },
-    { code: '7020400', name: 'Atividades de consultoria em gestão empresarial' },
-    { code: '7311400', name: 'Agências de publicidade' },
-    { code: '7312200', name: 'Agenciamento de espaços para publicidade, exceto em veículos de comunicação' },
-    { code: '7319000', name: 'Publicidade' },
-    { code: '7320300', name: 'Pesquisas de mercado e de opinião pública' },
-    { code: '7490104', name: 'Atividades de intermediação e agenciamento de serviços e negócios em geral' },
-    { code: '8599699', name: 'Outras atividades de ensino não especificadas anteriormente' },
-    { code: '9511800', name: 'Reparação e manutenção de computadores e de equipamentos periféricos' },
+    { code: '6201500', name: 'Custom software development' },
+    { code: '6202300', name: 'Development and licensing of customizable software' },
+    { code: '6203100', name: 'Development and licensing of non-customizable software' },
+    { code: '6204000', name: 'Information technology consulting' },
+    { code: '6209100', name: 'Technical support, maintenance, and other information technology services' },
+    { code: '6311900', name: 'Data processing, application service providers, and internet hosting services' },
+    { code: '6319400', name: 'Web portals, content providers, and other internet information services' },
+    { code: '7020400', name: 'Business management consulting activities' },
+    { code: '7311400', name: 'Advertising agencies' },
+    { code: '7312200', name: 'Advertising space brokerage, except in communication vehicles' },
+    { code: '7319000', name: 'Advertising' },
+    { code: '7320300', name: 'Market research and public opinion polling' },
+    { code: '7490104', name: 'Intermediation and brokerage of services and business activities in general' },
+    { code: '8599699', name: 'Other education activities not specified elsewhere' },
+    { code: '9511800', name: 'Repair and maintenance of computers and peripheral equipment' },
   ];
 
-  let inseridos = 0;
-  let atualizados = 0;
+  let inserted = 0;
+  let updated = 0;
 
   console.log('\n[CNAES SEED - SAMPLE DATA]');
-  console.log('  ⚠ Este seed contém apenas dados de exemplo');
-  console.log('  ⚠ Para produção, importe a tabela CNAE completa\n');
+  console.log('  ⚠ This seed contains sample data only');
+  console.log('  ⚠ For production, import the full CNAE table\n');
 
   for (const cnae of cnaes) {
     const existing = await prisma.cnae.findFirst({
@@ -49,17 +49,17 @@ export async function seedCNAEs() {
         where: { id: existing.id },
         data: { name: cnae.name },
       });
-      atualizados++;
+      updated++;
     } else {
       await prisma.cnae.create({
         data: cnae,
       });
-      inseridos++;
-      console.log(`  ✓ CNAE criado: ${cnae.code} - ${cnae.name}`);
+      inserted++;
+      console.log(`  ✓ CNAE created: ${cnae.code} - ${cnae.name}`);
     }
   }
 
-  console.log(`\n  Resumo: ${inseridos} criados, ${atualizados} atualizados\n`);
+  console.log(`\n  Summary: ${inserted} created, ${updated} updated\n`);
 
   await prisma.$disconnect();
 }

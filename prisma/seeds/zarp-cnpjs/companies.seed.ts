@@ -16,12 +16,12 @@ const prisma = new PrismaClient({ adapter });
  * as it requires CNAE data to be seeded first.
  */
 export async function seedCompanies() {
-  // Get first CNAE for reference
+  // Get the first CNAE for reference
   const firstCnae = await prisma.cnae.findFirst();
 
   if (!firstCnae) {
     console.log('\n[COMPANIES SEED]');
-    console.log('  ⚠ SKIP: Nenhum CNAE encontrado. Execute seed-cnaes.ts primeiro\n');
+    console.log('  ⚠ SKIP: No CNAE found. Run seed-cnaes.ts first\n');
     return;
   }
 
@@ -36,7 +36,7 @@ export async function seedCompanies() {
       outer_city: null,
       coutry_code: null,
       start_date: new Date('2020-01-15'),
-      type_of_place: 'Avenida',
+      type_of_place: 'Avenue',
       place: 'Paulista',
       house_number: '1000',
       address_complement: 'Sala 101',
@@ -60,18 +60,18 @@ export async function seedCompanies() {
     {
       cnpj: '23456789000196',
       branch_type: 1,
-      business_name: 'TECH INNOVATIONS SOLUCOES EM TI LTDA',
+      business_name: 'TECH INNOVATIONS IT SOLUTIONS LLC',
       status: '02',
       date_status: new Date('2024-01-10'),
       code_detail_status: '01',
       outer_city: null,
       coutry_code: null,
       start_date: new Date('2019-06-20'),
-      type_of_place: 'Rua',
-      place: 'da Consolação',
+      type_of_place: 'Street',
+      place: 'Consolacao',
       house_number: '2000',
-      address_complement: 'Conjunto 50',
-      district: 'Consolação',
+      address_complement: 'Suite 50',
+      district: 'Consolacao',
       cep: '01301000',
       uf: 'SP',
       city_code: '7107',
@@ -91,17 +91,17 @@ export async function seedCompanies() {
     {
       cnpj: '34567890000197',
       branch_type: 1,
-      business_name: 'EMPRESA TESTE COMERCIO E SERVICOS LTDA',
+      business_name: 'TEST COMPANY COMMERCE AND SERVICES LLC',
       status: '02',
       date_status: new Date('2024-02-01'),
       code_detail_status: '01',
       outer_city: null,
       coutry_code: null,
       start_date: new Date('2021-05-05'),
-      type_of_place: 'Avenida',
+      type_of_place: 'Avenue',
       place: 'Brigadeiro Faria Lima',
       house_number: '3000',
-      address_complement: 'Andar 10',
+      address_complement: 'Floor 10',
       district: 'Itaim Bibi',
       cep: '04538132',
       uf: 'SP',
@@ -121,12 +121,12 @@ export async function seedCompanies() {
     },
   ];
 
-  let inseridos = 0;
-  let atualizados = 0;
+  let inserted = 0;
+  let updated = 0;
 
   console.log('\n[COMPANIES SEED - SAMPLE DATA]');
-  console.log('  ⚠ Este seed contém apenas dados de exemplo');
-  console.log('  ⚠ Para produção, importe dados reais da Receita Federal\n');
+  console.log('  ⚠ This seed contains sample data only');
+  console.log('  ⚠ For production, import real data from Receita Federal\n');
 
   for (const company of companies) {
     const existing = await prisma.company.findUnique({
@@ -138,18 +138,18 @@ export async function seedCompanies() {
         where: { id: existing.id },
         data: company,
       });
-      atualizados++;
-      console.log(`  ↻ Empresa atualizada: ${company.business_name}`);
+      updated++;
+      console.log(`  ↻ Company updated: ${company.business_name}`);
     } else {
       await prisma.company.create({
         data: company,
       });
-      inseridos++;
-      console.log(`  ✓ Empresa criada: ${company.business_name}`);
+      inserted++;
+      console.log(`  ✓ Company created: ${company.business_name}`);
     }
   }
 
-  console.log(`\n  Resumo: ${inseridos} criados, ${atualizados} atualizados\n`);
+  console.log(`\n  Summary: ${inserted} created, ${updated} updated\n`);
 
   await prisma.$disconnect();
 }

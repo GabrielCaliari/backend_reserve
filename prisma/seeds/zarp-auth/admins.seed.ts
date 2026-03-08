@@ -39,9 +39,9 @@ export async function seedAdmins() {
       active: true,
     },
     {
-      name: 'Caua Cunha',
-      email: 'kelme.dev@pm.me',
-      password: 'Vamos@Inovar@26',
+      name: 'Cauã Cunha',
+      email: 'caua@zarpstudio.com',
+      password: 'Zarp@Unicorn@26',
       role: EAdminRole.super_admin,
       active: true,
     },
@@ -53,41 +53,47 @@ export async function seedAdmins() {
       active: true,
     },
     {
-      name: 'Carlos Mendes',
-      email: 'carlos.mendes@empresateste.com',
-      password: 'Teste@2024!Carlos',
+      name: 'Gabriel Caliari',
+      email: 'tech@zarpstudio.com',
+      password: 'Zarp@Caliari@26',
+      role: EAdminRole.super_admin,
+      active: true,
+    },
+    {
+      name: 'Rael Schwelm Lara',
+      email: 'allbrickpaving@gmail.com',
+      password: 'Rael@Pavers@26',
       role: EAdminRole.company_admin,
       active: true,
     },
     {
-      name: 'Beatriz Costa',
-      email: 'beatriz.costa@empresateste.com',
-      password: 'Teste@2024!Bia',
+      name: 'Cruz Vinci',
+      email: 'floridaexamprep@gmail.com',
+      password: 'Florida@Exam@26@Cruz',
       role: EAdminRole.company_admin,
       active: true,
     },
     {
-      name: 'Admin Inativo',
-      email: 'inativo@example.com',
-      password: 'Inativo@123',
+      name: 'Miguel',
+      email: 'levelonegrading@gmail.com',
+      password: 'Level@One@26@Live',
       role: EAdminRole.company_admin,
-      active: false,
+      active: true,
     },
   ];
 
-  /** Admin-tenant assignments with specific roles per tenant */
+  /** Admin-tenant assignments with tenant-specific roles */
   const adminTenantAssignments: AdminTenantAssignment[] = [
-    // Diego Kelme - super_admin has access to all tenants automatically
-    { adminEmail: 'kelme.dev@pm.me', tenantSlug: 'zarp-studio', role: EAdminRole.owner },
-    
-    // Ana Silva - owner of Zarp Studio
-    { adminEmail: 'ana.silva@zarpstudio.com', tenantSlug: 'zarp-studio', role: EAdminRole.owner },
-    
-    // Carlos Mendes - owner of Empresa Teste
-    { adminEmail: 'carlos.mendes@empresateste.com', tenantSlug: 'empresa-teste', role: EAdminRole.owner },
-    
-    // Beatriz Costa - editor in Empresa Teste
-    { adminEmail: 'beatriz.costa@empresateste.com', tenantSlug: 'empresa-teste', role: EAdminRole.editor },
+    // Super admins do not need explicit tenant assignments.
+
+    // Rael Schwelm Lara - owner of All Brick Pavers
+    { adminEmail: 'allbrickpaving@gmail.com', tenantSlug: 'allbrickpavers', role: EAdminRole.owner },
+
+    // Cruz Vinci - owner of Florida Exam Prep
+    { adminEmail: 'floridaexamprep@gmail.com', tenantSlug: 'florida-exam-prep', role: EAdminRole.owner },
+
+    // Miguel - owner of Level One Grading
+    { adminEmail: 'levelonegrading@gmail.com', tenantSlug: 'level-one-grading', role: EAdminRole.owner },
   ];
 
   async function deleteOldAdmins(adminsList: AdminSeed[]) {
@@ -96,7 +102,7 @@ export async function seedAdmins() {
       const allowedEmails = adminsList.map((a) => a.email);
       const adminsToDelete = allAdmins.filter((admin) => !allowedEmails.includes(admin.email));
 
-      let deletados = 0;
+      let deleted = 0;
 
       for (const admin of adminsToDelete) {
         await prisma.$transaction(async (tx) => {
@@ -106,11 +112,11 @@ export async function seedAdmins() {
           await tx.admin.delete({ where: { id: admin.id } });
         });
 
-        deletados++;
+        deleted++;
         console.log(`  ✗ Admin deleted: ${admin.email}`);
       }
 
-      return deletados;
+      return deleted;
     } catch (error) {
       console.log(`  ⚠ Could not delete old admins (database may have incompatible data types)`);
       console.log(`  ℹ Continuing with upsert operations...`);
@@ -119,8 +125,8 @@ export async function seedAdmins() {
   }
 
   async function upsertAdmins(adminsList: AdminSeed[]) {
-    let inseridos = 0;
-    let atualizados = 0;
+    let inserted = 0;
+    let updated = 0;
 
     for (const admin of adminsList) {
       const adminExists = await prisma.admin.findUnique({
@@ -148,7 +154,7 @@ export async function seedAdmins() {
           });
         });
 
-        atualizados++;
+        updated++;
         console.log(`  ↻ Admin updated: ${admin.email} (${admin.role})`);
       } else {
         await prisma.$transaction(async (tx) => {
@@ -168,17 +174,17 @@ export async function seedAdmins() {
           });
         });
 
-        inseridos++;
+        inserted++;
         console.log(`  ✓ Admin created: ${admin.email} (${admin.role})`);
       }
     }
 
-    return { inseridos, atualizados };
+    return { inserted, updated };
   }
 
   async function seedAdminTenantAssignments(assignments: AdminTenantAssignment[]) {
-    let criados = 0;
-    let atualizados = 0;
+    let created = 0;
+    let updated = 0;
 
     for (const assignment of assignments) {
       const admin = await prisma.admin.findUnique({ where: { email: assignment.adminEmail } });
@@ -200,7 +206,7 @@ export async function seedAdmins() {
           where: { id: existing.id },
           data: { role: assignment.role, active: true },
         });
-        atualizados++;
+        updated++;
         console.log(`  ↻ Assignment updated: ${admin.email} → ${tenant.slug} (${assignment.role})`);
       } else {
         await prisma.adminTenant.create({
@@ -211,21 +217,21 @@ export async function seedAdmins() {
             active: true,
           },
         });
-        criados++;
+        created++;
         console.log(`  ✓ Assignment created: ${admin.email} → ${tenant.slug} (${assignment.role})`);
       }
     }
 
-    return { criados, atualizados };
+    return { created, updated };
   }
 
   console.log('\n[ADMINS SEED]');
-  const deletados = await deleteOldAdmins(admins);
-  const resultado = await upsertAdmins(admins);
+  const deleted = await deleteOldAdmins(admins);
+  const result = await upsertAdmins(admins);
   const assignmentResult = await seedAdminTenantAssignments(adminTenantAssignments);
 
-  console.log(`\n  Summary: ${deletados} deleted, ${resultado.inseridos} created, ${resultado.atualizados} updated`);
-  console.log(`  Assignments: ${assignmentResult.criados} created, ${assignmentResult.atualizados} updated\n`);
+  console.log(`\n  Summary: ${deleted} deleted, ${result.inserted} created, ${result.updated} updated`);
+  console.log(`  Assignments: ${assignmentResult.created} created, ${assignmentResult.updated} updated\n`);
 
   await prisma.$disconnect();
 }

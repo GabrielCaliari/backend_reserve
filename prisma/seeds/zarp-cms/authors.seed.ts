@@ -15,60 +15,52 @@ interface AuthorSeed {
 
 export async function seedAuthors() {
   const authors: AuthorSeed[] = [
-    // ── Zarp Studio ──────────────────────────────────────────────────────────
+    // -- Zarp Studio ----------------------------------------------------------
     {
       first_name: 'Diego',
       last_name: 'Kelme',
       biography:
-        'Fundador da Zarp Studio e estrategista de marketing digital com mais de 12 anos de experiência. Especialista em growth hacking, branding e construção de presença digital para marcas de alto impacto.',
+        'Founder of Zarp Studio and a digital marketing strategist with more than 12 years of experience. Specialist in growth hacking, branding, and building strong digital presence for ambitious brands.',
       tenantSlug: 'zarp-studio',
       active: true,
     },
     {
-      first_name: 'Mariana',
-      last_name: 'Rocha',
+      first_name: 'Emily',
+      last_name: 'Clamerick',
       biography:
-        'Head de Marketing de Conteúdo da Zarp Studio. Especialista em inbound marketing, copywriting e estratégia de redes sociais. Já ajudou mais de 80 marcas a construírem audiências engajadas do zero.',
+        'Head of Content Marketing at Zarp Studio. Specialist in inbound marketing, copywriting, and social media strategy. She has helped more than 80 brands build engaged audiences from scratch.',
       tenantSlug: 'zarp-studio',
       active: true,
     },
     {
-      first_name: 'Felipe',
-      last_name: 'Duarte',
+      first_name: 'Gabriel',
+      last_name: 'Caliari',
       biography:
-        'Especialista em SEO e performance digital na Zarp Studio. Certificado pelo Google e HubSpot, com histórico comprovado de aumento de tráfego orgânico e conversão para e-commerces e SaaS.',
+        'SEO and digital performance specialist at Zarp Studio. Google and HubSpot certified, with a proven track record of increasing organic traffic and conversion for ecommerce and SaaS brands.',
       tenantSlug: 'zarp-studio',
       active: true,
     },
-    // ── Empresa Teste ─────────────────────────────────────────────────────────
+    // -- Florida Exam Prep ----------------------------------------------------
     {
-      first_name: 'Carlos',
-      last_name: 'Mendes',
+      first_name: 'Cruz',
+      last_name: 'Vinci',
       biography:
-        'Engenheiro de software com foco em DevOps e infraestrutura cloud. Entusiasta de automação e CI/CD.',
-      tenantSlug: 'empresa-teste',
+        'Educational content creator preparing you for Florida State Contractors Exams.',
+      tenantSlug: 'florida-exam-prep',
       active: true,
     },
-    {
-      first_name: 'Beatriz',
-      last_name: 'Costa',
-      biography:
-        'Product Manager e escritora técnica. Especialista em transformar conceitos complexos em conteúdo acessível.',
-      tenantSlug: 'empresa-teste',
-      active: true,
-    },
-    // ── Tech Innovations ──────────────────────────────────────────────────────
+    // -- Gen3 Construction ----------------------------------------------------
     {
       first_name: 'Roberto',
       last_name: 'Santos',
-      biography: 'Consultor de tecnologia e palestrante. Foco em transformação digital e inovação.',
-      tenantSlug: 'tech-innovations',
+      biography: 'Technology consultant and speaker focused on digital transformation and innovation.',
+      tenantSlug: 'gen3-construction',
       active: true,
     },
   ];
 
-  let inseridos = 0;
-  let atualizados = 0;
+  let inserted = 0;
+  let updated = 0;
 
   console.log('\n[AUTHORS SEED]');
 
@@ -78,7 +70,7 @@ export async function seedAuthors() {
     });
 
     if (!tenant) {
-      console.log(`  ⚠ SKIP: Tenant "${author.tenantSlug}" não encontrado para autor ${author.first_name} ${author.last_name}`);
+      console.log(`  ⚠ SKIP: Tenant "${author.tenantSlug}" not found for author ${author.first_name} ${author.last_name}`);
       continue;
     }
 
@@ -103,16 +95,16 @@ export async function seedAuthors() {
         where: { id: existing.id },
         data,
       });
-      atualizados++;
-      console.log(`  ↻ Autor atualizado: ${author.first_name} ${author.last_name}`);
+      updated++;
+      console.log(`  ↻ Author updated: ${author.first_name} ${author.last_name}`);
     } else {
       await prisma.author.create({ data });
-      inseridos++;
-      console.log(`  ✓ Autor criado: ${author.first_name} ${author.last_name}`);
+      inserted++;
+      console.log(`  ✓ Author created: ${author.first_name} ${author.last_name}`);
     }
   }
 
-  console.log(`\n  Resumo: ${inseridos} criados, ${atualizados} atualizados\n`);
+  console.log(`\n  Summary: ${inserted} created, ${updated} updated\n`);
 
   await prisma.$disconnect();
 }

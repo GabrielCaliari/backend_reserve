@@ -32,18 +32,18 @@ interface LeadCollectionSeed {
 
 export async function seedLeadCollections() {
   const collections: LeadCollectionSeed[] = [
-    // ── Zarp Studio ──────────────────────────────────────────────────────────
-    // Landing page principal: formulário "Vamos conversar?" para captar clientes
+    // -- Zarp Studio ----------------------------------------------------------
+    // Main landing page: "Let's talk" form used to capture commercial leads
     {
-      name: 'Landing Page - Contato Comercial',
-      slug: 'landing-page-contato-zarp',
+      name: 'Landing Page - Commercial Contact',
+      slug: 'landing-page-commercial-contact-zarp',
       source: 'zarpstudio.com',
       source_type: 'form',
       source_channel: 'organic',
       access_mode: ECollectionAccessMode.public,
       allowed_domains: ['zarpstudio.com', 'www.zarpstudio.com'],
       metadata: {
-        description: 'Formulário principal da landing page para captura de potenciais clientes',
+        description: 'Main landing page form used to capture potential customers',
         page: 'home',
         form_id: 'hero-cta-form',
         notification_email: 'comercial@zarpstudio.com',
@@ -52,29 +52,29 @@ export async function seedLeadCollections() {
       tenantSlug: 'zarp-studio',
       active: true,
     },
-    // Newsletter do blog: captura emails de leitores interessados em conteúdo de marketing
+    // Blog newsletter: captures emails from readers interested in marketing content
     {
-      name: 'Blog - Newsletter Semanal',
-      slug: 'blog-newsletter-zarp',
+      name: 'Blog - Weekly Newsletter',
+      slug: 'blog-weekly-newsletter-zarp',
       source: 'blog.zarpstudio.com',
       source_type: 'newsletter',
       source_channel: 'organic',
       access_mode: ECollectionAccessMode.public,
       allowed_domains: ['blog.zarpstudio.com', 'zarpstudio.com'],
       metadata: {
-        description: 'Inscrição na newsletter do blog Zarp Studio',
+        description: 'Subscription form for the Zarp Studio blog newsletter',
         page: 'blog',
         frequency: 'weekly',
-        topics: ['marketing digital', 'SEO', 'redes sociais', 'branding'],
+        topics: ['digital marketing', 'SEO', 'social media', 'branding'],
         notification_email: 'conteudo@zarpstudio.com',
       },
       tenantSlug: 'zarp-studio',
       active: true,
     },
-    // Página de Careers: coleta candidaturas com dados de CV (privada, requer chave)
+    // Careers page: captures job applications with CV data (private, requires a key)
     {
-      name: 'Careers - Candidaturas Abertas',
-      slug: 'careers-candidaturas-zarp',
+      name: 'Careers - Open Applications',
+      slug: 'careers-open-applications-zarp',
       source: 'zarpstudio.com/careers',
       source_type: 'form',
       source_channel: 'organic',
@@ -82,7 +82,7 @@ export async function seedLeadCollections() {
       allowed_domains: ['zarpstudio.com', 'www.zarpstudio.com'],
       secret_key: 'zarp-careers-form-secret-2025',
       metadata: {
-        description: 'Candidaturas para vagas abertas na Zarp Studio',
+        description: 'Applications for open positions at Zarp Studio',
         page: 'careers',
         accepts_cv: true,
         cv_storage_collection: 'cv-uploads-zarp-studio',
@@ -93,64 +93,64 @@ export async function seedLeadCollections() {
       tenantSlug: 'zarp-studio',
       active: true,
     },
-    // ── Empresa Teste ─────────────────────────────────────────────────────────
+    // -- Level One Grading ----------------------------------------------------
     {
-      name: 'Formulário de Contato - Empresa Teste',
-      slug: 'contato-empresa-teste',
-      source: 'website',
+      name: 'Contact Form - Level One Grading',
+      slug: 'contact-level-one-grading',
+      source: 'levelonegrading.com',
       source_type: 'organic',
       source_channel: 'direct',
       access_mode: ECollectionAccessMode.public,
-      allowed_domains: [],
-      tenantSlug: 'empresa-teste',
+      allowed_domains: ['levelonegrading.com', 'www.levelonegrading.com'],
+      tenantSlug: 'level-one-grading',
       active: true,
     },
     {
-      name: 'Coleção Privada - Teste',
-      slug: 'colecao-privada-teste',
+      name: 'Private Collection - Level One Grading',
+      slug: 'private-collection-level-one-grading',
       source: 'api',
       source_type: 'integration',
       source_channel: 'api',
       access_mode: ECollectionAccessMode.private,
       allowed_domains: [],
       secret_key: 'secret-key-123',
-      tenantSlug: 'empresa-teste',
+      tenantSlug: 'level-one-grading',
       active: true,
     },
     {
-      name: 'Coleção Restrita - Domínios',
-      slug: 'colecao-restrita-dominios',
+      name: 'Restricted Collection - Level One Grading Partners',
+      slug: 'restricted-collection-level-one-grading',
       source: 'widget',
       source_type: 'embedded',
       source_channel: 'partner',
       access_mode: ECollectionAccessMode.restricted,
-      allowed_domains: ['test-company.com', 'partner.example.com'],
-      tenantSlug: 'empresa-teste',
+      allowed_domains: ['levelonegrading.com', 'partners.levelonegrading.com'],
+      tenantSlug: 'level-one-grading',
       active: true,
     },
     {
-      name: 'Coleção Inativa - Teste',
-      slug: 'colecao-inativa-teste',
+      name: 'Inactive Collection - Level One Grading',
+      slug: 'inactive-collection-level-one-grading',
       source: 'test',
       access_mode: ECollectionAccessMode.public,
       allowed_domains: [],
-      tenantSlug: 'empresa-teste',
+      tenantSlug: 'level-one-grading',
       active: false,
     },
-    // ── Tech Innovations ──────────────────────────────────────────────────────
+    // -- Gen3 Construction ----------------------------------------------------
     {
-      name: 'Webinar - Tech Innovations',
-      slug: 'webinar-tech-innovations',
+      name: 'Webinar - Gen3 Construction',
+      slug: 'webinar-gen3-construction',
       source: 'event',
       source_type: 'organic',
       source_channel: 'webinar',
       source_campaign: 'webinar-q1-2024',
       access_mode: ECollectionAccessMode.restricted,
-      allowed_domains: ['techinnovations.io'],
-      tenantSlug: 'tech-innovations',
+      allowed_domains: ['gen3construction.vercel.app'],
+      tenantSlug: 'gen3-construction',
       active: true,
     },
-    // ── All Brick Pavers ──────────────────────────────────────────────────────
+    // -- All Brick Pavers -----------------------------------------------------
     {
       name: 'All Brick Pavers Lead Collection',
       slug: 'frontend_pages_allbrickpavers',
@@ -172,8 +172,8 @@ export async function seedLeadCollections() {
     },
   ];
 
-  let inseridos = 0;
-  let atualizados = 0;
+  let inserted = 0;
+  let updated = 0;
 
   console.log('\n[LEAD COLLECTIONS SEED]');
 
@@ -183,7 +183,7 @@ export async function seedLeadCollections() {
     });
 
     if (!tenant) {
-      console.log(`  ⚠ SKIP: Tenant "${collection.tenantSlug}" não encontrado para coleção "${collection.name}"`);
+      console.log(`  WARNING SKIP: Tenant "${collection.tenantSlug}" not found for collection "${collection.name}"`);
       continue;
     }
 
@@ -219,16 +219,16 @@ export async function seedLeadCollections() {
         where: { id: existing.id },
         data,
       });
-      atualizados++;
-      console.log(`  ↻ Collection atualizada: ${collection.name}`);
+      updated++;
+      console.log(`  UPDATED collection: ${collection.name}`);
     } else {
       await prisma.leadCollection.create({ data });
-      inseridos++;
-      console.log(`  ✓ Collection criada: ${collection.name}`);
+      inserted++;
+      console.log(`  CREATED collection: ${collection.name}`);
     }
   }
 
-  console.log(`\n  Resumo: ${inseridos} criados, ${atualizados} atualizados\n`);
+  console.log(`\n  Summary: ${inserted} created, ${updated} updated\n`);
 
   await prisma.$disconnect();
 }

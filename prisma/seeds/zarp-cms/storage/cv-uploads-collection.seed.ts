@@ -21,7 +21,7 @@ export async function seedCvUploadsCollection() {
     name: 'CV Uploads - Careers',
     slug: 'cv-uploads-zarp-studio',
     description:
-      'Currículos e portfólios enviados pelos candidatos pela página de careers da Zarp Studio',
+      'Resumes and portfolios submitted by candidates through the Zarp Studio careers page',
     type: 'document',
     max_file_size: 10485760, // 10MB
     allowed_mime_types: JSON.stringify([

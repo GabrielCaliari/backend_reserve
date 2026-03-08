@@ -46,8 +46,8 @@ export async function seedTenants() {
     },
   ];
 
-  let inseridos = 0;
-  let atualizados = 0;
+  let inserted = 0;
+  let updated = 0;
 
   console.log('\n[TENANTS SEED]');
 
@@ -65,8 +65,8 @@ export async function seedTenants() {
           active: tenant.active,
         },
       });
-      atualizados++;
-      console.log(`  ↻ Tenant atualizado: ${tenant.slug}`);
+      updated++;
+      console.log(`  ↻ Tenant updated: ${tenant.slug}`);
     } else {
       await prisma.tenant.create({
         data: {
@@ -76,12 +76,12 @@ export async function seedTenants() {
           active: tenant.active,
         },
       });
-      inseridos++;
-      console.log(`  ✓ Tenant criado: ${tenant.slug}`);
+      inserted++;
+      console.log(`  ✓ Tenant created: ${tenant.slug}`);
     }
   }
 
-  console.log(`\n  Resumo: ${inseridos} criados, ${atualizados} atualizados\n`);
+  console.log(`\n  Summary: ${inserted} created, ${updated} updated\n`);
 
   await prisma.$disconnect();
 }

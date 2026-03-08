@@ -74,8 +74,8 @@ export async function seedSMTPServers() {
     },
   ];
 
-  let inseridos = 0;
-  let atualizados = 0;
+  let inserted = 0;
+  let updated = 0;
 
   console.log('\n[SMTP SERVERS SEED]');
 
@@ -115,16 +115,16 @@ export async function seedSMTPServers() {
         where: { id: existing.id },
         data,
       });
-      atualizados++;
+      updated++;
       console.log(`  ↻ SMTP server updated: ${server.name}`);
     } else {
       await prisma.sMTPServer.create({ data });
-      inseridos++;
+      inserted++;
       console.log(`  ✓ SMTP server created: ${server.name}`);
     }
   }
 
-  console.log(`\n  Summary: ${inseridos} created, ${atualizados} updated\n`);
+  console.log(`\n  Summary: ${inserted} created, ${updated} updated\n`);
 
   await prisma.$disconnect();
 }
