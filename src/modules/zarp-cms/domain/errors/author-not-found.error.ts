@@ -1,4 +1,4 @@
-import { DomainException } from '@/shared/exceptions/domain.exception';
+import { DomainException } from '../../../../shared/exceptions/domain.exception';
 
 /**
  * Thrown when an author cannot be found by ID.

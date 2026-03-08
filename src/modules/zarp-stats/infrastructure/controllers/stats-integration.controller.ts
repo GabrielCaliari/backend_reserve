@@ -26,9 +26,9 @@ import {
   StatsIntegrationResponseDto,
   AvailableIntegrationDto,
 } from '../../application/dtos/stats-integration.dto';
-import { AdminJwtGuard, TenantGuard, RolesGuard } from '@/shared/auth/guards';
-import { Roles } from '@/shared/auth/decorators/roles.decorator';
-import { EAdminRole } from '@/modules/zarp-auth/domain/enums/admin-role.enum';
+import { AdminJwtGuard, TenantGuard, RolesGuard } from '../../../../shared/auth/guards';
+import { Roles } from '../../../../shared/auth/decorators/roles.decorator';
+import { EAdminRole } from '../../../zarp-auth/domain/enums/admin-role.enum';
 
 @ApiTags('Stats - Integrations')
 @ApiBearerAuth()

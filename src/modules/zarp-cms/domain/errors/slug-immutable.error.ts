@@ -1,4 +1,4 @@
-import { DomainException } from '@/shared/exceptions/domain.exception';
+import { DomainException } from '../../../../shared/exceptions/domain.exception';
 
 /**
  * Thrown when attempting to change the slug of a published article.
