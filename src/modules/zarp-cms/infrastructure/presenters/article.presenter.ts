@@ -38,6 +38,7 @@ export class ArticlePresenter {
     return {
       id: article.id, // string (UUID)
       display_title: article.displayTitle,
+      language: article.language,
       meta_title: article.metaTitle,
       meta_description: article.metaDescription,
       focus_keyword: article.focusKeyword,

@@ -1,5 +1,8 @@
-import { IsString, IsNotEmpty, MaxLength, IsOptional } from 'class-validator';
+import { Transform } from 'class-transformer';
+import { IsString, IsNotEmpty, MaxLength, IsOptional, Matches } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+
+const articleLanguagePattern = /^[a-z]{2}_[a-z]{2}$/;
 
 export class CreateArticleDTO {
   @ApiProperty({
@@ -11,6 +14,21 @@ export class CreateArticleDTO {
   @IsNotEmpty()
   @MaxLength(255)
   displayTitle: string;
+
+  @ApiPropertyOptional({
+    description: 'Article language in ll_cc format',
+    example: 'en_us',
+    default: 'en_us',
+    maxLength: 10,
+  })
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim().toLowerCase() : value))
+  @IsString()
+  @IsOptional()
+  @MaxLength(10)
+  @Matches(articleLanguagePattern, {
+    message: 'language must follow ll_cc format, for example en_us or pt_br',
+  })
+  language?: string;
 
   @ApiProperty({
     description: 'SEO meta title (max 60 characters)',

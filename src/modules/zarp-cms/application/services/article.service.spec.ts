@@ -121,6 +121,7 @@ describe('ArticleService', () => {
       const mockArticle = {
         id: 'article-1',
         displayTitle: 'Test Article',
+        language: 'en_us',
         metaTitle: 'Test Meta',
         content: 'Test content',
         slug: 'test-article',
@@ -150,6 +151,11 @@ describe('ArticleService', () => {
 
       expect(result.status).toBe(201);
       expect(articleRepository.create).toHaveBeenCalled();
+      expect(articleRepository.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          language: 'en_us',
+        }),
+      );
     });
   });
 
@@ -158,6 +164,7 @@ describe('ArticleService', () => {
       const mockArticle = {
         id: '',
         displayTitle: 'Test Article',
+        language: 'pt_br',
         metaTitle: 'Test Meta',
         content: 'Test content',
         slug: 'test-article',
@@ -182,14 +189,33 @@ describe('ArticleService', () => {
   });
 
   describe('findPublishedByBlogId', () => {
-    it('should delegate pagination and published filter to repository', async () => {
+    it('should delegate pagination, filter published articles, and include author data', async () => {
       const publishedArticle = {
         id: 'article-1',
         displayTitle: 'Published Article',
+        language: 'pt_br',
         slug: 'published-article',
         content: 'content',
         status: EArticleStatus.published,
+        publishedAt: new Date('2026-03-08T12:00:00.000Z'),
+        displayOrder: 3,
+        authorId: 'author-1',
       };
+
+      authorRepository.findById.mockResolvedValue({
+        id: 'author-1',
+        firstName: 'Jane',
+        lastName: 'Doe',
+        biography: 'Author bio',
+        avatarId: 'asset-1',
+        tenantId: 'tenant-1',
+        getFullName: () => 'Jane Doe',
+      } as any);
+      mediaAssetRepository.findById.mockResolvedValue({
+        id: 'asset-1',
+        url: 'https://cdn.example.com/avatar.jpg',
+        alt_text: 'Jane Doe',
+      } as any);
 
       articleRepository.findByBlogId.mockResolvedValue({
         data: [publishedArticle as any],
@@ -207,7 +233,81 @@ describe('ArticleService', () => {
         limit: 5,
       });
       expect(result.total).toBe(1);
-      expect(result.data).toEqual([publishedArticle]);
+      expect(result.data).toEqual([
+        {
+          id: 'article-1',
+          title: 'Published Article',
+          language: 'pt_br',
+          slug: 'published-article',
+          content: 'content',
+          published_at: publishedArticle.publishedAt,
+          display_order: 3,
+          author: {
+            id: 'author-1',
+            first_name: 'Jane',
+            last_name: 'Doe',
+            full_name: 'Jane Doe',
+            biography: 'Author bio',
+            avatar: {
+              id: 'asset-1',
+              url: 'https://cdn.example.com/avatar.jpg',
+              alt_text: 'Jane Doe',
+            },
+          },
+        },
+      ]);
+    });
+  });
+
+  describe('findPublishedBySlug', () => {
+    it('should return the public article detail with author data', async () => {
+      const publishedAt = new Date('2026-03-08T12:00:00.000Z');
+      const createdAt = new Date('2026-03-01T12:00:00.000Z');
+      const updatedAt = new Date('2026-03-07T12:00:00.000Z');
+
+      articleRepository.findBySlugAndBlogId.mockResolvedValue({
+        id: 'article-1',
+        displayTitle: 'Published Article',
+        language: 'pt_br',
+        slug: 'published-article',
+        content: 'content',
+        status: EArticleStatus.published,
+        publishedAt,
+        createdAt,
+        updatedAt,
+        authorId: 'author-1',
+      } as any);
+      authorRepository.findById.mockResolvedValue({
+        id: 'author-1',
+        firstName: 'Jane',
+        lastName: 'Doe',
+        biography: 'Author bio',
+        avatarId: null,
+        tenantId: 'tenant-1',
+        getFullName: () => 'Jane Doe',
+      } as any);
+
+      const result = await service.findPublishedBySlug('published-article', 'blog-1');
+
+      expect(result).toEqual({
+        id: 'article-1',
+        title: 'Published Article',
+        language: 'pt_br',
+        slug: 'published-article',
+        content: 'content',
+        status: EArticleStatus.published,
+        published_at: publishedAt,
+        created_at: createdAt,
+        updated_at: updatedAt,
+        author: {
+          id: 'author-1',
+          first_name: 'Jane',
+          last_name: 'Doe',
+          full_name: 'Jane Doe',
+          biography: 'Author bio',
+          avatar: null,
+        },
+      });
     });
   });
 });

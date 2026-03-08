@@ -19,6 +19,7 @@ export class PrismaArticleRepository implements IArticleRepository {
       const record = await this.prisma.article.create({
         data: {
           display_title: article.displayTitle,
+          language: article.language,
           meta_title: article.metaTitle,
           meta_description: article.metaDescription,
           focus_keyword: article.focusKeyword,
@@ -166,6 +167,7 @@ export class PrismaArticleRepository implements IArticleRepository {
       const updateData: any = {};
       
       if (data.displayTitle !== undefined) updateData.display_title = data.displayTitle;
+      if (data.language !== undefined) updateData.language = data.language;
       if (data.metaTitle !== undefined) updateData.meta_title = data.metaTitle;
       if (data.metaDescription !== undefined) updateData.meta_description = data.metaDescription;
       if (data.focusKeyword !== undefined) updateData.focus_keyword = data.focusKeyword;
@@ -227,6 +229,7 @@ export class PrismaArticleRepository implements IArticleRepository {
     return new Article({
       id: raw.id,
       displayTitle: raw.display_title,
+      language: raw.language,
       metaTitle: raw.meta_title,
       metaDescription: raw.meta_description,
       focusKeyword: raw.focus_keyword,

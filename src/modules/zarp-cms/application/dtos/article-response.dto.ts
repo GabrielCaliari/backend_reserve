@@ -15,6 +15,12 @@ export class ArticleResponseDTO {
   displayTitle: string;
 
   @ApiProperty({
+    description: 'Article language in ll_cc format',
+    example: 'en_us',
+  })
+  language: string;
+
+  @ApiProperty({
     description: 'SEO meta title',
     example: 'NestJS Guide - Complete Tutorial',
   })

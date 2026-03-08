@@ -7,8 +7,12 @@ import { EArticleStatus } from '../enums/article-status.enum';
  * Articles are scoped to a blog (identified by UUID) and track creation/edit history.
  */
 export class Article {
+  public static readonly DEFAULT_LANGUAGE = 'en_us';
+  public static readonly LANGUAGE_PATTERN = /^[a-z]{2}_[a-z]{2}$/;
+
   public readonly id?: string; // UUID (12-character cuid)
   public displayTitle: string;
+  public language: string;
   public metaTitle: string;
   public metaDescription: string | null;
   public focusKeyword: string | null;
@@ -28,6 +32,7 @@ export class Article {
   constructor(data: {
     id?: string;
     displayTitle: string;
+    language?: string;
     metaTitle: string;
     metaDescription?: string | null;
     focusKeyword?: string | null;
@@ -46,6 +51,7 @@ export class Article {
   }) {
     this.id = data.id;
     this.displayTitle = data.displayTitle;
+    this.language = Article.normalizeLanguage(data.language);
     this.metaTitle = data.metaTitle;
     this.metaDescription = data.metaDescription ?? null;
     this.focusKeyword = data.focusKeyword ?? null;
@@ -61,6 +67,16 @@ export class Article {
     this.lastEditedBy = data.lastEditedBy ?? null;
     this.createdAt = data.createdAt;
     this.updatedAt = data.updatedAt;
+  }
+
+  static normalizeLanguage(language?: string | null): string {
+    const normalized = (language ?? Article.DEFAULT_LANGUAGE).trim().toLowerCase();
+
+    if (!Article.LANGUAGE_PATTERN.test(normalized)) {
+      throw new Error('Article language must follow ll_cc format, for example en_us or pt_br');
+    }
+
+    return normalized;
   }
 
   /**

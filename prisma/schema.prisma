@@ -816,6 +816,7 @@ model Blog {
 model Article {
   id               String         @id @default(cuid()) @db.VarChar(25)
   display_title    String         @db.VarChar(255)
+  language         String         @default("en_us") @db.VarChar(10)
   meta_title       String         @db.VarChar(60)
   meta_description String?        @db.VarChar(160)
   focus_keyword    String?        @db.VarChar(100)

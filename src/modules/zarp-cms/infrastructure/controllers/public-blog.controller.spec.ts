@@ -24,11 +24,24 @@ describe('PublicBlogController', () => {
         data: [
           {
             id: 'article-1',
-            displayTitle: 'Article title',
+            title: 'Article title',
+            language: 'pt_br',
             slug: 'article-title',
             content: 'article content',
-            publishedAt,
-            displayOrder: 7,
+            published_at: publishedAt,
+            display_order: 7,
+            author: {
+              id: 'author-1',
+              first_name: 'Jane',
+              last_name: 'Doe',
+              full_name: 'Jane Doe',
+              biography: 'Author bio',
+              avatar: {
+                id: 'asset-1',
+                url: 'https://cdn.example.com/avatar.jpg',
+                alt_text: 'Jane Doe',
+              },
+            },
           },
         ],
         total: 17,
@@ -45,10 +58,23 @@ describe('PublicBlogController', () => {
           {
             id: 'article-1',
             title: 'Article title',
+            language: 'pt_br',
             slug: 'article-title',
             content: 'article content',
             published_at: publishedAt,
             display_order: 7,
+            author: {
+              id: 'author-1',
+              first_name: 'Jane',
+              last_name: 'Doe',
+              full_name: 'Jane Doe',
+              biography: 'Author bio',
+              avatar: {
+                id: 'asset-1',
+                url: 'https://cdn.example.com/avatar.jpg',
+                alt_text: 'Jane Doe',
+              },
+            },
           },
         ],
         meta: {
@@ -95,13 +121,22 @@ describe('PublicBlogController', () => {
 
       articleService.findPublishedBySlug.mockResolvedValue({
         id: 'article-1',
-        displayTitle: 'Article title',
+        title: 'Article title',
+        language: 'pt_br',
         slug: 'article-title',
         content: 'article content',
         status: EArticleStatus.published,
-        publishedAt,
-        createdAt,
-        updatedAt,
+        published_at: publishedAt,
+        created_at: createdAt,
+        updated_at: updatedAt,
+        author: {
+          id: 'author-1',
+          first_name: 'Jane',
+          last_name: 'Doe',
+          full_name: 'Jane Doe',
+          biography: 'Author bio',
+          avatar: null,
+        },
       } as any);
 
       const result = await controller.getArticleBySlug(
@@ -113,12 +148,21 @@ describe('PublicBlogController', () => {
       expect(result).toEqual({
         id: 'article-1',
         title: 'Article title',
+        language: 'pt_br',
         slug: 'article-title',
         content: 'article content',
         status: EArticleStatus.published,
         published_at: publishedAt,
         created_at: createdAt,
         updated_at: updatedAt,
+        author: {
+          id: 'author-1',
+          first_name: 'Jane',
+          last_name: 'Doe',
+          full_name: 'Jane Doe',
+          biography: 'Author bio',
+          avatar: null,
+        },
       });
     });
 

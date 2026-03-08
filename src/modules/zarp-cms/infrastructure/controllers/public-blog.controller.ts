@@ -59,10 +59,31 @@ export class PublicBlogController {
             properties: {
               id: { type: 'string' },
               title: { type: 'string' },
+              language: { type: 'string', example: 'en_us' },
               slug: { type: 'string' },
               content: { type: 'string' },
               published_at: { type: 'string', format: 'date-time' },
               display_order: { type: 'number' },
+              author: {
+                type: 'object',
+                nullable: true,
+                properties: {
+                  id: { type: 'string' },
+                  first_name: { type: 'string' },
+                  last_name: { type: 'string' },
+                  full_name: { type: 'string' },
+                  biography: { type: 'string', nullable: true },
+                  avatar: {
+                    type: 'object',
+                    nullable: true,
+                    properties: {
+                      id: { type: 'string' },
+                      url: { type: 'string' },
+                      alt_text: { type: 'string', nullable: true },
+                    },
+                  },
+                },
+              },
             },
           },
         },
@@ -101,18 +122,8 @@ export class PublicBlogController {
       maxLimit,
     );
 
-    // Format response
-    const data = articles.data.map((article) => ({
-      id: article.id,
-      title: article.displayTitle,
-      slug: article.slug,
-      content: article.content,
-      published_at: article.publishedAt,
-      display_order: article.displayOrder,
-    }));
-
     return {
-      data,
+      data: articles.data,
       meta: {
         page: articles.page,
         limit: articles.limit,
@@ -135,12 +146,33 @@ export class PublicBlogController {
       properties: {
         id: { type: 'string' },
         title: { type: 'string' },
+        language: { type: 'string', example: 'en_us' },
         slug: { type: 'string' },
         content: { type: 'string' },
         status: { type: 'string', enum: ['published'] },
         published_at: { type: 'string', format: 'date-time' },
         created_at: { type: 'string', format: 'date-time' },
         updated_at: { type: 'string', format: 'date-time' },
+        author: {
+          type: 'object',
+          nullable: true,
+          properties: {
+            id: { type: 'string' },
+            first_name: { type: 'string' },
+            last_name: { type: 'string' },
+            full_name: { type: 'string' },
+            biography: { type: 'string', nullable: true },
+            avatar: {
+              type: 'object',
+              nullable: true,
+              properties: {
+                id: { type: 'string' },
+                url: { type: 'string' },
+                alt_text: { type: 'string', nullable: true },
+              },
+            },
+          },
+        },
       },
     },
   })
@@ -161,17 +193,7 @@ export class PublicBlogController {
       throw new NotFoundException('Article not found or not in published status');
     }
 
-    // Format response
-    return {
-      id: article.id,
-      title: article.displayTitle,
-      slug: article.slug,
-      content: article.content,
-      status: article.status,
-      published_at: article.publishedAt,
-      created_at: article.createdAt,
-      updated_at: article.updatedAt,
-    };
+    return article;
   }
 
   private ensurePositiveInteger(value: number, fieldName: 'page' | 'limit'): number {

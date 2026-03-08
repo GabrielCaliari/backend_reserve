@@ -32,6 +32,45 @@ import {
   ERROR_BLOG_MEDIA_COLLECTION_NOT_CONFIGURED,
 } from '../../domain/constants/error-constants';
 
+export interface PublicAuthorAvatarResponse {
+  id: string;
+  url: string;
+  alt_text?: string;
+}
+
+export interface PublicAuthorResponse {
+  id: string;
+  first_name: string;
+  last_name: string;
+  full_name: string;
+  biography: string | null;
+  avatar: PublicAuthorAvatarResponse | null;
+}
+
+export interface PublicArticleListItem {
+  id: string;
+  title: string;
+  language: string;
+  slug: string;
+  content: string;
+  published_at: Date | null;
+  display_order: number;
+  author: PublicAuthorResponse | null;
+}
+
+export interface PublicArticleDetail {
+  id: string;
+  title: string;
+  language: string;
+  slug: string;
+  content: string;
+  status: EArticleStatus;
+  published_at: Date | null;
+  created_at?: Date;
+  updated_at?: Date;
+  author: PublicAuthorResponse | null;
+}
+
 // Error constants
 const ERROR_ARTICLE_NOT_FOUND = '404:Article not found';
 const ERROR_ARTICLE_CANNOT_PUBLISH = '400:Article cannot be published: missing required fields';
@@ -121,6 +160,7 @@ export class ArticleService {
       // Create article entity
       const article = new Article({
         displayTitle: dto.displayTitle,
+        language: dto.language !== undefined ? Article.normalizeLanguage(dto.language) : undefined,
         metaTitle: dto.metaTitle,
         metaDescription: dto.metaDescription,
         focusKeyword: dto.focusKeyword,
@@ -163,6 +203,42 @@ export class ArticleService {
     } catch (error) {
       return errorResponse(ERROR_CREATE_ARTICLE, 500, error);
     }
+  }
+
+  private async buildPublicAuthor(authorId: string): Promise<PublicAuthorResponse | null> {
+    const author = await this.authorRepository.findById(authorId);
+
+    if (!author) {
+      return null;
+    }
+
+    const avatar = author.avatarId
+      ? await this.mediaAssetRepository.findById(author.avatarId, author.tenantId)
+      : null;
+
+    return {
+      id: author.id!,
+      first_name: author.firstName,
+      last_name: author.lastName,
+      full_name: author.getFullName(),
+      biography: author.biography,
+      avatar: avatar
+        ? {
+            id: avatar.id!,
+            url: avatar.url,
+            alt_text: avatar.alt_text,
+          }
+        : null,
+    };
+  }
+
+  private async buildPublicAuthorMap(articles: Article[]): Promise<Map<string, PublicAuthorResponse | null>> {
+    const uniqueAuthorIds = [...new Set(articles.map((article) => article.authorId))];
+    const authors = await Promise.all(
+      uniqueAuthorIds.map(async (authorId) => [authorId, await this.buildPublicAuthor(authorId)] as const),
+    );
+
+    return new Map(authors);
   }
 
   /**
@@ -238,6 +314,10 @@ export class ArticleService {
       // Update article with last_edited_by tracking (Requirement 6.4)
       const updatedArticle = await this.articleRepository.update(id, {
         ...dto,
+        language:
+          dto.language !== undefined
+            ? Article.normalizeLanguage(dto.language)
+            : undefined,
         lastEditedBy: currentAdminId,
       });
 
@@ -679,24 +759,51 @@ export class ArticleService {
     blogId: string,
     page = 1,
     limit = 10,
-  ): Promise<PaginatedResult<Article>> {
-    return this.articleRepository.findByBlogId(blogId, {
+  ): Promise<PaginatedResult<PublicArticleListItem>> {
+    const result = await this.articleRepository.findByBlogId(blogId, {
       status: EArticleStatus.published,
       page,
       limit,
     });
+
+    const authorsById = await this.buildPublicAuthorMap(result.data);
+
+    return {
+      ...result,
+      data: result.data.map((article) => ({
+        id: article.id!,
+        title: article.displayTitle,
+        language: article.language,
+        slug: article.slug,
+        content: article.content,
+        published_at: article.publishedAt,
+        display_order: article.displayOrder,
+        author: authorsById.get(article.authorId) ?? null,
+      })),
+    };
   }
 
   /**
    * Finds a published article by slug (public API)
    */
-  async findPublishedBySlug(slug: string, blogId: string): Promise<Article | null> {
+  async findPublishedBySlug(slug: string, blogId: string): Promise<PublicArticleDetail | null> {
     const article = await this.articleRepository.findBySlugAndBlogId(slug, blogId);
     
     if (!article || article.status !== EArticleStatus.published) {
       return null;
     }
 
-    return article;
+    return {
+      id: article.id!,
+      title: article.displayTitle,
+      language: article.language,
+      slug: article.slug,
+      content: article.content,
+      status: article.status,
+      published_at: article.publishedAt,
+      created_at: article.createdAt,
+      updated_at: article.updatedAt,
+      author: await this.buildPublicAuthor(article.authorId),
+    };
   }
 }
