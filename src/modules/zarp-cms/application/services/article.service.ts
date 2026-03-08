@@ -25,7 +25,6 @@ import { CreateArticleDTO } from '../dtos/create-article.dto';
 import { UpdateArticleDTO } from '../dtos/update-article.dto';
 import { EArticleStatus } from '../../domain/enums/article-status.enum';
 import { ServiceResponse, successResponse, errorResponse } from '../utils/service-response.util';
-import { generateSlug } from '../../domain/utils/slug.util';
 import { isValidUUID } from '../../domain/utils/uuid.util';
 import {
   ERROR_ASSET_NOT_IN_BLOG_COLLECTION,
@@ -36,7 +35,6 @@ import {
 const ERROR_ARTICLE_NOT_FOUND = '404:Article not found';
 const ERROR_ARTICLE_CANNOT_PUBLISH = '400:Article cannot be published: missing required fields';
 const ERROR_ARTICLE_SLUG_DUPLICATE = '409:Article slug already exists in this blog';
-const ERROR_ARTICLE_SLUG_IMMUTABLE = '400:Cannot change slug for published article';
 const ERROR_AUTHOR_NOT_FOUND = '404:Author not found';
 const ERROR_AUTHOR_TENANT_MISMATCH = '400:Author must belong to the same tenant as the blog';
 const ERROR_BLOG_NOT_FOUND = '404:Blog not found';
@@ -192,15 +190,9 @@ export class ArticleService {
         return errorResponse(ERROR_BLOG_MEDIA_COLLECTION_NOT_CONFIGURED, 400);
       }
 
-      // Prevent slug changes for published articles (Requirement 2.4)
-      if (existingArticle.slug) {
-        if (existingArticle.status === EArticleStatus.published) {
-          return errorResponse(ERROR_ARTICLE_SLUG_IMMUTABLE, 400);
-        }
-
-        // Validate new slug uniqueness
+      if (dto.slug !== undefined && dto.slug !== existingArticle.slug) {
         const slugValidation = await this.validateSlugUniqueness(
-          existingArticle.slug,
+          dto.slug,
           existingArticle.blogId,
           id,
         );

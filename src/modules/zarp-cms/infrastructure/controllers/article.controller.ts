@@ -125,7 +125,7 @@ export class ArticleController {
   @Roles(EAdminRole.editor)
   @ApiOperation({ summary: 'Update article content and metadata' })
   @ApiResponse({ status: 200, description: 'Article updated successfully' })
-  @ApiResponse({ status: 400, description: 'Validation error or slug immutable for published articles' })
+  @ApiResponse({ status: 400, description: 'Validation error' })
   @ApiResponse({ status: 403, description: 'Insufficient role' })
   @ApiResponse({ status: 404, description: 'Article not found' })
   @ApiResponse({ status: 409, description: 'Slug already exists in this blog' })

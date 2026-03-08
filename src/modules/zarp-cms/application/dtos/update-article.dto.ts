@@ -51,6 +51,16 @@ export class UpdateArticleDTO {
   content?: string;
 
   @ApiPropertyOptional({
+    description: 'URL-safe slug (lowercase, hyphens only)',
+    example: 'updated-article-title',
+    maxLength: 255,
+  })
+  @IsString()
+  @IsOptional()
+  @MaxLength(255)
+  slug?: string;
+
+  @ApiPropertyOptional({
     description: 'Cover image MediaAsset ID (UUID)',
     example: 'ckl1234abcd5',
   })
