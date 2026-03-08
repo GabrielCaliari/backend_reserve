@@ -2,6 +2,9 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsString, IsNotEmpty, IsOptional, IsEnum, IsEmail } from 'class-validator';
 import { EAdminRole } from '../../domain/enums/admin-role.enum';
 
+const adminCuidExample = 'cma1admin0001ghijklmno23p';
+const tenantCuidExample = 'cma1tenant001uvwxyzab345';
+
 export class CreateAdminDTO {
   @ApiProperty({ description: 'Administrator name', example: 'John Doe' })
   @IsString()
@@ -48,8 +51,8 @@ export class UpdateAdminDTO {
 }
 
 export class AdminResponseDTO {
-  @ApiProperty({ example: 1 })
-  id: number;
+  @ApiProperty({ example: adminCuidExample, description: 'Admin CUID (25-character identifier)' })
+  id: string;
 
   @ApiProperty({ example: 'John Doe' })
   name: string;
@@ -65,7 +68,7 @@ export class AdminResponseDTO {
 
   @ApiProperty({ type: 'array', items: { type: 'object' } })
   tenants: Array<{
-    id: number;
+    id: string;
     name: string;
     slug: string;
     domain?: string;
@@ -77,8 +80,8 @@ export class AdminResponseDTO {
 }
 
 export class AdminListItemDTO {
-  @ApiProperty({ example: 1 })
-  id: number;
+  @ApiProperty({ example: adminCuidExample, description: 'Admin CUID (25-character identifier)' })
+  id: string;
 
   @ApiProperty({ example: 'John Doe' })
   name: string;
@@ -94,7 +97,7 @@ export class AdminListItemDTO {
 
   @ApiProperty({ type: 'array', items: { type: 'object' } })
   tenants: Array<{
-    id: number;
+    id: string;
     name: string;
     slug: string;
   }>;

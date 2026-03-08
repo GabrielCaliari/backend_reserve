@@ -24,7 +24,7 @@ export class BrandAnalysisController {
 
         @Body() rows: BrandAnalysisMessageDTO,
         @Res() res: Response,
-        @Req() req: Request & { user_id: number }
+        @Req() req: Request & { user_id: string }
     ) {
         const userId = req.user_id;
         const result = await this.brandAnalysisService.sendMessage(

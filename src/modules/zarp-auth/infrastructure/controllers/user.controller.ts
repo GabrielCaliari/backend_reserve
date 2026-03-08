@@ -1,13 +1,14 @@
-import { Body, Controller, Get, Param, Post, Req, Res, UseGuards, UseInterceptors, UsePipes } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Req, Res, UseGuards, UsePipes } from '@nestjs/common';
 import { UserService } from '../../application/services/user.service';
-import { ToLowercaseBodyRequestPipe } from '../../../../shared/pipes';
-import { Response } from 'express';
+import { ParseCuidPipe, ToLowercaseBodyRequestPipe } from '../../../../shared/pipes';
+import { Request, Response } from 'express';
 import CreateUserDTO from '../../application/dtos/create-user.dto';
 import AuthUserDTO from '../../application/dtos/auth-user.dto';
-import { UserJwtGuard } from '../../../../shared/auth/guards';
-import axios from 'axios';
+import { UserJwtGuard, UserRolesGuard } from '../../../../shared/auth/guards';
+import { UserRoles } from '../../../../shared/auth/decorators';
 import PreCreateUserDTO from '../../application/dtos/pre-create-user.dto';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody, ApiParam } from '@nestjs/swagger';
+import { EUserCollectionRole } from '../../domain/enums/user-collection-role.enum';
 
 @ApiTags('User')
 @Controller('user')
@@ -100,6 +101,40 @@ export class UserController {
         return res.status(result.status).json(result.data)
     }
 
+    @Get('/collections')
+    @UseGuards(UserJwtGuard)
+    @ApiBearerAuth()
+    @ApiOperation({ summary: 'List collections accessible to the authenticated user' })
+    @ApiResponse({ status: 200, description: 'User collections returned' })
+    @ApiResponse({ status: 401, description: 'Invalid or expired token' })
+    async listCollections(
+        @Res() res: Response,
+        @Req() req: Request & { user_id: string },
+    ) {
+        const tenantIdHeader = req.headers['x-tenant-id'];
+        const tenantId = Array.isArray(tenantIdHeader) ? tenantIdHeader[0] : tenantIdHeader;
+        const result = await this.userService.listCollections(req.user_id, tenantId);
+        return res.status(result.status).json(result.data);
+    }
+
+    @Get('/collections/:collectionId')
+    @UseGuards(UserJwtGuard, UserRolesGuard)
+    @UserRoles(EUserCollectionRole.guest)
+    @ApiBearerAuth()
+    @ApiOperation({ summary: 'Get authenticated user context inside a collection' })
+    @ApiParam({ name: 'collectionId', description: 'User collection CUID', example: 'cma1collec001ghijklmno23p' })
+    @ApiResponse({ status: 200, description: 'User collection context returned' })
+    @ApiResponse({ status: 401, description: 'Invalid or expired token' })
+    @ApiResponse({ status: 403, description: 'User has no access to this collection' })
+    async getCollectionContext(
+        @Res() res: Response,
+        @Req() req: Request & { user_id: string; collection_id?: string; tenant_id?: string },
+        @Param('collectionId', ParseCuidPipe) collectionId: string,
+    ) {
+        const result = await this.userService.getCollectionContext(req.user_id, collectionId, req.tenant_id);
+        return res.status(result.status).json(result.data);
+    }
+
     @Post('/generate-payment-account-link')
     @UseGuards(UserJwtGuard)
     @ApiBearerAuth()
@@ -164,7 +199,7 @@ export class UserController {
     @Post('/webhook/generate-tokens/:key/:user_id/:tokens')
     @ApiOperation({ summary: 'Webhook to generate user tokens' })
     @ApiParam({ name: 'key', description: 'Webhook secret key' })
-    @ApiParam({ name: 'user_id', description: 'Target user ID' })
+    @ApiParam({ name: 'user_id', description: 'Target user CUID (25-character identifier)', example: 'cma1bcdef0001ghijklmno23p' })
     @ApiParam({ name: 'tokens', description: 'Number of tokens to generate' })
     @ApiResponse({ status: 200, description: 'Tokens generated successfully' })
     @ApiResponse({ status: 400, description: 'Invalid parameters' })
@@ -173,7 +208,7 @@ export class UserController {
         @Req() req: Request,
         @Param('key') key: string,
         @Param('tokens') tokens: string,
-        @Param('user_id') userId: string
+        @Param('user_id', ParseCuidPipe) userId: string
     ) {
         const result = await this.userService.generateTokens(
             key,

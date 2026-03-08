@@ -1,6 +1,9 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsString, IsNotEmpty, IsOptional, Matches, MaxLength } from 'class-validator';
 
+const adminCuidExample = 'cma1admin0001ghijklmno23p';
+const tenantCuidExample = 'cma1tenant001uvwxyzab345';
+
 export class CreateTenantDTO {
   @ApiProperty({ description: 'Tenant company name', example: 'Acme Corp' })
   @IsString()
@@ -48,12 +51,14 @@ export class UpdateTenantDTO {
 }
 
 export class AssignAdminToTenantDTO {
-  @ApiProperty({ description: 'Admin ID to assign', example: 'ckl1234abcd5' })
+  @ApiProperty({ description: 'Admin CUID to assign', example: adminCuidExample })
   @IsNotEmpty()
+  @Matches(/^c[a-z0-9]{24}$/, { message: 'admin_id must be a valid CUID' })
   admin_id: string;
 
-  @ApiProperty({ description: 'Tenant ID to assign to', example: 1 })
+  @ApiProperty({ description: 'Tenant CUID to assign to', example: tenantCuidExample })
   @IsNotEmpty()
+  @Matches(/^c[a-z0-9]{24}$/, { message: 'tenant_id must be a valid CUID' })
   tenant_id: string;
 }
 
@@ -64,7 +69,7 @@ export class UpdateAdminTenantRoleDTO {
 }
 
 export class TenantResponseDTO {
-  @ApiProperty({ example: 1 })
+  @ApiProperty({ example: tenantCuidExample, description: 'Tenant CUID (25-character identifier)' })
   id: string;
 
   @ApiProperty({ example: 'Acme Corp' })
@@ -90,7 +95,7 @@ export class TenantWithAdminsDTO extends TenantResponseDTO {
   @ApiProperty({ type: 'array', items: { type: 'object' } })
   AdminTenant: Array<{
     Admin: {
-      id: number;
+      id: string;
       name: string;
       email: string;
       role: string;

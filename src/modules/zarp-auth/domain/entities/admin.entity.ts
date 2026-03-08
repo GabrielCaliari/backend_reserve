@@ -11,7 +11,7 @@ export interface ICreateAdmin {
  * Encapsulates business rules around admin identity, roles, and tenant access.
  */
 export class Admin {
-  public readonly id?: number;
+  public readonly id?: string;
   public name: string;
   public email: string;
   public role: EAdminRole;
@@ -20,15 +20,15 @@ export class Admin {
   public readonly updated_at?: Date;
 
   /** Tenant IDs this admin is assigned to (populated from AdminTenant) */
-  public tenantIds: number[];
+  public tenantIds: string[];
 
   constructor(data: {
-    id?: number;
+    id?: string;
     name: string;
     email: string;
     role?: EAdminRole;
     active?: boolean;
-    tenantIds?: number[];
+    tenantIds?: string[];
     created_at?: Date;
     updated_at?: Date;
   }) {
@@ -50,7 +50,7 @@ export class Admin {
     return this.role === EAdminRole.company_admin;
   }
 
-  belongsToTenant(tenantId: number): boolean {
+  belongsToTenant(tenantId: string): boolean {
     if (this.isSuperAdmin()) return true;
     return this.tenantIds.includes(tenantId);
   }

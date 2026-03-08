@@ -1,6 +1,6 @@
-import { Body, Controller, Get, Param, ParseUUIDPipe, Patch, Post, Req, Res, UseGuards, Delete } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Res, UseGuards, Delete } from '@nestjs/common';
 import { AdminService } from '../../application/services/admin.service';
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import AuthAdminDTO from '../../application/dtos/auth-admin.dto';
 import { CreateAdminDTO, UpdateAdminRoleDTO, UpdateAdminDTO, AdminResponseDTO, AdminListItemDTO } from '../../application/dtos/admin-management.dto';
 import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
@@ -9,6 +9,7 @@ import { Roles } from '../../../../shared/auth/decorators/roles.decorator';
 import { CurrentAdmin, CurrentAdminPayload } from '../../../../shared/auth/decorators/current-admin.decorator';
 import { EAdminRole } from '../../domain/enums/admin-role.enum';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody, ApiParam } from '@nestjs/swagger';
+import { ParseCuidPipe } from '../../../../shared/pipes';
 
 @ApiTags('Admin Management')
 @Controller('admin')
@@ -28,7 +29,7 @@ export class AdminController {
         description: 'Authentication successful',
         schema: {
             example: {
-                session_id: 1,
+                session_id: 'cma1sessn0001ghijklmno23p',
                 session_token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
                 details: {
                     name: 'John Doe',
@@ -80,7 +81,7 @@ export class AdminController {
         description: 'Admin created successfully',
         schema: {
             example: {
-                id: 1,
+                id: 'cma1admin0001ghijklmno23p',
                 name: 'John Doe',
                 email: 'john@company.com',
                 role: 'manager'
@@ -121,14 +122,14 @@ export class AdminController {
         summary: 'Update admin role (super_admin only)',
         description: 'Changes the role of an administrator'
     })
-    @ApiParam({ name: 'id', type: String, description: 'Admin UUID' })
+    @ApiParam({ name: 'id', type: String, description: 'Admin CUID (25-character identifier)', example: 'cma1admin0001ghijklmno23p' })
     @ApiBody({ type: UpdateAdminRoleDTO })
     @ApiResponse({ 
         status: 200, 
         description: 'Admin role updated',
         schema: {
             example: {
-                id: 1,
+                id: 'cma1admin0001ghijklmno23p',
                 name: 'John Doe',
                 role: 'manager'
             }
@@ -137,7 +138,7 @@ export class AdminController {
     @ApiResponse({ status: 403, description: 'Insufficient permissions' })
     @ApiResponse({ status: 404, description: 'Admin not found' })
     async updateRole(
-        @Param('id', ParseUUIDPipe) id: string,
+        @Param('id', ParseCuidPipe) id: string,
         @Body() data: UpdateAdminRoleDTO,
         @Res() res: Response,
     ) {
@@ -153,13 +154,13 @@ export class AdminController {
         summary: 'Deactivate an admin (super_admin only)',
         description: 'Deactivates an administrator account. Cannot deactivate yourself.'
     })
-    @ApiParam({ name: 'id', type: String, description: 'Admin UUID' })
+    @ApiParam({ name: 'id', type: String, description: 'Admin CUID (25-character identifier)', example: 'cma1admin0001ghijklmno23p' })
     @ApiResponse({ 
         status: 200, 
         description: 'Admin deactivated',
         schema: {
             example: {
-                id: 1,
+                id: 'cma1admin0001ghijklmno23p',
                 active: false
             }
         }
@@ -168,7 +169,7 @@ export class AdminController {
     @ApiResponse({ status: 403, description: 'Insufficient permissions' })
     @ApiResponse({ status: 404, description: 'Admin not found' })
     async deactivate(
-        @Param('id', ParseUUIDPipe) id: string,
+        @Param('id', ParseCuidPipe) id: string,
         @CurrentAdmin() admin: CurrentAdminPayload,
         @Res() res: Response,
     ) {
@@ -184,13 +185,13 @@ export class AdminController {
         summary: 'Activate an admin (super_admin only)',
         description: 'Reactivates a previously deactivated administrator account'
     })
-    @ApiParam({ name: 'id', type: String, description: 'Admin UUID' })
+    @ApiParam({ name: 'id', type: String, description: 'Admin CUID (25-character identifier)', example: 'cma1admin0001ghijklmno23p' })
     @ApiResponse({ 
         status: 200, 
         description: 'Admin activated',
         schema: {
             example: {
-                id: 1,
+                id: 'cma1admin0001ghijklmno23p',
                 active: true
             }
         }
@@ -198,7 +199,7 @@ export class AdminController {
     @ApiResponse({ status: 403, description: 'Insufficient permissions' })
     @ApiResponse({ status: 404, description: 'Admin not found' })
     async activate(
-        @Param('id', ParseUUIDPipe) id: string,
+        @Param('id', ParseCuidPipe) id: string,
         @Res() res: Response,
     ) {
         const result = await this.adminService.activate(id);
@@ -213,7 +214,7 @@ export class AdminController {
         summary: 'Get admin by ID (super_admin only)',
         description: 'Returns detailed information about a specific administrator'
     })
-    @ApiParam({ name: 'id', type: String, description: 'Admin UUID' })
+    @ApiParam({ name: 'id', type: String, description: 'Admin CUID (25-character identifier)', example: 'cma1admin0001ghijklmno23p' })
     @ApiResponse({ 
         status: 200, 
         description: 'Admin found',
@@ -222,7 +223,7 @@ export class AdminController {
     @ApiResponse({ status: 403, description: 'Insufficient permissions' })
     @ApiResponse({ status: 404, description: 'Admin not found' })
     async findById(
-        @Param('id', ParseUUIDPipe) id: string,
+        @Param('id', ParseCuidPipe) id: string,
         @Res() res: Response,
     ) {
         const result = await this.adminService.findById(id);
@@ -237,14 +238,14 @@ export class AdminController {
         summary: 'Update admin data (super_admin only)',
         description: 'Updates administrator name and/or email'
     })
-    @ApiParam({ name: 'id', type: String, description: 'Admin UUID' })
+    @ApiParam({ name: 'id', type: String, description: 'Admin CUID (25-character identifier)', example: 'cma1admin0001ghijklmno23p' })
     @ApiBody({ type: UpdateAdminDTO })
     @ApiResponse({ 
         status: 200, 
         description: 'Admin updated',
         schema: {
             example: {
-                id: 1,
+                id: 'cma1admin0001ghijklmno23p',
                 name: 'John Doe Updated',
                 email: 'john.new@company.com'
             }
@@ -254,7 +255,7 @@ export class AdminController {
     @ApiResponse({ status: 403, description: 'Insufficient permissions' })
     @ApiResponse({ status: 404, description: 'Admin not found' })
     async update(
-        @Param('id', ParseUUIDPipe) id: string,
+        @Param('id', ParseCuidPipe) id: string,
         @Body() data: UpdateAdminDTO,
         @Res() res: Response,
     ) {
@@ -270,7 +271,7 @@ export class AdminController {
         summary: 'Delete admin permanently (super_admin only)',
         description: 'Permanently deletes an administrator account. Cannot delete yourself.'
     })
-    @ApiParam({ name: 'id', type: String, description: 'Admin UUID' })
+    @ApiParam({ name: 'id', type: String, description: 'Admin CUID (25-character identifier)', example: 'cma1admin0001ghijklmno23p' })
     @ApiResponse({ 
         status: 200, 
         description: 'Admin deleted',
@@ -284,7 +285,7 @@ export class AdminController {
     @ApiResponse({ status: 403, description: 'Insufficient permissions' })
     @ApiResponse({ status: 404, description: 'Admin not found' })
     async delete(
-        @Param('id', ParseUUIDPipe) id: string,
+        @Param('id', ParseCuidPipe) id: string,
         @CurrentAdmin() admin: CurrentAdminPayload,
         @Res() res: Response,
     ) {

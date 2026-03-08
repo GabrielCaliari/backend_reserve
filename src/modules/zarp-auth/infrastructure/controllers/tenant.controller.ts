@@ -31,6 +31,7 @@ import { RolesGuard } from '../../../../shared/auth/guards/roles.guard';
 import { Roles } from '../../../../shared/auth/decorators/roles.decorator';
 import { EAdminRole } from '../../domain/enums/admin-role.enum';
 import { CurrentAdmin, CurrentAdminPayload } from '../../../../shared/auth/decorators/current-admin.decorator';
+import { ParseCuidPipe } from '../../../../shared/pipes';
 
 @ApiTags('Tenant Management')
 @ApiBearerAuth()
@@ -101,14 +102,14 @@ export class TenantController {
     summary: 'Get tenant by ID (super_admin only)',
     description: 'Returns detailed information about a specific tenant'
   })
-  @ApiParam({ name: 'id', type: String, description: 'Tenant ID' })
+  @ApiParam({ name: 'id', type: String, description: 'Tenant CUID (25-character identifier)', example: 'cma1tenant001uvwxyzab345' })
   @ApiResponse({ 
     status: 200, 
     description: 'Tenant found',
     type: TenantWithAdminsDTO
   })
   @ApiResponse({ status: 404, description: 'Tenant not found' })
-  async findById(@Param('id') id: string, @Res() res: Response) {
+  async findById(@Param('id', ParseCuidPipe) id: string, @Res() res: Response) {
     const result = await this.tenantService.findById(id);
     return res.status(result.status).json(result.data);
   }
@@ -120,7 +121,7 @@ export class TenantController {
     summary: 'Update tenant (super_admin only)',
     description: 'Updates tenant name, slug, or domain'
   })
-  @ApiParam({ name: 'id', type: String, description: 'Tenant ID' })
+  @ApiParam({ name: 'id', type: String, description: 'Tenant CUID (25-character identifier)', example: 'cma1tenant001uvwxyzab345' })
   @ApiBody({ type: UpdateTenantDTO })
   @ApiResponse({ 
     status: 200, 
@@ -130,7 +131,7 @@ export class TenantController {
   @ApiResponse({ status: 400, description: 'Slug already exists' })
   @ApiResponse({ status: 404, description: 'Tenant not found' })
   async update(
-    @Param('id') id: string,
+    @Param('id', ParseCuidPipe) id: string,
     @Body() dto: UpdateTenantDTO,
     @Res() res: Response,
   ) {
@@ -151,9 +152,9 @@ export class TenantController {
     description: 'Admin assigned to tenant',
     schema: {
       example: {
-        id: 1,
-        admin_id: 1,
-        tenant_id: 1,
+        id: 'cma1admtn0001ghijklmno23p',
+        admin_id: 'cma1admin0001ghijklmno23p',
+        tenant_id: 'cma1tenant001uvwxyzab345',
         role: 'manager',
         active: true
       }
@@ -172,8 +173,8 @@ export class TenantController {
     summary: 'Remove admin from tenant (super_admin only)',
     description: 'Removes the association between an admin and a tenant'
   })
-  @ApiParam({ name: 'tenantId', type: String, description: 'Tenant ID' })
-  @ApiParam({ name: 'adminId', type: String, description: 'Admin ID (UUID)' })
+  @ApiParam({ name: 'tenantId', type: String, description: 'Tenant CUID (25-character identifier)', example: 'cma1tenant001uvwxyzab345' })
+  @ApiParam({ name: 'adminId', type: String, description: 'Admin CUID (25-character identifier)', example: 'cma1admin0001ghijklmno23p' })
   @ApiResponse({ 
     status: 200, 
     description: 'Admin removed from tenant',
@@ -184,8 +185,8 @@ export class TenantController {
     }
   })
   async unassignAdmin(
-    @Param('tenantId') tenantId: string,
-    @Param('adminId') adminId: string,
+    @Param('tenantId', ParseCuidPipe) tenantId: string,
+    @Param('adminId', ParseCuidPipe) adminId: string,
     @Res() res: Response,
   ) {
     const result = await this.tenantService.unassignAdmin(adminId, tenantId);
@@ -199,14 +200,14 @@ export class TenantController {
     summary: 'List admins of a tenant (super_admin only)',
     description: 'Returns all administrators associated with a specific tenant'
   })
-  @ApiParam({ name: 'tenantId', type: String, description: 'Tenant ID' })
+  @ApiParam({ name: 'tenantId', type: String, description: 'Tenant CUID (25-character identifier)', example: 'cma1tenant001uvwxyzab345' })
   @ApiResponse({ 
     status: 200, 
     description: 'Tenant admins listed',
     schema: {
       example: [
         {
-          id: 1,
+          id: 'cma1admin0001ghijklmno23p',
           name: 'John Doe',
           email: 'john@company.com',
           role: 'manager',
@@ -216,7 +217,7 @@ export class TenantController {
     }
   })
   async findAdminsByTenant(
-    @Param('tenantId') tenantId: string,
+    @Param('tenantId', ParseCuidPipe) tenantId: string,
     @Res() res: Response,
   ) {
     const result = await this.tenantService.findAdminsByTenant(tenantId);
@@ -230,13 +231,13 @@ export class TenantController {
     summary: 'Deactivate tenant (super_admin only)',
     description: 'Deactivates a tenant organization'
   })
-  @ApiParam({ name: 'id', type: String, description: 'Tenant ID' })
+  @ApiParam({ name: 'id', type: String, description: 'Tenant CUID (25-character identifier)', example: 'cma1tenant001uvwxyzab345' })
   @ApiResponse({ 
     status: 200, 
     description: 'Tenant deactivated',
     schema: {
       example: {
-        id: 1,
+        id: 'cma1tenant001uvwxyzab345',
         active: false
       }
     }
@@ -244,7 +245,7 @@ export class TenantController {
   @ApiResponse({ status: 403, description: 'Insufficient permissions' })
   @ApiResponse({ status: 404, description: 'Tenant not found' })
   async deactivate(
-    @Param('id') id: string,
+    @Param('id', ParseCuidPipe) id: string,
     @Res() res: Response,
   ) {
     const result = await this.tenantService.deactivate(id);
@@ -258,13 +259,13 @@ export class TenantController {
     summary: 'Activate tenant (super_admin only)',
     description: 'Reactivates a previously deactivated tenant'
   })
-  @ApiParam({ name: 'id', type: String, description: 'Tenant ID' })
+  @ApiParam({ name: 'id', type: String, description: 'Tenant CUID (25-character identifier)', example: 'cma1tenant001uvwxyzab345' })
   @ApiResponse({ 
     status: 200, 
     description: 'Tenant activated',
     schema: {
       example: {
-        id: 1,
+        id: 'cma1tenant001uvwxyzab345',
         active: true
       }
     }
@@ -272,7 +273,7 @@ export class TenantController {
   @ApiResponse({ status: 403, description: 'Insufficient permissions' })
   @ApiResponse({ status: 404, description: 'Tenant not found' })
   async activate(
-    @Param('id') id: string,
+    @Param('id', ParseCuidPipe) id: string,
     @Res() res: Response,
   ) {
     const result = await this.tenantService.activate(id);
@@ -286,7 +287,7 @@ export class TenantController {
     summary: 'Delete tenant permanently (super_admin only)',
     description: 'Permanently deletes a tenant and all its associations'
   })
-  @ApiParam({ name: 'id', type: String, description: 'Tenant ID' })
+  @ApiParam({ name: 'id', type: String, description: 'Tenant CUID (25-character identifier)', example: 'cma1tenant001uvwxyzab345' })
   @ApiResponse({ 
     status: 200, 
     description: 'Tenant deleted',
@@ -299,7 +300,7 @@ export class TenantController {
   @ApiResponse({ status: 403, description: 'Insufficient permissions' })
   @ApiResponse({ status: 404, description: 'Tenant not found' })
   async delete(
-    @Param('id') id: string,
+    @Param('id', ParseCuidPipe) id: string,
     @Res() res: Response,
   ) {
     const result = await this.tenantService.delete(id);
@@ -313,8 +314,8 @@ export class TenantController {
     summary: 'Update admin role in tenant (super_admin only)',
     description: 'Changes the role of an admin within a specific tenant'
   })
-  @ApiParam({ name: 'tenantId', type: String, description: 'Tenant ID' })
-  @ApiParam({ name: 'adminId', type: String, description: 'Admin ID (UUID)' })
+  @ApiParam({ name: 'tenantId', type: String, description: 'Tenant CUID (25-character identifier)', example: 'cma1tenant001uvwxyzab345' })
+  @ApiParam({ name: 'adminId', type: String, description: 'Admin CUID (25-character identifier)', example: 'cma1admin0001ghijklmno23p' })
   @ApiBody({
     schema: {
       type: 'object',
@@ -332,9 +333,9 @@ export class TenantController {
     description: 'Admin role updated in tenant',
     schema: {
       example: {
-        id: 1,
+        id: 'cma1admtn0001ghijklmno23p',
         admin_id: 'ckl1234abcd5',
-        tenant_id: 1,
+        tenant_id: 'cma1tenant001uvwxyzab345',
         role: 'manager',
         active: true
       }
@@ -343,8 +344,8 @@ export class TenantController {
   @ApiResponse({ status: 403, description: 'Insufficient permissions' })
   @ApiResponse({ status: 404, description: 'Admin or tenant not found' })
   async updateAdminRole(
-    @Param('tenantId') tenantId: string,
-    @Param('adminId') adminId: string,
+    @Param('tenantId', ParseCuidPipe) tenantId: string,
+    @Param('adminId', ParseCuidPipe) adminId: string,
     @Body() dto: { role: EAdminRole },
     @Res() res: Response,
   ) {

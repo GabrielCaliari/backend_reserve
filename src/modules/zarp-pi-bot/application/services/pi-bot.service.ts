@@ -5,7 +5,7 @@ import { errorTypes } from '../../../../shared/constants/error-types';
 import { errorResponse } from '../../../../shared/helpers';
 
 export interface IMessage {
-    user_id: number;
+    user_id: string;
     message: string;
     history: MessageHistory[];
 }

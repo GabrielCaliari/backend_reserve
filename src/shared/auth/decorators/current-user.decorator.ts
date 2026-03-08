@@ -1,9 +1,13 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
+import { EUserCollectionRole } from '../../../modules/zarp-auth/domain/enums/user-collection-role.enum';
 
 export interface CurrentUserPayload {
-  user_id: number;
+  user_id: string;
   token: string;
-  'session-id': number;
+  'session-id': string;
+  tenant_id?: string;
+  collection_id?: string;
+  user_role?: EUserCollectionRole;
 }
 
 /**
@@ -17,6 +21,9 @@ export const CurrentUser = createParamDecorator(
       user_id: request.user_id,
       token: request.token,
       'session-id': request['session-id'],
+      tenant_id: request.tenant_id,
+      collection_id: request.collection_id,
+      user_role: request.user_role,
     };
 
     return data ? user[data] : user;

@@ -35,6 +35,7 @@ model User {
   Subscription              Subscription[]
   Plan                      Plan                        @relation(fields: [plan_id], references: [id])
   Credential                UserCredential?
+  UserCollectionMembership  UserCollectionMembership[]
   UserPasswordChangeSession UserPasswordChangeSession[]
   UserSessionToken          UserSessionToken[]
 }
@@ -684,6 +685,12 @@ enum ECollectionAccessMode {
   restricted
 }
 
+enum EUserCollectionRole {
+  guest
+  member
+  operator
+}
+
 model Admin {
   id                 String              @id @default(cuid()) @db.VarChar(25)
   name               String              @db.VarChar(100)
@@ -710,6 +717,7 @@ model Tenant {
   AdminTenant       AdminTenant[]
   Blog              Blog[]
   LeadCollection    LeadCollection[]
+  UserCollection    UserCollection[]
   leads             Lead[]
   Author            Author[]
   StatsIntegration  StatsIntegration[]
@@ -737,6 +745,38 @@ model LeadCollection {
 
   @@unique([slug, tenant_id])
   @@index([tenant_id])
+}
+
+model UserCollection {
+  id              String                    @id @default(cuid()) @db.VarChar(25)
+  name            String                    @db.VarChar(150)
+  slug            String                    @db.VarChar(100)
+  description     String?                   @db.VarChar(255)
+  active          Boolean                   @default(true)
+  tenant_id       String                    @db.VarChar(25)
+  created_at      DateTime                  @default(now())
+  updated_at      DateTime                  @updatedAt
+  Tenant          Tenant                    @relation(fields: [tenant_id], references: [id])
+  Memberships     UserCollectionMembership[]
+
+  @@unique([tenant_id, slug])
+  @@index([tenant_id])
+}
+
+model UserCollectionMembership {
+  id            String              @id @default(cuid()) @db.VarChar(25)
+  user_id       String              @db.VarChar(25)
+  collection_id String              @db.VarChar(25)
+  role          EUserCollectionRole @default(member)
+  active        Boolean             @default(true)
+  created_at    DateTime            @default(now())
+  updated_at    DateTime            @updatedAt
+  User          User                @relation(fields: [user_id], references: [id])
+  Collection    UserCollection      @relation(fields: [collection_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, collection_id])
+  @@index([user_id])
+  @@index([collection_id])
 }
 
 model AdminTenant {

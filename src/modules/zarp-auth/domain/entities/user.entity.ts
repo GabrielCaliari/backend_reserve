@@ -3,7 +3,7 @@ import Email from '../../../../shared/domain/value-objects/email.vo';
 import PhoneNumber from '../../../../shared/domain/value-objects/phone-number.vo';
 
 export default class User {
-  public id?: number;
+  public id?: string;
   public email: Email;
   public name: string;
   public cpf: CPF;
@@ -11,7 +11,7 @@ export default class User {
   public sex: number;
   public date_of_birth: Date;
   public date_expires_in: Date;
-  public plan_id: number;
+  public plan_id: string;
   public created_at?: Date;
   public updated_at?: Date;
 

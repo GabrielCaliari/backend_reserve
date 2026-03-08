@@ -4,7 +4,7 @@
  * Each tenant has its own CMS, metrics, and admin users.
  */
 export class Tenant {
-  public readonly id?: number;
+  public readonly id?: string;
   public name: string;
   public slug: string;
   public domain: string | null;
@@ -13,7 +13,7 @@ export class Tenant {
   public readonly updated_at?: Date;
 
   constructor(data: {
-    id?: number;
+    id?: string;
     name: string;
     slug: string;
     domain?: string | null;

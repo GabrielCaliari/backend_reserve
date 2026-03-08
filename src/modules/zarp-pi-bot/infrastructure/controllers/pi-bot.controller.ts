@@ -20,7 +20,7 @@ export class PiBotController {
     @ApiResponse({ status: 401, description: 'Invalid or expired token' })
     async message(
         @Res() res: Response,
-        @Req() req: Request & { user_id: number },
+        @Req() req: Request & { user_id: string },
         @Body() data: PiBotMessageDTO
     ) {
         const userId = req.user_id;

@@ -22,6 +22,8 @@ import UserSessionTokenRepository from './infrastructure/repositories/user-sessi
 import PlanRepository from './infrastructure/repositories/plan.repository';
 import TenantRepository from './infrastructure/repositories/tenant.repository';
 import AdminTenantRepository from './infrastructure/repositories/admin-tenant.repository';
+import { UserCollectionRepository } from './infrastructure/repositories/user-collection.repository';
+import { UserCollectionMembershipRepository } from './infrastructure/repositories/user-collection-membership.repository';
 
 // DIP tokens
 import {
@@ -34,6 +36,8 @@ import {
   PLAN_REPOSITORY,
   TENANT_REPOSITORY,
   ADMIN_TENANT_REPOSITORY,
+  USER_COLLECTION_REPOSITORY,
+  USER_COLLECTION_MEMBERSHIP_REPOSITORY,
 } from './domain/interfaces';
 
 // Cross-context repositories (temporary, to be replaced by module imports)
@@ -45,7 +49,7 @@ import AdditionalTokenPackRepository from '../zarp-pi-bot/infrastructure/reposit
 import APITokenRepository from '../zarp-brands/infrastructure/repositories/api-token.repository';
 
 // DIP Guards
-import { AdminJwtGuard, UserJwtGuard, RolesGuard, TenantGuard } from '../../shared/auth/guards';
+import { AdminJwtGuard, UserJwtGuard, RolesGuard, TenantGuard, UserTenantGuard, UserRolesGuard } from '../../shared/auth/guards';
 import { ADMIN_TOKEN_VALIDATOR, USER_TOKEN_VALIDATOR } from '../../shared/auth/interfaces/token-validator.interface';
 
 // Token Validators (ITokenValidator implementations)
@@ -89,6 +93,8 @@ import { FXGoogleAPITokenProvider } from './infrastructure/providers/fx-google-a
     UserJwtGuard,
     RolesGuard,
     TenantGuard,
+    UserTenantGuard,
+    UserRolesGuard,
 
     // Local repositories
     AdminRepository,
@@ -100,6 +106,8 @@ import { FXGoogleAPITokenProvider } from './infrastructure/providers/fx-google-a
     PlanRepository,
     TenantRepository,
     AdminTenantRepository,
+    UserCollectionRepository,
+    UserCollectionMembershipRepository,
 
     // DIP repository tokens (alias to concrete repos)
     { provide: ADMIN_REPOSITORY, useExisting: AdminRepository },
@@ -111,6 +119,8 @@ import { FXGoogleAPITokenProvider } from './infrastructure/providers/fx-google-a
     { provide: PLAN_REPOSITORY, useExisting: PlanRepository },
     { provide: TENANT_REPOSITORY, useExisting: TenantRepository },
     { provide: ADMIN_TENANT_REPOSITORY, useExisting: AdminTenantRepository },
+    { provide: USER_COLLECTION_REPOSITORY, useExisting: UserCollectionRepository },
+    { provide: USER_COLLECTION_MEMBERSHIP_REPOSITORY, useExisting: UserCollectionMembershipRepository },
 
     // Cross-context repositories (temporary coupling)
     SearchRepository,
@@ -130,6 +140,8 @@ import { FXGoogleAPITokenProvider } from './infrastructure/providers/fx-google-a
     UserJwtGuard,
     RolesGuard,
     TenantGuard,
+    UserTenantGuard,
+    UserRolesGuard,
     ADMIN_TOKEN_VALIDATOR,
     USER_TOKEN_VALIDATOR,
     // Concrete repos (backward compat for cross-context consumers)
@@ -142,6 +154,8 @@ import { FXGoogleAPITokenProvider } from './infrastructure/providers/fx-google-a
     PlanRepository,
     TenantRepository,
     AdminTenantRepository,
+    UserCollectionRepository,
+    UserCollectionMembershipRepository,
     // DIP tokens
     ADMIN_REPOSITORY,
     ADMIN_CREDENTIAL_REPOSITORY,
@@ -152,6 +166,8 @@ import { FXGoogleAPITokenProvider } from './infrastructure/providers/fx-google-a
     PLAN_REPOSITORY,
     TENANT_REPOSITORY,
     ADMIN_TENANT_REPOSITORY,
+    USER_COLLECTION_REPOSITORY,
+    USER_COLLECTION_MEMBERSHIP_REPOSITORY,
     UserService,
   ],
 })

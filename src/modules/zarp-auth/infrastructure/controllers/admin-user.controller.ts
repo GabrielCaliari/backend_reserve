@@ -22,6 +22,7 @@ import {
 import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
 import { RolesGuard } from '../../../../shared/auth/guards/roles.guard';
 import { Roles } from '../../../../shared/auth/decorators/roles.decorator';
+import { ParseCuidPipe } from '../../../../shared/pipes';
 import { EAdminRole } from '../../domain/enums/admin-role.enum';
 import { UserManagementService } from '../../application/services/user-management.service';
 import { 
@@ -79,10 +80,10 @@ export class AdminUserController {
   @Roles(EAdminRole.super_admin)
   @UseGuards(AdminJwtGuard, RolesGuard)
   @ApiOperation({ 
-    summary: 'Get user by ID (super_admin only)',
+    summary: 'Get user by CUID (super_admin only)',
     description: 'Returns detailed information about a specific user'
   })
-  @ApiParam({ name: 'id', type: String, description: 'User ID' })
+  @ApiParam({ name: 'id', type: String, description: 'User CUID (25-character identifier)', example: 'cma1bcdef0001ghijklmno23p' })
   @ApiResponse({ 
     status: 200, 
     description: 'User found',
@@ -90,7 +91,7 @@ export class AdminUserController {
   })
   @ApiResponse({ status: 403, description: 'Insufficient permissions' })
   @ApiResponse({ status: 404, description: 'User not found' })
-  async findById(@Param('id') id: string, @Res() res: Response) {
+  async findById(@Param('id', ParseCuidPipe) id: string, @Res() res: Response) {
     const result = await this.userManagementService.findById(id);
     return res.status(result.status).json(result.data);
   }
@@ -99,17 +100,17 @@ export class AdminUserController {
   @Roles(EAdminRole.super_admin)
   @UseGuards(AdminJwtGuard, RolesGuard)
   @ApiOperation({ 
-    summary: 'Update user data (super_admin only)',
+    summary: 'Update user data by CUID (super_admin only)',
     description: 'Updates user name, email, or phone number'
   })
-  @ApiParam({ name: 'id', type: String, description: 'User ID' })
+  @ApiParam({ name: 'id', type: String, description: 'User CUID (25-character identifier)', example: 'cma1bcdef0001ghijklmno23p' })
   @ApiBody({ type: UpdateUserDTO })
   @ApiResponse({ 
     status: 200, 
     description: 'User updated',
     schema: {
       example: {
-        id: 1,
+        id: 'cma1bcdef0001ghijklmno23p',
         name: 'Jane Doe Updated',
         email: 'jane.new@example.com',
         phone_number: '5511999999999'
@@ -120,7 +121,7 @@ export class AdminUserController {
   @ApiResponse({ status: 403, description: 'Insufficient permissions' })
   @ApiResponse({ status: 404, description: 'User not found' })
   async update(
-    @Param('id') id: string,
+    @Param('id', ParseCuidPipe) id: string,
     @Body() data: UpdateUserDTO,
     @Res() res: Response,
   ) {
@@ -132,16 +133,16 @@ export class AdminUserController {
   @Roles(EAdminRole.super_admin)
   @UseGuards(AdminJwtGuard, RolesGuard)
   @ApiOperation({ 
-    summary: 'Deactivate user (super_admin only)',
+    summary: 'Deactivate user by CUID (super_admin only)',
     description: 'Deactivates a user account by setting expiration date to now'
   })
-  @ApiParam({ name: 'id', type: String, description: 'User ID' })
+  @ApiParam({ name: 'id', type: String, description: 'User CUID (25-character identifier)', example: 'cma1bcdef0001ghijklmno23p' })
   @ApiResponse({ 
     status: 200, 
     description: 'User deactivated',
     schema: {
       example: {
-        id: 1,
+        id: 'cma1bcdef0001ghijklmno23p',
         date_expires_in: '2024-01-01T00:00:00.000Z'
       }
     }
@@ -149,7 +150,7 @@ export class AdminUserController {
   @ApiResponse({ status: 403, description: 'Insufficient permissions' })
   @ApiResponse({ status: 404, description: 'User not found' })
   async deactivate(
-    @Param('id') id: string,
+    @Param('id', ParseCuidPipe) id: string,
     @Res() res: Response,
   ) {
     const result = await this.userManagementService.deactivate(id);
@@ -160,10 +161,10 @@ export class AdminUserController {
   @Roles(EAdminRole.super_admin)
   @UseGuards(AdminJwtGuard, RolesGuard)
   @ApiOperation({ 
-    summary: 'Delete user permanently (super_admin only)',
+    summary: 'Delete user permanently by CUID (super_admin only)',
     description: 'Permanently deletes a user account and all associated data'
   })
-  @ApiParam({ name: 'id', type: String, description: 'User ID' })
+  @ApiParam({ name: 'id', type: String, description: 'User CUID (25-character identifier)', example: 'cma1bcdef0001ghijklmno23p' })
   @ApiResponse({ 
     status: 200, 
     description: 'User deleted',
@@ -175,7 +176,7 @@ export class AdminUserController {
   })
   @ApiResponse({ status: 403, description: 'Insufficient permissions' })
   @ApiResponse({ status: 404, description: 'User not found' })
-  async delete(@Param('id') id: string, @Res() res: Response) {
+  async delete(@Param('id', ParseCuidPipe) id: string, @Res() res: Response) {
     const result = await this.userManagementService.delete(id);
     return res.status(result.status).json(result.data);
   }

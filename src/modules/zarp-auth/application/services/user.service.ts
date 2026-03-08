@@ -7,11 +7,13 @@ import {
     IUserCredentialRepository,
     IUserSessionTokenRepository,
     IPlanRepository,
+    IUserCollectionMembershipRepository,
     ICreateUser,
     USER_REPOSITORY,
     USER_CREDENTIAL_REPOSITORY,
     USER_SESSION_TOKEN_REPOSITORY,
     PLAN_REPOSITORY,
+    USER_COLLECTION_MEMBERSHIP_REPOSITORY,
 } from '../../domain/interfaces';
 // Cross-context repositories (temporary, to be replaced by module imports)
 import SearchRepository from '../../../zarp-cnpjs/infrastructure/repositories/search.repository';
@@ -31,6 +33,7 @@ export class UserService {
         @Inject(USER_SESSION_TOKEN_REPOSITORY) private readonly userSessionTokenRepository: IUserSessionTokenRepository,
         private readonly searchRepository: SearchRepository,
         @Inject(PLAN_REPOSITORY) private readonly planRepository: IPlanRepository,
+        @Inject(USER_COLLECTION_MEMBERSHIP_REPOSITORY) private readonly userCollectionMembershipRepository: IUserCollectionMembershipRepository,
         private readonly brandAlertRepository: BrandAlertRepository,
         private readonly brandRepository: BrandRepository,
         private readonly brandAnalysisRepository: BrandAnalysisRepository,
@@ -323,6 +326,60 @@ export class UserService {
             }
         } catch (error) {
             return errorResponse(errorTypes._500.listing_user_data, 500, error);
+        }
+    }
+
+    async listCollections(userId: string, tenantId?: string) {
+        try {
+            const memberships = await this.userCollectionMembershipRepository.findCollectionsByUserId(userId, tenantId);
+
+            return {
+                status: 200,
+                data: memberships.map((membership: any) => ({
+                    membership_id: membership.id,
+                    role: membership.role,
+                    active: membership.active,
+                    collection: {
+                        id: membership.Collection.id,
+                        name: membership.Collection.name,
+                        slug: membership.Collection.slug,
+                        description: membership.Collection.description,
+                        tenant_id: membership.Collection.tenant_id,
+                        active: membership.Collection.active,
+                    },
+                })),
+            };
+        } catch (error) {
+            return errorResponse('500:USER_COLLECTIONS_NOT_LISTED', 500, error);
+        }
+    }
+
+    async getCollectionContext(userId: string, collectionId: string, tenantId?: string) {
+        try {
+            const membership = await this.userCollectionMembershipRepository.findMembership(userId, collectionId, tenantId);
+
+            if (!membership) {
+                return errorResponse('404:USER_COLLECTION_NOT_FOUND', 404);
+            }
+
+            return {
+                status: 200,
+                data: {
+                    membership_id: membership.id,
+                    role: membership.role,
+                    active: membership.active,
+                    tenant_id: membership.Collection.tenant_id,
+                    collection: {
+                        id: membership.Collection.id,
+                        name: membership.Collection.name,
+                        slug: membership.Collection.slug,
+                        description: membership.Collection.description,
+                        active: membership.Collection.active,
+                    },
+                },
+            };
+        } catch (error) {
+            return errorResponse('500:USER_COLLECTION_CONTEXT_NOT_FOUND', 500, error);
         }
     }
 

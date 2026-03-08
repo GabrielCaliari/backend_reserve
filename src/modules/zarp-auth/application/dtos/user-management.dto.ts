@@ -1,6 +1,9 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsString, IsOptional, IsEmail } from 'class-validator';
 
+const userCuidExample = 'cma1bcdef0001ghijklmno23p';
+const planCuidExample = 'cma1pqrst0002uvwxyzab345';
+
 export class UpdateUserDTO {
   @ApiPropertyOptional({ description: 'User name', example: 'Jane Doe' })
   @IsString()
@@ -19,8 +22,8 @@ export class UpdateUserDTO {
 }
 
 export class UserResponseDTO {
-  @ApiProperty({ example: 1 })
-  id: number;
+  @ApiProperty({ example: userCuidExample, description: 'User CUID (25-character identifier)' })
+  id: string;
 
   @ApiProperty({ example: 'Jane Doe' })
   name: string;
@@ -43,8 +46,8 @@ export class UserResponseDTO {
   @ApiProperty({ example: '2025-12-31', nullable: true })
   date_expires_in?: Date;
 
-  @ApiProperty({ example: 1 })
-  plan_id: number;
+  @ApiProperty({ example: planCuidExample, description: 'Plan CUID (25-character identifier)' })
+  plan_id: string;
 
   @ApiProperty({ example: '2024-01-01T00:00:00.000Z' })
   created_at: Date;
@@ -54,8 +57,8 @@ export class UserResponseDTO {
 }
 
 export class UserListItemDTO {
-  @ApiProperty({ example: 1 })
-  id: number;
+  @ApiProperty({ example: userCuidExample, description: 'User CUID (25-character identifier)' })
+  id: string;
 
   @ApiProperty({ example: 'Jane Doe' })
   name: string;
@@ -69,8 +72,8 @@ export class UserListItemDTO {
   @ApiProperty({ example: '12345678901' })
   cpf: string;
 
-  @ApiProperty({ example: 1 })
-  plan_id: number;
+  @ApiProperty({ example: planCuidExample, description: 'Plan CUID (25-character identifier)' })
+  plan_id: string;
 
   @ApiProperty({ example: '2025-12-31', nullable: true })
   date_expires_in?: Date;
