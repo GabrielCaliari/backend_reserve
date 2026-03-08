@@ -15,7 +15,6 @@ import {
   successResponse,
   errorResponse,
 } from '../utils/service-response.util';
-import { AuthorNotFoundError } from '../../domain/errors/author-not-found.error';
 import { isValidUUID } from '../../domain/utils/uuid.util';
 
 // Error constants
@@ -30,14 +29,14 @@ const ERROR_AVATAR_TENANT_MISMATCH =
   '400:Avatar must belong to the same tenant as the author';
 const ERROR_AVATAR_ASSIGN_FAILED = '500:Failed to assign avatar';
 const ERROR_INVALID_TENANT = '400:Invalid tenant ID';
-const ERROR_INVALID_UUID = '400:Invalid UUID format';
+const ERROR_INVALID_CUID = '400:Invalid CUID format';
 
 /**
  * AuthorService
  *
  * Application service for managing authors.
  * Handles author CRUD operations with business rule validation.
- * All author IDs are UUID strings (12-character cuid format).
+ * All author IDs are CUID strings.
  *
  * **Validates: Requirements 5.1, 5.7, 14.7**
  */
@@ -58,22 +57,26 @@ export class AuthorService {
    *
    * **Validates: Requirement 5.1, 14.7**
    */
-  async createAuthor(dto: CreateAuthorDTO): Promise<ServiceResponse<Author>> {
+  async createAuthor(
+    dto: CreateAuthorDTO,
+    tenantId?: string,
+  ): Promise<ServiceResponse<Author>> {
     try {
-// Validate tenant_id is present
-        if (!dto.tenantId) {
+      const resolvedTenantId = tenantId ?? dto.tenantId;
+
+      if (!resolvedTenantId || !isValidUUID(resolvedTenantId)) {
         return errorResponse(ERROR_INVALID_TENANT, 400);
       }
 
-      // Validate avatar UUID format if provided
+      // Validate avatar CUID format if provided
       if (dto.avatarId) {
         if (!isValidUUID(dto.avatarId)) {
-          return errorResponse(`${ERROR_INVALID_UUID}: avatarId`, 400);
+          return errorResponse(`${ERROR_INVALID_CUID}: avatarId`, 400);
         }
 
         const avatarValidation = await this.validateAvatar(
           dto.avatarId,
-          dto.tenantId,
+          resolvedTenantId,
         );
         if (!avatarValidation.valid) {
           return errorResponse(
@@ -89,7 +92,7 @@ export class AuthorService {
         lastName: dto.lastName,
         biography: dto.biography || null,
         avatarId: dto.avatarId || null,
-        tenantId: dto.tenantId,
+        tenantId: resolvedTenantId,
         active: true,
       });
 
@@ -113,7 +116,7 @@ export class AuthorService {
   /**
    * Updates an existing author
    *
-   * @param id - Author ID (UUID string)
+  * @param id - Author ID (CUID string)
    * @param dto - Author update data
    * @returns ServiceResponse with updated author or error
    *
@@ -122,11 +125,12 @@ export class AuthorService {
   async updateAuthor(
     id: string,
     dto: UpdateAuthorDTO,
+    tenantId?: string,
   ): Promise<ServiceResponse<Author>> {
     try {
-      // Validate author ID UUID format
+      // Validate author ID CUID format
       if (!isValidUUID(id)) {
-        return errorResponse(`${ERROR_INVALID_UUID}: authorId`, 400);
+        return errorResponse(`${ERROR_INVALID_CUID}: authorId`, 400);
       }
 
       // Check if author exists
@@ -135,10 +139,14 @@ export class AuthorService {
         return errorResponse(ERROR_AUTHOR_NOT_FOUND, 404);
       }
 
-      // Validate avatar UUID format if being updated
+      if (tenantId && existing.tenantId !== tenantId) {
+        return errorResponse(ERROR_AUTHOR_NOT_FOUND, 404);
+      }
+
+      // Validate avatar CUID format if being updated
       if (dto.avatarId !== undefined && dto.avatarId !== null) {
         if (!isValidUUID(dto.avatarId)) {
-          return errorResponse(`${ERROR_INVALID_UUID}: avatarId`, 400);
+          return errorResponse(`${ERROR_INVALID_CUID}: avatarId`, 400);
         }
 
         const avatarValidation = await this.validateAvatar(
@@ -165,7 +173,7 @@ export class AuthorService {
       if (dto.firstName !== undefined || dto.lastName !== undefined) {
         const firstName = dto.firstName ?? existing.firstName;
         const lastName = dto.lastName ?? existing.lastName;
-        if (firstName.length === 0 || lastName.length === 0) {
+        if (firstName.trim().length === 0 || lastName.trim().length === 0) {
           return errorResponse(
             '400:First name and last name cannot be empty',
             400,
@@ -188,16 +196,16 @@ export class AuthorService {
    * Prevents deletion if the author has published articles to maintain
    * referential integrity and content attribution.
    *
-   * @param id - Author ID (UUID string)
+  * @param id - Author ID (CUID string)
    * @returns ServiceResponse with success or error
    *
    * **Validates: Requirement 5.7, 14.7**
    */
   async deleteAuthor(id: string, tenantId?: string): Promise<ServiceResponse<void>> {
     try {
-      // Validate author ID UUID format
+      // Validate author ID CUID format
       if (!isValidUUID(id)) {
-        return errorResponse(`${ERROR_INVALID_UUID}: authorId`, 400);
+        return errorResponse(`${ERROR_INVALID_CUID}: authorId`, 400);
       }
 
       // Check if author exists
@@ -233,8 +241,8 @@ export class AuthorService {
    * Validates that the MediaAsset exists and belongs to the same tenant
    * as the author before assignment.
    *
-   * @param authorId - Author ID (UUID string)
-   * @param avatarId - MediaAsset ID (UUID string) for the avatar
+  * @param authorId - Author ID (CUID string)
+  * @param avatarId - MediaAsset ID (CUID string) for the avatar
    * @returns ServiceResponse with updated author or error
    *
    * **Validates: Requirement 5.3, 14.7**
@@ -242,21 +250,26 @@ export class AuthorService {
   async assignAvatar(
     authorId: string,
     avatarId: string,
+    tenantId?: string,
   ): Promise<ServiceResponse<Author>> {
     try {
-      // Validate author ID UUID format
+      // Validate author ID CUID format
       if (!isValidUUID(authorId)) {
-        return errorResponse(`${ERROR_INVALID_UUID}: authorId`, 400);
+        return errorResponse(`${ERROR_INVALID_CUID}: authorId`, 400);
       }
 
-      // Validate avatar ID UUID format
+      // Validate avatar ID CUID format
       if (!isValidUUID(avatarId)) {
-        return errorResponse(`${ERROR_INVALID_UUID}: avatarId`, 400);
+        return errorResponse(`${ERROR_INVALID_CUID}: avatarId`, 400);
       }
 
       // Check if author exists
       const author = await this.authorRepository.findById(authorId);
       if (!author) {
+        return errorResponse(ERROR_AUTHOR_NOT_FOUND, 404);
+      }
+
+      if (tenantId && author.tenantId !== tenantId) {
         return errorResponse(ERROR_AUTHOR_NOT_FOUND, 404);
       }
 
@@ -286,16 +299,16 @@ export class AuthorService {
   /**
    * Finds an author by ID
    *
-   * @param id - Author ID (UUID string)
+  * @param id - Author ID (CUID string)
    * @returns ServiceResponse with author or error
    *
    * **Validates: Requirement 5.1, 14.7**
    */
   async findById(id: string, tenantId?: string): Promise<ServiceResponse<Author>> {
     try {
-      // Validate author ID UUID format
+      // Validate author ID CUID format
       if (!isValidUUID(id)) {
-        return errorResponse(`${ERROR_INVALID_UUID}: authorId`, 400);
+        return errorResponse(`${ERROR_INVALID_CUID}: authorId`, 400);
       }
 
       const author = await this.authorRepository.findById(id);
@@ -341,7 +354,7 @@ export class AuthorService {
   /**
    * Validates that a MediaAsset exists and belongs to the specified tenant
    *
-   * @param avatarId - MediaAsset ID (UUID string)
+  * @param avatarId - MediaAsset ID (CUID string)
    * @param tenantId - Expected tenant ID
    * @returns Validation result with error details if invalid
    */
@@ -350,11 +363,11 @@ export class AuthorService {
     tenantId: string,
   ): Promise<{ valid: boolean; error?: string; status?: number }> {
     try {
-      // Validate avatar ID UUID format
+      // Validate avatar ID CUID format
       if (!isValidUUID(avatarId)) {
         return {
           valid: false,
-          error: `${ERROR_INVALID_UUID}: avatarId`,
+          error: `${ERROR_INVALID_CUID}: avatarId`,
           status: 400,
         };
       }

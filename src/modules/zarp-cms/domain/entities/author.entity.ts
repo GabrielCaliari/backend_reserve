@@ -50,6 +50,6 @@ export class Author {
    * @returns true if both names are valid, false otherwise
    */
   validateNames(): boolean {
-    return this.firstName.length > 0 && this.lastName.length > 0;
+    return this.firstName.trim().length > 0 && this.lastName.trim().length > 0;
   }
 }

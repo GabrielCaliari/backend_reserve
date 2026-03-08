@@ -1,5 +1,7 @@
-import { IsString, IsOptional, MaxLength, IsInt, Min, IsBoolean } from 'class-validator';
+import { IsString, IsOptional, MaxLength, IsBoolean } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
+
+const mediaAssetCuidExample = 'cmcmsasset01abc234def56789';
 
 export class UpdateAuthorDTO {
   @ApiPropertyOptional({
@@ -31,8 +33,8 @@ export class UpdateAuthorDTO {
   biography?: string;
 
   @ApiPropertyOptional({
-    description: 'Avatar MediaAsset ID (UUID)',
-    example: 'ckl1234abcd5',
+    description: 'Avatar MediaAsset ID (CUID de 25 caracteres)',
+    example: mediaAssetCuidExample,
   })
   @IsString()
   @IsOptional()

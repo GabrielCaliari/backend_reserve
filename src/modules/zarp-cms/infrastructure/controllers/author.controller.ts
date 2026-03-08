@@ -20,12 +20,25 @@ import {
   ApiResponse,
   ApiBearerAuth,
   ApiHeader,
-  ApiConsumes,
   ApiBody,
+  ApiBadRequestResponse,
+  ApiCreatedResponse,
+  ApiExtraModels,
+  ApiForbiddenResponse,
+  ApiNotFoundResponse,
+  ApiOkResponse,
+  ApiParam,
+  ApiQuery,
 } from '@nestjs/swagger';
 import { AuthorService } from '../../application/services/author.service';
 import { CreateAuthorDTO } from '../../application/dtos/create-author.dto';
 import { UpdateAuthorDTO } from '../../application/dtos/update-author.dto';
+import {
+  AssignAuthorAvatarDTO,
+  AuthorResponseDTO,
+  PaginatedAuthorsResponseDTO,
+  SuccessMessageResponseDTO,
+} from '../../application/dtos/author-response.dto';
 import { AuthorPresenter } from '../presenters/author.presenter';
 import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
 import { TenantGuard } from '../../../../shared/auth/guards/tenant.guard';
@@ -33,14 +46,16 @@ import { RolesGuard } from '../../../../shared/auth/guards/roles.guard';
 import { Roles } from '../../../../shared/auth/decorators/roles.decorator';
 import { CurrentAdmin, CurrentAdminPayload } from '../../../../shared/auth/decorators/current-admin.decorator';
 import { EAdminRole } from '../../../zarp-auth/domain/enums/admin-role.enum';
+import { UuidValidationPipe } from '../pipes/uuid-validation.pipe';
 
 @ApiTags('CMS Author Management')
 @Controller('authors')
 @UseGuards(AdminJwtGuard, TenantGuard, RolesGuard)
 @ApiBearerAuth()
+@ApiExtraModels(AuthorResponseDTO, PaginatedAuthorsResponseDTO, SuccessMessageResponseDTO)
 @ApiHeader({
   name: 'x-tenant-id',
-  description: 'Tenant ID',
+  description: 'Tenant CUID (25 caracteres)',
   required: true,
 })
 export class AuthorController {
@@ -48,13 +63,21 @@ export class AuthorController {
 
   @Post()
   @Roles(EAdminRole.editor)
-  @ApiOperation({ summary: 'Create a new author' })
-  @ApiResponse({ status: 201, description: 'Author created successfully' })
-  @ApiResponse({ status: 400, description: 'Validation error or invalid tenant' })
-  @ApiResponse({ status: 403, description: 'Insufficient role' })
-  @ApiResponse({ status: 404, description: 'Avatar MediaAsset not found' })
-  async create(@Body() dto: CreateAuthorDTO, @Res() res: Response) {
-    const result = await this.authorService.createAuthor(dto);
+  @ApiOperation({
+    summary: 'Create a new author',
+    description: 'Creates a tenant-scoped author using the tenant resolved from the x-tenant-id header.',
+  })
+  @ApiBody({ type: CreateAuthorDTO })
+  @ApiCreatedResponse({ description: 'Author created successfully', type: AuthorResponseDTO })
+  @ApiBadRequestResponse({ description: 'Validation error, invalid tenant CUID, or invalid avatar CUID' })
+  @ApiForbiddenResponse({ description: 'Insufficient role' })
+  @ApiNotFoundResponse({ description: 'Avatar MediaAsset not found' })
+  async create(
+    @CurrentAdmin() admin: CurrentAdminPayload,
+    @Body() dto: CreateAuthorDTO,
+    @Res() res: Response,
+  ) {
+    const result = await this.authorService.createAuthor(dto, admin.tenant_id);
 
     if (result.status !== 201) {
       return res.status(result.status).json(result.data);
@@ -67,16 +90,23 @@ export class AuthorController {
   @Put(':id')
   @Roles(EAdminRole.editor)
   @ApiOperation({ summary: 'Update author information' })
-  @ApiResponse({ status: 200, description: 'Author updated successfully' })
-  @ApiResponse({ status: 400, description: 'Validation error or avatar tenant mismatch' })
-  @ApiResponse({ status: 403, description: 'Insufficient role' })
-  @ApiResponse({ status: 404, description: 'Author or avatar not found' })
+  @ApiParam({
+    name: 'id',
+    type: String,
+    description: 'Author CUID (25 caracteres)',
+    example: 'cmcmsauthor01abc234def5678',
+  })
+  @ApiOkResponse({ description: 'Author updated successfully', type: AuthorResponseDTO })
+  @ApiBadRequestResponse({ description: 'Validation error, invalid author CUID, or invalid avatar CUID' })
+  @ApiForbiddenResponse({ description: 'Insufficient role' })
+  @ApiNotFoundResponse({ description: 'Author or avatar not found for this tenant' })
   async update(
-    @Param('id') id: string,
+    @CurrentAdmin() admin: CurrentAdminPayload,
+    @Param('id', UuidValidationPipe) id: string,
     @Body() dto: UpdateAuthorDTO,
     @Res() res: Response,
   ) {
-    const result = await this.authorService.updateAuthor(id, dto);
+    const result = await this.authorService.updateAuthor(id, dto, admin.tenant_id);
 
     if (result.status !== 200) {
       return res.status(result.status).json(result.data);
@@ -89,11 +119,18 @@ export class AuthorController {
   @Get(':id')
   @Roles(EAdminRole.viewer)
   @ApiOperation({ summary: 'Get a single author by ID' })
-  @ApiResponse({ status: 200, description: 'Author retrieved successfully' })
-  @ApiResponse({ status: 404, description: 'Author not found' })
+  @ApiParam({
+    name: 'id',
+    type: String,
+    description: 'Author CUID (25 caracteres)',
+    example: 'cmcmsauthor01abc234def5678',
+  })
+  @ApiOkResponse({ description: 'Author retrieved successfully', type: AuthorResponseDTO })
+  @ApiBadRequestResponse({ description: 'Invalid author CUID' })
+  @ApiNotFoundResponse({ description: 'Author not found for this tenant' })
   async findOne(
     @CurrentAdmin() admin: CurrentAdminPayload,
-    @Param('id') id: string,
+    @Param('id', UuidValidationPipe) id: string,
     @Res() res: Response,
   ) {
     const result = await this.authorService.findById(id, admin.tenant_id);
@@ -109,14 +146,35 @@ export class AuthorController {
   @Get()
   @Roles(EAdminRole.viewer)
   @ApiOperation({ summary: 'List all authors with optional filters' })
-  @ApiResponse({ status: 200, description: 'Authors retrieved successfully' })
-  @ApiResponse({ status: 400, description: 'Invalid filter parameters' })
+  @ApiQuery({
+    name: 'active',
+    required: false,
+    type: Boolean,
+    description: 'Filter by active status',
+    example: true,
+  })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    description: 'Page number (starts at 1)',
+    example: 1,
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Items per page',
+    example: 30,
+  })
+  @ApiOkResponse({ description: 'Authors retrieved successfully', type: PaginatedAuthorsResponseDTO })
+  @ApiBadRequestResponse({ description: 'Invalid filter parameters or missing tenant context' })
   async findAll(
     @CurrentAdmin() admin: CurrentAdminPayload,
+    @Res() res: Response,
     @Query('active') active?: string,
     @Query('page') page?: string,
     @Query('limit') limit?: string,
-    @Res() res?: Response,
   ) {
     const tenantId = admin.tenant_id;
     if (!tenantId) {
@@ -147,16 +205,21 @@ export class AuthorController {
   @ApiOperation({
     summary: 'Delete an author (prevents deletion if author has published articles)',
   })
-  @ApiResponse({ status: 200, description: 'Author deleted successfully' })
-  @ApiResponse({
-    status: 400,
-    description: 'Cannot delete author with published articles',
+  @ApiParam({
+    name: 'id',
+    type: String,
+    description: 'Author CUID (25 caracteres)',
+    example: 'cmcmsauthor01abc234def5678',
   })
-  @ApiResponse({ status: 403, description: 'Insufficient role' })
-  @ApiResponse({ status: 404, description: 'Author not found' })
+  @ApiOkResponse({ description: 'Author deleted successfully', type: SuccessMessageResponseDTO })
+  @ApiBadRequestResponse({
+    description: 'Invalid author CUID or author has published articles',
+  })
+  @ApiForbiddenResponse({ description: 'Insufficient role' })
+  @ApiNotFoundResponse({ description: 'Author not found for this tenant' })
   async delete(
     @CurrentAdmin() admin: CurrentAdminPayload,
-    @Param('id') id: string,
+    @Param('id', UuidValidationPipe) id: string,
     @Res() res: Response,
   ) {
     const result = await this.authorService.deleteAuthor(id, admin.tenant_id);
@@ -170,48 +233,39 @@ export class AuthorController {
 
   @Post(':id/avatar')
   @Roles(EAdminRole.editor)
-  @UseInterceptors(FileInterceptor('file'))
-  @ApiOperation({ summary: 'Upload and assign avatar to author' })
-  @ApiConsumes('multipart/form-data')
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        file: {
-          type: 'string',
-          format: 'binary',
-          description: 'Avatar image file',
-        },
-        avatarId: {
-          type: 'string',
-          description: 'Existing MediaAsset ID (UUID) to assign as avatar',
-        },
-      },
-    },
+  @ApiOperation({
+    summary: 'Assign an existing media asset as the author avatar',
+    description: 'This endpoint links an already uploaded media asset to the author. Direct file upload is not handled here.',
   })
-  @ApiResponse({ status: 200, description: 'Avatar assigned successfully' })
-  @ApiResponse({
-    status: 400,
-    description: 'Avatar tenant mismatch or validation error',
+  @ApiParam({
+    name: 'id',
+    type: String,
+    description: 'Author CUID (25 caracteres)',
+    example: 'cmcmsauthor01abc234def5678',
   })
-  @ApiResponse({ status: 403, description: 'Insufficient role' })
-  @ApiResponse({ status: 404, description: 'Author or avatar not found' })
+  @ApiBody({ type: AssignAuthorAvatarDTO })
+  @ApiOkResponse({ description: 'Avatar assigned successfully', type: AuthorResponseDTO })
+  @ApiBadRequestResponse({
+    description: 'Invalid author/avatar CUID or avatar tenant mismatch',
+  })
+  @ApiForbiddenResponse({ description: 'Insufficient role' })
+  @ApiNotFoundResponse({ description: 'Author or avatar not found for this tenant' })
   async uploadAvatar(
-    @Param('id') id: string,
-    @Body('avatarId') avatarId: string,
-    @UploadedFile() file: Express.Multer.File,
+    @CurrentAdmin() admin: CurrentAdminPayload,
+    @Param('id', UuidValidationPipe) id: string,
+    @Body() body: AssignAuthorAvatarDTO,
     @Res() res: Response,
   ) {
-    // For now, we only support assigning existing MediaAsset IDs
-    // File upload integration with MediaAsset system would be handled separately
+    const { avatarId } = body;
+
     if (!avatarId) {
       return res.status(400).json({
         code: '400:Avatar ID is required',
-        message: 'Please provide an existing MediaAsset ID as avatarId',
+        message: 'Please provide an existing MediaAsset CUID as avatarId',
       });
     }
 
-    const result = await this.authorService.assignAvatar(id, avatarId);
+    const result = await this.authorService.assignAvatar(id, avatarId, admin.tenant_id);
 
     if (result.status !== 200) {
       return res.status(result.status).json(result.data);

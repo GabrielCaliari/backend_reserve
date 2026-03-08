@@ -9,6 +9,7 @@ import {
 import { Author } from '../../domain/entities/author.entity';
 import { Author as PrismaAuthor } from '../../../../../src/generated/prisma/client';
 import { EArticleStatus } from '../../domain/enums/article-status.enum';
+import { isValidUUID } from '../../domain/utils/uuid.util';
 
 @Injectable()
 export class PrismaAuthorRepository implements IAuthorRepository {
@@ -34,20 +35,13 @@ export class PrismaAuthorRepository implements IAuthorRepository {
 
   async findById(id: string): Promise<Author | null> {
     try {
-      // Validate UUID format
-      if (!this.isValidUUID(id)) {
-        console.log(`[DEBUG] Invalid author ID format: "${id}" (length: ${id.length})`);
+      if (!isValidUUID(id)) {
         return null;
       }
 
       const record = await this.prisma.author.findUnique({
         where: { id },
       });
-      
-      if (!record) {
-        console.log(`[DEBUG] Author not found in database: "${id}"`);
-      }
-      
       return record ? this.toDomain(record) : null;
     } catch (error) {
       throw new RepositoryException('Failed to find author by ID', error);
@@ -93,9 +87,8 @@ export class PrismaAuthorRepository implements IAuthorRepository {
 
   async update(id: string, data: Partial<Author>): Promise<Author> {
     try {
-      // Validate UUID format
-      if (!this.isValidUUID(id)) {
-        throw new RepositoryException('Invalid UUID format for author ID', null);
+      if (!isValidUUID(id)) {
+        throw new RepositoryException('Invalid CUID format for author ID', null);
       }
 
       const updateData: any = {};
@@ -119,9 +112,8 @@ export class PrismaAuthorRepository implements IAuthorRepository {
 
   async delete(id: string): Promise<void> {
     try {
-      // Validate UUID format
-      if (!this.isValidUUID(id)) {
-        throw new RepositoryException('Invalid UUID format for author ID', null);
+      if (!isValidUUID(id)) {
+        throw new RepositoryException('Invalid CUID format for author ID', null);
       }
 
       await this.prisma.author.delete({
@@ -134,9 +126,8 @@ export class PrismaAuthorRepository implements IAuthorRepository {
 
   async hasPublishedArticles(authorId: string): Promise<boolean> {
     try {
-      // Validate UUID format
-      if (!this.isValidUUID(authorId)) {
-        throw new RepositoryException('Invalid UUID format for author ID', null);
+      if (!isValidUUID(authorId)) {
+        throw new RepositoryException('Invalid CUID format for author ID', null);
       }
 
       const count = await this.prisma.article.count({
@@ -163,15 +154,5 @@ export class PrismaAuthorRepository implements IAuthorRepository {
       createdAt: raw.created_at,
       updatedAt: raw.updated_at,
     });
-  }
-
-  /**
-   * Validates cuid format (up to 25 characters)
-   * @param id - The cuid string to validate
-   * @returns true if valid cuid format, false otherwise
-   */
-  private isValidUUID(id: string): boolean {
-    // cuid format: starts with 'c', followed by alphanumeric, length between 9-25 characters
-    return typeof id === 'string' && id.length >= 9 && id.length <= 25 && /^c[a-z0-9]+$/i.test(id);
   }
 }

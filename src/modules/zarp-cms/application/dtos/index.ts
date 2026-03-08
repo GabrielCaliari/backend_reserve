@@ -22,7 +22,14 @@ export { ArticleResponseDTO } from './article-response.dto';
 // Author DTOs
 export { CreateAuthorDTO } from './create-author.dto';
 export { UpdateAuthorDTO } from './update-author.dto';
-export { AuthorResponseDTO } from './author-response.dto';
+export {
+	AssignAuthorAvatarDTO,
+	AuthorAvatarResponseDTO,
+	AuthorPaginationResponseDTO,
+	AuthorResponseDTO,
+	PaginatedAuthorsResponseDTO,
+	SuccessMessageResponseDTO,
+} from './author-response.dto';
 
 // Blog DTOs
 export { CreateBlogDTO } from './create-blog.dto';
