@@ -28,17 +28,18 @@ import { AdminJwtGuard, TenantGuard, RolesGuard } from '../../../../shared/auth/
 import { Roles } from '../../../../shared/auth/decorators/roles.decorator';
 import { EAdminRole } from '../../../zarp-auth/domain/enums/admin-role.enum';
 import { DateRange } from '../../domain/interfaces/metric-provider.interface';
+import { ParseCuidPipe } from '../../../../shared/pipes/parse-cuid.pipe';
 
 @ApiTags('Stats - Dashboard')
 @ApiBearerAuth()
-@ApiHeader({ name: 'x-tenant-id', required: true, description: 'Tenant ID' })
-@UseGuards(AdminJwtGuard, TenantGuard, RolesGuard)
 @Controller()
 export class StatsDashboardController {
   constructor(private readonly statsService: StatsService) {}
 
   @Get('/dashboard')
+  @UseGuards(AdminJwtGuard, TenantGuard, RolesGuard)
   @Roles(EAdminRole.viewer)
+  @ApiHeader({ name: 'x-tenant-id', required: true, description: 'Tenant ID' })
   @ApiOperation({
     summary: 'Get stats dashboard',
     description:
@@ -64,7 +65,50 @@ export class StatsDashboardController {
     return this.statsService.getDashboard(tenantId, dateRange);
   }
 
+  @Get('/dashboard/tenants/:tenantId')
+  @UseGuards(AdminJwtGuard, TenantGuard, RolesGuard)
+  @Roles(EAdminRole.viewer)
+  @ApiOperation({
+    summary: 'Get stats dashboard for a tenant',
+    description:
+      'Returns aggregated tenant-scoped metrics for the tenant identified in the route param. ' +
+      'Regular admins must belong to the tenant. Super admins can inspect any active tenant.',
+  })
+  @ApiParam({
+    name: 'tenantId',
+    description: 'Tenant CUID',
+    example: 'cktenant1234567890abcdefgh',
+  })
+  @ApiResponse({ status: 200, description: 'Tenant dashboard metrics', type: DashboardResponseDto })
+  @ApiResponse({ status: 404, description: 'Tenant not found' })
+  async getDashboardByTenant(
+    @Param('tenantId', ParseCuidPipe) tenantId: string,
+    @Query() query: DateRangeQueryDto,
+  ): Promise<DashboardResponseDto> {
+    const dateRange = this.buildDateRange(query);
+    return this.statsService.getDashboard(tenantId, dateRange);
+  }
+
+  @Get('/dashboard/global')
+  @UseGuards(AdminJwtGuard, RolesGuard)
+  @Roles(EAdminRole.super_admin)
+  @ApiOperation({
+    summary: 'Get aggregated dashboard across all tenants',
+    description:
+      'Returns aggregated internal metrics across all active tenants. ' +
+      'This route is restricted to super admins and does not require x-tenant-id.',
+  })
+  @ApiResponse({ status: 200, description: 'Global aggregated dashboard metrics', type: DashboardResponseDto })
+  @ApiResponse({ status: 403, description: 'Forbidden - super admin only' })
+  async getGlobalDashboard(
+    @Query() query: DateRangeQueryDto,
+  ): Promise<DashboardResponseDto> {
+    const dateRange = this.buildDateRange(query);
+    return this.statsService.getGlobalDashboard(dateRange);
+  }
+
   @Get('/available-integrations')
+  @UseGuards(AdminJwtGuard, RolesGuard)
   @Roles(EAdminRole.viewer)
   @ApiOperation({
     summary: 'List available external integrations',
@@ -77,7 +121,9 @@ export class StatsDashboardController {
   }
 
   @Get('/module/:moduleKey')
+  @UseGuards(AdminJwtGuard, TenantGuard, RolesGuard)
   @Roles(EAdminRole.viewer)
+  @ApiHeader({ name: 'x-tenant-id', required: true, description: 'Tenant ID' })
   @ApiOperation({
     summary: 'Get metrics for a single module',
     description:
@@ -97,13 +143,7 @@ export class StatsDashboardController {
   ): Promise<MetricGroupResponseDto> {
     const tenantId: string = req.tenant_id;
 
-    let dateRange: DateRange | undefined;
-    if (query.from || query.to) {
-      dateRange = {
-        from: query.from ? new Date(query.from) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
-        to: query.to ? new Date(query.to) : new Date(),
-      };
-    }
+    const dateRange = this.buildDateRange(query);
 
     const result = await this.statsService.getModuleMetrics(moduleKey, tenantId, dateRange);
     if (!result) {
@@ -115,7 +155,9 @@ export class StatsDashboardController {
   }
 
   @Get('/timeseries')
+  @UseGuards(AdminJwtGuard, TenantGuard, RolesGuard)
   @Roles(EAdminRole.viewer)
+  @ApiHeader({ name: 'x-tenant-id', required: true, description: 'Tenant ID' })
   @ApiOperation({
     summary: 'Get time-series data',
     description:
@@ -138,5 +180,16 @@ export class StatsDashboardController {
     };
 
     return this.statsService.getTimeSeries(tenantId, dateRange, granularity, moduleKey);
+  }
+
+  private buildDateRange(query: DateRangeQueryDto): DateRange | undefined {
+    if (!query.from && !query.to) {
+      return undefined;
+    }
+
+    return {
+      from: query.from ? new Date(query.from) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+      to: query.to ? new Date(query.to) : new Date(),
+    };
   }
 }

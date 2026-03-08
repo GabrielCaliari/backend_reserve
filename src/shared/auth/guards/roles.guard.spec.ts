@@ -23,7 +23,7 @@ describe('RolesGuard', () => {
     handlerRoles?: EAdminRole[];
   }): ExecutionContext {
     const request: any = {
-      admin_id: overrides.admin_id ?? 'ckl1234abcd5',
+      admin_id: overrides.admin_id ?? '1',
       tenant_id: overrides.tenant_id,
     };
 

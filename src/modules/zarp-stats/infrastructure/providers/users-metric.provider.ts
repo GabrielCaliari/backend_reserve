@@ -15,6 +15,7 @@ import {
 export class UsersMetricProvider implements IMetricProvider {
   readonly moduleKey = 'users';
   readonly label = 'Users';
+  readonly scope = 'global' as const;
 
   constructor(private readonly prisma: PrismaService) {}
 

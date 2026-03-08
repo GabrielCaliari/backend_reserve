@@ -5,8 +5,9 @@ import {
   Inject,
   ForbiddenException,
   BadRequestException,
+  NotFoundException,
 } from '@nestjs/common';
-import { ADMIN_REPOSITORY, IAdminRepository } from '../../../modules/zarp-auth/domain/interfaces';
+import { ADMIN_REPOSITORY, IAdminRepository, ITenantRepository, TENANT_REPOSITORY } from '../../../modules/zarp-auth/domain/interfaces';
 import {
   ADMIN_TENANT_REPOSITORY,
   IAdminTenantRepository,
@@ -32,6 +33,8 @@ export class TenantGuard implements CanActivate {
   constructor(
     @Inject(ADMIN_REPOSITORY)
     private readonly adminRepository: IAdminRepository,
+    @Inject(TENANT_REPOSITORY)
+    private readonly tenantRepository: ITenantRepository,
     @Inject(ADMIN_TENANT_REPOSITORY)
     private readonly adminTenantRepository: IAdminTenantRepository,
   ) {}
@@ -55,6 +58,16 @@ export class TenantGuard implements CanActivate {
 
     if (!admin || !admin.active) {
       throw new ForbiddenException('Admin account is inactive or not found');
+    }
+
+    const tenant = await this.tenantRepository.selectById(tenantId);
+
+    if (!tenant) {
+      throw new NotFoundException('Tenant not found');
+    }
+
+    if (tenant.active === false) {
+      throw new ForbiddenException('Tenant is inactive');
     }
 
     // Super admins can access any tenant

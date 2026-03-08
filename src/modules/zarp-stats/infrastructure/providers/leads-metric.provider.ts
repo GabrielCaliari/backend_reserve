@@ -16,6 +16,7 @@ import {
 export class LeadsMetricProvider implements IMetricProvider {
   readonly moduleKey = 'leads';
   readonly label = 'Lead Management';
+  readonly scope = 'both' as const;
 
   private readonly statusLabels: Record<number, string> = {
     1: 'New',
@@ -47,10 +48,26 @@ export class LeadsMetricProvider implements IMetricProvider {
     const prevFrom = new Date(from.getTime() - periodMs);
     const prevTo = new Date(from.getTime());
 
-    const [total, periodCount, prevCount, byStatus, byCollectionRaw] = await Promise.all([
+    const [
+      total,
+      periodCount,
+      prevCount,
+      totalCollections,
+      activeCollections,
+      publicCollections,
+      restrictedCollections,
+      convertedLeads,
+      byStatus,
+      byCollectionRaw,
+    ] = await Promise.all([
       this.prisma.lead.count({ where }),
       this.prisma.lead.count({ where: wherePeriod }),
       this.prisma.lead.count({ where: { ...where, created_at: { gte: prevFrom, lte: prevTo } } }),
+      this.prisma.leadCollection.count({ where }),
+      this.prisma.leadCollection.count({ where: { ...where, active: true } }),
+      this.prisma.leadCollection.count({ where: { ...where, access_mode: 'public' } }),
+      this.prisma.leadCollection.count({ where: { ...where, access_mode: 'restricted' } }),
+      this.prisma.lead.count({ where: { ...where, status: 4 } }),
       this.prisma.lead.groupBy({
         by: ['status'],
         where: wherePeriod,
@@ -58,12 +75,14 @@ export class LeadsMetricProvider implements IMetricProvider {
       }),
       this.prisma.lead.groupBy({
         by: ['collection_id'],
-        where: wherePeriod,
+        where,
         _count: { _all: true },
       }),
     ]);
 
     const trend = prevCount > 0 ? ((periodCount - prevCount) / prevCount) * 100 : null;
+    const averageLeadsPerCollection = totalCollections > 0 ? total / totalCollections : 0;
+    const conversionRate = total > 0 ? (convertedLeads / total) * 100 : 0;
 
     // Fetch collection names for the breakdown
     const collectionIds = byCollectionRaw
@@ -105,11 +124,53 @@ export class LeadsMetricProvider implements IMetricProvider {
           unit: 'count',
         },
         {
+          key: 'leads.collections.total',
+          label: 'Lead Collections',
+          value: totalCollections,
+          unit: 'count',
+        },
+        {
+          key: 'leads.collections.active',
+          label: 'Active Lead Collections',
+          value: activeCollections,
+          unit: 'count',
+        },
+        {
+          key: 'leads.collections.public',
+          label: 'Public Lead Collections',
+          value: publicCollections,
+          unit: 'count',
+        },
+        {
+          key: 'leads.collections.restricted',
+          label: 'Restricted Lead Collections',
+          value: restrictedCollections,
+          unit: 'count',
+        },
+        {
           key: 'leads.period',
           label: 'Leads this period',
           value: periodCount,
           unit: 'count',
           ...(trend !== null ? { trend: Math.round(trend * 10) / 10 } : {}),
+        },
+        {
+          key: 'leads.converted',
+          label: 'Converted Leads',
+          value: convertedLeads,
+          unit: 'count',
+        },
+        {
+          key: 'leads.conversion_rate',
+          label: 'Conversion Rate',
+          value: Math.round(conversionRate * 10) / 10,
+          unit: '%',
+        },
+        {
+          key: 'leads.average_per_collection',
+          label: 'Average Leads per Collection',
+          value: Math.round(averageLeadsPerCollection * 10) / 10,
+          unit: 'count',
         },
         ...byStatus.map((s) => ({
           key: `leads.status.${s.status ?? 'unknown'}`,
@@ -117,7 +178,9 @@ export class LeadsMetricProvider implements IMetricProvider {
           value: s._count._all,
           unit: 'count',
         })),
-        ...byCollectionMetrics,
+        ...byCollectionMetrics
+          .sort((left, right) => Number(right.value) - Number(left.value))
+          .slice(0, 5),
       ],
     };
   }

@@ -39,6 +39,8 @@ export interface DateRange {
   to: Date;
 }
 
+export type MetricScope = 'tenant' | 'global' | 'both';
+
 export const METRIC_PROVIDERS = 'METRIC_PROVIDERS';
 
 /**
@@ -52,6 +54,7 @@ export const METRIC_PROVIDERS = 'METRIC_PROVIDERS';
 export interface IMetricProvider {
   readonly moduleKey: string;
   readonly label: string;
+  readonly scope?: MetricScope;
   getMetrics(tenantId?: string, dateRange?: DateRange): Promise<MetricGroup>;
   getTimeSeries?(
     tenantId: string,

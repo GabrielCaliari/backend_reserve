@@ -16,6 +16,7 @@ import {
 export class CmsMetricProvider implements IMetricProvider {
   readonly moduleKey = 'cms';
   readonly label = 'CMS';
+  readonly scope = 'both' as const;
 
   constructor(private readonly prisma: PrismaService) {}
 
@@ -39,7 +40,21 @@ export class CmsMetricProvider implements IMetricProvider {
 
     const totalWhere = blogIds.length > 0 ? { blog_id: { in: blogIds } } : {};
 
-    const [totalArticles, periodArticles, publishedArticles, byStatus] = await Promise.all([
+    const [
+      totalBlogs,
+      activeBlogs,
+      totalAuthors,
+      totalArticles,
+      periodArticles,
+      publishedArticles,
+      byStatus,
+      byBlogRaw,
+    ] = await Promise.all([
+      this.prisma.blog.count({ where: blogWhere }),
+      this.prisma.blog.count({ where: { ...blogWhere, active: true } }),
+      this.prisma.author.count({
+        where: tenantId !== undefined ? { tenant_id: tenantId } : {},
+      }),
       this.prisma.article.count({ where: totalWhere }),
       this.prisma.article.count({ where: periodWhere }),
       this.prisma.article.count({ where: { ...totalWhere, status: 'published' } }),
@@ -48,7 +63,28 @@ export class CmsMetricProvider implements IMetricProvider {
         where: totalWhere,
         _count: { _all: true },
       }),
+      this.prisma.article.groupBy({
+        by: ['blog_id'],
+        where: totalWhere,
+        _count: { _all: true },
+      }),
     ]);
+
+    const publishRate = totalArticles > 0 ? (publishedArticles / totalArticles) * 100 : 0;
+    const averageArticlesPerBlog = totalBlogs > 0 ? totalArticles / totalBlogs : 0;
+
+    const topBlogRows = byBlogRaw
+      .sort((left, right) => right._count._all - left._count._all)
+      .slice(0, 5);
+
+    const topBlogIds = topBlogRows.map(row => row.blog_id);
+    const topBlogs = topBlogIds.length > 0
+      ? await this.prisma.blog.findMany({
+          where: { id: { in: topBlogIds } },
+          select: { id: true, name: true, tenant_id: true },
+        })
+      : [];
+    const blogNameById = Object.fromEntries(topBlogs.map(blog => [blog.id, blog.name]));
 
     return {
       moduleKey: this.moduleKey,
@@ -59,7 +95,19 @@ export class CmsMetricProvider implements IMetricProvider {
         {
           key: 'cms.blogs',
           label: 'Blogs',
-          value: blogIds.length,
+          value: totalBlogs,
+          unit: 'count',
+        },
+        {
+          key: 'cms.blogs.active',
+          label: 'Active Blogs',
+          value: activeBlogs,
+          unit: 'count',
+        },
+        {
+          key: 'cms.authors.total',
+          label: 'Authors',
+          value: totalAuthors,
           unit: 'count',
         },
         {
@@ -80,11 +128,33 @@ export class CmsMetricProvider implements IMetricProvider {
           value: periodArticles,
           unit: 'count',
         },
+        {
+          key: 'cms.articles.publish_rate',
+          label: 'Publish Rate',
+          value: Math.round(publishRate * 10) / 10,
+          unit: '%',
+        },
+        {
+          key: 'cms.articles.average_per_blog',
+          label: 'Average Articles per Blog',
+          value: Math.round(averageArticlesPerBlog * 10) / 10,
+          unit: 'count',
+        },
         ...byStatus.map((s) => ({
           key: `cms.articles.status.${s.status}`,
           label: `Articles - ${s.status}`,
           value: s._count._all,
           unit: 'count',
+        })),
+        ...topBlogRows.map((row) => ({
+          key: `cms.blog.${row.blog_id}.articles`,
+          label: `Top Blog: ${blogNameById[row.blog_id] ?? row.blog_id}`,
+          value: row._count._all,
+          unit: 'count',
+          metadata: {
+            blog_id: row.blog_id,
+            blog_name: blogNameById[row.blog_id] ?? row.blog_id,
+          },
         })),
       ],
     };

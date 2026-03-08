@@ -3,9 +3,8 @@ import {
   IMetricProvider,
   METRIC_PROVIDERS,
   DateRange,
-  MetricGroup,
   TimeSeriesGranularity,
-  TimeSeriesGroup,
+  MetricScope,
 } from '../../domain/interfaces/metric-provider.interface';
 import {
   IExternalMetricProvider,
@@ -16,6 +15,8 @@ import {
   STATS_INTEGRATION_REPOSITORY,
 } from '../../domain/interfaces/stats-integration.repository.interface';
 import { DashboardResponseDto, MetricGroupResponseDto, TimeSeriesGroupResponseDto, TimeSeriesResponseDto } from '../dtos/stats.dto';
+import { ITenantRepository, TENANT_REPOSITORY } from '../../../zarp-auth/domain/interfaces';
+import { NotFoundException, ForbiddenException } from '@nestjs/common';
 
 @Injectable()
 export class StatsService {
@@ -32,24 +33,52 @@ export class StatsService {
 
     @Inject(STATS_INTEGRATION_REPOSITORY)
     private readonly integrationRepository: IStatsIntegrationRepository,
+
+    @Inject(TENANT_REPOSITORY)
+    private readonly tenantRepository: ITenantRepository,
   ) {
     this.metricProviders = Array.isArray(metricProviders) ? metricProviders : metricProviders ? [metricProviders] : [];
     this.externalProviders = Array.isArray(externalProviders) ? externalProviders : externalProviders ? [externalProviders] : [];
   }
 
   async getDashboard(tenantId: string, dateRange?: DateRange): Promise<DashboardResponseDto> {
+    await this.ensureTenantIsAccessible(tenantId);
+    return this.buildDashboard({
+      tenantId,
+      dateRange,
+      includeExternal: true,
+      scope: 'tenant',
+    });
+  }
+
+  async getGlobalDashboard(dateRange?: DateRange): Promise<DashboardResponseDto> {
+    return this.buildDashboard({
+      dateRange,
+      includeExternal: false,
+      scope: 'global',
+    });
+  }
+
+  private async buildDashboard(options: {
+    tenantId?: string;
+    dateRange?: DateRange;
+    includeExternal: boolean;
+    scope: 'tenant' | 'global';
+  }): Promise<DashboardResponseDto> {
+    const { tenantId, dateRange, includeExternal, scope } = options;
     const groups: MetricGroupResponseDto[] = [];
+    const providers = this.getScopedProviders(scope);
 
     // Collect from all internal providers in parallel (errors are isolated per provider)
     const internalResults = await Promise.allSettled(
-      this.metricProviders.map((provider) =>
+      providers.map((provider) =>
         provider.getMetrics(tenantId, dateRange),
       ),
     );
 
     for (let i = 0; i < internalResults.length; i++) {
       const result = internalResults[i];
-      const provider = this.metricProviders[i];
+      const provider = providers[i];
 
       if (result.status === 'fulfilled') {
         groups.push(result.value);
@@ -65,6 +94,13 @@ export class StatsService {
           error: `Failed to fetch metrics: ${result.reason?.message ?? 'Unknown error'}`,
         });
       }
+    }
+
+    if (!includeExternal || !tenantId) {
+      return {
+        groups,
+        generatedAt: new Date(),
+      };
     }
 
     // Collect from enabled external integrations for this tenant
@@ -128,7 +164,9 @@ export class StatsService {
     tenantId: string,
     dateRange?: DateRange,
   ): Promise<MetricGroupResponseDto | null> {
-    const provider = this.metricProviders.find((p) => p.moduleKey === moduleKey);
+    await this.ensureTenantIsAccessible(tenantId);
+
+    const provider = this.getScopedProviders('tenant').find((p) => p.moduleKey === moduleKey);
     if (!provider) return null;
 
     try {
@@ -156,9 +194,12 @@ export class StatsService {
     granularity: TimeSeriesGranularity,
     moduleKey?: string,
   ): Promise<TimeSeriesResponseDto> {
+    await this.ensureTenantIsAccessible(tenantId);
+
+    const scopedProviders = this.getScopedProviders('tenant');
     const providers = moduleKey
-      ? this.metricProviders.filter((p) => p.moduleKey === moduleKey && p.getTimeSeries)
-      : this.metricProviders.filter((p) => p.getTimeSeries);
+      ? scopedProviders.filter((p) => p.moduleKey === moduleKey && p.getTimeSeries)
+      : scopedProviders.filter((p) => p.getTimeSeries);
 
     const results = await Promise.allSettled(
       providers.map((p) => p.getTimeSeries!(tenantId, dateRange, granularity)),
@@ -187,5 +228,29 @@ export class StatsService {
    */
   getAvailableModuleKeys(): string[] {
     return this.metricProviders.map((p) => p.moduleKey);
+  }
+
+  private getScopedProviders(scope: 'tenant' | 'global'): IMetricProvider[] {
+    return this.metricProviders.filter((provider) => {
+      const providerScope: MetricScope = provider.scope ?? 'both';
+
+      if (scope === 'tenant') {
+        return providerScope !== 'global';
+      }
+
+      return true;
+    });
+  }
+
+  private async ensureTenantIsAccessible(tenantId: string): Promise<void> {
+    const tenant = await this.tenantRepository.selectById(tenantId);
+
+    if (!tenant) {
+      throw new NotFoundException(`Tenant ${tenantId} not found`);
+    }
+
+    if (tenant.active === false) {
+      throw new ForbiddenException(`Tenant ${tenantId} is inactive`);
+    }
   }
 }
