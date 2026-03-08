@@ -113,6 +113,49 @@ export class PrismaArticleRepository implements IArticleRepository {
     }
   }
 
+  async findByTenantId(
+    tenantId: string,
+    filters?: ArticleFilters,
+  ): Promise<PaginatedResult<Article>> {
+    try {
+      const page = filters?.page ?? 1;
+      const limit = filters?.limit ?? 10;
+      const skip = (page - 1) * limit;
+
+      const where: any = {
+        Blog: { tenant_id: tenantId },
+      };
+
+      if (filters?.status) {
+        where.status = filters.status;
+      }
+
+      if (filters?.authorId) {
+        where.author_id = filters.authorId;
+      }
+
+      const [records, total] = await Promise.all([
+        this.prisma.article.findMany({
+          where,
+          skip,
+          take: limit,
+          orderBy: { created_at: 'desc' },
+        }),
+        this.prisma.article.count({ where }),
+      ]);
+
+      return {
+        data: records.map((record) => this.toDomain(record)),
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      };
+    } catch (error) {
+      throw new RepositoryException('Failed to find articles by tenant ID', error);
+    }
+  }
+
   async update(id: string, data: Partial<Article>): Promise<Article> {
     try {
       // Validate UUID format
@@ -208,7 +251,7 @@ export class PrismaArticleRepository implements IArticleRepository {
    * @returns true if valid UUID format, false otherwise
    */
   private isValidUUID(id: string): boolean {
-    // cuid format: 12 characters, alphanumeric
-    return /^[a-z0-9]{12}$/i.test(id);
+    // cuid format: c + 24 alphanumeric chars (25 total)
+    return /^[a-z][a-z0-9]{24}$/i.test(id);
   }
 }

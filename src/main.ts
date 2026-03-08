@@ -13,7 +13,7 @@ async function bootstrap() {
     origin: '*',
   });
 
-  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalPipes(new ValidationPipe({ transform: true }));
 
   // Configuração do Swagger
   const config = new DocumentBuilder()

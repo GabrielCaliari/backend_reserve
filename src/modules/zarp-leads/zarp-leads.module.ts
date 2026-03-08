@@ -41,10 +41,10 @@ import { GeolocationProvider } from '../../shared/providers/geolocation.provider
     ZarpAuthModule,
   ],
   controllers: [
-    LeadController,
-    LeadCollectionController,
+    LeadCollectionController,  // must be before LeadController (`@Get(':id')` would swallow /collections)
     LeadCaptureController,
     PublicLeadController,
+    LeadController,
   ],
   providers: [
     // Services (legacy, for backward compatibility)

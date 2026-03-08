@@ -65,9 +65,12 @@ export class ArticleController {
 
   @Get()
   @Roles(EAdminRole.viewer)
-  @ApiOperation({ summary: 'List all articles with optional filters' })
+  @ApiOperation({
+    summary: 'List articles',
+    description: 'Without blogId: lists all articles across all blogs for the tenant. With blogId: lists articles of a specific blog.',
+  })
   @ApiResponse({ status: 200, description: 'Articles retrieved successfully' })
-  @ApiResponse({ status: 400, description: 'Invalid filter parameters' })
+  @ApiResponse({ status: 404, description: 'Blog not found or does not belong to tenant' })
   async findAll(
     @CurrentAdmin() admin: CurrentAdminPayload,
     @Query('blogId') blogId?: string,
@@ -76,28 +79,26 @@ export class ArticleController {
     @Query('limit') limit?: string,
     @Res() res?: Response,
   ) {
-    if (!blogId) {
-      return res.status(400).json({
-        code: '400:Blog ID is required',
-        message: 'Blog ID query parameter is required',
-      });
-    }
-
     const filters = {
       status: status as any,
       page: page ? parseInt(page, 10) : 1,
       limit: limit ? parseInt(limit, 10) : 30,
     };
 
-    const result = await this.articleService.findByBlogId(blogId, filters, admin.tenant_id);
-    
+    if (blogId) {
+      const result = await this.articleService.findByBlogId(blogId, filters, admin.tenant_id);
+      if (result.status !== 200) {
+        return res.status(result.status).json(result.data);
+      }
+      return res.status(200).json(ArticlePresenter.presentPaginated(result.data as any));
+    }
+
+    // No blogId — list all articles for the tenant
+    const result = await this.articleService.findByTenantId(admin.tenant_id, filters);
     if (result.status !== 200) {
       return res.status(result.status).json(result.data);
     }
-
-    // Present the paginated result
-    const presented = ArticlePresenter.presentPaginated(result.data as any);
-    return res.status(result.status).json(presented);
+    return res.status(200).json(ArticlePresenter.presentPaginated(result.data as any));
   }
 
   @Get(':id')

@@ -517,6 +517,14 @@ export class ArticleService {
     return successResponse(result, 200);
   }
 
+  async findByTenantId(
+    tenantId: string,
+    filters?: { status?: EArticleStatus; page?: number; limit?: number },
+  ): Promise<ServiceResponse> {
+    const result = await this.articleRepository.findByTenantId(tenantId, filters);
+    return successResponse(result, 200);
+  }
+
   async delete(id: string, tenantId?: string): Promise<ServiceResponse<void>> {
     const article = await this.articleRepository.findById(id);
     if (!article) {

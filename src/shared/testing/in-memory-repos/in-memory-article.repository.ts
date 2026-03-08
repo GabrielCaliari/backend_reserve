@@ -30,7 +30,13 @@ export class InMemoryArticleRepository implements IArticleRepository {
   }
 
   async findByBlogId(blogId: string, options?: any): Promise<any> {
-    return this.articles.filter((a) => a.blogId === blogId);
+    const filtered = this.articles.filter((a) => a.blogId === blogId);
+    return { data: filtered, total: filtered.length, page: 1, limit: 10, totalPages: 1 };
+  }
+
+  async findByTenantId(tenantId: string, options?: any): Promise<any> {
+    const filtered = this.articles.filter((a) => a.tenantId === tenantId);
+    return { data: filtered, total: filtered.length, page: 1, limit: 10, totalPages: 1 };
   }
 
   async countByAuthorId(authorId: string): Promise<number> {

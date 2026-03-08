@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsArray, IsEmail, IsEnum, IsNumber, IsObject, IsOptional, IsString, ValidateNested } from 'class-validator';
+import { IsArray, IsEmail, IsEnum, IsObject, IsOptional, IsString, ValidateNested } from 'class-validator';
 import { EOriginLead } from '../../domain/entities/lead.entity';
 import { AttachmentDto } from './attachment.dto';
 
@@ -34,10 +34,10 @@ export class CreateLeadWithAttachmentsDto {
   @IsOptional()
   description?: string;
 
-  @ApiPropertyOptional({ description: 'Collection ID', example: 1 })
-  @IsNumber()
+  @ApiPropertyOptional({ description: 'Collection ID (CUID)', example: 'cmmgmk6qr0000ikbwhnqawjbk' })
+  @IsString()
   @IsOptional()
-  collection_id?: number;
+  collection_id?: string;
 
   @ApiPropertyOptional({ description: 'Additional data', example: { position: 'Senior Developer' } })
   @IsObject()

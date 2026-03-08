@@ -26,6 +26,10 @@ export interface IArticleRepository {
     blogId: string,
     filters?: ArticleFilters,
   ): Promise<PaginatedResult<Article>>;
+  findByTenantId(
+    tenantId: string,
+    filters?: ArticleFilters,
+  ): Promise<PaginatedResult<Article>>;
   update(id: string, data: Partial<Article>): Promise<Article>;
   delete(id: string): Promise<void>;
   countByAuthorId(authorId: string, status?: EArticleStatus): Promise<number>;

@@ -40,8 +40,8 @@ export class PrismaMediaAssetRepository implements IMediaAssetRepository {
    * @returns true if valid UUID format, false otherwise
    */
   private isValidUUID(id: string): boolean {
-    // cuid format: 12 characters, alphanumeric
-    return /^[a-z0-9]{12}$/i.test(id);
+    // cuid format: c + 24 alphanumeric chars (25 total)
+    return /^[a-z][a-z0-9]{24}$/i.test(id);
   }
 
   /**
