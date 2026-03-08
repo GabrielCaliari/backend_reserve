@@ -7,7 +7,6 @@ import {
   Param,
   Query,
   UseGuards,
-  ParseUUIDPipe,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -101,7 +100,7 @@ export class MediaRelationController {
   @ApiResponse({ status: 200, description: 'Assets retrieved successfully' })
   async getEntityAssets(
     @Param('entityType') entityType: string,
-    @Param('entityId', ParseUUIDPipe) entityId: string,
+    @Param('entityId') entityId: string,
     @Query('relation_type') relationType?: string,
     @CurrentAdmin() admin?: CurrentAdminPayload,
   ) {

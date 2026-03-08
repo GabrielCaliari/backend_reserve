@@ -10,7 +10,6 @@ import {
   UseGuards,
   UseInterceptors,
   UploadedFile,
-  ParseUUIDPipe,
   BadRequestException,
   DefaultValuePipe,
 } from '@nestjs/common';
@@ -78,8 +77,8 @@ export class MediaAssetController {
           description: 'File to upload (max 50MB)',
         },
         collection_id: {
-          type: 'number',
-          description: 'Collection ID to upload to',
+          type: 'string',
+          description: 'Collection ID to upload to (CUID)',
         },
         alt_text: {
           type: 'string',
@@ -125,7 +124,7 @@ export class MediaAssetController {
   @Get()
   @Roles(EAdminRole.viewer)
   @ApiOperation({ summary: 'List media assets with filtering' })
-  @ApiQuery({ name: 'collection_id', required: false, type: Number })
+  @ApiQuery({ name: 'collection_id', required: false, type: String, description: 'Filter by collection CUID' })
   @ApiQuery({ name: 'status', required: false, enum: EAssetStatus })
   @ApiQuery({ name: 'mime_type', required: false, type: String })
   @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
@@ -165,7 +164,7 @@ export class MediaAssetController {
   @ApiResponse({ status: 200, description: 'Asset retrieved successfully' })
   @ApiResponse({ status: 404, description: 'Asset not found' })
   async findOne(
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id') id: string,
     @CurrentAdmin() admin: CurrentAdminPayload,
   ) {
     const result = await this.assetService.getAssetById(id, admin.tenant_id!);
@@ -196,7 +195,7 @@ export class MediaAssetController {
   @ApiResponse({ status: 200, description: 'Asset updated successfully' })
   @ApiResponse({ status: 404, description: 'Asset not found' })
   async update(
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id') id: string,
     @Body() data: { alt_text?: string; metadata?: Record<string, any> },
     @CurrentAdmin() admin: CurrentAdminPayload,
   ) {
@@ -224,7 +223,7 @@ export class MediaAssetController {
   @ApiResponse({ status: 200, description: 'Asset deleted successfully' })
   @ApiResponse({ status: 404, description: 'Asset not found' })
   async remove(
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id') id: string,
     @CurrentAdmin() admin: CurrentAdminPayload,
   ) {
     const result = await this.assetService.deleteAsset(id, admin.tenant_id!);
