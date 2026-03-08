@@ -110,7 +110,7 @@ export class ArticleImageService {
     }
 
     // Delete from storage
-    await this.storageProvider.delete(image.storage_key);
+    await this.storageProvider.delete(image.url);
 
     // Delete from database
     await this.imageRepository.delete(id);

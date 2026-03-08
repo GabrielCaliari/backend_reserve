@@ -21,15 +21,15 @@ export async function seedTenants() {
       active: true,
     },
     {
-      name: 'Empresa Teste',
-      slug: 'empresa-teste',
-      domain: 'empresateste.com.br',
+      name: 'Florida Exam Prep',
+      slug: 'florida-exam-prep',
+      domain: 'floridaexamprep.com',
       active: true,
     },
     {
-      name: 'Tech Innovations',
-      slug: 'tech-innovations',
-      domain: 'techinnovations.io',
+      name: 'Level One Grading',
+      slug: 'level-one-grading',
+      domain: 'levelonegrading.com',
       active: true,
     },
     {
@@ -39,10 +39,10 @@ export async function seedTenants() {
       active: true,
     },
     {
-      name: 'Tenant Inativo',
-      slug: 'tenant-inativo',
-      domain: null,
-      active: false,
+      name: 'Gen3 Construction',
+      slug: 'gen3-construction',
+      domain: 'gen3construction.vercel.app',
+      active: true,
     },
   ];
 

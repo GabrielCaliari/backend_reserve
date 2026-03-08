@@ -1,5 +1,4 @@
 import { Injectable, Inject } from '@nestjs/common';
-import sharp from 'sharp';
 import { MEDIA_ASSET_REPOSITORY } from '../../domain/interfaces/media-asset.repository.interface';
 import { IMediaAssetRepository } from '../../domain/interfaces/media-asset.repository.interface';
 import { MEDIA_COLLECTION_REPOSITORY } from '../../domain/interfaces/media-collection.repository.interface';
@@ -104,22 +103,26 @@ export class MediaAssetService {
       if (file.mimetype.startsWith('image/')) {
         // Get quality from environment variable (Requirement 4.6)
         const quality = parseInt(process.env.CMS_IMAGE_QUALITY || '80', 10);
-        
-        // Extract dimensions from original image before processing
-        const metadata = await sharp(file.buffer).metadata();
-        width = metadata.width;
-        height = metadata.height;
 
-        // Process to WebP format
-        const processed = await this.imageProcessor.processToWebp(file.buffer, quality);
-        processedBuffer = processed.data;
-        finalMimeType = 'image/webp';
+        try {
+          // Extract dimensions from original image before processing
+          const metadata = await this.imageProcessor.getMetadata(file.buffer);
+          width = metadata.width;
+          height = metadata.height;
+
+          // Process to WebP format
+          const processed = await this.imageProcessor.processToWebp(file.buffer, quality);
+          processedBuffer = processed.data;
+          finalMimeType = 'image/webp';
+        } catch (error) {
+          return errorResponse('422:Invalid or corrupted image file', 422, error);
+        }
       }
 
       // 6. Generate unique storage key (Requirement 15.4)
       const timestamp = Date.now();
-      const sanitizedFilename = this.sanitizeFilename(file.originalname);
-      const storageKey = `cms/${tenantId}/${collection.slug}/${timestamp}-${sanitizedFilename}`;
+      const storageFilename = this.buildStorageFilename(file.originalname, finalMimeType);
+      const storageKey = `cms/${tenantId}/${collection.slug}/${timestamp}-${storageFilename}`;
 
       // 7. Upload to storage provider (Requirement 1.1)
       const uploadResult = await this.storageProvider.upload(
@@ -167,6 +170,16 @@ export class MediaAssetService {
       .replace(/[^a-zA-Z0-9.-]/g, '_')  // Replace special chars with underscore
       .replace(/_{2,}/g, '_')            // Replace multiple underscores with single
       .toLowerCase();                     // Convert to lowercase
+  }
+
+  private buildStorageFilename(filename: string, contentType: string): string {
+    const sanitizedFilename = this.sanitizeFilename(filename);
+
+    if (contentType !== 'image/webp') {
+      return sanitizedFilename;
+    }
+
+    return sanitizedFilename.replace(/\.[^.]+$/, '.webp');
   }
 
   /**
@@ -308,10 +321,50 @@ export class MediaAssetService {
       }
 
       // Delete from storage provider first (Requirement 1.6)
-      await this.storageProvider.delete(asset.storage_key);
+      // Pass the full URL — Vercel Blob requires it for deletion; storage_key is only the pathname
+      await this.storageProvider.delete(asset.url);
 
       // Delete from database (cascade deletes relations - Requirement 3.6)
       await this.assetRepo.delete(id, tenantId);
+
+      return successResponse({ deleted: true }, 200);
+    } catch (err) {
+      return errorResponse(ERROR_STORAGE_PROVIDER_ERROR, 500, err);
+    }
+  }
+
+  /**
+   * Delete an asset within a specific collection.
+   *
+   * Ensures the collection exists for the tenant and that the asset
+   * belongs to that collection before removing it from storage and database.
+   */
+  async deleteAssetFromCollection(
+    collectionId: string,
+    assetId: string,
+    tenantId: string,
+  ) {
+    try {
+      if (!isValidUUID(collectionId)) {
+        return errorResponse(`${ERROR_INVALID_UUID}: collection_id`, 400);
+      }
+
+      if (!isValidUUID(assetId)) {
+        return errorResponse(`${ERROR_INVALID_UUID}: asset_id`, 400);
+      }
+
+      const collection = await this.collectionRepo.findById(collectionId, tenantId);
+      if (!collection) {
+        return errorResponse(ERROR_COLLECTION_NOT_FOUND, 404);
+      }
+
+      const asset = await this.assetRepo.findById(assetId, tenantId);
+      if (!asset || asset.collection_id !== collectionId) {
+        return errorResponse(ERROR_ASSET_NOT_FOUND, 404);
+      }
+
+      await this.storageProvider.delete(asset.url);
+      await this.assetRepo.delete(assetId, tenantId);
 
       return successResponse({ deleted: true }, 200);
     } catch (err) {

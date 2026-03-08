@@ -18,23 +18,42 @@ export class VercelBlobStorageProvider implements IStorageProvider {
   }
 
   async upload(key: string, data: Buffer, contentType: string): Promise<IUploadResult> {
-    const blob = await put(key, data, {
-      access: 'public',
-      contentType,
-      token: this.token,
-    });
+    if (!this.token) {
+      throw new Error('BLOB_READ_WRITE_TOKEN not configured');
+    }
 
-    return {
-      url: blob.url,
-      key: blob.pathname,
-    };
+    try {
+      const blob = await put(key, data, {
+        access: 'public',
+        contentType,
+        token: this.token,
+      });
+
+      return {
+        url: blob.url,
+        key: blob.pathname,
+      };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown Vercel Blob upload error';
+      throw new Error(`Vercel Blob upload failed: ${message}`);
+    }
   }
 
   async delete(key: string): Promise<void> {
+    if (!this.token) {
+      throw new Error('BLOB_READ_WRITE_TOKEN not configured');
+    }
+
     // Vercel Blob requires the full URL for deletion
     // We need to construct it from the key
     const url = this.getPublicUrl(key);
-    await del(url, { token: this.token });
+
+    try {
+      await del(url, { token: this.token });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown Vercel Blob delete error';
+      throw new Error(`Vercel Blob delete failed: ${message}`);
+    }
   }
 
   getPublicUrl(key: string): string {

@@ -89,6 +89,10 @@ export class ArticleImageController {
       throw new BadRequestException('File is required');
     }
 
+    if (!file.buffer || file.size === 0) {
+      throw new BadRequestException('Uploaded file is empty');
+    }
+
     if (!this.ALLOWED_FORMATS.includes(file.mimetype)) {
       throw new BadRequestException(
         'Invalid file format. Allowed formats: JPEG, PNG, GIF, WebP, AVIF',

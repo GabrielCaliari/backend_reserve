@@ -26,6 +26,7 @@ import { Roles } from '../../../../shared/auth/decorators/roles.decorator';
 import { EAdminRole } from '../../../zarp-auth/domain/enums/admin-role.enum';
 import { CurrentAdmin, CurrentAdminPayload } from '../../../../shared/auth/decorators/current-admin.decorator';
 import { MediaCollectionService } from '../../application/services/media-collection.service';
+import { MediaAssetService } from '../../application/services/media-asset.service';
 import { CreateCollectionDTO } from '../../application/dtos/create-collection.dto';
 import { MediaCollectionPresenter } from '../presenters/media-collection.presenter';
 import { MediaAssetPresenter } from '../presenters/media-asset.presenter';
@@ -46,7 +47,10 @@ import { ECollectionType } from '../../domain/enums/collection-type.enum';
 @Controller('collections')
 @UseGuards(AdminJwtGuard, TenantGuard, RolesGuard)
 export class MediaCollectionController {
-  constructor(private readonly collectionService: MediaCollectionService) {}
+  constructor(
+    private readonly collectionService: MediaCollectionService,
+    private readonly assetService: MediaAssetService,
+  ) {}
 
   /**
    * Create a new collection
@@ -150,6 +154,34 @@ export class MediaCollectionController {
     return {
       status: result.status,
       data: result.status === 200 ? MediaAssetPresenter.presentPaginated(result.data as any) : result.data,
+    };
+  }
+
+  /**
+   * Delete a specific asset from a collection
+   * DELETE /api/cms/collections/:id/assets/:assetId
+   */
+  @Delete(':id/assets/:assetId')
+  @Roles(EAdminRole.editor)
+  @ApiOperation({ summary: 'Delete a specific asset from a collection' })
+  @ApiParam({ name: 'id', type: String, description: 'Collection ID (UUID)', example: 'abc123def456' })
+  @ApiParam({ name: 'assetId', type: String, description: 'Asset UUID' })
+  @ApiResponse({ status: 200, description: 'Asset deleted successfully' })
+  @ApiResponse({ status: 404, description: 'Collection or asset not found' })
+  async removeAsset(
+    @Param('id') id: string,
+    @Param('assetId') assetId: string,
+    @CurrentAdmin() admin: CurrentAdminPayload,
+  ) {
+    const result = await this.assetService.deleteAssetFromCollection(
+      id,
+      assetId,
+      admin.tenant_id!,
+    );
+
+    return {
+      status: result.status,
+      data: result.data,
     };
   }
 

@@ -96,10 +96,10 @@ export class PrismaMediaCollectionRepository implements IMediaCollectionReposito
 
   async findById(id: string, tenantId: string): Promise<MediaCollection | null> {
     try {
-      // Validate UUID format (12-character cuid)
-      if (!id || typeof id !== 'string' || id.length !== 12) {
+      // Validate CUID format (25-character string)
+      if (!id || typeof id !== 'string' || id.length !== 25) {
         throw new RepositoryException(
-          'Invalid collection ID format: must be a 12-character UUID',
+          'Invalid collection ID format: must be a 25-character CUID',
           'INVALID_ID_FORMAT',
         );
       }
@@ -191,10 +191,10 @@ export class PrismaMediaCollectionRepository implements IMediaCollectionReposito
     tenantId: string,
   ): Promise<MediaCollection> {
     try {
-      // Validate UUID format (12-character cuid)
-      if (!id || typeof id !== 'string' || id.length !== 12) {
+      // Validate CUID format (25-character string)
+      if (!id || typeof id !== 'string' || id.length !== 25) {
         throw new RepositoryException(
-          'Invalid collection ID format: must be a 12-character UUID',
+          'Invalid collection ID format: must be a 25-character CUID',
           'INVALID_ID_FORMAT',
         );
       }
@@ -250,10 +250,10 @@ export class PrismaMediaCollectionRepository implements IMediaCollectionReposito
 
   async delete(id: string, tenantId: string): Promise<void> {
     try {
-      // Validate UUID format (12-character cuid)
-      if (!id || typeof id !== 'string' || id.length !== 12) {
+      // Validate CUID format (25-character string)
+      if (!id || typeof id !== 'string' || id.length !== 25) {
         throw new RepositoryException(
-          'Invalid collection ID format: must be a 12-character UUID',
+          'Invalid collection ID format: must be a 25-character CUID',
           'INVALID_ID_FORMAT',
         );
       }

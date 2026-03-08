@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import sharp from 'sharp';
+import * as sharp from 'sharp';
 import {
   IImageProcessor,
+  IImageMetadata,
   IProcessedImage,
 } from '../../domain/interfaces/image-processor.interface';
 
@@ -16,6 +17,15 @@ export class SharpImageProcessorProvider implements IImageProcessor {
       data: processed.data,
       size: processed.info.size,
       format: 'webp',
+    };
+  }
+
+  async getMetadata(buffer: Buffer): Promise<IImageMetadata> {
+    const meta = await sharp(buffer).metadata();
+    return {
+      width: meta.width,
+      height: meta.height,
+      format: meta.format,
     };
   }
 }

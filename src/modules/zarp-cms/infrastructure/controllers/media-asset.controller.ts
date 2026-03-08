@@ -12,8 +12,10 @@ import {
   UploadedFile,
   BadRequestException,
   DefaultValuePipe,
+  Res,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { Response } from 'express';
 import {
   ApiTags,
   ApiOperation,
@@ -99,9 +101,14 @@ export class MediaAssetController {
     @UploadedFile() file: Express.Multer.File,
     @Body() dto: UploadMediaDTO,
     @CurrentAdmin() admin: CurrentAdminPayload,
+    @Res() res: Response,
   ) {
     if (!file) {
       throw new BadRequestException('File is required');
+    }
+
+    if (!file.buffer || file.size === 0) {
+      throw new BadRequestException('Uploaded file is empty');
     }
 
     const result = await this.assetService.uploadAsset(
@@ -111,10 +118,10 @@ export class MediaAssetController {
       admin.admin_id,
     );
 
-    return {
+    return res.status(result.status).json({
       status: result.status,
       data: result.status === 201 ? MediaAssetPresenter.present(result.data as any) : result.data,
-    };
+    });
   }
 
   /**

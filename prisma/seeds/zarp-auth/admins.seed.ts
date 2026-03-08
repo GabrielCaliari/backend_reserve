@@ -39,10 +39,17 @@ export async function seedAdmins() {
       active: true,
     },
     {
-      name: 'Ana Silva',
-      email: 'ana.silva@zarpstudio.com',
-      password: 'Zarp@2024!Ana',
-      role: EAdminRole.company_admin,
+      name: 'Caua Cunha',
+      email: 'kelme.dev@pm.me',
+      password: 'Vamos@Inovar@26',
+      role: EAdminRole.super_admin,
+      active: true,
+    },
+    {
+      name: 'Emily Clamerick',
+      email: 'info@zarpstudio.com',
+      password: 'Zarp@Emily@20',
+      role: EAdminRole.super_admin,
       active: true,
     },
     {
