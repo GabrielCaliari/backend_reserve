@@ -139,6 +139,29 @@ export default class AdminRepository implements IAdminRepository {
         }
     }
 
+    async selectAllPaginated(page: number, limit: number): Promise<{ data: any[]; total: number }> {
+        try {
+            const skip = (page - 1) * limit;
+            const [data, total] = await Promise.all([
+                this.prisma.admin.findMany({
+                    include: {
+                        AdminTenant: {
+                            where: { active: true, Tenant: { active: true } },
+                            include: { Tenant: { select: { id: true, name: true, slug: true } } },
+                        },
+                    },
+                    orderBy: { created_at: 'desc' },
+                    skip,
+                    take: limit,
+                }),
+                this.prisma.admin.count(),
+            ]);
+            return { data, total };
+        } catch (error) {
+            throw new RepositoryException('Erro ao listar admins paginados.', error);
+        }
+    }
+
     async countActiveByRole(role: EAdminRole) {
         try {
             return await this.prisma.admin.count({

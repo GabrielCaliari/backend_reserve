@@ -11,7 +11,9 @@ export interface IAdminTenantRepository {
   unassign(adminId: string, tenantId: string): Promise<void>;
   updateRole(adminId: string, tenantId: string, role: EAdminRole): Promise<any>;
   findTenantsByAdminId(adminId: string): Promise<any[]>;
+  findTenantsByAdminIdPaginated(adminId: string, page: number, limit: number): Promise<{ data: any[]; total: number }>;
   findAdminsByTenantId(tenantId: string): Promise<any[]>;
+  findAdminsByTenantIdPaginated(tenantId: string, page: number, limit: number): Promise<{ data: any[]; total: number }>;
   isAdminInTenant(adminId: string, tenantId: string): Promise<boolean>;
   findRoleInTenant(adminId: string, tenantId: string): Promise<EAdminRole | null>;
 }

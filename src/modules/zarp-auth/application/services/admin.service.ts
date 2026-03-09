@@ -228,17 +228,19 @@ export class AdminService {
         }
     }
 
-    async listAll() {
+    async listAll(page = 1, limit = 20) {
         try {
-            const admins = await this.adminRepository.selectAll();
-            const allTenants = await this.tenantRepository.selectAll();
+            const [{ data: admins, total }, allTenants] = await Promise.all([
+                this.adminRepository.selectAllPaginated(page, limit),
+                this.tenantRepository.selectAll(),
+            ]);
             const allTenantsSlim = allTenants.map((t: any) => ({
                 id: t.id,
                 name: t.name,
                 slug: t.slug,
             }));
 
-            const mapped = admins.map((admin: any) => ({
+            const data = admins.map((admin: any) => ({
                 id: admin.id,
                 name: admin.name,
                 email: admin.email,
@@ -254,7 +256,15 @@ export class AdminService {
                 created_at: admin.created_at,
             }));
 
-            return successResponse(mapped);
+            return successResponse({
+                data,
+                pagination: {
+                    total,
+                    page,
+                    limit,
+                    totalPages: Math.ceil(total / limit),
+                },
+            });
         } catch (error) {
             return errorResponse('500:ADMINS_NOT_LISTED', 500, error);
         }

@@ -21,6 +21,7 @@ export interface ITenantRepository {
   selectById(id: string): Promise<any>;
   selectBySlug(slug: string): Promise<any>;
   selectAll(): Promise<any[]>;
+  selectAllPaginated(page: number, limit: number): Promise<{ data: any[]; total: number }>;
   update(id: string, data: IUpdateTenant): Promise<any>;
   deactivate(id: string): Promise<any>;
   activate(id: string): Promise<any>;

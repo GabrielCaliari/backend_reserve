@@ -53,10 +53,18 @@ export class TenantService {
     }
   }
 
-  async findAll() {
+  async findAll(page = 1, limit = 20) {
     try {
-      const tenants = await this.tenantRepository.selectAll();
-      return successResponse(tenants);
+      const { data, total } = await this.tenantRepository.selectAllPaginated(page, limit);
+      return successResponse({
+        data,
+        pagination: {
+          total,
+          page,
+          limit,
+          totalPages: Math.ceil(total / limit),
+        },
+      });
     } catch (error) {
       return errorResponse('500:TENANTS_NOT_LISTED', 500, error);
     }
@@ -135,35 +143,47 @@ export class TenantService {
     }
   }
 
-  async findTenantsByAdmin(adminId: string) {
+  async findTenantsByAdmin(adminId: string, page = 1, limit = 20) {
     try {
       const admin = await this.adminRepository.selectById(adminId);
       if (!admin) {
         return errorResponse(errorTypes._404.admin_nf, 404);
       }
 
-      // Super admins see all tenants
+      let data: any[];
+      let total: number;
+
       if (admin.role === EAdminRole.super_admin) {
-        const tenants = await this.tenantRepository.selectAll();
-        return successResponse(tenants);
+        const result = await this.tenantRepository.selectAllPaginated(page, limit);
+        data = result.data;
+        total = result.total;
+      } else {
+        const result = await this.adminTenantRepository.findTenantsByAdminIdPaginated(adminId, page, limit);
+        data = result.data;
+        total = result.total;
       }
 
-      const tenants = await this.adminTenantRepository.findTenantsByAdminId(adminId);
-      return successResponse(tenants);
+      return successResponse({
+        data,
+        pagination: { total, page, limit, totalPages: Math.ceil(total / limit) },
+      });
     } catch (error) {
       return errorResponse('500:ADMIN_TENANTS_NOT_LISTED', 500, error);
     }
   }
 
-  async findAdminsByTenant(tenantId: string) {
+  async findAdminsByTenant(tenantId: string, page = 1, limit = 20) {
     try {
       const tenant = await this.tenantRepository.selectById(tenantId);
       if (!tenant) {
         return errorResponse('404:TENANT_NOT_FOUND', 404);
       }
 
-      const admins = await this.adminTenantRepository.findAdminsByTenantId(tenantId);
-      return successResponse(admins);
+      const { data, total } = await this.adminTenantRepository.findAdminsByTenantIdPaginated(tenantId, page, limit);
+      return successResponse({
+        data,
+        pagination: { total, page, limit, totalPages: Math.ceil(total / limit) },
+      });
     } catch (error) {
       return errorResponse('500:TENANT_ADMINS_NOT_LISTED', 500, error);
     }

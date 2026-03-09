@@ -61,6 +61,28 @@ export default class TenantRepository implements ITenantRepository {
     }
   }
 
+  async selectAllPaginated(page: number, limit: number): Promise<{ data: any[]; total: number }> {
+    try {
+      const skip = (page - 1) * limit;
+      const [data, total] = await Promise.all([
+        this.prisma.tenant.findMany({
+          include: {
+            AdminTenant: {
+              include: { Admin: { select: { id: true, name: true, email: true, role: true } } },
+            },
+          },
+          orderBy: { created_at: 'desc' },
+          skip,
+          take: limit,
+        }),
+        this.prisma.tenant.count(),
+      ]);
+      return { data, total };
+    } catch (error) {
+      throw new RepositoryException('Erro ao listar tenants paginados.', error);
+    }
+  }
+
   async update(id: string, data: IUpdateTenant) {
     try {
       return await this.prisma.tenant.update({

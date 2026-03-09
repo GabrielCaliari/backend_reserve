@@ -62,6 +62,24 @@ export default class AdminTenantRepository implements IAdminTenantRepository {
     }
   }
 
+  async findTenantsByAdminIdPaginated(adminId: string, page: number, limit: number): Promise<{ data: any[]; total: number }> {
+    try {
+      const where = {
+        admin_id: adminId,
+        active: true,
+        Tenant: { active: true, deletion_scheduled_for_at: null },
+      };
+      const skip = (page - 1) * limit;
+      const [records, total] = await Promise.all([
+        this.prisma.adminTenant.findMany({ where, include: { Tenant: true }, skip, take: limit }),
+        this.prisma.adminTenant.count({ where }),
+      ]);
+      return { data: records.map((r) => r.Tenant), total };
+    } catch (error) {
+      throw new RepositoryException('Erro ao buscar tenants do admin paginados.', error);
+    }
+  }
+
   async findAdminsByTenantId(tenantId: string) {
     try {
       const records = await this.prisma.adminTenant.findMany({
@@ -86,6 +104,32 @@ export default class AdminTenantRepository implements IAdminTenantRepository {
       }));
     } catch (error) {
       throw new RepositoryException('Erro ao buscar admins do tenant.', error);
+    }
+  }
+
+  async findAdminsByTenantIdPaginated(tenantId: string, page: number, limit: number): Promise<{ data: any[]; total: number }> {
+    try {
+      const where = { tenant_id: tenantId, active: true, Admin: { active: true } };
+      const skip = (page - 1) * limit;
+      const [records, total] = await Promise.all([
+        this.prisma.adminTenant.findMany({
+          where,
+          include: { Admin: { select: { id: true, name: true, email: true, role: true, active: true } } },
+          skip,
+          take: limit,
+        }),
+        this.prisma.adminTenant.count({ where }),
+      ]);
+      return {
+        data: records.map((record) => ({
+          ...record.Admin,
+          role: record.role === EAdminRole.company_admin ? EAdminRole.manager : record.role,
+          global_role: record.Admin.role === EAdminRole.company_admin ? EAdminRole.manager : record.Admin.role,
+        })),
+        total,
+      };
+    } catch (error) {
+      throw new RepositoryException('Erro ao buscar admins do tenant paginados.', error);
     }
   }
 
