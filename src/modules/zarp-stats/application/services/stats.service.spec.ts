@@ -47,6 +47,7 @@ describe('StatsService', () => {
     selectById: jest.fn(),
     selectBySlug: jest.fn(),
     selectAll: jest.fn(),
+    selectAllPaginated: jest.fn(),
     update: jest.fn(),
     deactivate: jest.fn(),
     activate: jest.fn(),
