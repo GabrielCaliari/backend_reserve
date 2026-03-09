@@ -759,6 +759,37 @@ export class ArticleService {
   }
 
   /**
+   * Unarchives an archived article, restoring it to published status
+   */
+  async unarchive(articleId: string, tenantId?: string): Promise<ServiceResponse<Article>> {
+    try {
+      const article = await this.articleRepository.findById(articleId);
+      if (!article) {
+        return errorResponse(ERROR_ARTICLE_NOT_FOUND, 404);
+      }
+
+      if (tenantId) {
+        const blog = await this.blogRepository.findById(article.blogId);
+        if (!blog || blog.tenantId !== tenantId) {
+          return errorResponse(ERROR_ARTICLE_NOT_FOUND, 404);
+        }
+      }
+
+      if (article.status !== EArticleStatus.archived) {
+        return errorResponse('409:Article is not in archived status', 409);
+      }
+
+      const updatedArticle = await this.articleRepository.update(articleId, {
+        status: EArticleStatus.published,
+      });
+
+      return successResponse(updatedArticle, 200);
+    } catch (error) {
+      return errorResponse('500:Failed to unarchive article', 500, error);
+    }
+  }
+
+  /**
    * Finds all published articles for a blog (public API)
    */
   async findPublishedByBlogId(

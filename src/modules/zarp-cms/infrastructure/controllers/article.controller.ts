@@ -201,4 +201,24 @@ export class ArticleController {
     const result = await this.articleService.archive(articleId, admin.tenant_id);
     return res.status(result.status).json(result.data);
   }
+
+  @Post(':articleId/unarchive')
+  @Roles(EAdminRole.editor)
+  @ApiOperation({ summary: 'Restore an archived article back to published status' })
+  @ApiResponse({ status: 200, description: 'Article restored to published successfully' })
+  @ApiResponse({ status: 403, description: 'Insufficient role' })
+  @ApiResponse({ status: 404, description: 'Article not found' })
+  @ApiResponse({ status: 409, description: 'Article is not in archived status' })
+  async unarchive(
+    @CurrentAdmin() admin: CurrentAdminPayload,
+    @Param('articleId') articleId: string,
+    @Res() res: Response,
+  ) {
+    const result = await this.articleService.unarchive(articleId, admin.tenant_id);
+    if (result.status !== 200) {
+      return res.status(result.status).json(result.data);
+    }
+    const presented = ArticlePresenter.present(result.data as any);
+    return res.status(result.status).json(presented);
+  }
 }
