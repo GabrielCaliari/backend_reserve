@@ -5,17 +5,36 @@ import { PrismaPg } from '@prisma/adapter-pg';
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
 
+const ARTICLE_META_TITLE_MAX_LENGTH = 60;
+const ARTICLE_META_DESCRIPTION_MAX_LENGTH = 160;
+
 interface ArticleSeed {
   display_title: string;
+  language: string;
   meta_title: string;
   meta_description: string;
   focus_keyword: string;
   content: string;
   slug: string;
   status: EArticleStatus;
+  published_at?: string;
   blogName: string;
   authorFirstName: string;
   authorLastName: string;
+}
+
+function assertArticleSeedFitsSchema(article: ArticleSeed) {
+  if (article.meta_title.length > ARTICLE_META_TITLE_MAX_LENGTH) {
+    throw new Error(
+      `Article meta_title exceeds ${ARTICLE_META_TITLE_MAX_LENGTH} characters: ${article.slug}`,
+    );
+  }
+
+  if (article.meta_description.length > ARTICLE_META_DESCRIPTION_MAX_LENGTH) {
+    throw new Error(
+      `Article meta_description exceeds ${ARTICLE_META_DESCRIPTION_MAX_LENGTH} characters: ${article.slug}`,
+    );
+  }
 }
 
 export async function seedArticles() {
@@ -23,7 +42,8 @@ export async function seedArticles() {
     // -- Zarp Studio Blog (marketing agency) ---------------------------------
     {
       display_title: 'Inbound Marketing: How to Attract Clients Without Chasing Them',
-      meta_title: 'Inbound Marketing: How to Attract Clients Without Chasing Them | Zarp Studio',
+      language: 'en_us',
+      meta_title: 'Inbound Marketing: Attract Clients Without Chasing',
       meta_description:
         'Understand what inbound marketing is, how it works in practice, and why brands that educate their audience sell more and at better margins.',
       focus_keyword: 'inbound marketing',
@@ -89,13 +109,15 @@ The good news is that, unlike paid traffic, content can keep generating results 
 *Need help building an inbound marketing strategy for your business? [Talk to Zarp Studio.](/contato)*`,
       slug: 'inbound-marketing-how-to-attract-clients',
       status: EArticleStatus.published,
+      published_at: '2025-01-10T09:00:00.000Z',
       blogName: 'Blog Zarp Studio',
       authorFirstName: 'Diego',
       authorLastName: 'Kelme',
     },
     {
       display_title: 'SEO in 2025: The Definitive Guide to Ranking on Google',
-      meta_title: 'SEO in 2025: The Definitive Guide to Ranking on Google | Zarp Studio',
+      language: 'en_us',
+      meta_title: 'SEO in 2025: Definitive Guide to Ranking on Google',
       meta_description:
         'Everything you need to know about SEO in 2025, including how Google works, the ranking factors that matter most, and what changed with AI.',
       focus_keyword: 'SEO 2025',
@@ -150,13 +172,15 @@ SEO in 2025 is not about trying to beat Google. It is about being the best answe
 *Want an SEO audit for your site? Zarp Studio can review your organic visibility and build a practical action plan. [Request a free analysis.](/contato)*`,
       slug: 'seo-definitive-guide-2025',
       status: EArticleStatus.published,
+      published_at: '2025-01-17T09:00:00.000Z',
       blogName: 'Blog Zarp Studio',
-      authorFirstName: 'Felipe',
-      authorLastName: 'Duarte',
+      authorFirstName: 'Gabriel',
+      authorLastName: 'Caliari',
     },
     {
       display_title: 'Visual Identity: Why Your Brand Needs to Be Memorable',
-      meta_title: 'Visual Identity: Why Your Brand Needs to Be Memorable | Zarp Studio',
+      language: 'en_us',
+      meta_title: 'Visual Identity: Build a Memorable Brand',
       meta_description:
         'Learn what visual identity is, which elements shape a strong brand, and why getting it right early can be the difference between growth and stagnation.',
       focus_keyword: 'visual identity for companies',
@@ -194,13 +218,15 @@ Visual identity is not decoration. It is an investment in perception.
 *Want to build a visual identity that truly sets your brand apart? [Explore Zarp Studio’s process.](/identidade-visual)*`,
       slug: 'visual-identity-memorable-brand',
       status: EArticleStatus.published,
+      published_at: '2025-01-24T09:00:00.000Z',
       blogName: 'Blog Zarp Studio',
-      authorFirstName: 'Mariana',
-      authorLastName: 'Rocha',
+      authorFirstName: 'Emily',
+      authorLastName: 'Clamerick',
     },
     {
       display_title: 'Social Media Management: From Basic Execution to Professional Strategy',
-      meta_title: 'Social Media Management for Companies: Complete Guide | Zarp Studio',
+      language: 'en_us',
+      meta_title: 'Social Media Management: Complete Guide',
       meta_description:
         'Learn how to manage social media strategically, including content planning, useful metrics, and common mistakes that kill engagement.',
       focus_keyword: 'social media management for companies',
@@ -230,13 +256,15 @@ Social media can be one of the most powerful channels for brand growth, lead gen
 *Zarp Studio manages your company’s social media from strategy to execution. [See our services.](/redes-sociais)*`,
       slug: 'social-media-management-complete-guide',
       status: EArticleStatus.published,
+      published_at: '2025-01-31T09:00:00.000Z',
       blogName: 'Blog Zarp Studio',
-      authorFirstName: 'Mariana',
-      authorLastName: 'Rocha',
+      authorFirstName: 'Emily',
+      authorLastName: 'Clamerick',
     },
     {
       display_title: 'Content Marketing: Why Brands That Teach Sell More',
-      meta_title: 'Content Marketing: Why Brands That Teach Sell More | Zarp Studio',
+      language: 'en_us',
+      meta_title: 'Content Marketing: Why Teaching Brands Sell More',
       meta_description:
         'Learn what content marketing is, how to structure a strategy from scratch, and why it often becomes the lowest-cost lead source over time.',
       focus_keyword: 'content marketing',
@@ -270,13 +298,15 @@ Brands that teach build audiences. Audiences become customers. Satisfied custome
 *Zarp Studio develops end-to-end content strategies, from editorial planning to execution. [See how we can help.](/marketing-de-conteudo)*`,
       slug: 'content-marketing-brands-that-teach',
       status: EArticleStatus.published,
+      published_at: '2025-02-07T09:00:00.000Z',
       blogName: 'Blog Zarp Studio',
-      authorFirstName: 'Felipe',
-      authorLastName: 'Duarte',
+      authorFirstName: 'Gabriel',
+      authorLastName: 'Caliari',
     },
     {
       display_title: 'Landing Pages That Convert: A Practical Guide for Agencies and Clients',
-      meta_title: 'Landing Pages That Convert: A Complete Guide for Agencies | Zarp Studio',
+      language: 'en_us',
+      meta_title: 'Landing Pages That Convert: Practical Guide',
       meta_description:
         'Understand the essential elements of a high-converting landing page, including headline, social proof, CTA, and the mistakes that should always be avoided.',
       focus_keyword: 'high-converting landing page',
@@ -310,6 +340,7 @@ Landing page optimization is not guesswork. It is a disciplined mix of persuasio
 *Want Zarp Studio to build and optimize your landing page? [Talk to our team.](/contato)*`,
       slug: 'landing-page-that-converts-complete-guide',
       status: EArticleStatus.published,
+      published_at: '2025-02-14T09:00:00.000Z',
       blogName: 'Blog Zarp Studio',
       authorFirstName: 'Diego',
       authorLastName: 'Kelme',
@@ -317,9 +348,10 @@ Landing page optimization is not guesswork. It is a disciplined mix of persuasio
     // Draft currently being reviewed by the content team
     {
       display_title: 'Email Marketing: How to Build Campaigns That Actually Perform',
-      meta_title: 'Email Marketing: How to Build Campaigns That Perform | Zarp Studio',
+      language: 'en_us',
+      meta_title: 'Email Marketing: Campaigns That Actually Perform',
       meta_description:
-        'Email marketing is still one of the highest-ROI channels in digital marketing. Learn how to build campaigns that reach the inbox, get opened, and drive conversion.',
+        'Email marketing is still a high-ROI channel. Learn how to build campaigns that reach the inbox, earn opens, and drive conversion.',
       focus_keyword: 'email marketing for companies',
       content: `# Email Marketing: How to Build Campaigns That Actually Perform
 
@@ -341,12 +373,13 @@ Article in production. Expected publication date: 2025-04-15.`,
       slug: 'email-marketing-campaigns-that-perform',
       status: EArticleStatus.draft,
       blogName: 'Blog Zarp Studio',
-      authorFirstName: 'Mariana',
-      authorLastName: 'Rocha',
+      authorFirstName: 'Emily',
+      authorLastName: 'Clamerick',
     },
     // -- Tech Insights (florida-exam-prep) -----------------------------------
     {
       display_title: 'DevOps: CI/CD with GitHub Actions',
+      language: 'en_us',
       meta_title: 'DevOps: CI/CD with GitHub Actions | Complete Tutorial',
       meta_description:
         'Learn how to configure CI/CD pipelines with GitHub Actions to automate testing and deployment.',
@@ -376,9 +409,10 @@ Create a file called \`.github/workflows/deploy.yml\` and define checkout, setup
 GitHub Actions makes CI/CD more accessible and easier to adopt, improving both software quality and delivery speed.`,
       slug: 'devops-cicd-github-actions',
       status: EArticleStatus.published,
+      published_at: '2025-02-21T09:00:00.000Z',
       blogName: 'Tech Insights',
-      authorFirstName: 'Carlos',
-      authorLastName: 'Mendes',
+      authorFirstName: 'Cruz',
+      authorLastName: 'Vinci',
     },
   ];
 
@@ -388,6 +422,8 @@ GitHub Actions makes CI/CD more accessible and easier to adopt, improving both s
   console.log('\n[ARTICLES SEED]');
 
   for (const article of articles) {
+    assertArticleSeedFitsSchema(article);
+
     const blog = await prisma.blog.findFirst({
       where: { name: article.blogName },
     });
@@ -426,6 +462,7 @@ GitHub Actions makes CI/CD more accessible and easier to adopt, improving both s
 
     const data = {
       display_title: article.display_title,
+      language: article.language,
       meta_title: article.meta_title,
       meta_description: article.meta_description,
       focus_keyword: article.focus_keyword,
@@ -436,7 +473,10 @@ GitHub Actions makes CI/CD more accessible and easier to adopt, improving both s
       author_id: author.id,
       created_by: firstAdmin?.id,
       last_edited_by: firstAdmin?.id,
-      published_at: article.status === EArticleStatus.published ? new Date() : null,
+      published_at:
+        article.status === EArticleStatus.published && article.published_at
+          ? new Date(article.published_at)
+          : null,
     };
 
     if (existing) {

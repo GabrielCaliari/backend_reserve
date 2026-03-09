@@ -14,6 +14,10 @@ import {
 } from '../../../modules/zarp-auth/domain/interfaces/admin-tenant.repository.interface';
 import { EAdminRole } from '../../../modules/zarp-auth/domain/enums/admin-role.enum';
 
+function normalizeRole(role: EAdminRole): EAdminRole {
+  return role === EAdminRole.company_admin ? EAdminRole.manager : role;
+}
+
 /**
  * Guard that validates the admin has access to the requested tenant.
  * Reads tenant_id from:
@@ -85,7 +89,7 @@ export class TenantGuard implements CanActivate {
     }
 
     request.tenant_id = tenantId;
-    request.admin_role = admin.role;
+    request.admin_role = normalizeRole(admin.role as EAdminRole);
 
     return true;
   }

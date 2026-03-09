@@ -13,6 +13,7 @@ export interface IAdminRepository {
     selectByEmail(email: string): Promise<any>;
     selectByIdWithTenants(id: string): Promise<any>;
     selectAll(): Promise<any[]>;
+    countActiveByRole(role: EAdminRole): Promise<number>;
     updateRole(id: string, role: EAdminRole): Promise<any>;
     update(id: string, data: { name?: string; email?: string }): Promise<any>;
     deactivate(id: string): Promise<any>;

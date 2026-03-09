@@ -35,7 +35,7 @@ export class Admin {
     this.id = data.id;
     this.name = data.name;
     this.email = data.email;
-    this.role = data.role ?? EAdminRole.company_admin;
+    this.role = data.role ?? EAdminRole.manager;
     this.active = data.active ?? true;
     this.tenantIds = data.tenantIds ?? [];
     this.created_at = data.created_at;
@@ -47,7 +47,7 @@ export class Admin {
   }
 
   isCompanyAdmin(): boolean {
-    return this.role === EAdminRole.company_admin;
+    return this.role === EAdminRole.company_admin || this.role === EAdminRole.manager;
   }
 
   belongsToTenant(tenantId: string): boolean {

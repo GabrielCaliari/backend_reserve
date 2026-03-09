@@ -14,7 +14,17 @@ import {
   IAdminRepository,
 } from '../../domain/interfaces/admin.repository.interface';
 import { EAdminRole } from '../../domain/enums/admin-role.enum';
-import { CreateTenantDTO, UpdateTenantDTO } from '../dtos/tenant-management.dto';
+import {
+  CreateTenantDTO,
+  ScheduleTenantDeletionDTO,
+  UpdateTenantDTO,
+} from '../dtos/tenant-management.dto';
+
+const TENANT_DELETION_RETENTION_DAYS = 15;
+
+function isTenantScopedRole(role: EAdminRole): boolean {
+  return [EAdminRole.owner, EAdminRole.manager, EAdminRole.editor, EAdminRole.viewer].includes(role);
+}
 
 @Injectable()
 export class TenantService {
@@ -92,9 +102,17 @@ export class TenantService {
         return errorResponse(errorTypes._404.admin_nf, 404);
       }
 
+      if (!admin.active) {
+        return errorResponse('400:ADMIN_ACCOUNT_DEACTIVATED', 400);
+      }
+
       const tenant = await this.tenantRepository.selectById(tenantId);
       if (!tenant) {
         return errorResponse('404:TENANT_NOT_FOUND', 404);
+      }
+
+      if (!tenant.active || tenant.deletion_scheduled_for_at) {
+        return errorResponse('409:TENANT_NOT_AVAILABLE_FOR_ASSIGNMENT', 409);
       }
 
       const record = await this.adminTenantRepository.assign({
@@ -175,6 +193,10 @@ export class TenantService {
         return errorResponse('404:TENANT_NOT_FOUND', 404);
       }
 
+      if (tenant.deletion_scheduled_for_at) {
+        return errorResponse('409:TENANT_DELETION_ALREADY_SCHEDULED_USE_RESTORE', 409);
+      }
+
       const activated = await this.tenantRepository.activate(id);
       return successResponse({
         id: activated.id,
@@ -199,8 +221,100 @@ export class TenantService {
     }
   }
 
+  async scheduleDeletion(id: string, adminId: string, dto?: ScheduleTenantDeletionDTO) {
+    try {
+      const tenant = await this.tenantRepository.selectById(id);
+      if (!tenant) {
+        return errorResponse('404:TENANT_NOT_FOUND', 404);
+      }
+
+      if (tenant.deletion_scheduled_for_at) {
+        return errorResponse('409:TENANT_DELETION_ALREADY_SCHEDULED', 409);
+      }
+
+      const deletionRequestedAt = new Date();
+      const deletionScheduledForAt = new Date(deletionRequestedAt);
+      deletionScheduledForAt.setDate(deletionScheduledForAt.getDate() + TENANT_DELETION_RETENTION_DAYS);
+
+      const scheduled = await this.tenantRepository.scheduleDeletion(id, {
+        archived_at: deletionRequestedAt,
+        deletion_requested_at: deletionRequestedAt,
+        deletion_scheduled_for_at: deletionScheduledForAt,
+        deletion_requested_by: adminId,
+        deletion_reason: dto?.reason ?? null,
+      });
+
+      return successResponse({
+        id: scheduled.id,
+        active: scheduled.active,
+        archived_at: scheduled.archived_at,
+        deletion_requested_at: scheduled.deletion_requested_at,
+        deletion_scheduled_for_at: scheduled.deletion_scheduled_for_at,
+        deletion_requested_by: scheduled.deletion_requested_by,
+        deletion_reason: scheduled.deletion_reason,
+        scheduled_for_deletion: true,
+      });
+    } catch (error) {
+      return errorResponse('500:TENANT_DELETION_NOT_SCHEDULED', 500, error);
+    }
+  }
+
+  async restoreDeletion(id: string) {
+    try {
+      const tenant = await this.tenantRepository.selectById(id);
+      if (!tenant) {
+        return errorResponse('404:TENANT_NOT_FOUND', 404);
+      }
+
+      if (!tenant.deletion_scheduled_for_at) {
+        return errorResponse('409:TENANT_DELETION_NOT_SCHEDULED', 409);
+      }
+
+      const restored = await this.tenantRepository.restoreDeletion(id);
+      return successResponse(restored);
+    } catch (error) {
+      return errorResponse('500:TENANT_DELETION_NOT_RESTORED', 500, error);
+    }
+  }
+
+  async getDeletionStatus(id: string) {
+    try {
+      const tenant = await this.tenantRepository.selectById(id);
+      if (!tenant) {
+        return errorResponse('404:TENANT_NOT_FOUND', 404);
+      }
+
+      return successResponse({
+        id: tenant.id,
+        active: tenant.active,
+        scheduled_for_deletion: tenant.deletion_scheduled_for_at !== null,
+        archived_at: tenant.archived_at,
+        deletion_requested_at: tenant.deletion_requested_at,
+        deletion_scheduled_for_at: tenant.deletion_scheduled_for_at,
+        deletion_requested_by: tenant.deletion_requested_by,
+        deletion_reason: tenant.deletion_reason,
+      });
+    } catch (error) {
+      return errorResponse('500:TENANT_DELETION_STATUS_NOT_AVAILABLE', 500, error);
+    }
+  }
+
+  async purgeDueTenants(now = new Date()) {
+    const dueTenants = await this.tenantRepository.findDueForDeletion(now);
+
+    for (const tenant of dueTenants) {
+      await this.tenantRepository.delete(tenant.id);
+    }
+
+    return dueTenants.length;
+  }
+
   async updateAdminRole(adminId: string, tenantId: string, role: EAdminRole) {
     try {
+      if (!isTenantScopedRole(role)) {
+        return errorResponse('400:INVALID_TENANT_ROLE', 400);
+      }
+
       const admin = await this.adminRepository.selectById(adminId);
       if (!admin) {
         return errorResponse(errorTypes._404.admin_nf, 404);
@@ -209,6 +323,10 @@ export class TenantService {
       const tenant = await this.tenantRepository.selectById(tenantId);
       if (!tenant) {
         return errorResponse('404:TENANT_NOT_FOUND', 404);
+      }
+
+      if (!tenant.active || tenant.deletion_scheduled_for_at) {
+        return errorResponse('409:TENANT_NOT_AVAILABLE_FOR_ROLE_UPDATE', 409);
       }
 
       const isInTenant = await this.adminTenantRepository.isAdminInTenant(adminId, tenantId);

@@ -712,6 +712,11 @@ model Tenant {
   slug           String           @unique @db.VarChar(50)
   domain         String?          @db.VarChar(255)
   active         Boolean          @default(true)
+  archived_at    DateTime?
+  deletion_requested_at DateTime?
+  deletion_scheduled_for_at DateTime?
+  deletion_requested_by String?  @db.VarChar(25)
+  deletion_reason String?        @db.VarChar(255)
   created_at     DateTime         @default(now())
   updated_at     DateTime         @updatedAt
   AdminTenant       AdminTenant[]

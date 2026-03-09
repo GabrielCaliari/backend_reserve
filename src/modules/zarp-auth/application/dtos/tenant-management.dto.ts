@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, IsOptional, Matches, MaxLength } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, Matches, MaxLength, IsEnum } from 'class-validator';
+import { EAdminRole } from '../../domain/enums/admin-role.enum';
 
 const adminCuidExample = 'cma1admin0001ghijklmno23p';
 const tenantCuidExample = 'cma1tenant001uvwxyzab345';
@@ -50,6 +51,17 @@ export class UpdateTenantDTO {
   domain?: string;
 }
 
+export class ScheduleTenantDeletionDTO {
+  @ApiPropertyOptional({
+    description: 'Optional reason for scheduling tenant deletion',
+    example: 'Customer requested account closure',
+  })
+  @IsString()
+  @IsOptional()
+  @MaxLength(255)
+  reason?: string;
+}
+
 export class AssignAdminToTenantDTO {
   @ApiProperty({ description: 'Admin CUID to assign', example: adminCuidExample })
   @IsNotEmpty()
@@ -63,9 +75,10 @@ export class AssignAdminToTenantDTO {
 }
 
 export class UpdateAdminTenantRoleDTO {
-  @ApiProperty({ description: 'New role for admin in tenant', enum: ['manager', 'editor', 'viewer'] })
+  @ApiProperty({ description: 'New role for admin in tenant', enum: [EAdminRole.owner, EAdminRole.manager, EAdminRole.editor, EAdminRole.viewer] })
   @IsNotEmpty()
-  role: string;
+  @IsEnum(EAdminRole)
+  role: EAdminRole;
 }
 
 export class TenantResponseDTO {
@@ -84,6 +97,21 @@ export class TenantResponseDTO {
   @ApiProperty({ example: true })
   active: boolean;
 
+  @ApiPropertyOptional({ example: '2026-03-08T12:00:00.000Z', nullable: true })
+  archived_at?: Date | null;
+
+  @ApiPropertyOptional({ example: '2026-03-08T12:00:00.000Z', nullable: true })
+  deletion_requested_at?: Date | null;
+
+  @ApiPropertyOptional({ example: '2026-03-23T12:00:00.000Z', nullable: true })
+  deletion_scheduled_for_at?: Date | null;
+
+  @ApiPropertyOptional({ example: adminCuidExample, nullable: true })
+  deletion_requested_by?: string | null;
+
+  @ApiPropertyOptional({ example: 'Customer requested account closure', nullable: true })
+  deletion_reason?: string | null;
+
   @ApiProperty({ example: '2024-01-01T00:00:00.000Z' })
   created_at: Date;
 
@@ -101,4 +129,30 @@ export class TenantWithAdminsDTO extends TenantResponseDTO {
       role: string;
     };
   }>;
+}
+
+export class TenantDeletionStatusDTO {
+  @ApiProperty({ example: tenantCuidExample, description: 'Tenant CUID (25-character identifier)' })
+  id: string;
+
+  @ApiProperty({ example: false })
+  active: boolean;
+
+  @ApiProperty({ example: true })
+  scheduled_for_deletion: boolean;
+
+  @ApiPropertyOptional({ example: '2026-03-08T12:00:00.000Z', nullable: true })
+  archived_at?: Date | null;
+
+  @ApiPropertyOptional({ example: '2026-03-08T12:00:00.000Z', nullable: true })
+  deletion_requested_at?: Date | null;
+
+  @ApiPropertyOptional({ example: '2026-03-23T12:00:00.000Z', nullable: true })
+  deletion_scheduled_for_at?: Date | null;
+
+  @ApiPropertyOptional({ example: adminCuidExample, nullable: true })
+  deletion_requested_by?: string | null;
+
+  @ApiPropertyOptional({ example: 'Customer requested account closure', nullable: true })
+  deletion_reason?: string | null;
 }

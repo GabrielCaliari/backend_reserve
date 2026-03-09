@@ -139,10 +139,11 @@ export class AdminController {
     @ApiResponse({ status: 404, description: 'Admin not found' })
     async updateRole(
         @Param('id', ParseCuidPipe) id: string,
+        @CurrentAdmin() admin: CurrentAdminPayload,
         @Body() data: UpdateAdminRoleDTO,
         @Res() res: Response,
     ) {
-        const result = await this.adminService.updateRole(id, data.role);
+        const result = await this.adminService.updateRole(id, data.role, admin.admin_id);
         return res.status(result.status).json(result.data)
     }
 

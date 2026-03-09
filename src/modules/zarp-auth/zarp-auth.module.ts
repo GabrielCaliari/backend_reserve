@@ -8,6 +8,7 @@ import { EmailController } from './infrastructure/controllers/admin-email.contro
 import { PostService as AdminPostService } from './application/services/admin-post.service';
 import { PostController as AdminPostController } from './infrastructure/controllers/admin-post.controller';
 import { TenantService } from './application/services/tenant.service';
+import { TenantRetentionService } from './application/services/tenant-retention.service';
 import { TenantController } from './infrastructure/controllers/tenant.controller';
 import { UserManagementService } from './application/services/user-management.service';
 import { AdminUserController } from './infrastructure/controllers/admin-user.controller';
@@ -80,6 +81,7 @@ import { FXGoogleAPITokenProvider } from './infrastructure/providers/fx-google-a
     EmailService,
     AdminPostService,
     TenantService,
+    TenantRetentionService,
     UserManagementService,
 
     // Token Validators (DIP implementations)

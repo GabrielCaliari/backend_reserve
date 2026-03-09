@@ -23,6 +23,9 @@ import {
   CreateTenantDTO, 
   UpdateTenantDTO, 
   AssignAdminToTenantDTO,
+  ScheduleTenantDeletionDTO,
+  TenantDeletionStatusDTO,
+  UpdateAdminTenantRoleDTO,
   TenantResponseDTO,
   TenantWithAdminsDTO,
 } from '../../application/dtos/tenant-management.dto';
@@ -284,26 +287,70 @@ export class TenantController {
   @Roles(EAdminRole.super_admin)
   @UseGuards(AdminJwtGuard, RolesGuard)
   @ApiOperation({ 
-    summary: 'Delete tenant permanently (super_admin only)',
-    description: 'Permanently deletes a tenant and all its associations'
+    summary: 'Schedule tenant deletion (super_admin only)',
+    description: 'Archives the tenant immediately and schedules permanent deletion after 15 days'
   })
   @ApiParam({ name: 'id', type: String, description: 'Tenant CUID (25-character identifier)', example: 'cma1tenant001uvwxyzab345' })
+  @ApiBody({ type: ScheduleTenantDeletionDTO, required: false })
   @ApiResponse({ 
     status: 200, 
-    description: 'Tenant deleted',
+    description: 'Tenant deletion scheduled',
     schema: {
       example: {
-        deleted: true
+        id: 'cma1tenant001uvwxyzab345',
+        active: false,
+        scheduled_for_deletion: true,
+        deletion_scheduled_for_at: '2026-03-23T12:00:00.000Z'
       }
     }
   })
   @ApiResponse({ status: 403, description: 'Insufficient permissions' })
   @ApiResponse({ status: 404, description: 'Tenant not found' })
+  @ApiResponse({ status: 409, description: 'Tenant deletion already scheduled' })
   async delete(
+    @Param('id', ParseCuidPipe) id: string,
+    @CurrentAdmin() admin: CurrentAdminPayload,
+    @Body() dto: ScheduleTenantDeletionDTO,
+    @Res() res: Response,
+  ) {
+    const result = await this.tenantService.scheduleDeletion(id, admin.admin_id, dto);
+    return res.status(result.status).json(result.data);
+  }
+
+  @Post('/:id/restore')
+  @Roles(EAdminRole.super_admin)
+  @UseGuards(AdminJwtGuard, RolesGuard)
+  @ApiOperation({
+    summary: 'Restore tenant scheduled for deletion (super_admin only)',
+    description: 'Cancels the deletion window and restores tenant access before the 15-day purge deadline'
+  })
+  @ApiParam({ name: 'id', type: String, description: 'Tenant CUID (25-character identifier)', example: 'cma1tenant001uvwxyzab345' })
+  @ApiResponse({ status: 200, description: 'Tenant restored', type: TenantResponseDTO })
+  @ApiResponse({ status: 404, description: 'Tenant not found' })
+  @ApiResponse({ status: 409, description: 'Tenant deletion is not scheduled' })
+  async restore(
     @Param('id', ParseCuidPipe) id: string,
     @Res() res: Response,
   ) {
-    const result = await this.tenantService.delete(id);
+    const result = await this.tenantService.restoreDeletion(id);
+    return res.status(result.status).json(result.data);
+  }
+
+  @Get('/:id/deletion-status')
+  @Roles(EAdminRole.super_admin)
+  @UseGuards(AdminJwtGuard, RolesGuard)
+  @ApiOperation({
+    summary: 'Get tenant deletion status (super_admin only)',
+    description: 'Returns archival and scheduled deletion information for a tenant'
+  })
+  @ApiParam({ name: 'id', type: String, description: 'Tenant CUID (25-character identifier)', example: 'cma1tenant001uvwxyzab345' })
+  @ApiResponse({ status: 200, description: 'Tenant deletion status returned', type: TenantDeletionStatusDTO })
+  @ApiResponse({ status: 404, description: 'Tenant not found' })
+  async deletionStatus(
+    @Param('id', ParseCuidPipe) id: string,
+    @Res() res: Response,
+  ) {
+    const result = await this.tenantService.getDeletionStatus(id);
     return res.status(result.status).json(result.data);
   }
 
@@ -346,7 +393,7 @@ export class TenantController {
   async updateAdminRole(
     @Param('tenantId', ParseCuidPipe) tenantId: string,
     @Param('adminId', ParseCuidPipe) adminId: string,
-    @Body() dto: { role: EAdminRole },
+    @Body() dto: UpdateAdminTenantRoleDTO,
     @Res() res: Response,
   ) {
     const result = await this.tenantService.updateAdminRole(adminId, tenantId, dto.role);

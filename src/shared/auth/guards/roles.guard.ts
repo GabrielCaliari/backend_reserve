@@ -26,6 +26,10 @@ const ROLE_HIERARCHY: EAdminRole[] = [
   EAdminRole.super_admin,
 ];
 
+function normalizeRole(role: EAdminRole): EAdminRole {
+  return role === EAdminRole.company_admin ? EAdminRole.manager : role;
+}
+
 /**
  * Guard that checks if the authenticated admin has the required role(s).
  *
@@ -85,7 +89,7 @@ export class RolesGuard implements CanActivate {
     }
 
     // Resolve the effective role
-    let effectiveRole: EAdminRole = admin.role as EAdminRole;
+    let effectiveRole: EAdminRole = normalizeRole(admin.role as EAdminRole);
 
     // If tenant_id is present, use per-tenant role
     const tenantId: string | undefined = request.tenant_id;
@@ -96,16 +100,16 @@ export class RolesGuard implements CanActivate {
         throw new ForbiddenException('You do not have a role in this tenant');
       }
 
-      effectiveRole = tenantRole;
-      request.tenant_role = tenantRole;
+      effectiveRole = normalizeRole(tenantRole);
+      request.tenant_role = effectiveRole;
+    } else {
+      throw new ForbiddenException('Tenant context is required for non-super-admin role checks');
     }
 
     // Check if effective role satisfies any of the required roles using hierarchy
     const effectiveLevel = ROLE_HIERARCHY.indexOf(effectiveRole);
     const hasPermission = requiredRoles.some((required) => {
-      // Handle deprecated company_admin as equivalent to manager
-      const normalizedRequired =
-        required === EAdminRole.company_admin ? EAdminRole.manager : required;
+      const normalizedRequired = normalizeRole(required);
       const requiredLevel = ROLE_HIERARCHY.indexOf(normalizedRequired);
       return effectiveLevel >= requiredLevel;
     });
@@ -115,7 +119,7 @@ export class RolesGuard implements CanActivate {
     }
 
     // Attach roles to request for downstream use
-    request.admin_role = admin.role;
+    request.admin_role = normalizeRole(admin.role as EAdminRole);
 
     return true;
   }

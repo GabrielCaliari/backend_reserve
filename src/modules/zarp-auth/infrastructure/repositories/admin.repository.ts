@@ -20,7 +20,7 @@ export default class AdminRepository implements IAdminRepository {
                     data: {
                         name: data.name,
                         email: data.email,
-                        role: data.role ?? EAdminRole.company_admin,
+                        role: data.role ?? EAdminRole.manager,
                     }
                 });
 
@@ -58,7 +58,10 @@ export default class AdminRepository implements IAdminRepository {
                 where: { id },
                 include: {
                     AdminTenant: {
-                        where: { active: true },
+                        where: {
+                            active: true,
+                            Tenant: { active: true },
+                        },
                         include: { Tenant: true },
                     },
                 },
@@ -122,7 +125,10 @@ export default class AdminRepository implements IAdminRepository {
             return await this.prisma.admin.findMany({
                 include: {
                     AdminTenant: {
-                        where: { active: true },
+                        where: {
+                            active: true,
+                            Tenant: { active: true },
+                        },
                         include: { Tenant: { select: { id: true, name: true, slug: true } } },
                     },
                 },
@@ -130,6 +136,19 @@ export default class AdminRepository implements IAdminRepository {
             });
         } catch (error) {
             throw new RepositoryException('Erro ao listar admins.', error);
+        }
+    }
+
+    async countActiveByRole(role: EAdminRole) {
+        try {
+            return await this.prisma.admin.count({
+                where: {
+                    role,
+                    active: true,
+                },
+            });
+        } catch (error) {
+            throw new RepositoryException('Erro ao contar admins ativos por role.', error);
         }
     }
 

@@ -21,6 +21,10 @@ import { EAdminRole } from '../../domain/enums/admin-role.enum';
 import { errorTypes } from '../../../../shared/constants/error-types';
 import { errorResponse, successResponse } from '../../../../shared/helpers';
 
+function normalizeAdminRole(role: EAdminRole): EAdminRole {
+    return role === EAdminRole.company_admin ? EAdminRole.manager : role;
+}
+
 @Injectable()
 export class AdminService {
     constructor(
@@ -30,6 +34,54 @@ export class AdminService {
         @Inject(ADMIN_TENANT_REPOSITORY) private readonly adminTenantRepository: IAdminTenantRepository,
         @Inject(TENANT_REPOSITORY) private readonly tenantRepository: ITenantRepository,
     ) { }
+
+    private async assertSuperAdminSafety(
+        targetAdminId: string,
+        options?: {
+            currentAdminId?: string;
+            nextRole?: EAdminRole;
+            deactivate?: boolean;
+            delete?: boolean;
+        },
+    ) {
+        const targetAdmin = await this.adminRepository.selectById(targetAdminId);
+
+        if (!targetAdmin) {
+            return { ok: false as const, response: errorResponse(errorTypes._404.admin_nf, 404) };
+        }
+
+        const targetRole = normalizeAdminRole(targetAdmin.role as EAdminRole);
+        if (targetRole !== EAdminRole.super_admin) {
+            return { ok: true as const, admin: targetAdmin };
+        }
+
+        const removesSuperAdminAccess = Boolean(
+            options?.deactivate ||
+            options?.delete ||
+            (options?.nextRole && options.nextRole !== EAdminRole.super_admin),
+        );
+
+        if (!removesSuperAdminAccess) {
+            return { ok: true as const, admin: targetAdmin };
+        }
+
+        if (options?.currentAdminId && options.currentAdminId === targetAdminId) {
+            return {
+                ok: false as const,
+                response: errorResponse('400:CANNOT_REMOVE_OWN_SUPER_ADMIN_ACCESS', 400),
+            };
+        }
+
+        const activeSuperAdmins = await this.adminRepository.countActiveByRole(EAdminRole.super_admin);
+        if (targetAdmin.active && activeSuperAdmins <= 1) {
+            return {
+                ok: false as const,
+                response: errorResponse('400:CANNOT_REMOVE_LAST_ACTIVE_SUPER_ADMIN', 400),
+            };
+        }
+
+        return { ok: true as const, admin: targetAdmin };
+    }
 
     async authenticate(data: AuthAdminDTO) {
         try {
@@ -81,7 +133,7 @@ export class AdminService {
                     details: {
                         name: admin.name,
                         email: admin.email,
-                        role: admin.role,
+                        role: normalizeAdminRole(admin.role as EAdminRole),
                     }
                 }
             }
@@ -119,7 +171,7 @@ export class AdminService {
             }
 
             let tenants: any[];
-            if (admin.role === EAdminRole.super_admin) {
+            if (normalizeAdminRole(admin.role as EAdminRole) === EAdminRole.super_admin) {
                 const all = await this.tenantRepository.selectAll();
                 tenants = all.map((t: any) => ({
                     id: t.id,
@@ -141,7 +193,7 @@ export class AdminService {
                 data: {
                     name: admin.name,
                     email: admin.email,
-                    role: admin.role,
+                    role: normalizeAdminRole(admin.role as EAdminRole),
                     active: admin.active,
                     tenants,
                 }
@@ -162,14 +214,14 @@ export class AdminService {
                 name: data.name,
                 email: data.email,
                 password: data.password,
-                role: data.role,
+                role: data.role ? normalizeAdminRole(data.role) : undefined,
             });
 
             return successResponse({
                 id: admin.id,
                 name: admin.name,
                 email: admin.email,
-                role: admin.role,
+                role: normalizeAdminRole(admin.role as EAdminRole),
             }, 201);
         } catch (error) {
             return errorResponse('500:ADMIN_NOT_CREATED', 500, error);
@@ -190,9 +242,9 @@ export class AdminService {
                 id: admin.id,
                 name: admin.name,
                 email: admin.email,
-                role: admin.role,
+                role: normalizeAdminRole(admin.role as EAdminRole),
                 active: admin.active,
-                tenants: admin.role === EAdminRole.super_admin
+                tenants: normalizeAdminRole(admin.role as EAdminRole) === EAdminRole.super_admin
                     ? allTenantsSlim
                     : admin.AdminTenant?.map((at: any) => ({
                         id: at.Tenant.id,
@@ -208,18 +260,22 @@ export class AdminService {
         }
     }
 
-    async updateRole(adminId: string, role: EAdminRole) {
+    async updateRole(adminId: string, role: EAdminRole, currentAdminId?: string) {
         try {
-            const admin = await this.adminRepository.selectById(adminId);
-            if (!admin) {
-                return errorResponse(errorTypes._404.admin_nf, 404);
+            const normalizedRole = normalizeAdminRole(role);
+            const safety = await this.assertSuperAdminSafety(adminId, {
+                currentAdminId,
+                nextRole: normalizedRole,
+            });
+            if (!safety.ok) {
+                return safety.response;
             }
 
-            const updated = await this.adminRepository.updateRole(adminId, role);
+            const updated = await this.adminRepository.updateRole(adminId, normalizedRole);
             return successResponse({
                 id: updated.id,
                 name: updated.name,
-                role: updated.role,
+                role: normalizeAdminRole(updated.role as EAdminRole),
             });
         } catch (error) {
             return errorResponse('500:ADMIN_ROLE_NOT_UPDATED', 500, error);
@@ -232,9 +288,12 @@ export class AdminService {
                 return errorResponse('400:CANNOT_DEACTIVATE_SELF', 400);
             }
 
-            const admin = await this.adminRepository.selectById(adminId);
-            if (!admin) {
-                return errorResponse(errorTypes._404.admin_nf, 404);
+            const safety = await this.assertSuperAdminSafety(adminId, {
+                currentAdminId,
+                deactivate: true,
+            });
+            if (!safety.ok) {
+                return safety.response;
             }
 
             const deactivated = await this.adminRepository.deactivate(adminId);
@@ -297,7 +356,7 @@ export class AdminService {
             }
 
             let tenants: any[];
-            if (admin.role === EAdminRole.super_admin) {
+            if (normalizeAdminRole(admin.role as EAdminRole) === EAdminRole.super_admin) {
                 const all = await this.tenantRepository.selectAll();
                 tenants = all.map((t: any) => ({
                     id: t.id,
@@ -312,7 +371,7 @@ export class AdminService {
                     name: at.Tenant.name,
                     slug: at.Tenant.slug,
                     domain: at.Tenant.domain,
-                    role: at.role,
+                    role: normalizeAdminRole(at.role as EAdminRole),
                 })) ?? [];
             }
 
@@ -320,7 +379,7 @@ export class AdminService {
                 id: admin.id,
                 name: admin.name,
                 email: admin.email,
-                role: admin.role,
+                role: normalizeAdminRole(admin.role as EAdminRole),
                 active: admin.active,
                 tenants,
                 created_at: admin.created_at,
@@ -336,9 +395,12 @@ export class AdminService {
                 return errorResponse('400:CANNOT_DELETE_SELF', 400);
             }
 
-            const admin = await this.adminRepository.selectById(adminId);
-            if (!admin) {
-                return errorResponse(errorTypes._404.admin_nf, 404);
+            const safety = await this.assertSuperAdminSafety(adminId, {
+                currentAdminId,
+                delete: true,
+            });
+            if (!safety.ok) {
+                return safety.response;
             }
 
             await this.adminRepository.delete(adminId);

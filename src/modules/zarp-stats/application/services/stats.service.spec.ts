@@ -51,6 +51,9 @@ describe('StatsService', () => {
     deactivate: jest.fn(),
     activate: jest.fn(),
     delete: jest.fn(),
+    scheduleDeletion: jest.fn(),
+    restoreDeletion: jest.fn(),
+    findDueForDeletion: jest.fn(),
   };
 
   beforeEach(() => {

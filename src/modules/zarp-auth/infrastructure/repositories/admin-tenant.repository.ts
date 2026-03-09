@@ -46,7 +46,14 @@ export default class AdminTenantRepository implements IAdminTenantRepository {
   async findTenantsByAdminId(adminId: string) {
     try {
       const records = await this.prisma.adminTenant.findMany({
-        where: { admin_id: adminId, active: true },
+        where: {
+          admin_id: adminId,
+          active: true,
+          Tenant: {
+            active: true,
+            deletion_scheduled_for_at: null,
+          },
+        },
         include: { Tenant: true },
       });
       return records.map((r) => r.Tenant);
@@ -58,14 +65,25 @@ export default class AdminTenantRepository implements IAdminTenantRepository {
   async findAdminsByTenantId(tenantId: string) {
     try {
       const records = await this.prisma.adminTenant.findMany({
-        where: { tenant_id: tenantId, active: true },
+        where: {
+          tenant_id: tenantId,
+          active: true,
+          Admin: { active: true },
+        },
         include: {
           Admin: {
             select: { id: true, name: true, email: true, role: true, active: true },
           },
         },
       });
-      return records.map((r) => r.Admin);
+      return records.map((record) => ({
+        ...record.Admin,
+        role: record.role === EAdminRole.company_admin ? EAdminRole.manager : record.role,
+        global_role:
+          record.Admin.role === EAdminRole.company_admin
+            ? EAdminRole.manager
+            : record.Admin.role,
+      }));
     } catch (error) {
       throw new RepositoryException('Erro ao buscar admins do tenant.', error);
     }
@@ -103,7 +121,9 @@ export default class AdminTenantRepository implements IAdminTenantRepository {
         return null;
       }
 
-      return record.role as EAdminRole;
+      return record.role === EAdminRole.company_admin
+        ? EAdminRole.manager
+        : (record.role as EAdminRole);
     } catch (error) {
       throw new RepositoryException('Erro ao buscar role do admin no tenant.', error);
     }

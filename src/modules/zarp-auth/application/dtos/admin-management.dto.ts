@@ -24,7 +24,7 @@ export class CreateAdminDTO {
   @ApiPropertyOptional({
     description: 'Administrator role',
     enum: EAdminRole,
-    default: EAdminRole.company_admin,
+    default: EAdminRole.manager,
   })
   @IsEnum(EAdminRole)
   @IsOptional()
