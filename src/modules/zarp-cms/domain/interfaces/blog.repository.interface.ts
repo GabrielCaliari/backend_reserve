@@ -8,6 +8,7 @@ export interface IBlogRepository {
   findBySecretKey(secretKeyHash: string): Promise<Blog | null>;
   findByNameAndTenantId(name: string, tenantId: string): Promise<Blog | null>;
   findByTenantId(tenantId: string): Promise<Blog[]>;
+  findAllActive(): Promise<Blog[]>;
   update(id: string, data: Partial<Blog>): Promise<Blog>;
   delete(id: string): Promise<void>;
 }
