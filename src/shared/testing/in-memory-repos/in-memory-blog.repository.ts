@@ -34,6 +34,10 @@ export class InMemoryBlogRepository implements IBlogRepository {
     return this.blogs.filter((b) => b.tenantId === tenantId && b.active);
   }
 
+  async findAllActive(): Promise<Blog[]> {
+    return this.blogs.filter((b) => b.active);
+  }
+
   async findBySecretKey(secretKeyHash: string): Promise<Blog | null> {
     const blog = this.blogs.find((b) => b.secretKeyHash === secretKeyHash && b.active);
     return blog || null;

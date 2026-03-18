@@ -86,6 +86,22 @@ export class PrismaBlogRepository implements IBlogRepository {
     }
   }
 
+  async findAllActive(): Promise<Blog[]> {
+    try {
+      const records = await this.prisma.blog.findMany({
+        where: {
+          active: true,
+        },
+        orderBy: {
+          created_at: 'desc',
+        },
+      });
+      return records.map((record) => this.toDomain(record));
+    } catch (error) {
+      throw new RepositoryException('Failed to find all active blogs', error);
+    }
+  }
+
   async update(id: string, data: Partial<Blog>): Promise<Blog> {
     try {
       const updateData: any = {};

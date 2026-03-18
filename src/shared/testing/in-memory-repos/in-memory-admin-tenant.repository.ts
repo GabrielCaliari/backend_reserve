@@ -65,9 +65,10 @@ export class InMemoryAdminTenantRepository implements IAdminTenantRepository {
   }
 
   async findTenantsByAdminIdPaginated(adminId: string, page: number, limit: number): Promise<{ data: any[]; total: number }> {
-    const all = this.records.filter((r) => r.admin_id === adminId && r.active);
-    const total = all.length;
-    const data = all.slice((page - 1) * limit, page * limit).map((r) => ({ id: r.tenant_id }));
+    const filtered = this.records.filter((r) => r.admin_id === adminId && r.active);
+    const total = filtered.length;
+    const start = (page - 1) * limit;
+    const data = filtered.slice(start, start + limit).map((r) => ({ id: r.tenant_id }));
     return { data, total };
   }
 
@@ -75,13 +76,6 @@ export class InMemoryAdminTenantRepository implements IAdminTenantRepository {
     return this.records
       .filter((r) => r.tenant_id === tenantId && r.active)
       .map((r) => ({ id: r.admin_id, role: r.role }));
-  }
-
-  async findAdminsByTenantIdPaginated(tenantId: string, page: number, limit: number): Promise<{ data: any[]; total: number }> {
-    const all = this.records.filter((r) => r.tenant_id === tenantId && r.active);
-    const total = all.length;
-    const data = all.slice((page - 1) * limit, page * limit).map((r) => ({ id: r.admin_id, role: r.role }));
-    return { data, total };
   }
 
   async isAdminInTenant(adminId: string, tenantId: string): Promise<boolean> {
