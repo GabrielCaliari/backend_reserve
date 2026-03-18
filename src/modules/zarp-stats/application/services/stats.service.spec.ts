@@ -54,6 +54,7 @@ describe('StatsService', () => {
     scheduleDeletion: jest.fn(),
     restoreDeletion: jest.fn(),
     findDueForDeletion: jest.fn(),
+    selectAllPaginated: jest.fn(),
   };
 
   beforeEach(() => {
