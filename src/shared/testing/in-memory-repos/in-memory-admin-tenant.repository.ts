@@ -72,6 +72,14 @@ export class InMemoryAdminTenantRepository implements IAdminTenantRepository {
     return { data, total };
   }
 
+  async findAdminsByTenantIdPaginated(tenantId: string, page: number, limit: number): Promise<{ data: any[]; total: number }> {
+    const filtered = this.records.filter((r) => r.tenant_id === tenantId && r.active);
+    const total = filtered.length;
+    const start = (page - 1) * limit;
+    const data = filtered.slice(start, start + limit).map((r) => ({ id: r.admin_id, role: r.role }));
+    return { data, total };
+  }
+
   async findAdminsByTenantId(tenantId: string): Promise<any[]> {
     return this.records
       .filter((r) => r.tenant_id === tenantId && r.active)
