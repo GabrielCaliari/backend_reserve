@@ -1,6 +1,7 @@
-import { Body, Controller, HttpCode, HttpStatus, Post, Req, UseGuards } from '@nestjs/common';
-import { ApiHeader, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Body, Controller, HttpCode, HttpStatus, NotFoundException, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';
+import { ApiHeader, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { SubmitLeadUseCase } from '../../application/use-cases/submit-lead.use-case';
+import { UpdateLeadUseCase, UpdateLeadDto } from '../../application/use-cases/update-lead.use-case';
 import { SubmitLeadDto } from '../../application/dtos/submit-lead.dto';
 import { TenantKeyGuard } from '../guards/tenant-key.guard';
 import { successResponse } from '../../../../shared/helpers/response.helper';
@@ -17,6 +18,7 @@ import { successResponse } from '../../../../shared/helpers/response.helper';
 export class PublicLeadController {
   constructor(
     private readonly submitLeadUseCase: SubmitLeadUseCase,
+    private readonly updateLeadUseCase: UpdateLeadUseCase,
   ) {}
 
   @Post('submit')
@@ -93,5 +95,30 @@ export class PublicLeadController {
     const result = await this.submitLeadUseCase.execute(dto, tenantContext);
     
     return successResponse({ leadId: result.leadId });
+  }
+
+  @Patch(':leadId')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Update an existing lead',
+    description: 'Updates lead data such as message, source, and custom data fields. Requires the same X-Tenant-Key used during submission.',
+  })
+  @ApiParam({ name: 'leadId', type: String, description: 'Lead ID returned from POST /submit' })
+  @ApiResponse({ status: 200, description: 'Lead updated successfully', schema: { example: { success: true } } })
+  @ApiResponse({ status: 404, description: 'Lead not found' })
+  @ApiResponse({ status: 401, description: 'Authentication error' })
+  async update(
+    @Param('leadId') leadId: string,
+    @Body() dto: UpdateLeadDto,
+    @Req() request: any,
+  ) {
+    const { tenantId } = request.tenantContext;
+    const result = await this.updateLeadUseCase.execute(leadId, dto, tenantId);
+
+    if (!result) {
+      throw new NotFoundException('Lead not found');
+    }
+
+    return successResponse(result);
   }
 }

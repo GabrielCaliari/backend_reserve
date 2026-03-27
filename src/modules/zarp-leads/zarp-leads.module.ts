@@ -16,6 +16,7 @@ import { CreateLeadWithAttachmentsUseCase } from './application/use-cases/create
 import { AttachFileToLeadUseCase } from './application/use-cases/attach-file-to-lead.use-case';
 import { RemoveLeadAttachmentUseCase } from './application/use-cases/remove-lead-attachment.use-case';
 import { SubmitLeadUseCase } from './application/use-cases/submit-lead.use-case';
+import { UpdateLeadUseCase } from './application/use-cases/update-lead.use-case';
 import { GeolocationProvider } from '../../shared/providers/geolocation.provider';
 
 /**
@@ -68,6 +69,7 @@ import { GeolocationProvider } from '../../shared/providers/geolocation.provider
     AttachFileToLeadUseCase,
     RemoveLeadAttachmentUseCase,
     SubmitLeadUseCase,
+    UpdateLeadUseCase,
     
     // Repository DI tokens
     {
