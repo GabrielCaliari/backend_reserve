@@ -4,6 +4,7 @@
   "description": "Reserve backend API",
   "author": "Gabriel Caliari",
   "private": true,
+  "packageManager": "npm@11.6.2",
   "license": "MIT",
   "prisma": {
     "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seeds.ts"
