@@ -6,6 +6,7 @@ import { setupSwagger } from './swagger.config';
 import { MulterExceptionFilter } from './shared/exceptions/multer-exception.filter';
 import { DomainExceptionFilter } from './shared/exceptions/domain-exception.filter';
 import { ConnectionErrorFilter } from './shared/exceptions/connection-error.filter';
+import { PrismaExceptionFilter } from './shared/exceptions/prisma-exception.filter';
 import { Request, Response, NextFunction, json, urlencoded } from 'express';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
@@ -88,9 +89,10 @@ async function bootstrap() {
   
   const httpAdapterHost = app.get(HttpAdapterHost);
   app.useGlobalFilters(
-    new ConnectionErrorFilter(httpAdapterHost.httpAdapter), // Must be first to catch connection errors
-    new DomainExceptionFilter(), 
-    new MulterExceptionFilter()
+    new ConnectionErrorFilter(httpAdapterHost.httpAdapter), // primeiro: captura erro de conexão
+    new PrismaExceptionFilter(),
+    new DomainExceptionFilter(),
+    new MulterExceptionFilter(),
   );
 
   const { version } = require('../package.json') as { version: string };
