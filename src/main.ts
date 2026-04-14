@@ -54,28 +54,26 @@ async function bootstrap() {
     credentials: true,
   });
 
-  // Increase timeouts for file upload routes
+  // Timeout de 5 minutos SOMENTE em requisição mutante nos prefixos de rota
+  // que de fato hospedam upload multipart (endpoints com FileInterceptor).
+  // Prefixo ancorado — sem casamento por substring, que dava 5 min a
+  // qualquer rota com "upload"/"assets"/"images" no caminho.
+  const UPLOAD_TIMEOUT_METHODS = new Set(['POST', 'PUT', 'PATCH']);
+  const UPLOAD_TIMEOUT_ROUTES: RegExp[] = [
+    /^\/api\/cms\//, // assets, blogs, authors, articles/:id/images
+  ];
+  const UPLOAD_TIMEOUT_MS = 5 * 60 * 1000;
+
   app.use((req: Request, res: Response, next: NextFunction) => {
-    // Check if this is an upload endpoint
     const isUploadRoute =
-      req.path.includes('/upload') ||
-      req.path.includes('/assets') ||
-      req.path.includes('/images') ||
-      req.path.includes('/articles/') && req.method === 'POST';
+      UPLOAD_TIMEOUT_METHODS.has(req.method) &&
+      UPLOAD_TIMEOUT_ROUTES.some((route) => route.test(req.path));
 
     if (isUploadRoute) {
-      // Set generous timeout for upload routes (5 minutes)
-      req.setTimeout(5 * 60 * 1000);
-      res.setTimeout(5 * 60 * 1000);
-
-      // Add error handlers for the request/response streams
-      req.on('error', (error: any) => {
-        console.error('Request stream error:', error.message);
-      });
-
-      res.on('error', (error: any) => {
-        console.error('Response stream error:', error.message);
-      });
+      req.setTimeout(UPLOAD_TIMEOUT_MS);
+      res.setTimeout(UPLOAD_TIMEOUT_MS);
+      req.on('error', (error: Error) => logger.error(`Erro no stream da requisição: ${error.message}`));
+      res.on('error', (error: Error) => logger.error(`Erro no stream da resposta: ${error.message}`));
     }
 
     next();
