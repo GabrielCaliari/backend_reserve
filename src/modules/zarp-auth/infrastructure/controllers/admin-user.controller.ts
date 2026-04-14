@@ -37,7 +37,7 @@ import {
 export class AdminUserController {
   constructor(private readonly userManagementService: UserManagementService) {}
 
-  @Get('/')
+  @Get()
   @Roles(EAdminRole.super_admin)
   @UseGuards(AdminJwtGuard, RolesGuard)
   @ApiOperation({ 
@@ -69,6 +69,7 @@ export class AdminUserController {
     @Query('limit') limit: string = '20',
     @Res() res: Response,
   ) {
+    console.log('[findAll] chegou no controller');
     const result = await this.userManagementService.findAll(
       parseInt(page),
       parseInt(limit),
@@ -92,6 +93,7 @@ export class AdminUserController {
   @ApiResponse({ status: 403, description: 'Insufficient permissions' })
   @ApiResponse({ status: 404, description: 'User not found' })
   async findById(@Param('id', ParseCuidPipe) id: string, @Res() res: Response) {
+    console.log('[findById] chegou no controller, id:', id);
     const result = await this.userManagementService.findById(id);
     return res.status(result.status).json(result.data);
   }

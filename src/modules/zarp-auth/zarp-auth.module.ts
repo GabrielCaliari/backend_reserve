@@ -67,12 +67,12 @@ import { FXGoogleAPITokenProvider } from './infrastructure/providers/fx-google-a
  */
 @Module({
   controllers: [
+    AdminUserController, // must be before AdminController to avoid /:id route conflict
     AdminController,
     UserController,
     EmailController,
     AdminPostController,
     TenantController,
-    AdminUserController,
   ],
   providers: [
     // Application services
