@@ -100,13 +100,16 @@ model UserSessionToken {
 }
 
 model UserCredential {
-  id         String   @id @default(cuid()) @db.VarChar(25)
-  user_id    String   @unique @db.VarChar(25)
-  hash       String
-  salt       String
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-  User       User     @relation(fields: [user_id], references: [id])
+  id              String    @id @default(cuid()) @db.VarChar(25)
+  user_id         String    @unique @db.VarChar(25)
+  hash            String
+  salt            String
+  hash_version    Int       @default(1) @db.SmallInt
+  failed_attempts Int       @default(0)
+  locked_until    DateTime?
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @updatedAt
+  User            User      @relation(fields: [user_id], references: [id])
 }
 
 model UserCredentialHistory {
@@ -405,13 +408,16 @@ model AdminSessionToken {
 }
 
 model AdminCredential {
-  id         String   @id @default(cuid()) @db.VarChar(25)
-  admin_id   String   @unique @db.VarChar(25)
-  hash       String
-  salt       String
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-  Admin      Admin    @relation(fields: [admin_id], references: [id])
+  id              String    @id @default(cuid()) @db.VarChar(25)
+  admin_id        String    @unique @db.VarChar(25)
+  hash            String
+  salt            String
+  hash_version    Int       @default(1) @db.SmallInt
+  failed_attempts Int       @default(0)
+  locked_until    DateTime?
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @updatedAt
+  Admin           Admin     @relation(fields: [admin_id], references: [id])
 }
 
 model SMSNotification {
