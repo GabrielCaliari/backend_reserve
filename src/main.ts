@@ -28,6 +28,11 @@ async function bootstrap() {
     bodyParser: false,
   });
 
+  // Registrada direto no adaptador: fica fora do prefixo `api` e antes de
+  // qualquer guard global, para o health check do load balancer nunca
+  // depender de autenticação nem de banco.
+  app.getHttpAdapter().getInstance().get('/health', (_req: any, res: any) => res.status(200).send('OK'));
+
   app.use(cookieParser());
 
   // CSP desligado: esta é uma API JSON e o CSP default quebra os scripts
@@ -102,5 +107,21 @@ async function bootstrap() {
   if (swaggerMounted) {
     logger.log(`📚 Documentação Swagger em: http://localhost:${process.env.PORT}/api/docs`);
   }
+
+  // Encerramento gracioso: fecha conexões HTTP, Prisma e Bull antes de sair.
+  const gracefulShutdown = async (signal: string) => {
+    logger.log(`${signal} recebido. Iniciando encerramento gracioso...`);
+    try {
+      await app.close();
+      logger.log('Aplicação encerrada com sucesso.');
+      process.exit(0);
+    } catch (error) {
+      logger.error('Erro durante o encerramento:', error);
+      process.exit(1);
+    }
+  };
+
+  process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+  process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
 }
 bootstrap();
