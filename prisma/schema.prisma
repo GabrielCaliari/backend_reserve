@@ -638,6 +638,7 @@ model Lead {
   LeadCollection LeadCollection?  @relation(fields: [collection_id], references: [id])
   Tenant         Tenant?          @relation(fields: [tenant_id], references: [id])
   LeadAttachment LeadAttachment[]
+  Appointments   Appointment[]
 
   @@index([tenant_id])
   @@index([country])
@@ -719,13 +720,16 @@ model Tenant {
   deletion_reason String?        @db.VarChar(255)
   created_at     DateTime         @default(now())
   updated_at     DateTime         @updatedAt
-  AdminTenant       AdminTenant[]
-  Blog              Blog[]
-  LeadCollection    LeadCollection[]
-  UserCollection    UserCollection[]
-  leads             Lead[]
-  Author            Author[]
-  StatsIntegration  StatsIntegration[]
+  AdminTenant                  AdminTenant[]
+  Blog                         Blog[]
+  LeadCollection               LeadCollection[]
+  UserCollection               UserCollection[]
+  leads                        Lead[]
+  Author                       Author[]
+  StatsIntegration             StatsIntegration[]
+  AppointmentScheduleConfig    AppointmentScheduleConfig?
+  AppointmentBlockedPeriods    AppointmentBlockedPeriod[]
+  Appointments                 Appointment[]
 }
 
 model LeadCollection {
@@ -1211,4 +1215,75 @@ model AnalyticsReport {
   updated_at DateTime @updatedAt
 
   @@map("analytics_reports")
+}
+
+// ============================================
+// Appointments — Scheduling sub-domain
+// ============================================
+
+enum EAppointmentStatus {
+  confirmed
+  cancelled
+  completed
+}
+
+model AppointmentScheduleConfig {
+  id                    String                     @id @default(uuid()) @db.Uuid
+  tenant_id             String                     @db.VarChar(25)
+  working_days          Int[]                      // Legacy: array of working days
+  work_start_time       String                     @db.VarChar(5)  // Legacy: global start time
+  work_end_time         String                     @db.VarChar(5)  // Legacy: global end time
+  slot_interval_minutes Int                        @db.SmallInt
+  capacity_per_slot     Int                        @db.SmallInt
+  lunch_start_time      String?                    @db.VarChar(5)  // Legacy: global lunch start
+  lunch_end_time        String?                    @db.VarChar(5)  // Legacy: global lunch end
+  days_config           Json?                      // New: per-day configuration
+  created_at            DateTime                   @default(now())
+  updated_at            DateTime                   @updatedAt
+  Tenant                Tenant                     @relation(fields: [tenant_id], references: [id])
+  Appointments          Appointment[]
+  BlockedPeriods        AppointmentBlockedPeriod[]
+
+  @@unique([tenant_id])
+  @@index([tenant_id])
+  @@map("AppointmentScheduleConfig")
+}
+
+model AppointmentBlockedPeriod {
+  id                 String                    @id @default(uuid()) @db.Uuid
+  tenant_id          String                    @db.VarChar(25)
+  schedule_config_id String                    @db.Uuid
+  start_datetime     DateTime
+  end_datetime       DateTime
+  label              String?                   @db.VarChar(255)
+  created_at         DateTime                  @default(now())
+  updated_at         DateTime                  @updatedAt
+  Tenant             Tenant                    @relation(fields: [tenant_id], references: [id])
+  ScheduleConfig     AppointmentScheduleConfig @relation(fields: [schedule_config_id], references: [id])
+
+  @@index([tenant_id])
+  @@index([tenant_id, start_datetime, end_datetime])
+  @@map("AppointmentBlockedPeriod")
+}
+
+model Appointment {
+  id                 String                    @id @default(uuid()) @db.Uuid
+  tenant_id          String                    @db.VarChar(25)
+  lead_id            String                    @db.Uuid
+  schedule_config_id String                    @db.Uuid
+  appointment_date   DateTime                  @db.Date
+  slot_start_time    String                    @db.VarChar(5)
+  slot_end_time      String                    @db.VarChar(5)
+  status             EAppointmentStatus        @default(confirmed)
+  selected_product   String?                   @db.VarChar(255)
+  notes              String?                   @db.Text
+  created_at         DateTime                  @default(now())
+  updated_at         DateTime                  @updatedAt
+  Tenant             Tenant                    @relation(fields: [tenant_id], references: [id])
+  Lead               Lead                      @relation(fields: [lead_id], references: [id])
+  ScheduleConfig     AppointmentScheduleConfig @relation(fields: [schedule_config_id], references: [id])
+
+  @@index([tenant_id])
+  @@index([tenant_id, appointment_date, slot_start_time])
+  @@map("Appointment")
 }

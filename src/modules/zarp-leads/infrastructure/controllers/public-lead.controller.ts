@@ -1,10 +1,13 @@
-import { Body, Controller, HttpCode, HttpStatus, NotFoundException, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, ConflictException, HttpCode, HttpStatus, NotFoundException, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';
 import { ApiHeader, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { SubmitLeadUseCase } from '../../application/use-cases/submit-lead.use-case';
 import { UpdateLeadUseCase, UpdateLeadDto } from '../../application/use-cases/update-lead.use-case';
+import { BookAppointmentForLeadUseCase } from '../../application/use-cases/book-appointment-for-lead.use-case';
 import { SubmitLeadDto } from '../../application/dtos/submit-lead.dto';
 import { TenantKeyGuard } from '../guards/tenant-key.guard';
 import { successResponse } from '../../../../shared/helpers/response.helper';
+import { SlotUnavailableError } from '../../domain/errors/slot-unavailable.error';
+import { SlotInvalidError } from '../../domain/errors/slot-invalid.error';
 
 @ApiTags('Public Lead Submission')
 @Controller()
@@ -19,6 +22,7 @@ export class PublicLeadController {
   constructor(
     private readonly submitLeadUseCase: SubmitLeadUseCase,
     private readonly updateLeadUseCase: UpdateLeadUseCase,
+    private readonly bookAppointmentForLeadUseCase: BookAppointmentForLeadUseCase,
   ) {}
 
   @Post('submit')
@@ -93,19 +97,23 @@ export class PublicLeadController {
   ) {
     const tenantContext = request.tenantContext;
     const result = await this.submitLeadUseCase.execute(dto, tenantContext);
-    
-    return successResponse({ leadId: result.leadId });
+
+    return successResponse({
+      leadId: result.leadId,
+      ...(result.appointmentId && { appointmentId: result.appointmentId }),
+    });
   }
 
   @Patch(':leadId')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Update an existing lead',
-    description: 'Updates lead data such as message, source, and custom data fields. Requires the same X-Tenant-Key used during submission.',
+    description: 'Updates lead data. When data.appointmentDate and data.appointmentTime are present, also creates an appointment atomically.',
   })
   @ApiParam({ name: 'leadId', type: String, description: 'Lead ID returned from POST /submit' })
-  @ApiResponse({ status: 200, description: 'Lead updated successfully', schema: { example: { success: true } } })
+  @ApiResponse({ status: 200, description: 'Lead updated successfully' })
   @ApiResponse({ status: 404, description: 'Lead not found' })
+  @ApiResponse({ status: 409, description: 'Slot unavailable' })
   @ApiResponse({ status: 401, description: 'Authentication error' })
   async update(
     @Param('leadId') leadId: string,
@@ -113,10 +121,39 @@ export class PublicLeadController {
     @Req() request: any,
   ) {
     const { tenantId } = request.tenantContext;
+
+    // Update lead fields first
     const result = await this.updateLeadUseCase.execute(leadId, dto, tenantId);
 
     if (!result) {
       throw new NotFoundException('Lead not found');
+    }
+
+    // If appointment data is present, book the appointment
+    if (dto.data?.appointmentDate && dto.data?.appointmentTime) {
+      try {
+        const booking = await this.bookAppointmentForLeadUseCase.execute(
+          leadId,
+          tenantId,
+          dto.data.appointmentDate,
+          dto.data.appointmentTime,
+          dto.data.selectedProduct,
+        );
+
+        if (!booking) {
+          throw new NotFoundException('Lead not found');
+        }
+
+        return successResponse({ success: true, appointmentId: booking.appointmentId });
+      } catch (error) {
+        if (error instanceof SlotUnavailableError) {
+          throw new ConflictException('Slot unavailable: no remaining capacity for the requested time');
+        }
+        if (error instanceof SlotInvalidError) {
+          throw new NotFoundException('The requested time does not correspond to a valid slot');
+        }
+        throw error;
+      }
     }
 
     return successResponse(result);
