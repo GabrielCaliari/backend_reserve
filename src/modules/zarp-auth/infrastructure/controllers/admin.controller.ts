@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post, Res, UseGuards, Delete } from '@nestjs/common';
+import { Body, Controller, Get, Headers, Param, Patch, Post, Res, UseGuards, Delete } from '@nestjs/common';
 import { AdminService } from '../../application/services/admin.service';
 import { Response } from 'express';
 import AuthAdminDTO from '../../application/dtos/auth-admin.dto';
@@ -10,6 +10,10 @@ import { CurrentAdmin, CurrentAdminPayload } from '../../../../shared/auth/decor
 import { EAdminRole } from '../../domain/enums/admin-role.enum';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody, ApiParam } from '@nestjs/swagger';
 import { ParseCuidPipe } from '../../../../shared/pipes';
+
+function normalizeAdminRole(role: EAdminRole): EAdminRole {
+    return role === EAdminRole.company_admin ? EAdminRole.manager : role;
+}
 
 @ApiTags('Admin Management')
 @Controller('admin')
@@ -68,12 +72,12 @@ export class AdminController {
     }
 
     @Post('/register')
-    @Roles(EAdminRole.super_admin)
+    @Roles(EAdminRole.super_admin, EAdminRole.manager)
     @UseGuards(AdminJwtGuard, RolesGuard)
     @ApiBearerAuth()
     @ApiOperation({ 
-        summary: 'Register a new admin (super_admin only)',
-        description: 'Creates a new administrator account. Only accessible by super_admin users.'
+        summary: 'Register a new admin (super_admin or manager)',
+        description: 'Creates a new administrator account. Managers cannot create super_admin or owner accounts.'
     })
     @ApiBody({ type: CreateAdminDTO })
     @ApiResponse({ 
@@ -90,18 +94,23 @@ export class AdminController {
     })
     @ApiResponse({ status: 400, description: 'Email already exists' })
     @ApiResponse({ status: 403, description: 'Insufficient permissions' })
-    async register(@Res() res: Response, @Body() data: CreateAdminDTO) {
-        const result = await this.adminService.register(data);
+    async register(
+        @Res() res: Response,
+        @Body() data: CreateAdminDTO,
+        @CurrentAdmin() admin: CurrentAdminPayload,
+    ) {
+        const callerRole = normalizeAdminRole((admin.admin_role ?? EAdminRole.manager) as EAdminRole);
+        const result = await this.adminService.register(data, callerRole);
         return res.status(result.status).json(result.data)
     }
 
     @Get('/list')
-    @Roles(EAdminRole.super_admin)
+    @Roles(EAdminRole.super_admin, EAdminRole.manager)
     @UseGuards(AdminJwtGuard, RolesGuard)
     @ApiBearerAuth()
     @ApiOperation({ 
-        summary: 'List all admins (super_admin only)',
-        description: 'Returns a list of all administrators with their associated tenants'
+        summary: 'List admins (super_admin or manager)',
+        description: 'Super admins see all admins. Managers only see admins with roles below super_admin/owner. When x-tenant-id header is present, filters admins belonging to that tenant.'
     })
     @ApiResponse({ 
         status: 200, 
@@ -109,18 +118,23 @@ export class AdminController {
         type: [AdminListItemDTO]
     })
     @ApiResponse({ status: 403, description: 'Insufficient permissions' })
-    async listAll(@Res() res: Response) {
-        const result = await this.adminService.listAll();
+    async listAll(
+        @Res() res: Response,
+        @CurrentAdmin() admin: CurrentAdminPayload,
+        @Headers('x-tenant-id') tenantId?: string,
+    ) {
+        const callerRole = normalizeAdminRole((admin.admin_role ?? EAdminRole.manager) as EAdminRole);
+        const result = await this.adminService.listAll(1, 20, callerRole, tenantId || undefined);
         return res.status(result.status).json(result.data)
     }
 
     @Patch('/:id/role')
-    @Roles(EAdminRole.super_admin)
+    @Roles(EAdminRole.super_admin, EAdminRole.manager)
     @UseGuards(AdminJwtGuard, RolesGuard)
     @ApiBearerAuth()
     @ApiOperation({ 
-        summary: 'Update admin role (super_admin only)',
-        description: 'Changes the role of an administrator'
+        summary: 'Update admin role (super_admin or manager)',
+        description: 'Changes the role of an administrator. Managers cannot assign super_admin or owner roles.'
     })
     @ApiParam({ name: 'id', type: String, description: 'Admin CUID (25-character identifier)', example: 'cma1admin0001ghijklmno23p' })
     @ApiBody({ type: UpdateAdminRoleDTO })
@@ -143,7 +157,8 @@ export class AdminController {
         @Body() data: UpdateAdminRoleDTO,
         @Res() res: Response,
     ) {
-        const result = await this.adminService.updateRole(id, data.role, admin.admin_id);
+        const callerRole = normalizeAdminRole((admin.admin_role ?? EAdminRole.manager) as EAdminRole);
+        const result = await this.adminService.updateRole(id, data.role, admin.admin_id, callerRole);
         return res.status(result.status).json(result.data)
     }
 
@@ -208,11 +223,11 @@ export class AdminController {
     }
 
     @Get('/:id')
-    @Roles(EAdminRole.super_admin)
+    @Roles(EAdminRole.super_admin, EAdminRole.manager)
     @UseGuards(AdminJwtGuard, RolesGuard)
     @ApiBearerAuth()
     @ApiOperation({ 
-        summary: 'Get admin by ID (super_admin only)',
+        summary: 'Get admin by ID (super_admin or manager)',
         description: 'Returns detailed information about a specific administrator'
     })
     @ApiParam({ name: 'id', type: String, description: 'Admin CUID (25-character identifier)', example: 'cma1admin0001ghijklmno23p' })
@@ -232,11 +247,11 @@ export class AdminController {
     }
 
     @Patch('/:id')
-    @Roles(EAdminRole.super_admin)
+    @Roles(EAdminRole.super_admin, EAdminRole.manager)
     @UseGuards(AdminJwtGuard, RolesGuard)
     @ApiBearerAuth()
     @ApiOperation({ 
-        summary: 'Update admin data (super_admin only)',
+        summary: 'Update admin data (super_admin or manager)',
         description: 'Updates administrator name and/or email'
     })
     @ApiParam({ name: 'id', type: String, description: 'Admin CUID (25-character identifier)', example: 'cma1admin0001ghijklmno23p' })

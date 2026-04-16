@@ -139,11 +139,33 @@ export default class AdminRepository implements IAdminRepository {
         }
     }
 
-    async selectAllPaginated(page: number, limit: number): Promise<{ data: any[]; total: number }> {
+    async selectAllPaginated(
+        page: number,
+        limit: number,
+        excludeRoles?: EAdminRole[],
+        tenantId?: string,
+    ): Promise<{ data: any[]; total: number }> {
         try {
             const skip = (page - 1) * limit;
+
+            // Build where clause
+            const where: any = {};
+            if (excludeRoles?.length) {
+                where.role = { notIn: excludeRoles };
+            }
+            // Filter by tenant via AdminTenant relation
+            if (tenantId) {
+                where.AdminTenant = {
+                    some: {
+                        tenant_id: tenantId,
+                        active: true,
+                    },
+                };
+            }
+
             const [data, total] = await Promise.all([
                 this.prisma.admin.findMany({
+                    where,
                     include: {
                         AdminTenant: {
                             where: { active: true, Tenant: { active: true } },
@@ -154,7 +176,7 @@ export default class AdminRepository implements IAdminRepository {
                     skip,
                     take: limit,
                 }),
-                this.prisma.admin.count(),
+                this.prisma.admin.count({ where }),
             ]);
             return { data, total };
         } catch (error) {

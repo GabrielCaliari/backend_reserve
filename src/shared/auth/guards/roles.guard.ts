@@ -91,7 +91,10 @@ export class RolesGuard implements CanActivate {
     // Resolve the effective role
     let effectiveRole: EAdminRole = normalizeRole(admin.role as EAdminRole);
 
-    // If tenant_id is present, use per-tenant role
+    // Always populate admin_role from the global role
+    request.admin_role = effectiveRole;
+
+    // If tenant_id is present, refine with per-tenant role
     const tenantId: string | undefined = request.tenant_id;
     if (tenantId) {
       const tenantRole = await this.adminTenantRepository.findRoleInTenant(adminId, tenantId);
@@ -102,8 +105,6 @@ export class RolesGuard implements CanActivate {
 
       effectiveRole = normalizeRole(tenantRole);
       request.tenant_role = effectiveRole;
-    } else {
-      throw new ForbiddenException('Tenant context is required for non-super-admin role checks');
     }
 
     // Check if effective role satisfies any of the required roles using hierarchy
@@ -117,9 +118,6 @@ export class RolesGuard implements CanActivate {
     if (!hasPermission) {
       throw new ForbiddenException('Insufficient permissions for this operation');
     }
-
-    // Attach roles to request for downstream use
-    request.admin_role = normalizeRole(admin.role as EAdminRole);
 
     return true;
   }

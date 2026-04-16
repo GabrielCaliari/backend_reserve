@@ -203,8 +203,17 @@ export class AdminService {
         }
     }
 
-    async register(data: CreateAdminDTO) {
+    async register(data: CreateAdminDTO, callerRole?: EAdminRole) {
         try {
+            const roleToAssign = data.role ? normalizeAdminRole(data.role) : EAdminRole.manager;
+
+            // Managers cannot create super_admin or owner accounts
+            if (callerRole === EAdminRole.manager) {
+                if (roleToAssign === EAdminRole.super_admin || roleToAssign === EAdminRole.owner) {
+                    return errorResponse('403:INSUFFICIENT_PERMISSIONS_TO_ASSIGN_ROLE', 403);
+                }
+            }
+
             const existing = await this.adminRepository.selectByEmail(data.email);
             if (existing) {
                 return errorResponse('400:ADMIN_EMAIL_ALREADY_EXISTS', 400);
@@ -214,7 +223,7 @@ export class AdminService {
                 name: data.name,
                 email: data.email,
                 password: data.password,
-                role: data.role ? normalizeAdminRole(data.role) : undefined,
+                role: roleToAssign,
             });
 
             return successResponse({
@@ -228,10 +237,18 @@ export class AdminService {
         }
     }
 
-    async listAll(page = 1, limit = 20) {
+    async listAll(page = 1, limit = 20, callerRole?: EAdminRole, tenantId?: string) {
         try {
+            // Managers can only see admins with roles below super_admin/owner
+            const excludeRoles = callerRole === EAdminRole.manager
+                ? [EAdminRole.super_admin, EAdminRole.owner]
+                : undefined;
+
+            // super_admin without tenant filter sees everyone; otherwise filter by tenant
+            const filterByTenant = tenantId ?? undefined;
+
             const [{ data: admins, total }, allTenants] = await Promise.all([
-                this.adminRepository.selectAllPaginated(page, limit),
+                this.adminRepository.selectAllPaginated(page, limit, excludeRoles, filterByTenant),
                 this.tenantRepository.selectAll(),
             ]);
             const allTenantsSlim = allTenants.map((t: any) => ({
@@ -270,9 +287,17 @@ export class AdminService {
         }
     }
 
-    async updateRole(adminId: string, role: EAdminRole, currentAdminId?: string) {
+    async updateRole(adminId: string, role: EAdminRole, currentAdminId?: string, callerRole?: EAdminRole) {
         try {
             const normalizedRole = normalizeAdminRole(role);
+
+            // Managers cannot assign super_admin or owner roles
+            if (callerRole === EAdminRole.manager) {
+                if (normalizedRole === EAdminRole.super_admin || normalizedRole === EAdminRole.owner) {
+                    return errorResponse('403:INSUFFICIENT_PERMISSIONS_TO_ASSIGN_ROLE', 403);
+                }
+            }
+
             const safety = await this.assertSuperAdminSafety(adminId, {
                 currentAdminId,
                 nextRole: normalizedRole,

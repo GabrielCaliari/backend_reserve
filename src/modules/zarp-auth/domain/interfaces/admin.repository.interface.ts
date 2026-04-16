@@ -13,7 +13,7 @@ export interface IAdminRepository {
     selectByEmail(email: string): Promise<any>;
     selectByIdWithTenants(id: string): Promise<any>;
     selectAll(): Promise<any[]>;
-    selectAllPaginated(page: number, limit: number): Promise<{ data: any[]; total: number }>;
+    selectAllPaginated(page: number, limit: number, excludeRoles?: EAdminRole[], tenantId?: string): Promise<{ data: any[]; total: number }>;
     countActiveByRole(role: EAdminRole): Promise<number>;
     updateRole(id: string, role: EAdminRole): Promise<any>;
     update(id: string, data: { name?: string; email?: string }): Promise<any>;

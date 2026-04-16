@@ -38,31 +38,15 @@ export class AdminUserController {
   constructor(private readonly userManagementService: UserManagementService) {}
 
   @Get()
-  @Roles(EAdminRole.super_admin)
+  @Roles(EAdminRole.super_admin, EAdminRole.manager)
   @UseGuards(AdminJwtGuard, RolesGuard)
   @ApiOperation({ 
-    summary: 'List all users with pagination (super_admin only)',
+    summary: 'List all users with pagination',
     description: 'Returns a paginated list of all users in the system'
   })
-  @ApiQuery({ 
-    name: 'page', 
-    required: false, 
-    type: Number, 
-    description: 'Page number (default: 1)',
-    example: 1
-  })
-  @ApiQuery({ 
-    name: 'limit', 
-    required: false, 
-    type: Number, 
-    description: 'Items per page (default: 20)',
-    example: 20
-  })
-  @ApiResponse({ 
-    status: 200, 
-    description: 'Users listed',
-    type: UserListResponseDTO
-  })
+  @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
+  @ApiQuery({ name: 'limit', required: false, type: Number, example: 20 })
+  @ApiResponse({ status: 200, description: 'Users listed', type: UserListResponseDTO })
   @ApiResponse({ status: 403, description: 'Insufficient permissions' })
   async findAll(
     @Query('page') page: string = '1',
@@ -77,18 +61,14 @@ export class AdminUserController {
   }
 
   @Get('/:id')
-  @Roles(EAdminRole.super_admin)
+  @Roles(EAdminRole.super_admin, EAdminRole.manager)
   @UseGuards(AdminJwtGuard, RolesGuard)
   @ApiOperation({ 
-    summary: 'Get user by CUID (super_admin only)',
+    summary: 'Get user by CUID',
     description: 'Returns detailed information about a specific user'
   })
   @ApiParam({ name: 'id', type: String, description: 'User CUID (25-character identifier)', example: 'cma1bcdef0001ghijklmno23p' })
-  @ApiResponse({ 
-    status: 200, 
-    description: 'User found',
-    type: UserResponseDTO
-  })
+  @ApiResponse({ status: 200, description: 'User found', type: UserResponseDTO })
   @ApiResponse({ status: 403, description: 'Insufficient permissions' })
   @ApiResponse({ status: 404, description: 'User not found' })
   async findById(@Param('id', ParseCuidPipe) id: string, @Res() res: Response) {
