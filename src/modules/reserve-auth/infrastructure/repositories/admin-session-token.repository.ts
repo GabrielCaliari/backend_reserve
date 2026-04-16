@@ -26,7 +26,12 @@ export default class AdminSessionTokenRepository implements IAdminSessionTokenRe
                 return { token: null }
             }
 
-            const compare = this.hashProvider.compare(data.password, credential.salt, credential.hash);
+            const compare = this.hashProvider.compare(
+                data.password,
+                credential.salt,
+                credential.hash,
+                credential.hash_version as 1 | 2,
+            );
 
             if (!compare) {
                 return { token: null }

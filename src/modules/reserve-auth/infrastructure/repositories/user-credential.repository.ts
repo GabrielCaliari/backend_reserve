@@ -18,7 +18,12 @@ export default class UserCredentialRepository implements IUserCredentialReposito
                 }
             })
 
-            const compare = this.hashProvider.compare(value, credential.salt, credential.hash);
+            const compare = this.hashProvider.compare(
+                value,
+                credential.salt,
+                credential.hash,
+                credential.hash_version as 1 | 2,
+            );
             if (typeof compare !== 'boolean') return false;
 
             return compare;

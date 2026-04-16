@@ -20,7 +20,12 @@ export default class AdminCredentialRepository implements IAdminCredentialReposi
 
             if (!credential) return false;
 
-            const compare = this.hashProvider.compare(value, credential.salt, credential.hash);
+            const compare = this.hashProvider.compare(
+                value,
+                credential.salt,
+                credential.hash,
+                credential.hash_version as 1 | 2,
+            );
             if (typeof compare !== 'boolean') return false;
 
             return compare;
@@ -31,11 +36,11 @@ export default class AdminCredentialRepository implements IAdminCredentialReposi
 
     async updatePasswordByAdminId(adminId: string, password: string) {
         try {
-            const { hash, salt } = this.hashProvider.hash(password);
+            const { hash, salt, version } = this.hashProvider.hash(password);
             await this.prisma.adminCredential.upsert({
                 where: { admin_id: adminId },
-                update: { hash, salt },
-                create: { admin_id: adminId, hash, salt },
+                update: { hash, salt, hash_version: version, failed_attempts: 0, locked_until: null },
+                create: { admin_id: adminId, hash, salt, hash_version: version },
             });
         } catch (error) {
             throw new RepositoryException('Erro ao atualizar credenciais do admin.', error);
