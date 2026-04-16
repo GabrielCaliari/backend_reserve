@@ -76,18 +76,34 @@ export class PrismaAppointmentRepository implements IAppointmentRepository {
       const limit = params.limit ?? 10;
       const skip = (page - 1) * limit;
 
+      // Build where clause with optional status filter
+      const where: any = { tenant_id: tenantId };
+      if (params.status) {
+        where.status = params.status;
+      }
+
       const [raws, count] = await Promise.all([
         this.prisma.appointment.findMany({
-          where: { tenant_id: tenantId },
+          where,
           skip,
           take: limit,
           orderBy: [
             { appointment_date: 'asc' },
             { slot_start_time: 'asc' },
           ],
+          include: {
+            Lead: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                phone_number: true,
+              },
+            },
+          },
         }),
         this.prisma.appointment.count({
-          where: { tenant_id: tenantId },
+          where,
         }),
       ]);
 
@@ -194,6 +210,12 @@ export class PrismaAppointmentRepository implements IAppointmentRepository {
       notes: raw.notes ?? undefined,
       createdAt: raw.created_at,
       updatedAt: raw.updated_at,
+      Lead: raw.Lead ? {
+        id: raw.Lead.id,
+        name: raw.Lead.name,
+        email: raw.Lead.email,
+        phone_number: raw.Lead.phone_number,
+      } : undefined,
     });
   }
 }

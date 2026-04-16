@@ -7,6 +7,7 @@ import {
   HttpStatus,
   NotFoundException,
   Param,
+  Patch,
   Post,
   Query,
   UnprocessableEntityException,
@@ -30,7 +31,9 @@ import { EAdminRole } from '../../../zarp-auth/domain/enums/admin-role.enum';
 import { CreateBlockedPeriodUseCase } from '../../application/use-cases/create-blocked-period.use-case';
 import { ListBlockedPeriodsUseCase } from '../../application/use-cases/list-blocked-periods.use-case';
 import { DeleteBlockedPeriodUseCase } from '../../application/use-cases/delete-blocked-period.use-case';
+import { UpdateBlockedPeriodUseCase } from '../../application/use-cases/update-blocked-period.use-case';
 import { CreateBlockedPeriodDto } from '../../application/dtos/create-blocked-period.dto';
+import { UpdateBlockedPeriodDto } from '../../application/dtos/update-blocked-period.dto';
 import { InvalidTimeRangeError } from '../../domain/errors/invalid-time-range.error';
 import { BlockedPeriodNotFoundError } from '../../domain/errors/blocked-period-not-found.error';
 import { successResponse } from '../../../../shared/helpers/response.helper';
@@ -44,6 +47,7 @@ export class AdminBlockedPeriodController {
     private readonly createBlockedPeriodUseCase: CreateBlockedPeriodUseCase,
     private readonly listBlockedPeriodsUseCase: ListBlockedPeriodsUseCase,
     private readonly deleteBlockedPeriodUseCase: DeleteBlockedPeriodUseCase,
+    private readonly updateBlockedPeriodUseCase: UpdateBlockedPeriodUseCase,
   ) {}
 
   @Get()
@@ -113,6 +117,37 @@ export class AdminBlockedPeriodController {
       );
       return successResponse(period);
     } catch (error) {
+      if (error instanceof InvalidTimeRangeError) {
+        throw new UnprocessableEntityException(error.message);
+      }
+      throw error;
+    }
+  }
+
+  @Patch(':id')
+  @HttpCode(HttpStatus.OK)
+  @Roles(EAdminRole.editor)
+  @ApiOperation({
+    summary: 'Update a blocked period',
+    description: 'Updates one or more fields of an existing blocked period.',
+  })
+  @ApiParam({ name: 'id', description: 'Blocked period ID' })
+  @ApiResponse({ status: 200, description: 'Blocked period updated successfully' })
+  @ApiResponse({ status: 404, description: 'Blocked period not found' })
+  @ApiResponse({ status: 422, description: 'Validation error (end must be after start)' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async update(
+    @Param('id') id: string,
+    @Body() dto: UpdateBlockedPeriodDto,
+    @GetTenantId() tenantId: string,
+  ) {
+    try {
+      const period = await this.updateBlockedPeriodUseCase.execute(id, tenantId, dto);
+      return successResponse(period);
+    } catch (error) {
+      if (error instanceof BlockedPeriodNotFoundError) {
+        throw new NotFoundException(error.message);
+      }
       if (error instanceof InvalidTimeRangeError) {
         throw new UnprocessableEntityException(error.message);
       }

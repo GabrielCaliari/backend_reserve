@@ -210,7 +210,7 @@ Implement the Appointments sub-domain inside the existing `ZarpLeadsModule` foll
     - Create `src/modules/zarp-leads/application/use-cases/delete-blocked-period.use-case.ts` — verifies ownership (throws `BlockedPeriodNotFoundError` if wrong tenant), then deletes
     - _Requirements: 6.1, 6.3, 6.4, 6.5, 6.6, 7.2_
 
-- [~] 7. Checkpoint — Ensure all domain and application layer tests pass
+- [ ] 7. Checkpoint — Ensure all domain and application layer tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 - [x] 8. Implement HTTP controllers
@@ -263,7 +263,7 @@ Implement the Appointments sub-domain inside the existing `ZarpLeadsModule` foll
   - Add all new use cases to `providers`: `UpsertScheduleConfigUseCase`, `GetScheduleConfigUseCase`, `GetSlotAvailabilityUseCase`, `BookAppointmentUseCase`, `ListAppointmentsUseCase`, `GetAppointmentUseCase`, `CancelAppointmentUseCase`, `CompleteAppointmentUseCase`, `CreateBlockedPeriodUseCase`, `ListBlockedPeriodsUseCase`, `DeleteBlockedPeriodUseCase`
   - _Requirements: all_
 
-- [~] 10. Final checkpoint — Ensure all tests pass
+- [ ] 10. Final checkpoint — Ensure all tests pass
   - Run `pnpm test` and confirm all unit tests pass
   - Verify `SubmitLeadUseCase` backward compatibility: existing lead submission without appointment fields must work unchanged
   - Ensure all tests pass, ask the user if questions arise.

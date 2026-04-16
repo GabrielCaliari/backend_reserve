@@ -42,6 +42,7 @@ import { CompleteAppointmentUseCase } from './application/use-cases/complete-app
 import { CreateBlockedPeriodUseCase } from './application/use-cases/create-blocked-period.use-case';
 import { ListBlockedPeriodsUseCase } from './application/use-cases/list-blocked-periods.use-case';
 import { DeleteBlockedPeriodUseCase } from './application/use-cases/delete-blocked-period.use-case';
+import { UpdateBlockedPeriodUseCase } from './application/use-cases/update-blocked-period.use-case';
 import { BookAppointmentForLeadUseCase } from './application/use-cases/book-appointment-for-lead.use-case';
 import { SlotDerivationService } from './domain/services/slot-derivation.service';
 import { GeolocationProvider } from '../../shared/providers/geolocation.provider';
@@ -124,6 +125,7 @@ import { GeolocationProvider } from '../../shared/providers/geolocation.provider
     CreateBlockedPeriodUseCase,
     ListBlockedPeriodsUseCase,
     DeleteBlockedPeriodUseCase,
+    UpdateBlockedPeriodUseCase,
     
     // Repository DI tokens
     {

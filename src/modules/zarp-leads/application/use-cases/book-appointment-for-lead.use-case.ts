@@ -40,9 +40,12 @@ export class BookAppointmentForLeadUseCase {
 
     // Atomic booking inside a transaction
     const appointment: Appointment = await this.prisma.$transaction(async (tx) => {
+      // Parse date with fixed time to avoid timezone issues
+      const date = new Date(appointmentDate + 'T12:00:00');
+      
       return this.bookAppointmentUseCase.execute(
         tenantId,
-        new Date(appointmentDate),
+        date,
         appointmentTime,
         leadId,
         selectedProduct,

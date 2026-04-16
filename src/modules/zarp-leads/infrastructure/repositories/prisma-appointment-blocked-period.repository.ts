@@ -124,6 +124,28 @@ export class PrismaAppointmentBlockedPeriodRepository
     }
   }
 
+  async update(
+    period: AppointmentBlockedPeriod,
+  ): Promise<AppointmentBlockedPeriod> {
+    try {
+      const raw = await this.prisma.appointmentBlockedPeriod.update({
+        where: { id: period.id },
+        data: {
+          start_datetime: period.startDatetime,
+          end_datetime: period.endDatetime,
+          label: period.label ?? null,
+        },
+      });
+
+      return this.toDomain(raw);
+    } catch (error) {
+      throw new RepositoryException(
+        'Error updating appointment blocked period',
+        error,
+      );
+    }
+  }
+
   async delete(id: string): Promise<void> {
     try {
       await this.prisma.appointmentBlockedPeriod.delete({

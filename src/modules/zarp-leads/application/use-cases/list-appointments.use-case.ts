@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { Appointment } from '../../domain/entities/appointment.entity';
+import { Appointment, EAppointmentStatus } from '../../domain/entities/appointment.entity';
 import {
   APPOINTMENT_REPOSITORY,
   IAppointmentRepository,
@@ -17,10 +17,12 @@ export class ListAppointmentsUseCase {
     tenantId: string,
     page: number = 1,
     limit: number = 10,
+    status?: EAppointmentStatus,
   ): Promise<PaginatedResult<Appointment>> {
     return await this.appointmentRepository.findAllByTenantId(tenantId, {
       page,
       limit,
+      status,
     });
   }
 }

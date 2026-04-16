@@ -4,6 +4,13 @@ export enum EAppointmentStatus {
   completed = 'completed',
 }
 
+export interface LeadData {
+  id?: string;
+  name?: string;
+  email?: string;
+  phone_number?: string;
+}
+
 export class Appointment {
   public readonly id?: string;
   public readonly tenantId: string;
@@ -17,6 +24,7 @@ export class Appointment {
   public readonly notes?: string;
   public readonly createdAt?: Date;
   public readonly updatedAt?: Date;
+  public readonly Lead?: LeadData; // Lead relation data
 
   constructor(appointment: {
     id?: string;
@@ -31,6 +39,7 @@ export class Appointment {
     notes?: string;
     createdAt?: Date;
     updatedAt?: Date;
+    Lead?: LeadData;
   }) {
     this.id = appointment.id;
     this.tenantId = appointment.tenantId;
@@ -44,5 +53,6 @@ export class Appointment {
     this.notes = appointment.notes;
     this.createdAt = appointment.createdAt;
     this.updatedAt = appointment.updatedAt;
+    this.Lead = appointment.Lead;
   }
 }

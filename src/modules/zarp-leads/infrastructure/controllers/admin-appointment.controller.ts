@@ -68,6 +68,7 @@ export class AdminAppointmentController {
       tenantId,
       query.page,
       query.limit,
+      query.status,
     );
     return successResponse(result);
   }

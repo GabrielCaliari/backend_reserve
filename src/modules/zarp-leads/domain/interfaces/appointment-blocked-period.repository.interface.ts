@@ -1,4 +1,5 @@
 import { AppointmentBlockedPeriod } from '../entities/appointment-blocked-period.entity';
+import { EAppointmentStatus } from '../entities/appointment.entity';
 
 export const APPOINTMENT_BLOCKED_PERIOD_REPOSITORY = Symbol(
   'APPOINTMENT_BLOCKED_PERIOD_REPOSITORY',
@@ -7,6 +8,7 @@ export const APPOINTMENT_BLOCKED_PERIOD_REPOSITORY = Symbol(
 export interface PaginationParams {
   page?: number;
   limit?: number;
+  status?: EAppointmentStatus;
 }
 
 export interface PaginatedResult<T> {
@@ -27,5 +29,6 @@ export interface IAppointmentBlockedPeriodRepository {
     tenantId: string,
     params: PaginationParams,
   ): Promise<PaginatedResult<AppointmentBlockedPeriod>>;
+  update(period: AppointmentBlockedPeriod): Promise<AppointmentBlockedPeriod>;
   delete(id: string): Promise<void>;
 }

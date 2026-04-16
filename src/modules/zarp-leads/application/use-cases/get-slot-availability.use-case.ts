@@ -27,8 +27,10 @@ export class GetSlotAvailabilityUseCase {
   ) {}
 
   async execute(tenantId: string, dateString: string): Promise<TimeSlot[]> {
-    // Parse date
-    const date = new Date(dateString);
+    // Parse date with fixed time (noon) to avoid timezone issues
+    // When dateString is "2024-04-15", new Date() interprets as UTC midnight
+    // which can shift to previous day in negative timezones (e.g., Brazil UTC-3)
+    const date = new Date(dateString + 'T12:00:00');
 
     // Get schedule config (if none exists, return empty array with 200)
     const config = await this.scheduleConfigRepository.findByTenantId(tenantId);

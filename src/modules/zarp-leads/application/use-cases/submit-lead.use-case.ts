@@ -105,8 +105,8 @@ export class SubmitLeadUseCase {
         },
       });
 
-      // Parse appointment data
-      const appointmentDate = new Date(dto.data.appointmentDate);
+      // Parse appointment data with fixed time to avoid timezone issues
+      const appointmentDate = new Date(dto.data.appointmentDate + 'T12:00:00');
       const appointmentTime = dto.data.appointmentTime;
       const selectedProduct = dto.data.selectedProduct;
 
