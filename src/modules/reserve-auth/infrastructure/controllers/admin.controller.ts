@@ -47,6 +47,7 @@ export class AdminController {
     })
     @ApiResponse({ status: 401, description: 'Invalid credentials' })
     @ApiResponse({ status: 403, description: 'Admin account deactivated' })
+    @ApiResponse({ status: 423, description: 'Conta bloqueada por tentativas de senha incorretas' })
     async authenticateAdmin(@Res() res: Response, @Body() data: AuthAdminDTO) {
         const result = await this.adminService.authenticate(data);
         return res.status(result.status).json(result.data)

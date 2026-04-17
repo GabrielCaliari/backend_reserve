@@ -36,6 +36,14 @@ export const ADMIN_REPOSITORY = Symbol('ADMIN_REPOSITORY');
 export interface IAdminCredentialRepository {
     compareHashByAdminId(value: string, adminId: string): Promise<boolean>;
     updatePasswordByAdminId(adminId: string, password: string): Promise<void>;
+    findLockoutState(adminId: string): Promise<{
+        lockedUntil: Date | null;
+        failedAttempts: number;
+        hashVersion: 1 | 2;
+    } | null>;
+    registerFailedAttempt(adminId: string): Promise<void>;
+    clearFailedAttempts(adminId: string): Promise<void>;
+    rehashToLatest(adminId: string, plainPassword: string): Promise<void>;
 }
 
 export const ADMIN_CREDENTIAL_REPOSITORY = Symbol('ADMIN_CREDENTIAL_REPOSITORY');

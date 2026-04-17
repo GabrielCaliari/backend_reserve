@@ -49,6 +49,9 @@ export const errorTypes = {
     admin_password_in: '401:ADMIN_PASSWORD_IS_INVALID',
     admin_token_in: '401:ADMIN_TOKEN_IS_INVALID',
   },
+  _423: {
+    admin_account_locked: '423:ADMIN_ACCOUNT_LOCKED',
+  },
   _500: {
     user_nc: '500:USER_NOT_CREATED',
     user_una: '500:UNAUTHENTICATED_USER',

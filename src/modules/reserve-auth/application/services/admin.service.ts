@@ -104,10 +104,35 @@ export class AdminService {
                 }
             }
 
+            // Lockout por conta, persistido — complementa o rate limit por IP
+            // (que não protege quem troca de IP a cada tentativa).
+            const lockout = await this.adminCredentialRepository.findLockoutState(admin.id);
+            if (lockout?.lockedUntil && lockout.lockedUntil > new Date()) {
+                return {
+                    status: 423,
+                    data: {
+                        code: errorTypes._423.admin_account_locked,
+                        message: 'Conta temporariamente bloqueada por tentativas de senha incorretas. Tente novamente mais tarde.',
+                        locked_until: lockout.lockedUntil.toISOString(),
+                    }
+                }
+            }
+
             const compareHashByAdminId = await this.adminCredentialRepository.compareHashByAdminId(data.password, admin.id);
 
             if (!compareHashByAdminId) {
+                await this.adminCredentialRepository.registerFailedAttempt(admin.id);
                 return errorResponse(errorTypes._401.admin_password_in, 401);
+            }
+
+            await this.adminCredentialRepository.clearFailedAttempts(admin.id);
+
+            // Re-hash transparente de v1 para v2. Precisa acontecer ANTES de
+            // criar a sessão: o JWT é assinado com credential.salt, e
+            // AdminSessionTokenRepository.create relê a credencial — então ele
+            // já pega o salt novo e emite um token válido na mesma resposta.
+            if (lockout?.hashVersion === 1) {
+                await this.adminCredentialRepository.rehashToLatest(admin.id, data.password);
             }
 
             const session = await this.adminSessionTokenRepository.create({
