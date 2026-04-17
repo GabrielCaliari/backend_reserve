@@ -104,7 +104,10 @@ export default class LeadRepository implements ILeadRepository {
 
     async delete(lead_id: string): Promise<void> {
         try {
-            await this.prisma.lead.delete({ where: { id: lead_id } });
+            await this.prisma.$transaction([
+                this.prisma.appointment.deleteMany({ where: { lead_id } }),
+                this.prisma.lead.delete({ where: { id: lead_id } }),
+            ]);
         } catch (error) {
             throw new RepositoryException('Erro ao deletar o lead', error);
         }
