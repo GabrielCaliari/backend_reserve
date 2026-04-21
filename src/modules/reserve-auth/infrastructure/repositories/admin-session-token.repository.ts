@@ -87,9 +87,9 @@ export default class AdminSessionTokenRepository implements IAdminSessionTokenRe
                 return false;
             }
 
-            const { jwt, expired, payload } = await this.jwtProvider.validate(token, session.Admin.AdminCredential.salt);
+            const { jwt, expired, invalid, payload } = await this.jwtProvider.validate(token, session.Admin.AdminCredential.salt);
 
-            if (expired || !payload.id) {
+            if (expired || invalid || !payload?.id) {
                 return false;
             }
 

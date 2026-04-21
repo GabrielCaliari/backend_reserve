@@ -83,9 +83,9 @@ export default class UserSessionTokenRepository implements IUserSessionTokenRepo
                 return false;
             }
 
-            const { jwt, expired, payload } = await this.jwtProvider.validate(token, session.User.Credential.salt);
+            const { jwt, expired, invalid, payload } = await this.jwtProvider.validate(token, session.User.Credential.salt);
 
-            if (expired || !payload.id) {
+            if (expired || invalid || !payload?.id) {
                 return false;
             }
 
