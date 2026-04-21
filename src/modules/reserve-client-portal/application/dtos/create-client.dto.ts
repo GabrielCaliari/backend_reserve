@@ -8,8 +8,8 @@ import {
   Min,
   Max,
   MaxLength,
-  MinLength,
 } from 'class-validator';
+import { IsStrongPassword } from '../../../../shared/validators';
 
 export class CreateClientDto {
   @IsString()
@@ -20,7 +20,7 @@ export class CreateClientDto {
 
   @IsOptional()
   @IsString()
-  @MinLength(6)
+  @IsStrongPassword()
   password?: string;
 
   @IsString()

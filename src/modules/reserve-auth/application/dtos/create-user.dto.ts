@@ -3,10 +3,10 @@ import {
     IsNotEmpty,
     IsEmail,
     Matches,
-    MinLength,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { IsCPF } from '../../../../shared/validators/is-cpf.validator';
+import { IsStrongPassword } from '../../../../shared/validators';
 
 export default class CreateUserDTO {
     @ApiProperty({ description: 'Full name (min 2 words, letters only)', example: 'John Doe' })
@@ -27,9 +27,9 @@ export default class CreateUserDTO {
     @IsCPF()
     cpf: string;
 
-    @ApiProperty({ description: 'Password (min 6 characters)', example: 'Str0ng!Pass', minLength: 6 })
+    @ApiProperty({ description: 'Senha (mínimo 10 caracteres, com maiúscula, minúscula, número e símbolo)', example: 'Str0ng!Pass', minLength: 10 })
     @IsString()
     @IsNotEmpty()
-    @MinLength(6)
+    @IsStrongPassword()
     password: string;
 }
