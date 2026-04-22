@@ -62,3 +62,12 @@ Para mais detalhes, consulte a documentação individual de cada dependência em
 A documentação detalhada de cada dependência está organizada em arquivos individuais dentro da pasta `/docs`...
 
 Consulte o arquivo principal de dependências: [docs/dependencies.md](docs/dependencies.md).
+
+---
+
+## Segurança
+
+A configuração de segurança do bootstrap e das credenciais está documentada em
+[`docs/SECURITY-FASE1.md`](docs/SECURITY-FASE1.md), incluindo as mudanças de
+comportamento (lockout de conta, política de senha, rate limit) e as variáveis
+de ambiente necessárias. Copie `.env.example` para `.env` antes de subir.
