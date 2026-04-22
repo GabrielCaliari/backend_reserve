@@ -53,26 +53,34 @@ export class GetSlotAvailabilityUseCase {
     );
 
     // For each slot, count confirmed bookings and calculate availability
-    const slotsWithAvailability = await Promise.all(
-      derivedSlots.map(async (slot) => {
-        const confirmedCount = await this.appointmentRepository.countBySlot(
-          tenantId,
-          date,
-          slot.startTime,
-        );
+    // Process in batches to avoid exhausting connection pool in serverless
+    const batchSize = 5;
+    const slotsWithAvailability: TimeSlot[] = [];
 
-        const availableCapacity = config.capacityPerSlot - confirmedCount;
-        const isAvailable = availableCapacity > 0;
+    for (let i = 0; i < derivedSlots.length; i += batchSize) {
+      const batch = derivedSlots.slice(i, i + batchSize);
+      const batchResults = await Promise.all(
+        batch.map(async (slot) => {
+          const confirmedCount = await this.appointmentRepository.countBySlot(
+            tenantId,
+            date,
+            slot.startTime,
+          );
 
-        return new TimeSlot(
-          slot.startTime,
-          slot.endTime,
-          slot.date,
-          availableCapacity,
-          isAvailable,
-        );
-      }),
-    );
+          const availableCapacity = config.capacityPerSlot - confirmedCount;
+          const isAvailable = availableCapacity > 0;
+
+          return new TimeSlot(
+            slot.startTime,
+            slot.endTime,
+            slot.date,
+            availableCapacity,
+            isAvailable,
+          );
+        }),
+      );
+      slotsWithAvailability.push(...batchResults);
+    }
 
     return slotsWithAvailability;
   }
