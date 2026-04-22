@@ -43,7 +43,7 @@ export default class AdminSessionTokenRepository implements IAdminSessionTokenRe
                 credential.salt
             );
 
-            const { hash, salt } = this.hashProvider.hash(token);
+            const { hash, salt } = this.hashProvider.hashToken(token);
 
             const session = await this.prisma.adminSessionToken.create({
                 data: {
@@ -81,7 +81,7 @@ export default class AdminSessionTokenRepository implements IAdminSessionTokenRe
                 return false;
             }
 
-            const tokenIsEqual = await this.hashProvider.compare(token, session.salt, session.hash_token);
+            const tokenIsEqual = this.hashProvider.compareToken(token, session.salt, session.hash_token);
 
             if (!tokenIsEqual) {
                 return false;

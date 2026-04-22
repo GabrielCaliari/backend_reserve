@@ -64,4 +64,34 @@ describe('HashProvider', () => {
 
     expect(hash).toBe(expected);
   });
+
+  describe('hashToken / compareToken', () => {
+    it('produz salt e hash a partir de um token', () => {
+      const result = provider.hashToken('token-de-sessao-de-alta-entropia');
+      expect(result.salt).toHaveLength(32);
+      expect(result.hash).toHaveLength(64); // HMAC-SHA-256 = 32 bytes = 64 hex chars
+    });
+
+    it('aceita o token correto e rejeita o token errado', () => {
+      const { salt, hash } = provider.hashToken('token-correto');
+      expect(provider.compareToken('token-correto', salt, hash)).toBe(true);
+      expect(provider.compareToken('token-errado', salt, hash)).toBe(false);
+    });
+
+    it('retorna false sem lançar quando o hash armazenado tem tamanho diferente', () => {
+      const { salt } = provider.hashToken('token-qualquer');
+      expect(() => provider.compareToken('token-qualquer', salt, 'abcd')).not.toThrow();
+      expect(provider.compareToken('token-qualquer', salt, 'abcd')).toBe(false);
+    });
+
+    it('roda em bem menos tempo que o PBKDF2 v2 (~73ms) — não deve bloquear o event loop', () => {
+      const { salt, hash } = provider.hashToken('token-de-performance');
+
+      const start = performance.now();
+      provider.compareToken('token-de-performance', salt, hash);
+      const elapsedMs = performance.now() - start;
+
+      expect(elapsedMs).toBeLessThan(50);
+    });
+  });
 });

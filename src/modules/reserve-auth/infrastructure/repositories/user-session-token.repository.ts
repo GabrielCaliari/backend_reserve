@@ -39,7 +39,7 @@ export default class UserSessionTokenRepository implements IUserSessionTokenRepo
                 credential.salt
             );
 
-            const { hash, salt } = this.hashProvider.hash(token);
+            const { hash, salt } = this.hashProvider.hashToken(token);
 
             const session = await this.prisma.userSessionToken.create({
                 data: {
@@ -77,7 +77,7 @@ export default class UserSessionTokenRepository implements IUserSessionTokenRepo
                 return false;
             }
 
-            const tokenIsEqual = await this.hashProvider.compare(token, session.salt, session.hash_token);
+            const tokenIsEqual = this.hashProvider.compareToken(token, session.salt, session.hash_token);
 
             if (!tokenIsEqual) {
                 return false;

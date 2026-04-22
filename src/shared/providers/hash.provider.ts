@@ -81,4 +81,44 @@ export class HashProvider {
       throw new ProviderException('Erro ao gerar um hash', 'HASH_ERROR', error);
     }
   }
+
+  /**
+   * Hash rápido (HMAC-SHA-256) para segredos de alta entropia gerados
+   * aleatoriamente (ex.: token de sessão JWT), NÃO para senhas escolhidas
+   * por humanos. Um token de sessão já tem entropia suficiente para não
+   * precisar de key-stretching (PBKDF2) — HMAC roda em microssegundos e não
+   * bloqueia o event loop, ao contrário de hash()/compare(), que continuam
+   * exclusivos para senha (v1 legado 856 iterações, v2 210.000 iterações).
+   */
+  hashToken(value: string): { salt: string; hash: string } {
+    const salt = crypto.randomBytes(16).toString('hex');
+    const hash = crypto
+      .createHmac('sha256', salt + this.privateKey)
+      .update(value)
+      .digest('hex');
+
+    return { salt, hash };
+  }
+
+  compareToken(value: string, salt: string, hash: string): boolean {
+    try {
+      const computed = crypto
+        .createHmac('sha256', salt + this.privateKey)
+        .update(value)
+        .digest('hex');
+
+      const storedBuffer = Buffer.from(hash, 'hex');
+      const computedBuffer = Buffer.from(computed, 'hex');
+
+      // timingSafeEqual lança se os tamanhos diferem; comparar antes evita
+      // trocar um retorno false por uma exceção.
+      if (storedBuffer.length !== computedBuffer.length) {
+        return false;
+      }
+
+      return crypto.timingSafeEqual(storedBuffer, computedBuffer);
+    } catch (error) {
+      throw new ProviderException('Erro ao comparar um hash de token', 'HASH_TOKEN_COMPARE_ERROR', error);
+    }
+  }
 }
