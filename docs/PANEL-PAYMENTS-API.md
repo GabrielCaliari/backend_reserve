@@ -536,7 +536,7 @@ function SubscriptionsSection({ tenantId }) {
 | `GET` | `/api/subscriptions/tenant/:id` | `viewer` | Buscar assinatura |
 | `POST` | `/api/subscriptions/checkout` | `manager` | Iniciar checkout |
 | `POST` | `/api/subscriptions/:id/cancel` | `manager` | Cancelar assinatura |
-| `POST` | `/api/webhooks/stripe` | — (Stripe signature) | Webhook do Stripe |
+| `POST` | `/api/webhooks/stripe/:tenantId` | — (Stripe signature) | Webhook do Stripe (por tenant) |
 
 ---
 

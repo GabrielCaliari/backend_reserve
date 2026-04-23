@@ -77,6 +77,10 @@ export class PrismaStripeSubscriptionRepository implements IStripeSubscriptionRe
     const data = await this.prisma.stripeSubscription.update({
       where: { id: subscription.id },
       data: {
+        stripe_subscription_id: subscription.stripeSubscriptionId,
+        stripe_customer_id: subscription.stripeCustomerId,
+        stripe_price_id: subscription.stripePriceId,
+        stripe_product_id: subscription.stripeProductId,
         status: subscription.status,
         current_period_start: subscription.currentPeriodStart,
         current_period_end: subscription.currentPeriodEnd,
