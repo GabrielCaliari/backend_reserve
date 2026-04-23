@@ -19,6 +19,7 @@ import { ZarpCmsModule } from './modules/zarp-cms/zarp-cms.module';
 import { ZarpLeadsModule } from './modules/zarp-leads/zarp-leads.module';
 import { ZarpStatsModule } from './modules/zarp-stats/zarp-stats.module';
 import { ZarpReportsModule } from './modules/zarp-reports/zarp-reports.module';
+import { ZarpSubscriptionsModule } from './modules/zarp-subscriptions/zarp-subscriptions.module';
 
 // Shared pipes
 import { ToLowercaseQueryParamsPipe, ToLowercaseBodyRequestPipe } from './shared/pipes';
@@ -42,6 +43,7 @@ import { ToLowercaseQueryParamsPipe, ToLowercaseBodyRequestPipe } from './shared
     ZarpLeadsModule,
     ZarpStatsModule,
     ZarpReportsModule,
+    ZarpSubscriptionsModule,
 
     // Route prefixes per bounded context
     RouterModule.register([
@@ -82,6 +84,11 @@ import { ToLowercaseQueryParamsPipe, ToLowercaseBodyRequestPipe } from './shared
         path: 'reports',
         module: ZarpReportsModule,
       },
+      {
+        path: 'subscriptions',
+        module: ZarpSubscriptionsModule,
+      },
+      // Note: webhooks/stripe não precisa de prefixo pois já está definido no controller
     ]),
   ],
   controllers: [AppController],

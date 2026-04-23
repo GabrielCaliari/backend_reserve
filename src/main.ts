@@ -3,11 +3,23 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { json } from 'express';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   app.setGlobalPrefix('api');
+
+  // IMPORTANTE: Raw body para webhook do Stripe
+  // Deve vir ANTES do ValidationPipe
+  app.use(
+    '/api/webhooks/stripe',
+    json({
+      verify: (req: any, res, buf) => {
+        req.rawBody = buf;
+      },
+    }),
+  );
 
   app.enableCors({
     origin: '*',
@@ -22,6 +34,7 @@ async function bootstrap() {
       API de gerenciamento e administração do sistema Zarp
       
       ## Módulos API
+      - **Subscriptions**: Gerenciamento de assinaturas recorrentes com Stripe
       - **Event Notification (SMS)**: Gestão de notificações SMS com webhooks
       - **Lead Management**: Gerenciamento de leads e prospects
       - **Email Campaign**: Campanhas de email marketing com segmentação
@@ -34,6 +47,8 @@ async function bootstrap() {
       bearerFormat: 'JWT',
       description: 'Token JWT para autenticação admin'
     })
+    .addTag('Subscriptions', 'API para gerenciamento de assinaturas Stripe')
+    .addTag('Webhooks', 'Endpoints para webhooks externos (Stripe, etc)')
     .addTag('Event Notification (SMS)', 'API para gerenciamento de notificações SMS e webhooks')
     .addTag('Lead Management', 'API para gerenciamento de leads')
     .addTag('Email Campaign', 'API para campanhas de email marketing')

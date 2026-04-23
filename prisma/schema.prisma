@@ -730,6 +730,8 @@ model Tenant {
   AppointmentScheduleConfig    AppointmentScheduleConfig?
   AppointmentBlockedPeriods    AppointmentBlockedPeriod[]
   Appointments                 Appointment[]
+  StripeSubscription           StripeSubscription?
+  TenantBillingConfig          TenantBillingConfig?
 }
 
 model LeadCollection {
@@ -1286,4 +1288,121 @@ model Appointment {
   @@index([tenant_id])
   @@index([tenant_id, appointment_date, slot_start_time])
   @@map("Appointment")
+}
+
+
+// ============================================
+// Tenant Billing Config — Per-tenant payment settings
+// ============================================
+
+enum EBillingInterval {
+  monthly
+  quarterly
+  semiannual
+  annual
+}
+
+enum EBillingCollectionMode {
+  upfront    // Full period charged at once (e.g. R$479 for annual)
+  installments // Monthly installments with discount (e.g. R$39.92/mo x12)
+}
+
+model TenantBillingConfig {
+  id                     String                 @id @default(cuid()) @db.VarChar(25)
+  tenant_id              String                 @unique @db.VarChar(25)
+
+  // Stripe keys (per-tenant, overrides global env vars)
+  stripe_publishable_key String?                @db.VarChar(255)
+  stripe_secret_key_hash String?                @db.VarChar(255) // stored encrypted
+  stripe_webhook_secret_hash String?            @db.VarChar(255) // stored encrypted
+
+  // Stripe Price IDs configured for this tenant
+  stripe_price_ids       Json?                  // { monthly: "price_xxx", annual: "price_yyy", ... }
+
+  // Billing behavior
+  billing_interval       EBillingInterval       @default(monthly)
+  billing_collection_mode EBillingCollectionMode @default(upfront)
+
+  // Trial settings
+  trial_enabled          Boolean                @default(false)
+  trial_days             Int                    @default(7) @db.SmallInt
+
+  // Display / UI hints (sent to panel for rendering)
+  currency               String                 @default("brl") @db.VarChar(3)
+  plan_name              String?                @db.VarChar(100)
+  plan_description       String?                @db.VarChar(255)
+
+  // Metadata (any extra config the panel needs)
+  metadata               Json?
+
+  active                 Boolean                @default(true)
+  created_at             DateTime               @default(now())
+  updated_at             DateTime               @updatedAt
+
+  Tenant                 Tenant                 @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+
+  @@index([tenant_id])
+  @@map("tenant_billing_configs")
+}
+
+// ============================================
+// Stripe Subscriptions — Payment Integration
+// ============================================
+
+model StripeSubscription {
+  id                     String    @id @default(cuid()) @db.VarChar(25)
+  tenant_id              String    @unique @db.VarChar(25)
+  
+  // Stripe IDs
+  stripe_subscription_id String    @unique @db.VarChar(255)
+  stripe_customer_id     String    @db.VarChar(255)
+  stripe_price_id        String    @db.VarChar(255)
+  stripe_product_id      String?   @db.VarChar(255)
+  
+  // Status
+  status                 String    @db.VarChar(50) // active, canceled, past_due, trialing, incomplete, etc.
+  
+  // Dates
+  current_period_start   DateTime
+  current_period_end     DateTime
+  trial_start            DateTime?
+  trial_end              DateTime?
+  canceled_at            DateTime?
+  cancel_at_period_end   Boolean   @default(false)
+  
+  // Financial
+  amount                 Int       // Amount in cents
+  currency               String    @default("brl") @db.VarChar(3)
+  interval               String    @db.VarChar(20) // month, year, week, day
+  interval_count         Int       @default(1) @db.SmallInt
+  
+  // Metadata
+  metadata               Json?
+  created_at             DateTime  @default(now())
+  updated_at             DateTime  @updatedAt
+  
+  Tenant                 Tenant    @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  
+  @@index([stripe_subscription_id])
+  @@index([stripe_customer_id])
+  @@index([tenant_id, status])
+  @@index([status])
+  @@map("stripe_subscriptions")
+}
+
+model StripeWebhookEvent {
+  id              String    @id @default(cuid()) @db.VarChar(25)
+  stripe_event_id String    @unique @db.VarChar(255)
+  event_type      String    @db.VarChar(100)
+  payload         Json
+  processed       Boolean   @default(false)
+  error_message   String?   @db.Text
+  processing_attempts Int   @default(0) @db.SmallInt
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @updatedAt
+  
+  @@index([event_type, processed])
+  @@index([created_at])
+  @@index([processed, processing_attempts])
+  @@map("stripe_webhook_events")
 }
