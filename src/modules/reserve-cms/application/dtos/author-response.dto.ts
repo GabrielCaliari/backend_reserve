@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsString, IsNotEmpty } from 'class-validator';
 
 const authorCuidExample = 'cmcmsauthor01abc234def5678';
 const tenantCuidExample = 'cma1tenant001uvwxyzab345';
@@ -95,6 +96,8 @@ export class AssignAuthorAvatarDTO {
     description: 'Existing MediaAsset CUID to assign as the author avatar',
     example: mediaAssetCuidExample,
   })
+  @IsString()
+  @IsNotEmpty()
   avatarId: string;
 }
 

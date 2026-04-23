@@ -1,5 +1,6 @@
 ﻿import { Controller, Get, Post, Body, Param, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiHeader, ApiParam } from '@nestjs/swagger';
+import { IsOptional, IsString } from 'class-validator';
 import { ListProductsUseCase } from '../../application/use-cases/list-products.use-case';
 import { GetProductUseCase } from '../../application/use-cases/get-product.use-case';
 import { CalculateOrderCostUseCase } from '../../application/use-cases/calculate-order-cost.use-case';
@@ -10,6 +11,8 @@ import { ProductAccessGuard } from '../../../reserve-b2c-subscriptions/infrastru
 import { OrderCostBreakdownResponseDTO } from '../../application/dtos/fee-config.dto';
 
 export class CalculateCostBodyDTO {
+  @IsOptional()
+  @IsString()
   priceId?: string;
 }
 
