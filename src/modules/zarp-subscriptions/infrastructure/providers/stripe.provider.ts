@@ -5,23 +5,29 @@ import { IStripeProvider } from '../../domain/interfaces/stripe.provider.interfa
 @Injectable()
 export class StripeProvider implements IStripeProvider {
   private readonly logger = new Logger(StripeProvider.name);
-  private readonly stripe: Stripe;
+  private _stripe: Stripe | null = null;
   private readonly webhookSecret: string;
 
   constructor() {
-    const secretKey = process.env.STRIPE_SECRET_KEY;
-    this.webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
+    this.webhookSecret = process.env.STRIPE_WEBHOOK_SECRET ?? '';
+  }
 
-    if (!secretKey) {
-      throw new Error('STRIPE_SECRET_KEY environment variable is required');
+  /** Lazy initialization — only instantiates Stripe SDK when first used */
+  private get stripe(): Stripe {
+    if (!this._stripe) {
+      const secretKey = process.env.STRIPE_SECRET_KEY;
+      if (!secretKey) {
+        throw new Error(
+          'STRIPE_SECRET_KEY is not configured. Add it to your .env file to use Stripe features.',
+        );
+      }
+      this._stripe = new Stripe(secretKey, {
+        apiVersion: '2025-02-24.acacia',
+        typescript: true,
+      });
+      this.logger.log('Stripe SDK initialized');
     }
-
-    this.stripe = new Stripe(secretKey, {
-      apiVersion: '2024-12-18.acacia',
-      typescript: true,
-    });
-
-    this.logger.log('Stripe provider initialized');
+    return this._stripe;
   }
 
   async createCheckoutSession(params: {

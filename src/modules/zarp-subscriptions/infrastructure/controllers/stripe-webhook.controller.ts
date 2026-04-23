@@ -37,7 +37,7 @@ export class StripeWebhookController {
     }
 
     try {
-      // Get raw body (must be configured in main.ts)
+      // Get raw body — provided natively by NestJS when { rawBody: true } is set in main.ts
       const rawBody = (request as any).rawBody;
 
       if (!rawBody) {

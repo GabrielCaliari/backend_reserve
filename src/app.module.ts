@@ -84,11 +84,11 @@ import { ToLowercaseQueryParamsPipe, ToLowercaseBodyRequestPipe } from './shared
         path: 'reports',
         module: ZarpReportsModule,
       },
-      {
-        path: 'subscriptions',
-        module: ZarpSubscriptionsModule,
-      },
-      // Note: webhooks/stripe não precisa de prefixo pois já está definido no controller
+      // ZarpSubscriptionsModule uses full paths in controllers:
+      // - SubscriptionsController       → /api/subscriptions/...
+      // - TenantBillingConfigController → /api/payments/billing-config
+      // - StripeWebhookController       → /api/webhooks/stripe
+      // No RouterModule prefix needed — controllers declare their own full paths.
     ]),
   ],
   controllers: [AppController],

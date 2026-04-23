@@ -20,7 +20,8 @@ export class ManageTenantBillingConfigUseCase {
   async getByTenantId(tenantId: string): Promise<TenantBillingConfigResponseDTO | null> {
     const config = await this.repository.findByTenantId(tenantId);
     if (!config) return null;
-    return this.toResponse(config);
+    const keyPresence = await this.repository.hasSecretKeys(tenantId);
+    return this.toResponse(config, keyPresence);
   }
 
   async create(
@@ -50,7 +51,8 @@ export class ManageTenantBillingConfigUseCase {
       metadata: dto.metadata,
     });
 
-    return this.toResponse(created);
+    const keyPresence = await this.repository.hasSecretKeys(tenantId);
+    return this.toResponse(created, keyPresence);
   }
 
   async update(
@@ -78,7 +80,8 @@ export class ManageTenantBillingConfigUseCase {
       active: dto.active,
     });
 
-    return this.toResponse(updated);
+    const keyPresence = await this.repository.hasSecretKeys(tenantId);
+    return this.toResponse(updated, keyPresence);
   }
 
   async delete(tenantId: string): Promise<void> {
@@ -89,14 +92,16 @@ export class ManageTenantBillingConfigUseCase {
     await this.repository.delete(tenantId);
   }
 
-  private toResponse(config: any): TenantBillingConfigResponseDTO {
+  private toResponse(
+    config: any,
+    keyPresence: { hasSecretKey: boolean; hasWebhookSecret: boolean },
+  ): TenantBillingConfigResponseDTO {
     return {
       id: config.id,
       tenantId: config.tenantId,
       stripePublishableKey: config.stripePublishableKey ?? null,
-      // Secret keys are NEVER returned — only a boolean indicating presence
-      hasStripeSecretKey: false, // repository doesn't expose raw key; presence is checked separately
-      hasStripeWebhookSecret: false,
+      hasStripeSecretKey: keyPresence.hasSecretKey,
+      hasStripeWebhookSecret: keyPresence.hasWebhookSecret,
       stripePriceIds: config.stripePriceIds ?? null,
       billingInterval: config.billingInterval as EBillingInterval,
       billingCollectionMode: config.billingCollectionMode as EBillingCollectionMode,

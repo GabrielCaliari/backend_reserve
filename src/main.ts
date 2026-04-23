@@ -3,23 +3,12 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { json } from 'express';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  // rawBody: true enables access to req.rawBody for Stripe webhook signature validation
+  const app = await NestFactory.create(AppModule, { rawBody: true });
 
   app.setGlobalPrefix('api');
-
-  // IMPORTANTE: Raw body para webhook do Stripe
-  // Deve vir ANTES do ValidationPipe
-  app.use(
-    '/api/webhooks/stripe',
-    json({
-      verify: (req: any, res, buf) => {
-        req.rawBody = buf;
-      },
-    }),
-  );
 
   app.enableCors({
     origin: '*',

@@ -42,6 +42,8 @@ export interface ITenantBillingConfigRepository {
   getStripeSecretKey(tenantId: string): Promise<string | null>;
   /** Returns the raw (decrypted) Stripe webhook secret for internal use only */
   getStripeWebhookSecret(tenantId: string): Promise<string | null>;
+  /** Returns whether secret keys are configured (without decrypting) */
+  hasSecretKeys(tenantId: string): Promise<{ hasSecretKey: boolean; hasWebhookSecret: boolean }>;
 }
 
 export const TENANT_BILLING_CONFIG_REPOSITORY = Symbol('TENANT_BILLING_CONFIG_REPOSITORY');
