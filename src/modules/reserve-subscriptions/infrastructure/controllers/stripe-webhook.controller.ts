@@ -10,6 +10,7 @@
   Inject,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
+import { SkipThrottle } from '@nestjs/throttler';
 import { Request } from 'express';
 import Stripe from 'stripe';
 import { ProcessStripeWebhookUseCase } from '../../application/use-cases/process-stripe-webhook.use-case';
@@ -24,6 +25,7 @@ import {
 
 @ApiTags('Webhooks')
 @Controller('webhooks')
+@SkipThrottle()
 export class StripeWebhookController {
   private readonly logger = new Logger(StripeWebhookController.name);
 
