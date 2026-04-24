@@ -83,6 +83,7 @@ export default class AdminCredentialRepository implements IAdminCredentialReposi
                 });
             }
         } catch (error) {
+            if ((error as { code?: string })?.code === 'P2025') return; // sem credential row — nada a registrar
             throw new RepositoryException('Erro ao registrar tentativa de login falha.', error);
         }
     }
@@ -94,6 +95,7 @@ export default class AdminCredentialRepository implements IAdminCredentialReposi
                 data: { failed_attempts: 0, locked_until: null },
             });
         } catch (error) {
+            if ((error as { code?: string })?.code === 'P2025') return;
             throw new RepositoryException('Erro ao limpar tentativas de login falhas.', error);
         }
     }
