@@ -13,6 +13,7 @@ import { GetTenantSubscriptionUseCase } from './application/use-cases/get-tenant
 import { CancelSubscriptionUseCase } from './application/use-cases/cancel-subscription.use-case';
 import { ProcessStripeWebhookUseCase } from './application/use-cases/process-stripe-webhook.use-case';
 import { ManageTenantBillingConfigUseCase } from './application/use-cases/manage-tenant-billing-config.use-case';
+import { CreateBillingPortalSessionUseCase } from './application/use-cases/create-billing-portal-session.use-case';
 
 // Repositories
 import { PrismaStripeSubscriptionRepository } from './infrastructure/repositories/prisma-stripe-subscription.repository';
@@ -25,6 +26,10 @@ import { TENANT_BILLING_CONFIG_REPOSITORY } from './domain/interfaces/tenant-bil
 // Providers
 import { StripeProvider } from './infrastructure/providers/stripe.provider';
 import { STRIPE_PROVIDER } from './domain/interfaces/stripe.provider.interface';
+
+// Schedulers & Guards
+import { StripeWebhookRetryScheduler } from './infrastructure/schedulers/stripe-webhook-retry.scheduler';
+import { ActiveSubscriptionGuard } from './infrastructure/guards/active-subscription.guard';
 
 @Module({
   imports: [DatabaseModule, ZarpAuthModule],
@@ -40,6 +45,7 @@ import { STRIPE_PROVIDER } from './domain/interfaces/stripe.provider.interface';
     CancelSubscriptionUseCase,
     ProcessStripeWebhookUseCase,
     ManageTenantBillingConfigUseCase,
+    CreateBillingPortalSessionUseCase,
 
     // Repositories
     {
@@ -60,13 +66,19 @@ import { STRIPE_PROVIDER } from './domain/interfaces/stripe.provider.interface';
       provide: STRIPE_PROVIDER,
       useClass: StripeProvider,
     },
-    StripeProvider, // Also provide as concrete class for webhook controller
+
+    // Schedulers
+    StripeWebhookRetryScheduler,
+
+    // Guards (registered as providers so they can be injected)
+    ActiveSubscriptionGuard,
   ],
   exports: [
     STRIPE_SUBSCRIPTION_REPOSITORY,
     TENANT_BILLING_CONFIG_REPOSITORY,
     GetTenantSubscriptionUseCase,
     ManageTenantBillingConfigUseCase,
+    ActiveSubscriptionGuard,
   ],
 })
 export class ZarpSubscriptionsModule {}

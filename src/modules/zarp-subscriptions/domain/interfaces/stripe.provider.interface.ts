@@ -6,7 +6,8 @@ import Stripe from 'stripe';
  */
 export interface IStripeProvider {
   /**
-   * Create a checkout session for subscription
+   * Create a checkout session for subscription.
+   * If stripeSecretKey is provided, uses it instead of the global env var.
    */
   createCheckoutSession(params: {
     customerId?: string;
@@ -16,42 +17,58 @@ export interface IStripeProvider {
     cancelUrl: string;
     metadata?: Record<string, string>;
     trialPeriodDays?: number;
+    stripeSecretKey?: string;
   }): Promise<Stripe.Checkout.Session>;
 
   /**
-   * Retrieve a subscription from Stripe
+   * Retrieve a subscription from Stripe.
    */
-  retrieveSubscription(subscriptionId: string): Promise<Stripe.Subscription>;
+  retrieveSubscription(subscriptionId: string, stripeSecretKey?: string): Promise<Stripe.Subscription>;
 
   /**
-   * Cancel a subscription
+   * Cancel a subscription.
+   * If stripeSecretKey is provided, uses it instead of the global env var.
    */
   cancelSubscription(
     subscriptionId: string,
     cancelAtPeriodEnd: boolean,
+    stripeSecretKey?: string,
   ): Promise<Stripe.Subscription>;
 
   /**
-   * Create or retrieve a customer
+   * Create or retrieve a customer by email.
    */
   createOrRetrieveCustomer(params: {
     email: string;
     name?: string;
     metadata?: Record<string, string>;
+    stripeSecretKey?: string;
   }): Promise<Stripe.Customer>;
 
   /**
-   * Construct webhook event from raw body and signature
+   * Construct webhook event from raw body and signature.
+   * Uses the provided webhookSecret (per-tenant) or falls back to env var.
    */
   constructWebhookEvent(
     rawBody: string | Buffer,
     signature: string,
+    webhookSecret?: string,
   ): Promise<Stripe.Event>;
 
   /**
-   * Retrieve a customer by ID
+   * Retrieve a customer by ID.
    */
-  retrieveCustomer(customerId: string): Promise<Stripe.Customer>;
+  retrieveCustomer(customerId: string, stripeSecretKey?: string): Promise<Stripe.Customer>;
+
+  /**
+   * Create a Stripe Billing Portal session so the customer can manage
+   * their subscription (update payment method, view invoices, cancel, etc.).
+   */
+  createBillingPortalSession(params: {
+    customerId: string;
+    returnUrl: string;
+    stripeSecretKey?: string;
+  }): Promise<Stripe.BillingPortal.Session>;
 }
 
 /**

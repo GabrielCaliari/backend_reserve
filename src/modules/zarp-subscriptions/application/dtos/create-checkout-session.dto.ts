@@ -7,10 +7,10 @@ export class CreateCheckoutSessionDTO {
   @IsString()
   priceId: string;
 
-  @IsUrl()
+  @IsUrl({ require_tld: false })
   successUrl: string;
 
-  @IsUrl()
+  @IsUrl({ require_tld: false })
   cancelUrl: string;
 
   @IsOptional()

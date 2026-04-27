@@ -718,6 +718,17 @@ model Tenant {
   deletion_scheduled_for_at DateTime?
   deletion_requested_by String?  @db.VarChar(25)
   deletion_reason String?        @db.VarChar(255)
+
+  // Stripe — cached fields to avoid extra queries
+  // stripe_customer_id: persisted here so the same Stripe Customer is reused
+  //   across subscription cancellations and re-subscriptions.
+  stripe_customer_id   String?  @db.VarChar(255)
+  // subscription_status: denormalized cache of the current subscription state.
+  //   Kept in sync by webhook handlers. Allows guards to check access without
+  //   an extra JOIN to stripe_subscriptions.
+  //   Values: none | active | trialing | past_due | canceled | paused | unpaid
+  subscription_status  String   @default("none") @db.VarChar(50)
+
   created_at     DateTime         @default(now())
   updated_at     DateTime         @updatedAt
   AdminTenant                  AdminTenant[]
@@ -732,6 +743,9 @@ model Tenant {
   Appointments                 Appointment[]
   StripeSubscription           StripeSubscription?
   TenantBillingConfig          TenantBillingConfig?
+
+  @@index([stripe_customer_id])
+  @@index([subscription_status])
 }
 
 model LeadCollection {

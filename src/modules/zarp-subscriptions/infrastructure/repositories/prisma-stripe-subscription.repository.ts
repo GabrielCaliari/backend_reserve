@@ -106,6 +106,21 @@ export class PrismaStripeSubscriptionRepository implements IStripeSubscriptionRe
     });
   }
 
+  async updateTenantStripeFields(
+    tenantId: string,
+    fields: { stripeCustomerId?: string; subscriptionStatus?: string },
+  ): Promise<void> {
+    const data: any = {};
+    if (fields.stripeCustomerId !== undefined) data.stripe_customer_id = fields.stripeCustomerId;
+    if (fields.subscriptionStatus !== undefined) data.subscription_status = fields.subscriptionStatus;
+    if (Object.keys(data).length === 0) return;
+
+    await this.prisma.tenant.update({
+      where: { id: tenantId },
+      data,
+    });
+  }
+
   private toDomain(data: any): StripeSubscriptionEntity {
     return new StripeSubscriptionEntity({
       id: data.id,

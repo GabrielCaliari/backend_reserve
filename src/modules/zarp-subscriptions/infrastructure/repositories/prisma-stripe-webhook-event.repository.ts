@@ -54,11 +54,29 @@ export class PrismaStripeWebhookEventRepository implements IStripeWebhookEventRe
     await this.prisma.stripeWebhookEvent.update({
       where: { stripe_event_id: stripeEventId },
       data: {
-        processing_attempts: {
-          increment: 1,
-        },
+        processing_attempts: { increment: 1 },
         updated_at: new Date(),
       },
     });
+  }
+
+  async findFailedEvents(maxAttempts: number): Promise<import('../../domain/interfaces/stripe-webhook-event.repository.interface').IFailedWebhookEvent[]> {
+    const rows = await this.prisma.stripeWebhookEvent.findMany({
+      where: {
+        processed: false,
+        processing_attempts: { gte: 1, lt: maxAttempts },
+      },
+      orderBy: { created_at: 'asc' },
+      take: 50,
+    });
+
+    return rows.map((r) => ({
+      stripeEventId: r.stripe_event_id,
+      eventType: r.event_type,
+      payload: r.payload,
+      processingAttempts: r.processing_attempts,
+      errorMessage: r.error_message,
+      createdAt: r.created_at,
+    }));
   }
 }
