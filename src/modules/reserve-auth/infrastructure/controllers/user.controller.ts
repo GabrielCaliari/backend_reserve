@@ -70,6 +70,7 @@ export class UserController {
     @ApiBody({ type: AuthUserDTO })
     @ApiResponse({ status: 200, description: 'Authentication successful' })
     @ApiResponse({ status: 401, description: 'Invalid credentials' })
+    @ApiResponse({ status: 423, description: 'Conta bloqueada por tentativas de senha incorretas' })
     async authenticateUser(@Res() res: Response, @Body() data: AuthUserDTO) {
         const result = await this.userService.authenticate(data);
         return res.status(result.status).json(result.data)

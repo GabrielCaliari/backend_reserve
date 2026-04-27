@@ -51,6 +51,7 @@ export const errorTypes = {
   },
   _423: {
     admin_account_locked: '423:ADMIN_ACCOUNT_LOCKED',
+    user_account_locked: '423:USER_ACCOUNT_LOCKED',
   },
   _500: {
     user_nc: '500:USER_NOT_CREATED',

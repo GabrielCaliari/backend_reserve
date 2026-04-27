@@ -138,11 +138,27 @@ export class UserService {
                 }
             }
 
+            // Lockout por conta, persistido — complementa o rate limit por IP.
+            const lockout = await this.userCredentialRepository.findLockoutState(user.id);
+            if (lockout?.lockedUntil && lockout.lockedUntil > new Date()) {
+                return {
+                    status: 423,
+                    data: {
+                        code: errorTypes._423.user_account_locked,
+                        message: 'Conta temporariamente bloqueada por tentativas de senha incorretas. Tente novamente mais tarde.',
+                        locked_until: lockout.lockedUntil.toISOString(),
+                    }
+                }
+            }
+
             const compareHashByUserId = await this.userCredentialRepository.compareHashByUserId(data.password, user.id);
 
             if (!compareHashByUserId) {
+                await this.userCredentialRepository.registerFailedAttempt(user.id);
                 return errorResponse(errorTypes._401.user_password_in, 401);
             }
+
+            await this.userCredentialRepository.clearFailedAttempts(user.id);
 
             const session = await this.userSessionTokenRepository.create({
                 user_id: user.id,
