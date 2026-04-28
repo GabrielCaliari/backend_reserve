@@ -14,6 +14,13 @@ import helmet from 'helmet';
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
 
+  // Rotas que legitimamente trafegam corpos JSON maiores que o padrão da API
+  // (ex.: conteúdo CMS com HTML embutido) — reaproveitada abaixo pelo timeout
+  // de upload também.
+  const LARGE_BODY_ROUTES: RegExp[] = [
+    /^\/api\/cms\//,
+  ];
+
   // Preserva o corpo cru para a validação de assinatura do webhook do Stripe.
   // Necessário porque desligamos o bodyParser embutido do Nest para poder
   // impor um limite de tamanho.
@@ -45,8 +52,24 @@ async function bootstrap() {
     }),
   );
 
-  app.use(json({ limit: '5mb', verify: rawBodySaver }));
-  app.use(urlencoded({ extended: true, limit: '5mb', verify: rawBodySaver }));
+  // Limite de 5mb só nas rotas de CMS (conteúdo rico); o resto da API usa
+  // 100kb, restaurando o padrão implícito do body-parser do Express — um
+  // limite global de 5mb era 50x maior que o necessário para a imensa
+  // maioria das rotas.
+  const largeJsonParser = json({ limit: '5mb', verify: rawBodySaver });
+  const largeUrlencodedParser = urlencoded({ extended: true, limit: '5mb', verify: rawBodySaver });
+  const defaultJsonParser = json({ limit: '100kb', verify: rawBodySaver });
+  const defaultUrlencodedParser = urlencoded({ extended: true, limit: '100kb', verify: rawBodySaver });
+
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    const useLargeLimit = LARGE_BODY_ROUTES.some((route) => route.test(req.path));
+    const jsonParser = useLargeLimit ? largeJsonParser : defaultJsonParser;
+    jsonParser(req, res, (err?: unknown) => {
+      if (err) return next(err as Error);
+      const urlencodedParser = useLargeLimit ? largeUrlencodedParser : defaultUrlencodedParser;
+      urlencodedParser(req, res, next);
+    });
+  });
 
   app.setGlobalPrefix('api', { exclude: ['wa/:code'] });
 
@@ -64,15 +87,12 @@ async function bootstrap() {
   // Prefixo ancorado — sem casamento por substring, que dava 5 min a
   // qualquer rota com "upload"/"assets"/"images" no caminho.
   const UPLOAD_TIMEOUT_METHODS = new Set(['POST', 'PUT', 'PATCH']);
-  const UPLOAD_TIMEOUT_ROUTES: RegExp[] = [
-    /^\/api\/cms\//, // assets, blogs, authors, articles/:id/images
-  ];
   const UPLOAD_TIMEOUT_MS = 5 * 60 * 1000;
 
   app.use((req: Request, res: Response, next: NextFunction) => {
     const isUploadRoute =
       UPLOAD_TIMEOUT_METHODS.has(req.method) &&
-      UPLOAD_TIMEOUT_ROUTES.some((route) => route.test(req.path));
+      LARGE_BODY_ROUTES.some((route) => route.test(req.path));
 
     if (isUploadRoute) {
       req.setTimeout(UPLOAD_TIMEOUT_MS);
