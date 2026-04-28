@@ -1,0 +1,224 @@
+# Implementation Plan: B2C Student Subscriptions
+
+## Overview
+
+Implement two new bounded-context modules — `zarp-b2c-products` and `zarp-b2c-subscriptions` — following the project's DDD/`zarp-*` pattern. The feature introduces a direct-to-consumer subscription system where students purchase access to educational products via Stripe Hosted Checkout. The existing `zarp-subscriptions` (B2B) module is left untouched.
+
+## Tasks
+
+- [x] 1. Prisma schema additions and migration
+  - Add `stripe_customer_id String? @unique @db.VarChar(100)` field to the `User` model
+  - Add `Product`, `ProductPrice`, and `UserSubscription` models exactly as specified in the design
+  - Include `@@index([user_id, status])` and `@@index([stripe_subscription_id])` on `UserSubscription`
+  - Run `pnpm exec prisma migrate dev --name add_b2c_products_and_subscriptions` to generate the migration SQL
+  - Run `pnpm exec prisma generate` to regenerate the Prisma client
+  - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5_
+
+- [x] 2. `zarp-b2c-products` — domain layer
+  - [x] 2.1 Create `ProductPriceEntity` in `src/modules/zarp-b2c-products/domain/entities/product-price.entity.ts`
+    - Plain TypeScript class with props: `id`, `stripePriceId`, `productId`, `interval` (`'month' | 'year' | 'week'`), `intervalCount`, `unitAmount`, `currency`, `active`
+    - No NestJS decorators
+    - _Requirements: 8.2_
+  - [x] 2.2 Create `ProductEntity` in `src/modules/zarp-b2c-products/domain/entities/product.entity.ts`
+    - Props: `id`, `stripeProductId`, `name`, `description`, `slug`, `active`, `prices: ProductPriceEntity[]`, `createdAt`, `updatedAt`
+    - No NestJS decorators
+    - _Requirements: 8.1_
+  - [x] 2.3 Create repository interfaces and tokens
+    - `IProductRepository` with `findAllActive()` and `findBySlug()` in `domain/interfaces/product.repository.interface.ts`
+    - `IProductPriceRepository` with `findActiveByProductId()` and `findByStripePriceId()` in `domain/interfaces/product-price.repository.interface.ts`
+    - Export `PRODUCT_REPOSITORY` and `PRODUCT_PRICE_REPOSITORY` Symbol tokens
+    - _Requirements: 1.1, 1.2_
+
+- [x] 3. `zarp-b2c-products` — application layer
+  - [x] 3.1 Create `ListProductsUseCase` in `src/modules/zarp-b2c-products/application/use-cases/list-products.use-case.ts`
+    - Inject `IProductRepository` via `PRODUCT_REPOSITORY` token
+    - Call `findAllActive()` and return the result
+    - _Requirements: 1.1_
+  - [x] 3.2 Create `GetProductUseCase` in `src/modules/zarp-b2c-products/application/use-cases/get-product.use-case.ts`
+    - Inject `IProductRepository` via `PRODUCT_REPOSITORY` token
+    - Call `findBySlug(slug)`, throw `NotFoundException` if null
+    - _Requirements: 1.2, 1.3_
+  - [x] 3.3 Create `ProductResponseDTO` in `src/modules/zarp-b2c-products/application/dtos/product-response.dto.ts`
+    - Flat DTO with product fields and nested `prices: ProductPriceResponseDTO[]`
+    - _Requirements: 1.1, 1.2_
+
+- [x] 4. `zarp-b2c-products` — infrastructure layer
+  - [x] 4.1 Create `PrismaProductRepository` in `src/modules/zarp-b2c-products/infrastructure/repositories/prisma-product.repository.ts`
+    - Implement `IProductRepository`
+    - `findAllActive()`: query `prisma.product.findMany({ where: { active: true }, include: { ProductPrice: { where: { active: true } } } })` and map to `ProductEntity`
+    - `findBySlug()`: query by slug with same include, map to `ProductEntity` or return null
+    - _Requirements: 1.1, 1.2_
+  - [x] 4.2 Create `PrismaProductPriceRepository` in `src/modules/zarp-b2c-products/infrastructure/repositories/prisma-product-price.repository.ts`
+    - Implement `IProductPriceRepository`
+    - `findActiveByProductId()` and `findByStripePriceId()` with Prisma queries, map to `ProductPriceEntity`
+    - _Requirements: 8.2_
+  - [x] 4.3 Create `ProductsController` in `src/modules/zarp-b2c-products/infrastructure/controllers/products.controller.ts`
+    - `GET /products` → `ListProductsUseCase.execute()` (public, no guard)
+    - `GET /products/:slug` → `GetProductUseCase.execute(slug)` (public, no guard)
+    - `GET /products/:slug/content` → apply `UserJwtGuard` then `SubscriptionAccessGuard`; return placeholder `{ content: 'ok' }` (guard wiring is the goal here)
+    - _Requirements: 1.1, 1.2, 1.3, 1.4, 4.1, 4.2, 4.4_
+  - [x] 4.4 Create `ZarpB2cProductsModule` in `src/modules/zarp-b2c-products/zarp-b2c-products.module.ts`
+    - Import `DatabaseModule` and `ZarpAuthModule`
+    - Register `ListProductsUseCase`, `GetProductUseCase`
+    - Register `PRODUCT_REPOSITORY → PrismaProductRepository`, `PRODUCT_PRICE_REPOSITORY → PrismaProductPriceRepository`
+    - Declare `ProductsController`
+    - Export `PRODUCT_PRICE_REPOSITORY` (needed by `zarp-b2c-subscriptions`)
+    - _Requirements: 1.1, 1.2, 1.3, 1.4_
+
+- [x] 5. Checkpoint — products module
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [x] 6. `zarp-b2c-subscriptions` — domain layer
+  - [x] 6.1 Create `EUserSubscriptionStatus` enum in `src/modules/zarp-b2c-subscriptions/domain/enums/user-subscription-status.enum.ts`
+    - Values: `ACTIVE = 'active'`, `TRIALING = 'trialing'`, `PAST_DUE = 'past_due'`, `CANCELED = 'canceled'`, `INCOMPLETE = 'incomplete'`, `UNPAID = 'unpaid'`
+    - _Requirements: 7.1, 7.2_
+  - [x] 6.2 Create `UserSubscriptionEntity` in `src/modules/zarp-b2c-subscriptions/domain/entities/user-subscription.entity.ts`
+    - Props as specified in design: `id`, `userId`, `productId`, `productPriceId`, `stripeSubscriptionId`, `stripeCustomerId`, `stripePriceId`, `status: EUserSubscriptionStatus`, `currentPeriodStart`, `currentPeriodEnd`, `trialStart?`, `trialEnd?`, `canceledAt?`, `cancelAtPeriodEnd`, `amount`, `currency`, `createdAt`, `updatedAt`
+    - Implement `isActive(): boolean` — returns `true` iff `status ∈ {ACTIVE, TRIALING}` AND `currentPeriodEnd >= new Date()`
+    - No NestJS decorators
+    - _Requirements: 7.1, 7.2, 7.3_
+  - [ ]* 6.3 Write unit tests for `UserSubscriptionEntity.isActive()`
+    - **Property 7: `isActive()` is true if and only if status and period are valid**
+    - Test: `status=active`, `currentPeriodEnd` in future → `true`
+    - Test: `status=trialing`, `currentPeriodEnd` in future → `true`
+    - Test: `status=active`, `currentPeriodEnd` in past → `false`
+    - Test: `status=canceled`, `currentPeriodEnd` in future → `false`
+    - Test: `status=past_due`, `currentPeriodEnd` in future → `false`
+    - Test: `cancelAtPeriodEnd=true`, `status=active`, `currentPeriodEnd` in future → `true`
+    - **Validates: Requirements 7.1, 7.2, 7.3**
+  - [x] 6.4 Create repository interfaces and tokens
+    - `IUserSubscriptionRepository` with `create()`, `findById()`, `findByStripeSubscriptionId()`, `findAllByUserId()`, `hasActiveSubscription()`, `updateByStripeSubscriptionId()` in `domain/interfaces/user-subscription.repository.interface.ts`
+    - `IB2CStripeWebhookEventRepository` with `existsByStripeEventId()` and `create()` in `domain/interfaces/b2c-stripe-webhook-event.repository.interface.ts`
+    - Export `USER_SUBSCRIPTION_REPOSITORY` and `B2C_STRIPE_WEBHOOK_EVENT_REPOSITORY` Symbol tokens
+    - _Requirements: 3.8, 3.9, 6.1_
+
+- [x] 7. `zarp-b2c-subscriptions` — application layer
+  - [x] 7.1 Create `CreateCheckoutSessionUseCase` in `src/modules/zarp-b2c-subscriptions/application/use-cases/create-checkout-session.use-case.ts`
+    - Inject `IUserSubscriptionRepository`, `IProductPriceRepository` (from `zarp-b2c-products`), `IStripeProvider`, and `PrismaService`
+    - Validate `priceId` exists and is active; throw `NotFoundException` if not
+    - Check `hasActiveSubscription(userId, productSlug)`; throw `ConflictException` if true
+    - If `User.stripe_customer_id` is null, call `stripeProvider.createOrRetrieveCustomer()` and persist the result via `prisma.user.update()`
+    - Call `stripeProvider.createCheckoutSession()` with `metadata: { userId, productId, priceId }`, `successUrl` and `cancelUrl` from `FRONTEND_URL` env var
+    - Return `{ checkoutUrl: session.url }`
+    - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7_
+  - [ ]* 7.2 Write unit tests for `CreateCheckoutSessionUseCase`
+    - **Property 3: Checkout creates customer when absent**
+    - **Property 4: Checkout rejects duplicate active subscription**
+    - Test: valid priceId, no existing subscription → returns `checkoutUrl`
+    - Test: `stripe_customer_id` is null → `createOrRetrieveCustomer` called and id persisted
+    - Test: `stripe_customer_id` already set → `createOrRetrieveCustomer` NOT called
+    - Test: active subscription exists → throws `ConflictException`
+    - Test: priceId not found → throws `NotFoundException`
+    - **Validates: Requirements 2.1, 2.2, 2.3, 2.4, 2.5**
+  - [x] 7.3 Create `ListMySubscriptionsUseCase` in `src/modules/zarp-b2c-subscriptions/application/use-cases/list-my-subscriptions.use-case.ts`
+    - Inject `IUserSubscriptionRepository`
+    - Call `findAllByUserId(userId)` and return the list
+    - _Requirements: 6.1_
+  - [x] 7.4 Create `CancelSubscriptionUseCase` in `src/modules/zarp-b2c-subscriptions/application/use-cases/cancel-subscription.use-case.ts`
+    - Inject `IUserSubscriptionRepository` and `IStripeProvider`
+    - Load subscription by `id`; throw `NotFoundException` if not found or `userId` mismatch
+    - Throw `BadRequestException` if `status === 'canceled'`
+    - Call `stripeProvider.cancelSubscription(stripeSubscriptionId, true)` (cancel at period end)
+    - Call `updateByStripeSubscriptionId()` to set `cancel_at_period_end = true`
+    - _Requirements: 5.1, 5.2, 5.3, 5.4_
+  - [ ]* 7.5 Write unit tests for `CancelSubscriptionUseCase`
+    - **Property 10: Cancellation sets cancel_at_period_end without revoking access**
+    - Test: valid subscription belonging to user → Stripe called, local record updated
+    - Test: subscription not found → throws `NotFoundException`
+    - Test: subscription belongs to different user → throws `NotFoundException`
+    - Test: subscription already canceled → throws `BadRequestException`
+    - **Validates: Requirements 5.1, 5.2, 5.3, 5.4**
+  - [x] 7.6 Create `ProcessB2CWebhookUseCase` in `src/modules/zarp-b2c-subscriptions/application/use-cases/process-b2c-webhook.use-case.ts`
+    - Inject `IUserSubscriptionRepository`, `IB2CStripeWebhookEventRepository`, `IStripeProvider`, and `PrismaService`
+    - Check idempotency via `webhookEventRepo.existsByStripeEventId(event.id)`; return early if already processed
+    - Persist `StripeWebhookEvent` record before dispatching to handler
+    - Implement private handlers: `handleCheckoutCompleted`, `handleSubscriptionUpdated`, `handleSubscriptionDeleted`, `handleInvoicePaid`, `handleInvoicePaymentFailed`
+    - `handleCheckoutCompleted`: validate metadata fields (`userId`, `productId`, `priceId`); retrieve Stripe subscription; upsert `User.stripe_customer_id`; insert `UserSubscription`
+    - _Requirements: 3.1, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 3.10_
+  - [ ]* 7.7 Write unit tests for `ProcessB2CWebhookUseCase`
+    - **Property 5: Webhook idempotency**
+    - **Property 6: Webhook event handlers update subscription state correctly**
+    - Test: `checkout.session.completed` → `UserSubscription` created, `stripe_customer_id` persisted
+    - Test: `customer.subscription.updated` → status, period, `cancel_at_period_end` updated
+    - Test: `customer.subscription.deleted` → status set to `canceled`, `canceled_at` set
+    - Test: `invoice.paid` → `current_period_end` updated, status set to `active`
+    - Test: `invoice.payment_failed` → status set to `past_due`
+    - Test: duplicate `stripe_event_id` → no DB writes (idempotency)
+    - Test: missing metadata in `checkout.session.completed` → throws `BadRequestException`
+    - **Validates: Requirements 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 3.10**
+  - [x] 7.8 Create DTOs in `src/modules/zarp-b2c-subscriptions/application/dtos/`
+    - `CreateCheckoutSessionDTO`: `{ priceId: string }` with `@IsString()` / `@IsNotEmpty()` validation
+    - `UserSubscriptionResponseDTO`: flat DTO mapping `UserSubscriptionEntity` fields
+    - _Requirements: 2.1, 6.1_
+
+- [x] 8. Checkpoint — subscriptions use cases
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [x] 9. `zarp-b2c-subscriptions` — infrastructure layer
+  - [x] 9.1 Create `PrismaUserSubscriptionRepository` in `src/modules/zarp-b2c-subscriptions/infrastructure/repositories/prisma-user-subscription.repository.ts`
+    - Implement `IUserSubscriptionRepository`
+    - `hasActiveSubscription(userId, productSlug)`: join `UserSubscription → Product` where `status IN ('active','trialing')` AND `current_period_end >= now` AND `product.slug = productSlug`
+    - All methods map Prisma records to `UserSubscriptionEntity` via a private `toDomain()` helper
+    - _Requirements: 4.1, 4.2, 4.3, 6.1, 8.3, 8.5_
+  - [x] 9.2 Create `PrismaB2CStripeWebhookEventRepository` in `src/modules/zarp-b2c-subscriptions/infrastructure/repositories/prisma-b2c-stripe-webhook-event.repository.ts`
+    - Implement `IB2CStripeWebhookEventRepository`
+    - `existsByStripeEventId()`: `prisma.stripeWebhookEvent.findUnique({ where: { stripe_event_id } })` — reuse existing `StripeWebhookEvent` model
+    - `create()`: insert a new `StripeWebhookEvent` record
+    - _Requirements: 3.8, 3.9_
+  - [x] 9.3 Create `SubscriptionAccessGuard` in `src/modules/zarp-b2c-subscriptions/infrastructure/guards/subscription-access.guard.ts`
+    - Implement `CanActivate`
+    - Read `req.user_id` (set by `UserJwtGuard`) and `req.params.slug`
+    - Call `userSubscriptionRepo.hasActiveSubscription(userId, slug)`
+    - Return `true` if active; throw `ForbiddenException` otherwise
+    - _Requirements: 4.1, 4.2, 4.3, 4.5_
+  - [ ]* 9.4 Write unit tests for `SubscriptionAccessGuard`
+    - **Property 8: Access guard allows exactly the subscriptions that satisfy the access predicate**
+    - Test: active subscription → `canActivate` returns `true`
+    - Test: trialing subscription → `canActivate` returns `true`
+    - Test: canceled subscription → throws `ForbiddenException`
+    - Test: active subscription with `cancel_at_period_end=true` and future period end → returns `true`
+    - Test: expired subscription (past `current_period_end`) → throws `ForbiddenException`
+    - **Validates: Requirements 4.1, 4.2, 4.3**
+  - [x] 9.5 Create `B2CSubscriptionsController` in `src/modules/zarp-b2c-subscriptions/infrastructure/controllers/b2c-subscriptions.controller.ts`
+    - `POST /subscriptions/checkout` → `UserJwtGuard` → `CreateCheckoutSessionUseCase.execute({ userId: req.user_id, priceId: dto.priceId })`
+    - `GET /subscriptions/my` → `UserJwtGuard` → `ListMySubscriptionsUseCase.execute(req.user_id)`
+    - `POST /subscriptions/:id/cancel` → `UserJwtGuard` → `CancelSubscriptionUseCase.execute({ subscriptionId, userId: req.user_id })`
+    - _Requirements: 2.7, 5.5, 6.2_
+  - [x] 9.6 Create `B2CStripeWebhookController` in `src/modules/zarp-b2c-subscriptions/infrastructure/controllers/b2c-stripe-webhook.controller.ts`
+    - `POST /webhooks/b2c/stripe` — no auth guard
+    - Read `stripe-signature` header; throw `BadRequestException` if missing
+    - Read `(req as any).rawBody` buffer; throw `BadRequestException` if absent
+    - Call `stripeProvider.constructWebhookEvent(rawBody, signature)` using global `STRIPE_WEBHOOK_SECRET`; throw `BadRequestException` on failure
+    - Call `processB2CWebhookUseCase.execute(event)`; return `{ received: true }`
+    - _Requirements: 3.1, 3.2_
+  - [x] 9.7 Create `ZarpB2cSubscriptionsModule` in `src/modules/zarp-b2c-subscriptions/zarp-b2c-subscriptions.module.ts`
+    - Import `DatabaseModule`, `ZarpAuthModule`, and `ZarpB2cProductsModule`
+    - Register all four use cases
+    - Register `USER_SUBSCRIPTION_REPOSITORY → PrismaUserSubscriptionRepository`, `B2C_STRIPE_WEBHOOK_EVENT_REPOSITORY → PrismaB2CStripeWebhookEventRepository`
+    - Register `STRIPE_PROVIDER → StripeProvider` (import from `zarp-subscriptions` infrastructure or re-provide locally)
+    - Register `SubscriptionAccessGuard` as a provider so it can be injected
+    - Declare `B2CSubscriptionsController` and `B2CStripeWebhookController`
+    - _Requirements: 2.1, 3.1, 4.1, 5.1, 6.1_
+
+- [x] 10. Wire modules into the application
+  - [x] 10.1 Register raw body middleware for the B2C webhook route in `src/main.ts`
+    - The app is already bootstrapped with `{ rawBody: true }` — verify this is sufficient for `(req as any).rawBody` to be populated; if not, add an explicit `express.json` verify middleware scoped to `/api/webhooks/b2c/stripe`
+    - _Requirements: 3.1_
+  - [x] 10.2 Register both new modules in `src/app.module.ts`
+    - Import `ZarpB2cProductsModule` and `ZarpB2cSubscriptionsModule`
+    - Add both to the `imports` array
+    - Both modules use full controller paths (`/products`, `/subscriptions`, `/webhooks/b2c/stripe`) — no `RouterModule` prefix needed
+    - _Requirements: 1.4, 2.7, 3.1, 4.4, 5.5, 6.2_
+
+- [ ] 11. Final checkpoint — Ensure all tests pass
+  - Run `pnpm test` and confirm all unit tests pass
+  - Ensure all tests pass, ask the user if questions arise.
+
+## Notes
+
+- Tasks marked with `*` are optional and can be skipped for faster MVP
+- `StripeProvider` is reused from `zarp-subscriptions` — import the class directly or re-export it; do not duplicate the implementation
+- `StripeWebhookEvent` Prisma model is reused as-is for B2C idempotency (no new model needed)
+- The B2C webhook uses the global `STRIPE_WEBHOOK_SECRET` env var, unlike B2B which uses per-tenant secrets
+- `UserJwtGuard` sets `req.user_id`; use `(req as any).user_id` or a `@CurrentUser()` decorator in controllers
+- Domain layer must remain pure TypeScript — no `@Injectable()`, no `HttpException`, no Prisma types
