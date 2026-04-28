@@ -6,22 +6,31 @@ import { ZarpAuthModule } from '../zarp-auth/zarp-auth.module';
 import { SubscriptionsController } from './infrastructure/controllers/subscriptions.controller';
 import { StripeWebhookController } from './infrastructure/controllers/stripe-webhook.controller';
 import { TenantBillingConfigController } from './infrastructure/controllers/tenant-billing-config.controller';
+import { StripePlansController } from './infrastructure/controllers/stripe-plans.controller';
 
 // Use Cases
 import { CreateCheckoutSessionUseCase } from './application/use-cases/create-checkout-session.use-case';
 import { GetTenantSubscriptionUseCase } from './application/use-cases/get-tenant-subscription.use-case';
+import { GetTenantSubscriptionFromStripeUseCase } from './application/use-cases/get-tenant-subscription-from-stripe.use-case';
 import { CancelSubscriptionUseCase } from './application/use-cases/cancel-subscription.use-case';
 import { ProcessStripeWebhookUseCase } from './application/use-cases/process-stripe-webhook.use-case';
 import { ManageTenantBillingConfigUseCase } from './application/use-cases/manage-tenant-billing-config.use-case';
 import { CreateBillingPortalSessionUseCase } from './application/use-cases/create-billing-portal-session.use-case';
+import { CreateStripePlanUseCase } from './application/use-cases/create-stripe-plan.use-case';
+import { ArchiveStripePlanUseCase } from './application/use-cases/archive-stripe-plan.use-case';
+import { ListStripePlansUseCase } from './application/use-cases/list-stripe-plans.use-case';
+import { UpdateStripePlanUseCase } from './application/use-cases/update-stripe-plan.use-case';
 
 // Repositories
 import { PrismaStripeSubscriptionRepository } from './infrastructure/repositories/prisma-stripe-subscription.repository';
 import { PrismaStripeWebhookEventRepository } from './infrastructure/repositories/prisma-stripe-webhook-event.repository';
 import { PrismaTenantBillingConfigRepository } from './infrastructure/repositories/prisma-tenant-billing-config.repository';
+import { PrismaStripePlanRepository } from './infrastructure/repositories/prisma-stripe-plan.repository';
+import { StripeApiPlanRepository } from './infrastructure/repositories/stripe-api-plan.repository';
 import { STRIPE_SUBSCRIPTION_REPOSITORY } from './domain/interfaces/stripe-subscription.repository.interface';
 import { STRIPE_WEBHOOK_EVENT_REPOSITORY } from './domain/interfaces/stripe-webhook-event.repository.interface';
 import { TENANT_BILLING_CONFIG_REPOSITORY } from './domain/interfaces/tenant-billing-config.repository.interface';
+import { STRIPE_PLAN_REPOSITORY } from './domain/interfaces/stripe-plan.repository.interface';
 
 // Providers
 import { StripeProvider } from './infrastructure/providers/stripe.provider';
@@ -37,15 +46,21 @@ import { ActiveSubscriptionGuard } from './infrastructure/guards/active-subscrip
     SubscriptionsController,
     StripeWebhookController,
     TenantBillingConfigController,
+    StripePlansController,
   ],
   providers: [
     // Use Cases
     CreateCheckoutSessionUseCase,
     GetTenantSubscriptionUseCase,
+    GetTenantSubscriptionFromStripeUseCase, // NEW: Fetches from Stripe API
     CancelSubscriptionUseCase,
     ProcessStripeWebhookUseCase,
     ManageTenantBillingConfigUseCase,
     CreateBillingPortalSessionUseCase,
+    CreateStripePlanUseCase,
+    ArchiveStripePlanUseCase,
+    ListStripePlansUseCase,
+    UpdateStripePlanUseCase,
 
     // Repositories
     {
@@ -59,6 +74,10 @@ import { ActiveSubscriptionGuard } from './infrastructure/guards/active-subscrip
     {
       provide: TENANT_BILLING_CONFIG_REPOSITORY,
       useClass: PrismaTenantBillingConfigRepository,
+    },
+    {
+      provide: STRIPE_PLAN_REPOSITORY,
+      useClass: StripeApiPlanRepository, // CHANGED: Now uses Stripe API instead of local DB
     },
 
     // Providers
@@ -76,8 +95,11 @@ import { ActiveSubscriptionGuard } from './infrastructure/guards/active-subscrip
   exports: [
     STRIPE_SUBSCRIPTION_REPOSITORY,
     TENANT_BILLING_CONFIG_REPOSITORY,
+    STRIPE_PLAN_REPOSITORY,
     GetTenantSubscriptionUseCase,
+    GetTenantSubscriptionFromStripeUseCase, // Export the new use case
     ManageTenantBillingConfigUseCase,
+    ListStripePlansUseCase,
     ActiveSubscriptionGuard,
   ],
 })

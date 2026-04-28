@@ -4,6 +4,7 @@ import {
   Get,
   Param,
   Body,
+  Headers,
   HttpCode,
   HttpStatus,
   UseGuards,
@@ -12,6 +13,7 @@ import {
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { CreateCheckoutSessionUseCase } from '../../application/use-cases/create-checkout-session.use-case';
 import { GetTenantSubscriptionUseCase } from '../../application/use-cases/get-tenant-subscription.use-case';
+import { GetTenantSubscriptionFromStripeUseCase } from '../../application/use-cases/get-tenant-subscription-from-stripe.use-case';
 import { CancelSubscriptionUseCase } from '../../application/use-cases/cancel-subscription.use-case';
 import { CreateBillingPortalSessionUseCase } from '../../application/use-cases/create-billing-portal-session.use-case';
 import { CreateCheckoutSessionDTO } from '../../application/dtos/create-checkout-session.dto';
@@ -27,6 +29,7 @@ export class SubscriptionsController {
   constructor(
     private readonly createCheckoutSessionUseCase: CreateCheckoutSessionUseCase,
     private readonly getTenantSubscriptionUseCase: GetTenantSubscriptionUseCase,
+    private readonly getTenantSubscriptionFromStripeUseCase: GetTenantSubscriptionFromStripeUseCase,
     private readonly cancelSubscriptionUseCase: CancelSubscriptionUseCase,
     private readonly createBillingPortalSessionUseCase: CreateBillingPortalSessionUseCase,
   ) {}
@@ -51,10 +54,14 @@ export class SubscriptionsController {
   }
 
   @Get('tenant/:tenantId')
-  @ApiOperation({ summary: 'Get subscription by tenant ID' })
+  @ApiOperation({ 
+    summary: 'Get subscription by tenant ID',
+    description: 'Fetches subscription data directly from Stripe API, not from local database. This ensures subscriptions created in Stripe Dashboard appear in the application.',
+  })
   @ApiResponse({ status: 200, description: 'Subscription found or null' })
   async getTenantSubscription(@Param('tenantId') tenantId: string) {
-    const subscription = await this.getTenantSubscriptionUseCase.execute(tenantId);
+    // CRITICAL FIX: Now fetches from Stripe API instead of local database
+    const subscription = await this.getTenantSubscriptionFromStripeUseCase.execute(tenantId);
 
     if (!subscription) {
       return {

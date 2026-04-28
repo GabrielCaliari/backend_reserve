@@ -41,6 +41,96 @@ export class StripeProvider implements IStripeProvider {
     });
   }
 
+  // ─── Products ──────────────────────────────────────────────────────────────
+
+  async createProduct(params: {
+    name: string;
+    description?: string;
+    metadata?: Record<string, string>;
+    stripeSecretKey?: string;
+  }): Promise<Stripe.Product> {
+    return this.getClient(params.stripeSecretKey).products.create({
+      name: params.name,
+      description: params.description,
+      metadata: params.metadata,
+    });
+  }
+
+  async archiveProduct(productId: string, stripeSecretKey?: string): Promise<Stripe.Product> {
+    return this.getClient(stripeSecretKey).products.update(productId, { active: false });
+  }
+
+  async listProducts(stripeSecretKey?: string): Promise<Stripe.Product[]> {
+    const response = await this.getClient(stripeSecretKey).products.list({
+      active: true,
+      limit: 100,
+    });
+    return response.data;
+  }
+
+  async listAllProducts(includeInactive = false, stripeSecretKey?: string): Promise<Stripe.Product[]> {
+    const params: Stripe.ProductListParams = {
+      limit: 100,
+    };
+    
+    if (!includeInactive) {
+      params.active = true;
+    }
+    
+    const response = await this.getClient(stripeSecretKey).products.list(params);
+    return response.data;
+  }
+
+  // ─── Prices ────────────────────────────────────────────────────────────────
+
+  async createPrice(params: {
+    productId: string;
+    unitAmount: number;
+    currency: string;
+    interval: 'day' | 'week' | 'month' | 'year';
+    intervalCount?: number;
+    trialPeriodDays?: number;
+    metadata?: Record<string, string>;
+    stripeSecretKey?: string;
+  }): Promise<Stripe.Price> {
+    return this.getClient(params.stripeSecretKey).prices.create({
+      product: params.productId,
+      unit_amount: params.unitAmount,
+      currency: params.currency,
+      recurring: {
+        interval: params.interval,
+        interval_count: params.intervalCount ?? 1,
+      },
+      metadata: params.metadata,
+    });
+  }
+
+  async archivePrice(priceId: string, stripeSecretKey?: string): Promise<Stripe.Price> {
+    return this.getClient(stripeSecretKey).prices.update(priceId, { active: false });
+  }
+
+  async listPricesForProduct(productId: string, stripeSecretKey?: string): Promise<Stripe.Price[]> {
+    const response = await this.getClient(stripeSecretKey).prices.list({
+      product: productId,
+      active: true,
+      limit: 100,
+    });
+    return response.data;
+  }
+
+  async listAllPrices(active?: boolean, stripeSecretKey?: string): Promise<Stripe.Price[]> {
+    const params: Stripe.PriceListParams = {
+      limit: 100,
+    };
+    
+    if (active !== undefined) {
+      params.active = active;
+    }
+    
+    const response = await this.getClient(stripeSecretKey).prices.list(params);
+    return response.data;
+  }
+
   // ─── Checkout ──────────────────────────────────────────────────────────────
 
   async createCheckoutSession(params: {
@@ -108,6 +198,17 @@ export class StripeProvider implements IStripeProvider {
     stripeSecretKey?: string,
   ): Promise<Stripe.Subscription> {
     return this.getClient(stripeSecretKey).subscriptions.retrieve(subscriptionId);
+  }
+
+  async listCustomerSubscriptions(
+    customerId: string,
+    stripeSecretKey?: string,
+  ): Promise<Stripe.Subscription[]> {
+    const response = await this.getClient(stripeSecretKey).subscriptions.list({
+      customer: customerId,
+      limit: 100,
+    });
+    return response.data;
   }
 
   async cancelSubscription(

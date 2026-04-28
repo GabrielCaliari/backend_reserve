@@ -1420,3 +1420,39 @@ model StripeWebhookEvent {
   @@index([processed, processing_attempts])
   @@map("stripe_webhook_events")
 }
+
+// ============================================
+// Stripe Plans — Product+Price pairs managed via API
+// ============================================
+
+model StripePlan {
+  id                              String   @id @default(cuid()) @db.VarChar(25)
+  slug                            String   @unique @db.VarChar(100)
+  plan_name                       String   @db.VarChar(100)
+  description                     String?  @db.Text
+
+  // Stripe IDs
+  stripe_product_id               String   @unique @db.VarChar(255)
+  stripe_price_id                 String   @unique @db.VarChar(255)  // recurring price
+  stripe_trial_price_id           String?  @unique @db.VarChar(255)  // optional free-trial price
+
+  // Billing configuration
+  billing_interval                Int      @db.SmallInt              // 1=weekly 2=monthly 3=quarterly 4=annual
+  unit_amount                     Int                                // in cents
+  currency                        String   @default("brl") @db.VarChar(3)
+
+  // Credits / limits
+  released_credits                Int      @default(0)
+  credits_released_trial_period   Int      @default(0)
+  guest_limit                     Int      @default(0)
+  trial_days                      Int      @default(7) @db.SmallInt
+
+  // Control
+  active                          Boolean  @default(true)
+  created_at                      DateTime @default(now())
+  updated_at                      DateTime @updatedAt
+
+  @@index([active])
+  @@index([slug])
+  @@map("stripe_plans")
+}

@@ -5,6 +5,68 @@ import Stripe from 'stripe';
  * Abstracts Stripe SDK operations
  */
 export interface IStripeProvider {
+  // ─── Products ──────────────────────────────────────────────────────────────
+
+  /**
+   * Create a product in Stripe.
+   */
+  createProduct(params: {
+    name: string;
+    description?: string;
+    metadata?: Record<string, string>;
+    stripeSecretKey?: string;
+  }): Promise<Stripe.Product>;
+
+  /**
+   * Archive a product in Stripe (sets active=false).
+   * Never deletes — preserves billing history.
+   */
+  archiveProduct(productId: string, stripeSecretKey?: string): Promise<Stripe.Product>;
+
+  /**
+   * List all active products.
+   */
+  listProducts(stripeSecretKey?: string): Promise<Stripe.Product[]>;
+
+  /**
+   * List all products (including inactive).
+   */
+  listAllProducts(includeInactive?: boolean, stripeSecretKey?: string): Promise<Stripe.Product[]>;
+
+  // ─── Prices ────────────────────────────────────────────────────────────────
+
+  /**
+   * Create a recurring price linked to a product.
+   * unitAmount is in cents (e.g. 9990 = R$ 99,90).
+   */
+  createPrice(params: {
+    productId: string;
+    unitAmount: number;
+    currency: string;
+    interval: 'day' | 'week' | 'month' | 'year';
+    intervalCount?: number;
+    trialPeriodDays?: number;
+    metadata?: Record<string, string>;
+    stripeSecretKey?: string;
+  }): Promise<Stripe.Price>;
+
+  /**
+   * Archive a price in Stripe (sets active=false).
+   */
+  archivePrice(priceId: string, stripeSecretKey?: string): Promise<Stripe.Price>;
+
+  /**
+   * List active prices for a given product.
+   */
+  listPricesForProduct(productId: string, stripeSecretKey?: string): Promise<Stripe.Price[]>;
+
+  /**
+   * List all prices (optionally filtered by active status).
+   */
+  listAllPrices(active?: boolean, stripeSecretKey?: string): Promise<Stripe.Price[]>;
+
+  // ─── Checkout ──────────────────────────────────────────────────────────────
+
   /**
    * Create a checkout session for subscription.
    * If stripeSecretKey is provided, uses it instead of the global env var.
@@ -24,6 +86,11 @@ export interface IStripeProvider {
    * Retrieve a subscription from Stripe.
    */
   retrieveSubscription(subscriptionId: string, stripeSecretKey?: string): Promise<Stripe.Subscription>;
+
+  /**
+   * List subscriptions for a customer.
+   */
+  listCustomerSubscriptions(customerId: string, stripeSecretKey?: string): Promise<Stripe.Subscription[]>;
 
   /**
    * Cancel a subscription.
