@@ -12,6 +12,7 @@ describe('lockout no login de usuário (B2C)', () => {
     compareHashByUserId: jest.Mock;
     registerFailedAttempt: jest.Mock;
     clearFailedAttempts: jest.Mock;
+    rehashToLatest: jest.Mock;
     selectByEmail: jest.Mock;
     sessionCreate: jest.Mock;
   }> = {}) {
@@ -21,6 +22,7 @@ describe('lockout no login de usuário (B2C)', () => {
       compareHashByUserId: overrides.compareHashByUserId ?? jest.fn().mockResolvedValue(true),
       registerFailedAttempt: overrides.registerFailedAttempt ?? jest.fn(),
       clearFailedAttempts: overrides.clearFailedAttempts ?? jest.fn(),
+      rehashToLatest: overrides.rehashToLatest ?? jest.fn(),
     } as any;
     const userSessionTokenRepository = {
       create: overrides.sessionCreate ?? jest.fn().mockResolvedValue({ id: 's1', token: 't1' }),
@@ -88,5 +90,33 @@ describe('lockout no login de usuário (B2C)', () => {
     const result = await service.authenticate({ email: 'nope@b.com', password: 'x' } as any);
     expect(result.status).toBe(401);
     expect(userCredentialRepository.findLockoutState).not.toHaveBeenCalled();
+  });
+
+  it('faz re-hash transparente de v1 para v2 em login bem-sucedido, espelhando o admin', async () => {
+    const { service, userCredentialRepository } = buildService({
+      selectByEmail: jest.fn().mockResolvedValue({ id: 'u1', email: 'a@b.com' }),
+      findLockoutState: jest.fn().mockResolvedValue({
+        lockedUntil: null,
+        failedAttempts: 0,
+        hashVersion: 1,
+      }),
+    });
+    const result = await service.authenticate({ email: 'a@b.com', password: 'right' } as any);
+    expect(result.status).toBe(200);
+    expect(userCredentialRepository.rehashToLatest).toHaveBeenCalledWith('u1', 'right');
+  });
+
+  it('não faz re-hash quando a credencial já está em v2', async () => {
+    const { service, userCredentialRepository } = buildService({
+      selectByEmail: jest.fn().mockResolvedValue({ id: 'u1', email: 'a@b.com' }),
+      findLockoutState: jest.fn().mockResolvedValue({
+        lockedUntil: null,
+        failedAttempts: 0,
+        hashVersion: 2,
+      }),
+    });
+    const result = await service.authenticate({ email: 'a@b.com', password: 'right' } as any);
+    expect(result.status).toBe(200);
+    expect(userCredentialRepository.rehashToLatest).not.toHaveBeenCalled();
   });
 });

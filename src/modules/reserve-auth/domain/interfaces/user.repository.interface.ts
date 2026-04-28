@@ -36,6 +36,7 @@ export interface IUserCredentialRepository {
   } | null>;
   registerFailedAttempt(userId: string): Promise<void>;
   clearFailedAttempts(userId: string): Promise<void>;
+  rehashToLatest(userId: string, plainPassword: string): Promise<void>;
 }
 
 export const USER_CREDENTIAL_REPOSITORY = Symbol('USER_CREDENTIAL_REPOSITORY');

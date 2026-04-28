@@ -86,4 +86,16 @@ export default class UserCredentialRepository implements IUserCredentialReposito
             throw new RepositoryException('Erro ao limpar tentativas de login falhas.', error);
         }
     }
+
+    async rehashToLatest(userId: string, plainPassword: string) {
+        try {
+            const { hash, salt, version } = this.hashProvider.hash(plainPassword);
+            await this.prisma.userCredential.update({
+                where: { user_id: userId },
+                data: { hash, salt, hash_version: version },
+            });
+        } catch (error) {
+            throw new RepositoryException('Erro ao atualizar a versão do hash da senha.', error);
+        }
+    }
 }

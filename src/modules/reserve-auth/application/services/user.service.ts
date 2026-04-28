@@ -160,6 +160,15 @@ export class UserService {
 
             await this.userCredentialRepository.clearFailedAttempts(user.id);
 
+            // Re-hash transparente de v1 para v2. Precisa acontecer ANTES de
+            // criar a sessão: o JWT é assinado com credential.salt, e
+            // UserSessionTokenRepository.create relê a credencial — então ele
+            // já pega o salt novo e emite um token válido na mesma resposta.
+            // Espelha admin.service.ts:130-136.
+            if (lockout?.hashVersion === 1) {
+                await this.userCredentialRepository.rehashToLatest(user.id, data.password);
+            }
+
             const session = await this.userSessionTokenRepository.create({
                 user_id: user.id,
                 password: data.password,

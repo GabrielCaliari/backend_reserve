@@ -15,10 +15,13 @@ async function bootstrap() {
   const logger = new Logger('Bootstrap');
 
   // Rotas que legitimamente trafegam corpos JSON maiores que o padrão da API
-  // (ex.: conteúdo CMS com HTML embutido) — reaproveitada abaixo pelo timeout
-  // de upload também.
+  // (conteúdo CMS com HTML embutido; eventos do Stripe como
+  // invoice.*/checkout.session.* podem passar de 100kb com itens de linha e
+  // objetos expandidos) — reaproveitada abaixo pelo timeout de upload também
+  // (inofensivo para webhooks: só eleva o teto, não força espera).
   const LARGE_BODY_ROUTES: RegExp[] = [
     /^\/api\/cms\//,
+    /^\/api\/webhooks\//,
   ];
 
   // Preserva o corpo cru para a validação de assinatura do webhook do Stripe.
