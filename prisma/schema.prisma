@@ -41,6 +41,7 @@ model User {
   UserPasswordChangeSession UserPasswordChangeSession[]
   UserSessionToken          UserSessionToken[]
   UserSubscription          UserSubscription[]
+  B2BPurchase               B2BPurchase[]
 }
 
 model Plan {
@@ -746,6 +747,11 @@ model Tenant {
   Appointments                 Appointment[]
   StripeSubscription           StripeSubscription?
   TenantBillingConfig          TenantBillingConfig?
+  B2BProducts                  B2BProduct[]
+  B2BPurchases                 B2BPurchase[]
+  B2CProducts                  Product[]
+  B2CProductPrices             ProductPrice[] @relation("B2CProductPrices")
+  B2CUserSubscriptions         UserSubscription[] @relation("B2CUserSubscriptions")
 
   @@index([stripe_customer_id])
   @@index([subscription_status])
@@ -1466,27 +1472,33 @@ model StripePlan {
 
 model Product {
   id                String         @id @default(cuid()) @db.VarChar(25)
-  stripe_product_id String         @unique @db.VarChar(100)
+  tenant_id         String         @db.VarChar(25)
+  stripe_product_id String         @db.VarChar(100)
   name              String         @db.VarChar(255)
   description       String?        @db.Text
-  slug              String         @unique @db.VarChar(100)
+  slug              String         @db.VarChar(100)
   active            Boolean        @default(true)
   created_at        DateTime       @default(now())
   updated_at        DateTime       @updatedAt
 
+  tenant            Tenant         @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
   ProductPrice      ProductPrice[]
   UserSubscription  UserSubscription[]
 
-  @@index([active])
-  @@index([slug])
+  @@unique([tenant_id, stripe_product_id])
+  @@unique([tenant_id, slug])
+  @@index([tenant_id])
+  @@index([tenant_id, active])
   @@map("b2c_products")
 }
 
 model ProductPrice {
   id              String         @id @default(cuid()) @db.VarChar(25)
-  stripe_price_id String         @unique @db.VarChar(100)
+  tenant_id       String         @db.VarChar(25)
+  stripe_price_id String         @db.VarChar(100)
   product_id      String         @db.VarChar(25)
   Product         Product        @relation(fields: [product_id], references: [id])
+  tenant          Tenant         @relation("B2CProductPrices", fields: [tenant_id], references: [id], onDelete: Cascade)
   interval        String         @db.VarChar(20)   // month | year | week
   interval_count  Int            @default(1) @db.SmallInt
   unit_amount     Int                               // cents
@@ -1497,21 +1509,25 @@ model ProductPrice {
 
   UserSubscription UserSubscription[]
 
+  @@unique([tenant_id, stripe_price_id])
+  @@index([tenant_id])
   @@index([product_id, active])
   @@map("b2c_product_prices")
 }
 
 model UserSubscription {
   id                     String   @id @default(cuid()) @db.VarChar(25)
+  tenant_id              String   @db.VarChar(25)
   user_id                String   @db.VarChar(25)
   User                   User     @relation(fields: [user_id], references: [id])
   product_id             String   @db.VarChar(25)
   Product                Product  @relation(fields: [product_id], references: [id])
   product_price_id       String   @db.VarChar(25)
   ProductPrice           ProductPrice @relation(fields: [product_price_id], references: [id])
+  tenant                 Tenant   @relation("B2CUserSubscriptions", fields: [tenant_id], references: [id], onDelete: Cascade)
 
   // Stripe identifiers
-  stripe_subscription_id String   @unique @db.VarChar(100)
+  stripe_subscription_id String   @db.VarChar(100)
   stripe_customer_id     String   @db.VarChar(100)
   stripe_price_id        String   @db.VarChar(100)
 
@@ -1533,7 +1549,76 @@ model UserSubscription {
   created_at             DateTime @default(now())
   updated_at             DateTime @updatedAt
 
+  @@unique([tenant_id, stripe_subscription_id])
+  @@index([tenant_id])
+  @@index([tenant_id, user_id, status])
   @@index([user_id, status])
-  @@index([stripe_subscription_id])
   @@map("b2c_user_subscriptions")
+}
+
+// ============================================
+// B2B One-Time Payments Models
+// ============================================
+
+model B2BProduct {
+  id                String   @id @default(cuid()) @db.VarChar(25)
+  tenant_id         String   @db.VarChar(25)
+  stripe_product_id String   @db.VarChar(100)
+  stripe_price_id   String   @db.VarChar(100)
+  name              String   @db.VarChar(255)
+  description       String?  @db.Text
+  price             Int      // Centavos
+  currency          String   @default("brl") @db.VarChar(3)
+  active            Boolean  @default(true)
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
+
+  tenant            Tenant   @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  purchases         B2BPurchase[]
+
+  @@unique([tenant_id, stripe_product_id])
+  @@unique([tenant_id, stripe_price_id])
+  @@index([tenant_id])
+  @@index([tenant_id, active])
+  @@map("b2b_products")
+}
+
+model B2BPurchase {
+  id                      String    @id @default(cuid()) @db.VarChar(25)
+  tenant_id               String    @db.VarChar(25)
+  user_id                 String?   @db.VarChar(25)
+  product_id              String    @db.VarChar(25)
+  stripe_checkout_id      String?   @db.VarChar(200)
+  stripe_payment_intent   String?   @db.VarChar(200)
+  
+  checkout_started_at     DateTime? @db.Timestamptz
+  checkout_completed_at   DateTime? @db.Timestamptz
+  checkout_abandoned_at   DateTime? @db.Timestamptz
+  
+  status                  String    @db.VarChar(20) // pending, completed, abandoned, refunded
+  amount                  Int       // Centavos
+  currency                String    @db.VarChar(3)
+  
+  customer_email          String    @db.VarChar(255)
+  customer_name           String?   @db.VarChar(255)
+  customer_phone          String?   @db.VarChar(50)
+  
+  metadata                Json?     @db.JsonB
+  
+  created_at              DateTime  @default(now())
+  updated_at              DateTime  @updatedAt
+
+  tenant                  Tenant     @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  product                 B2BProduct @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  user                    User?      @relation(fields: [user_id], references: [id], onDelete: SetNull)
+
+  @@unique([tenant_id, stripe_checkout_id])
+  @@unique([tenant_id, stripe_payment_intent])
+  @@index([tenant_id])
+  @@index([tenant_id, status])
+  @@index([user_id])
+  @@index([product_id])
+  @@index([customer_email])
+  @@index([created_at])
+  @@map("b2b_purchases")
 }
