@@ -25,9 +25,10 @@ export class B2CSubscriptionsController {
   @ApiResponse({ status: 409, description: 'Already subscribed to this product' })
   async createCheckout(
     @CurrentUser('user_id') userId: string,
+    @CurrentUser('tenant_id') tenantId: string,
     @Body() dto: CreateCheckoutSessionDTO,
   ) {
-    return this.createCheckoutSessionUseCase.execute({ userId, priceId: dto.priceId });
+    return this.createCheckoutSessionUseCase.execute({ tenantId, userId, priceId: dto.priceId });
   }
 
   @Get('my')
@@ -44,9 +45,10 @@ export class B2CSubscriptionsController {
   @ApiResponse({ status: 400, description: 'Subscription already canceled' })
   async cancelSubscription(
     @CurrentUser('user_id') userId: string,
+    @CurrentUser('tenant_id') tenantId: string,
     @Param('id') subscriptionId: string,
   ) {
-    await this.cancelSubscriptionUseCase.execute({ subscriptionId, userId });
+    await this.cancelSubscriptionUseCase.execute({ tenantId, subscriptionId, userId });
     return { message: 'Subscription will be canceled at the end of the current period' };
   }
 }

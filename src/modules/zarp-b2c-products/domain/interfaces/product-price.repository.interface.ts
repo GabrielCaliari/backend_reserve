@@ -4,5 +4,5 @@ export const PRODUCT_PRICE_REPOSITORY = Symbol('PRODUCT_PRICE_REPOSITORY');
 
 export interface IProductPriceRepository {
   findActiveByProductId(productId: string): Promise<ProductPriceEntity[]>;
-  findByStripePriceId(stripePriceId: string): Promise<ProductPriceEntity | null>;
+  findByStripePriceId(tenantId: string, stripePriceId: string): Promise<ProductPriceEntity | null>;
 }

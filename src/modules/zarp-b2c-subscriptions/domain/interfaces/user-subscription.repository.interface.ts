@@ -4,6 +4,7 @@ import { EUserSubscriptionStatus } from '../enums/user-subscription-status.enum'
 export const USER_SUBSCRIPTION_REPOSITORY = Symbol('USER_SUBSCRIPTION_REPOSITORY');
 
 export interface CreateUserSubscriptionData {
+  tenantId: string;
   userId: string;
   productId: string;
   productPriceId: string;
@@ -30,10 +31,11 @@ export interface UpdateUserSubscriptionData {
 export interface IUserSubscriptionRepository {
   create(data: CreateUserSubscriptionData): Promise<UserSubscriptionEntity>;
   findById(id: string): Promise<UserSubscriptionEntity | null>;
-  findByStripeSubscriptionId(stripeSubId: string): Promise<UserSubscriptionEntity | null>;
+  findByStripeSubscriptionId(tenantId: string, stripeSubId: string): Promise<UserSubscriptionEntity | null>;
   findAllByUserId(userId: string): Promise<UserSubscriptionEntity[]>;
   hasActiveSubscription(userId: string, productSlug: string): Promise<boolean>;
   updateByStripeSubscriptionId(
+    tenantId: string,
     stripeSubId: string,
     data: UpdateUserSubscriptionData,
   ): Promise<void>;

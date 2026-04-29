@@ -105,6 +105,21 @@ export class StripeProvider implements IStripeProvider {
     });
   }
 
+  async createOneTimePrice(params: {
+    productId: string;
+    unitAmount: number;
+    currency: string;
+    metadata?: Record<string, string>;
+    stripeSecretKey?: string;
+  }): Promise<Stripe.Price> {
+    return this.getClient(params.stripeSecretKey).prices.create({
+      product: params.productId,
+      unit_amount: params.unitAmount,
+      currency: params.currency,
+      metadata: params.metadata,
+    });
+  }
+
   async archivePrice(priceId: string, stripeSecretKey?: string): Promise<Stripe.Price> {
     return this.getClient(stripeSecretKey).prices.update(priceId, { active: false });
   }

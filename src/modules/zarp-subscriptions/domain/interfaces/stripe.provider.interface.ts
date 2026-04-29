@@ -51,6 +51,17 @@ export interface IStripeProvider {
   }): Promise<Stripe.Price>;
 
   /**
+   * Create a one-time (non-recurring) price linked to a product.
+   */
+  createOneTimePrice(params: {
+    productId: string;
+    unitAmount: number;
+    currency: string;
+    metadata?: Record<string, string>;
+    stripeSecretKey?: string;
+  }): Promise<Stripe.Price>;
+
+  /**
    * Archive a price in Stripe (sets active=false).
    */
   archivePrice(priceId: string, stripeSecretKey?: string): Promise<Stripe.Price>;
@@ -66,11 +77,6 @@ export interface IStripeProvider {
   listAllPrices(active?: boolean, stripeSecretKey?: string): Promise<Stripe.Price[]>;
 
   // ─── Checkout ──────────────────────────────────────────────────────────────
-
-  /**
-   * Create a checkout session for subscription.
-   * If stripeSecretKey is provided, uses it instead of the global env var.
-   */
   createCheckoutSession(params: {
     customerId?: string;
     customerEmail?: string;

@@ -8,18 +8,23 @@ import { ProductPriceEntity } from '../../domain/entities/product-price.entity';
 export class PrismaProductRepository implements IProductRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAllActive(): Promise<ProductEntity[]> {
+  async findAllActive(tenantId: string): Promise<ProductEntity[]> {
     const records = await this.prisma.product.findMany({
-      where: { active: true },
+      where: { tenant_id: tenantId, active: true },
       include: { ProductPrice: { where: { active: true } } },
       orderBy: { created_at: 'asc' },
     });
     return records.map((r) => this.toDomain(r));
   }
 
-  async findBySlug(slug: string): Promise<ProductEntity | null> {
+  async findBySlug(tenantId: string, slug: string): Promise<ProductEntity | null> {
     const record = await this.prisma.product.findUnique({
-      where: { slug },
+      where: {
+        tenant_id_slug: {
+          tenant_id: tenantId,
+          slug: slug,
+        },
+      },
       include: { ProductPrice: { where: { active: true } } },
     });
     if (!record) return null;

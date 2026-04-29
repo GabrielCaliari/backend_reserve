@@ -9,8 +9,8 @@ export class GetProductUseCase {
     private readonly productRepository: IProductRepository,
   ) {}
 
-  async execute(slug: string): Promise<ProductEntity> {
-    const product = await this.productRepository.findBySlug(slug);
+  async execute(tenantId: string, slug: string): Promise<ProductEntity> {
+    const product = await this.productRepository.findBySlug(tenantId, slug);
     if (!product) {
       throw new NotFoundException(`Product with slug "${slug}" not found`);
     }

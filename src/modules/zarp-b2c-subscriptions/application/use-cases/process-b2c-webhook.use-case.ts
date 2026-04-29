@@ -13,6 +13,10 @@ import {
   IStripeProvider,
   STRIPE_PROVIDER,
 } from '../../../zarp-subscriptions/domain/interfaces/stripe.provider.interface';
+import {
+  ITenantBillingConfigRepository,
+  TENANT_BILLING_CONFIG_REPOSITORY,
+} from '../../../zarp-subscriptions/domain/interfaces/tenant-billing-config.repository.interface';
 import { EUserSubscriptionStatus } from '../../domain/enums/user-subscription-status.enum';
 
 @Injectable()
@@ -26,6 +30,8 @@ export class ProcessB2CWebhookUseCase {
     private readonly webhookEventRepo: IB2CStripeWebhookEventRepository,
     @Inject(STRIPE_PROVIDER)
     private readonly stripeProvider: IStripeProvider,
+    @Inject(TENANT_BILLING_CONFIG_REPOSITORY)
+    private readonly billingConfigRepo: ITenantBillingConfigRepository,
     private readonly prisma: PrismaService,
   ) {}
 
@@ -70,14 +76,17 @@ export class ProcessB2CWebhookUseCase {
     const userId = session.metadata?.userId;
     const productId = session.metadata?.productId;
     const priceId = session.metadata?.priceId;
+    const tenantId = session.metadata?.tenantId;
     const stripeSubscriptionId = session.subscription as string;
 
-    if (!userId || !productId || !priceId || !stripeSubscriptionId) {
+    if (!userId || !productId || !priceId || !tenantId || !stripeSubscriptionId) {
       throw new BadRequestException('Missing metadata in checkout.session.completed');
     }
 
-    // Retrieve subscription details from Stripe
-    const stripeSub = await this.stripeProvider.retrieveSubscription(stripeSubscriptionId);
+    const stripeSecretKey = await this.billingConfigRepo.getStripeSecretKey(tenantId) ?? undefined;
+
+    // Retrieve subscription details from Stripe using tenant's key
+    const stripeSub = await this.stripeProvider.retrieveSubscription(stripeSubscriptionId, stripeSecretKey);
     const customerId = session.customer as string;
 
     // Upsert stripe_customer_id on User
@@ -88,6 +97,7 @@ export class ProcessB2CWebhookUseCase {
 
     // Create UserSubscription
     await this.userSubscriptionRepo.create({
+      tenantId,
       userId,
       productId,
       productPriceId: priceId,
@@ -107,7 +117,10 @@ export class ProcessB2CWebhookUseCase {
   }
 
   private async handleSubscriptionUpdated(subscription: Stripe.Subscription): Promise<void> {
-    await this.userSubscriptionRepo.updateByStripeSubscriptionId(subscription.id, {
+    const tenantId = (subscription.metadata as any)?.tenantId;
+    if (!tenantId) return;
+
+    await this.userSubscriptionRepo.updateByStripeSubscriptionId(tenantId, subscription.id, {
       status: subscription.status as EUserSubscriptionStatus,
       currentPeriodStart: new Date(subscription.current_period_start * 1000),
       currentPeriodEnd: new Date(subscription.current_period_end * 1000),
@@ -118,7 +131,10 @@ export class ProcessB2CWebhookUseCase {
   }
 
   private async handleSubscriptionDeleted(subscription: Stripe.Subscription): Promise<void> {
-    await this.userSubscriptionRepo.updateByStripeSubscriptionId(subscription.id, {
+    const tenantId = (subscription.metadata as any)?.tenantId;
+    if (!tenantId) return;
+
+    await this.userSubscriptionRepo.updateByStripeSubscriptionId(tenantId, subscription.id, {
       status: EUserSubscriptionStatus.CANCELED,
       canceledAt: new Date(),
     });
@@ -130,9 +146,14 @@ export class ProcessB2CWebhookUseCase {
     const stripeSubscriptionId = invoice.subscription as string;
     if (!stripeSubscriptionId) return;
 
-    const stripeSub = await this.stripeProvider.retrieveSubscription(stripeSubscriptionId);
+    const tenantId = (invoice as any).metadata?.tenantId
+      ?? (invoice.subscription_details?.metadata as any)?.tenantId;
+    if (!tenantId) return;
 
-    await this.userSubscriptionRepo.updateByStripeSubscriptionId(stripeSubscriptionId, {
+    const stripeSecretKey = await this.billingConfigRepo.getStripeSecretKey(tenantId) ?? undefined;
+    const stripeSub = await this.stripeProvider.retrieveSubscription(stripeSubscriptionId, stripeSecretKey);
+
+    await this.userSubscriptionRepo.updateByStripeSubscriptionId(tenantId, stripeSubscriptionId, {
       status: EUserSubscriptionStatus.ACTIVE,
       currentPeriodStart: new Date(stripeSub.current_period_start * 1000),
       currentPeriodEnd: new Date(stripeSub.current_period_end * 1000),
@@ -146,7 +167,11 @@ export class ProcessB2CWebhookUseCase {
     const stripeSubscriptionId = invoice.subscription as string;
     if (!stripeSubscriptionId) return;
 
-    await this.userSubscriptionRepo.updateByStripeSubscriptionId(stripeSubscriptionId, {
+    const tenantId = (invoice as any).metadata?.tenantId
+      ?? (invoice.subscription_details?.metadata as any)?.tenantId;
+    if (!tenantId) return;
+
+    await this.userSubscriptionRepo.updateByStripeSubscriptionId(tenantId, stripeSubscriptionId, {
       status: EUserSubscriptionStatus.PAST_DUE,
     });
 

@@ -9,7 +9,7 @@ export class ListProductsUseCase {
     private readonly productRepository: IProductRepository,
   ) {}
 
-  async execute(): Promise<ProductEntity[]> {
-    return this.productRepository.findAllActive();
+  async execute(tenantId: string): Promise<ProductEntity[]> {
+    return this.productRepository.findAllActive(tenantId);
   }
 }

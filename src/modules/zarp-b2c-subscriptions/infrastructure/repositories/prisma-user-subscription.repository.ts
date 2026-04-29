@@ -15,6 +15,7 @@ export class PrismaUserSubscriptionRepository implements IUserSubscriptionReposi
   async create(data: CreateUserSubscriptionData): Promise<UserSubscriptionEntity> {
     const record = await this.prisma.userSubscription.create({
       data: {
+        tenant_id: data.tenantId,
         user_id: data.userId,
         product_id: data.productId,
         product_price_id: data.productPriceId,
@@ -39,9 +40,17 @@ export class PrismaUserSubscriptionRepository implements IUserSubscriptionReposi
     return this.toDomain(record);
   }
 
-  async findByStripeSubscriptionId(stripeSubId: string): Promise<UserSubscriptionEntity | null> {
+  async findByStripeSubscriptionId(
+    tenantId: string,
+    stripeSubId: string,
+  ): Promise<UserSubscriptionEntity | null> {
     const record = await this.prisma.userSubscription.findUnique({
-      where: { stripe_subscription_id: stripeSubId },
+      where: {
+        tenant_id_stripe_subscription_id: {
+          tenant_id: tenantId,
+          stripe_subscription_id: stripeSubId,
+        },
+      },
     });
     if (!record) return null;
     return this.toDomain(record);
@@ -69,11 +78,17 @@ export class PrismaUserSubscriptionRepository implements IUserSubscriptionReposi
   }
 
   async updateByStripeSubscriptionId(
+    tenantId: string,
     stripeSubId: string,
     data: UpdateUserSubscriptionData,
   ): Promise<void> {
     await this.prisma.userSubscription.update({
-      where: { stripe_subscription_id: stripeSubId },
+      where: {
+        tenant_id_stripe_subscription_id: {
+          tenant_id: tenantId,
+          stripe_subscription_id: stripeSubId,
+        },
+      },
       data: {
         status: data.status,
         current_period_start: data.currentPeriodStart,

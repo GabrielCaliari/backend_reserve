@@ -18,7 +18,7 @@ export class CancelSubscriptionUseCase {
     private readonly stripeProvider: IStripeProvider,
   ) {}
 
-  async execute(dto: { subscriptionId: string; userId: string }): Promise<void> {
+  async execute(dto: { tenantId: string; subscriptionId: string; userId: string }): Promise<void> {
     const subscription = await this.userSubscriptionRepo.findById(dto.subscriptionId);
 
     if (!subscription || subscription.userId !== dto.userId) {
@@ -34,6 +34,7 @@ export class CancelSubscriptionUseCase {
 
     // Update local record
     await this.userSubscriptionRepo.updateByStripeSubscriptionId(
+      dto.tenantId,
       subscription.stripeSubscriptionId,
       { cancelAtPeriodEnd: true },
     );

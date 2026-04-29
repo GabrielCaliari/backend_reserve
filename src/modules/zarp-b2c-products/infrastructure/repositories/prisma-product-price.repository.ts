@@ -14,9 +14,17 @@ export class PrismaProductPriceRepository implements IProductPriceRepository {
     return records.map((r) => this.toDomain(r));
   }
 
-  async findByStripePriceId(stripePriceId: string): Promise<ProductPriceEntity | null> {
+  async findByStripePriceId(
+    tenantId: string,
+    stripePriceId: string,
+  ): Promise<ProductPriceEntity | null> {
     const record = await this.prisma.productPrice.findUnique({
-      where: { stripe_price_id: stripePriceId },
+      where: {
+        tenant_id_stripe_price_id: {
+          tenant_id: tenantId,
+          stripe_price_id: stripePriceId,
+        },
+      },
     });
     if (!record) return null;
     return this.toDomain(record);
