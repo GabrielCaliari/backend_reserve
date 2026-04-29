@@ -35,6 +35,7 @@ export class PrismaB2BPurchaseRepository implements IB2BPurchaseRepository {
   async findById(id: string, tenantId: string): Promise<B2BPurchaseEntity | null> {
     const record = await this.prisma.b2BPurchase.findFirst({
       where: { id, tenant_id: tenantId },
+      include: { product: { select: { name: true } } },
     });
     if (!record) return null;
     return this.toDomain(record);
@@ -122,6 +123,7 @@ export class PrismaB2BPurchaseRepository implements IB2BPurchaseRepository {
       record.tenant_id,
       record.user_id ?? null,
       record.product_id,
+      record.product?.name ?? null,       // included via JOIN
       record.stripe_checkout_id ?? null,
       record.stripe_payment_intent ?? null,
       record.checkout_started_at ?? null,

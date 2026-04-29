@@ -53,8 +53,8 @@ async function main() {
   const configs = await prisma.tenantBillingConfig.findMany({
     select: {
       tenant_id: true,
-      stripe_secret_key: true,
-      stripe_webhook_secret: true,
+      stripe_secret_key_hash: true,
+      stripe_webhook_secret_hash: true,
       active: true,
     },
   });
@@ -65,8 +65,8 @@ async function main() {
     configs.forEach((c) => {
       console.log({
         tenant_id: c.tenant_id,
-        has_stripe_key: !!c.stripe_secret_key,
-        has_webhook_secret: !!c.stripe_webhook_secret,
+        has_stripe_key: !!c.stripe_secret_key_hash,
+        has_webhook_secret: !!c.stripe_webhook_secret_hash,
         active: c.active,
       });
     });

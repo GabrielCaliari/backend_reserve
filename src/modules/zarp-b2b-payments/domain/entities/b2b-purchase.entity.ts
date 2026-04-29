@@ -6,6 +6,7 @@ export class B2BPurchaseEntity {
     public readonly tenantId: string,
     public readonly userId: string | null,
     public readonly productId: string,
+    public readonly productName: string | null,
     public readonly stripeCheckoutId: string | null,
     public readonly stripePaymentIntent: string | null,
     public readonly checkoutStartedAt: Date | null,
