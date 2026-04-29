@@ -1,473 +1,193 @@
-# Integração B2C - Site Final (Frontend dos Estudantes)
+# B2C Frontend Integration Guide
 
-## Visão Geral
+Guia completo para integrar o site final dos estudantes com o backend.
 
-Este documento descreve como integrar o site final dos estudantes com o sistema de produtos e assinaturas B2C. O site permite que os alunos visualizem cursos, façam login, comprem assinaturas e acessem conteúdo exclusivo.
-
-## Arquitetura do Frontend
-
-- **API Backend**: `https://api.seudominio.com/api`
-- **Site dos Cursos**: `https://cursos.seudominio.com`
-- **Autenticação**: JWT Bearer Token
-- **Pagamentos**: Stripe Checkout (hosted)
-
----
-
-## Fluxo do Usuário
+## Base URL
 
 ```
-1. Estudante navega pelos cursos (público)
-   ↓
-2. Estudante cria conta ou faz login
-   ↓
-3. Estudante seleciona um plano (mensal/anual)
-   ↓
-4. Sistema redireciona para Stripe Checkout
-   ↓
-5. Estudante completa o pagamento no Stripe
-   ↓
-6. Stripe redireciona de volta para o site
-   ↓
-7. Webhook atualiza assinatura no backend
-   ↓
-8. Estudante acessa conteúdo exclusivo
+https://api.seudominio.com/api
+```
+
+## Visão Geral do Fluxo
+
+```
+1. Estudante cria conta  →  POST /user/
+2. Estudante faz login   →  POST /user/authenticate
+3. Recebe session_token + session_id
+4. Navega pelos cursos   →  GET /products
+5. Escolhe um plano      →  POST /subscriptions/checkout
+6. Paga no Stripe        →  Stripe Checkout (hosted)
+7. Webhook atualiza      →  Backend cria UserSubscription
+8. Acessa conteúdo       →  GET /products/:slug/content
 ```
 
 ---
 
-## Endpoints da API
+## Headers Obrigatórios
 
-### 1. Autenticação
+Todas as rotas autenticadas exigem:
 
-#### Criar Conta (Registro)
-
-**Endpoint**: `POST /api/auth/register` (você precisa implementar este endpoint)
-
-**Body**:
-```json
-{
-  "email": "aluno@exemplo.com",
-  "password": "senha123",
-  "name": "João Silva"
-}
+```
+Authorization: Bearer <session_token>
+session-id: <session_id>
+x-tenant-id: <tenantId>
+Content-Type: application/json
 ```
 
-**Resposta** (201):
-```json
-{
-  "user": {
-    "id": "uuid",
-    "email": "aluno@exemplo.com",
-    "name": "João Silva"
-  },
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-}
-```
-
-#### Login
-
-**Endpoint**: `POST /api/auth/login` (você precisa implementar este endpoint)
-
-**Body**:
-```json
-{
-  "email": "aluno@exemplo.com",
-  "password": "senha123"
-}
-```
-
-**Resposta** (200):
-```json
-{
-  "user": {
-    "id": "uuid",
-    "email": "aluno@exemplo.com",
-    "name": "João Silva"
-  },
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-}
-```
+> `session_token` e `session_id` são retornados pelo login.
+> `x-tenant-id` identifica a instituição — fixo por site.
 
 ---
 
-### 2. Produtos (Cursos)
+## 1. Autenticação
 
-#### Listar Todos os Cursos
+### Criar Conta
 
-**Endpoint**: `GET /api/products`
+```
+POST /user/
+```
 
-**Autenticação**: Não requerida
+**Body:**
+```json
+{
+  "name": "João Silva",
+  "email": "joao@email.com",
+  "phone_number": "11999999999",
+  "cpf": "12345678901",
+  "password": "Senha123!"
+}
+```
 
-**Resposta** (200):
+| Campo | Tipo | Obrigatório | Regra |
+|-------|------|-------------|-------|
+| `name` | string | ✅ | Mínimo 2 palavras, só letras |
+| `email` | string | ✅ | Formato email válido |
+| `phone_number` | string | ✅ | Só números |
+| `cpf` | string | ✅ | CPF válido, 11 dígitos |
+| `password` | string | ✅ | Mínimo 6 caracteres |
+
+**Resposta 201:**
+```json
+{
+  "id": "cm5abc123"
+}
+```
+
+**Erros:**
+- `409` — Email ou CPF já cadastrado
+
+---
+
+### Login
+
+```
+POST /user/authenticate
+```
+
+**Body:**
+```json
+{
+  "email": "joao@email.com",
+  "password": "Senha123!"
+}
+```
+
+**Resposta 200:**
+```json
+{
+  "session_id": "cm5session123",
+  "session_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "details": {
+    "name": "João Silva",
+    "email": "joao@email.com"
+  }
+}
+```
+
+> Salve `session_token` como `Authorization: Bearer <token>` e `session_id` no header `session-id`.
+
+**Erros:**
+- `401` — Email não encontrado ou senha incorreta
+
+---
+
+## 2. Produtos (Cursos)
+
+Todas as rotas de produtos exigem autenticação + `x-tenant-id`.
+
+### Listar Cursos
+
+```
+GET /products
+```
+
+**Headers:**
+```
+Authorization: Bearer <session_token>
+session-id: <session_id>
+x-tenant-id: <tenantId>
+```
+
+**Resposta 200:**
 ```json
 [
   {
-    "id": "uuid",
-    "name": "Curso de JavaScript Avançado",
-    "description": "Aprenda JavaScript do zero ao avançado",
+    "id": "cm5prod123",
+    "stripeProductId": "prod_xxxxx",
+    "name": "Curso de JavaScript",
+    "description": "Do zero ao avançado",
     "slug": "javascript-avancado",
     "active": true,
     "prices": [
       {
-        "id": "uuid",
+        "id": "cm5price123",
         "stripePriceId": "price_xxxxx",
         "interval": "month",
         "intervalCount": 1,
         "unitAmount": 9900,
-        "currency": "brl"
+        "currency": "brl",
+        "active": true
       },
       {
-        "id": "uuid",
+        "id": "cm5price456",
         "stripePriceId": "price_yyyyy",
         "interval": "year",
         "intervalCount": 1,
         "unitAmount": 99000,
-        "currency": "brl"
+        "currency": "brl",
+        "active": true
       }
-    ]
+    ],
+    "createdAt": "2026-04-28T10:00:00.000Z",
+    "updatedAt": "2026-04-28T10:00:00.000Z"
   }
 ]
 ```
 
-**Exemplo React**:
-```typescript
-// hooks/useProducts.ts
-import { useEffect, useState } from 'react';
-
-interface Product {
-  id: string;
-  name: string;
-  description: string;
-  slug: string;
-  prices: Array<{
-    id: string;
-    stripePriceId: string;
-    interval: string;
-    unitAmount: number;
-    currency: string;
-  }>;
-}
-
-export function useProducts() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    fetch('https://api.seudominio.com/api/products')
-      .then(res => res.json())
-      .then(data => {
-        setProducts(data);
-        setLoading(false);
-      })
-      .catch(err => {
-        setError(err.message);
-        setLoading(false);
-      });
-  }, []);
-
-  return { products, loading, error };
-}
-```
-
-#### Obter Detalhes de um Curso
-
-**Endpoint**: `GET /api/products/:slug`
-
-**Autenticação**: Não requerida
-
-**Exemplo**:
-```typescript
-// pages/curso/[slug].tsx
-import { useRouter } from 'next/router';
-import { useEffect, useState } from 'react';
-
-export default function CursoPage() {
-  const router = useRouter();
-  const { slug } = router.query;
-  const [product, setProduct] = useState(null);
-
-  useEffect(() => {
-    if (slug) {
-      fetch(`https://api.seudominio.com/api/products/${slug}`)
-        .then(res => res.json())
-        .then(data => setProduct(data));
-    }
-  }, [slug]);
-
-  if (!product) return <div>Carregando...</div>;
-
-  return (
-    <div>
-      <h1>{product.name}</h1>
-      <p>{product.description}</p>
-      <div className="prices">
-        {product.prices.map(price => (
-          <PriceCard key={price.id} price={price} productSlug={slug} />
-        ))}
-      </div>
-    </div>
-  );
-}
-```
+> `unitAmount` em centavos: `9900 = R$ 99,00`
 
 ---
 
-### 3. Assinaturas
+### Detalhes de um Curso
 
-#### Criar Sessão de Checkout
-
-**Endpoint**: `POST /api/subscriptions/checkout`
-
-**Autenticação**: Requerida (Bearer Token)
-
-**Headers**:
 ```
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-Content-Type: application/json
+GET /products/:slug
 ```
 
-**Body**:
-```json
-{
-  "priceId": "price_xxxxx"
-}
-```
+**Resposta 200:** Mesmo formato de um item da listagem acima.
 
-**Resposta** (201):
-```json
-{
-  "checkoutUrl": "https://checkout.stripe.com/c/pay/cs_test_xxxxx"
-}
-```
-
-**Exemplo React**:
-```typescript
-// components/PriceCard.tsx
-import { useState } from 'react';
-
-interface PriceCardProps {
-  price: {
-    id: string;
-    stripePriceId: string;
-    interval: string;
-    unitAmount: number;
-    currency: string;
-  };
-  productSlug: string;
-}
-
-export function PriceCard({ price, productSlug }: PriceCardProps) {
-  const [loading, setLoading] = useState(false);
-
-  const handleSubscribe = async () => {
-    setLoading(true);
-    
-    const token = localStorage.getItem('authToken');
-    
-    if (!token) {
-      // Redirecionar para login
-      window.location.href = '/login?redirect=' + encodeURIComponent(window.location.pathname);
-      return;
-    }
-
-    try {
-      const response = await fetch('https://api.seudominio.com/api/subscriptions/checkout', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          priceId: price.stripePriceId,
-        }),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message);
-      }
-
-      const { checkoutUrl } = await response.json();
-      
-      // Redirecionar para o Stripe Checkout
-      window.location.href = checkoutUrl;
-    } catch (error) {
-      alert('Erro ao criar checkout: ' + error.message);
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div className="price-card">
-      <h3>Plano {price.interval === 'month' ? 'Mensal' : 'Anual'}</h3>
-      <p className="price">
-        R$ {(price.unitAmount / 100).toFixed(2)}
-        <span>/{price.interval === 'month' ? 'mês' : 'ano'}</span>
-      </p>
-      <button 
-        onClick={handleSubscribe} 
-        disabled={loading}
-      >
-        {loading ? 'Processando...' : 'Assinar Agora'}
-      </button>
-    </div>
-  );
-}
-```
-
-#### Listar Minhas Assinaturas
-
-**Endpoint**: `GET /api/subscriptions/my`
-
-**Autenticação**: Requerida (Bearer Token)
-
-**Headers**:
-```
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-```
-
-**Resposta** (200):
-```json
-[
-  {
-    "id": "uuid",
-    "productId": "uuid",
-    "status": "active",
-    "currentPeriodStart": "2026-04-01T00:00:00.000Z",
-    "currentPeriodEnd": "2026-05-01T00:00:00.000Z",
-    "cancelAtPeriodEnd": false,
-    "amount": 9900,
-    "currency": "brl"
-  }
-]
-```
-
-**Exemplo React**:
-```typescript
-// pages/minhas-assinaturas.tsx
-import { useEffect, useState } from 'react';
-
-export default function MinhasAssinaturas() {
-  const [subscriptions, setSubscriptions] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const token = localStorage.getItem('authToken');
-    
-    fetch('https://api.seudominio.com/api/subscriptions/my', {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    })
-      .then(res => res.json())
-      .then(data => {
-        setSubscriptions(data);
-        setLoading(false);
-      });
-  }, []);
-
-  if (loading) return <div>Carregando...</div>;
-
-  return (
-    <div>
-      <h1>Minhas Assinaturas</h1>
-      {subscriptions.length === 0 ? (
-        <p>Você ainda não possui assinaturas ativas.</p>
-      ) : (
-        <ul>
-          {subscriptions.map(sub => (
-            <li key={sub.id}>
-              <p>Status: {sub.status}</p>
-              <p>Valor: R$ {(sub.amount / 100).toFixed(2)}</p>
-              <p>Próxima cobrança: {new Date(sub.currentPeriodEnd).toLocaleDateString()}</p>
-              {!sub.cancelAtPeriodEnd && (
-                <button onClick={() => handleCancel(sub.id)}>
-                  Cancelar Assinatura
-                </button>
-              )}
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-  );
-}
-```
-
-#### Cancelar Assinatura
-
-**Endpoint**: `POST /api/subscriptions/:id/cancel`
-
-**Autenticação**: Requerida (Bearer Token)
-
-**Headers**:
-```
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-```
-
-**Resposta** (200):
-```json
-{
-  "message": "Subscription will be canceled at period end",
-  "cancelAtPeriodEnd": true,
-  "currentPeriodEnd": "2026-05-01T00:00:00.000Z"
-}
-```
-
-**Exemplo**:
-```typescript
-async function handleCancel(subscriptionId: string) {
-  if (!confirm('Tem certeza que deseja cancelar sua assinatura?')) {
-    return;
-  }
-
-  const token = localStorage.getItem('authToken');
-
-  try {
-    const response = await fetch(
-      `https://api.seudominio.com/api/subscriptions/${subscriptionId}/cancel`,
-      {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error('Erro ao cancelar assinatura');
-    }
-
-    const data = await response.json();
-    alert(`Assinatura cancelada. Você terá acesso até ${new Date(data.currentPeriodEnd).toLocaleDateString()}`);
-    
-    // Recarregar lista
-    window.location.reload();
-  } catch (error) {
-    alert('Erro: ' + error.message);
-  }
-}
-```
+**Erros:**
+- `404` — Produto não encontrado
 
 ---
 
-### 4. Acesso ao Conteúdo
+### Acessar Conteúdo (requer assinatura ativa)
 
-#### Acessar Conteúdo do Curso
-
-**Endpoint**: `GET /api/products/:slug/content`
-
-**Autenticação**: Requerida (Bearer Token)
-
-**Autorização**: Requer assinatura ativa para o produto
-
-**Headers**:
 ```
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+GET /products/:slug/content
 ```
 
-**Resposta de Sucesso** (200):
+**Resposta 200:**
 ```json
 {
   "content": "ok",
@@ -475,321 +195,358 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 }
 ```
 
-**Resposta de Erro** (403):
+**Erros:**
+- `401` — Não autenticado
+- `403` — Sem assinatura ativa para este produto
+
+---
+
+## 3. Assinaturas
+
+### Criar Checkout (iniciar compra)
+
+```
+POST /subscriptions/checkout
+```
+
+**Headers:**
+```
+Authorization: Bearer <session_token>
+session-id: <session_id>
+x-tenant-id: <tenantId>
+Content-Type: application/json
+```
+
+**Body:**
 ```json
 {
-  "statusCode": 403,
-  "message": "No active subscription for this product",
-  "error": "Forbidden"
+  "priceId": "cm5price123"
 }
 ```
 
-**Exemplo React**:
-```typescript
-// pages/curso/[slug]/aulas.tsx
-import { useRouter } from 'next/router';
-import { useEffect, useState } from 'react';
+> `priceId` é o **ID interno** do preço (campo `id` do objeto `prices` retornado em `/products`), não o `stripePriceId`.
 
-export default function AulasPage() {
-  const router = useRouter();
-  const { slug } = router.query;
-  const [hasAccess, setHasAccess] = useState(false);
-  const [loading, setLoading] = useState(true);
+**Resposta 201:**
+```json
+{
+  "checkoutUrl": "https://checkout.stripe.com/c/pay/cs_test_..."
+}
+```
 
-  useEffect(() => {
-    if (slug) {
-      const token = localStorage.getItem('authToken');
-      
-      fetch(`https://api.seudominio.com/api/products/${slug}/content`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      })
-        .then(res => {
-          if (res.ok) {
-            setHasAccess(true);
-          } else if (res.status === 403) {
-            setHasAccess(false);
-          }
-          setLoading(false);
-        });
-    }
-  }, [slug]);
+Redirecione o usuário para `checkoutUrl`. O Stripe cuida do pagamento.
 
-  if (loading) return <div>Verificando acesso...</div>;
+Após o pagamento, o Stripe redireciona para:
+- **Sucesso:** `FRONTEND_URL/dashboard?checkout=success&product=<slug>`
+- **Cancelamento:** `FRONTEND_URL/products/<slug>?checkout=canceled`
 
-  if (!hasAccess) {
-    return (
-      <div>
-        <h1>Acesso Negado</h1>
-        <p>Você precisa de uma assinatura ativa para acessar este conteúdo.</p>
-        <button onClick={() => router.push(`/curso/${slug}`)}>
-          Ver Planos
-        </button>
-      </div>
-    );
+**Erros:**
+- `404` — Preço não encontrado ou inativo
+- `409` — Usuário já tem assinatura ativa para este produto
+- `400` — Stripe não configurado para este tenant
+
+---
+
+### Listar Minhas Assinaturas
+
+```
+GET /subscriptions/my
+```
+
+**Resposta 200:**
+```json
+[
+  {
+    "id": "cm5sub123",
+    "tenantId": "cm5tenant123",
+    "userId": "cm5user123",
+    "productId": "cm5prod123",
+    "productPriceId": "cm5price123",
+    "stripeSubscriptionId": "sub_xxxxx",
+    "stripeCustomerId": "cus_xxxxx",
+    "stripePriceId": "price_xxxxx",
+    "status": "active",
+    "currentPeriodStart": "2026-04-01T00:00:00.000Z",
+    "currentPeriodEnd": "2026-05-01T00:00:00.000Z",
+    "trialStart": null,
+    "trialEnd": null,
+    "canceledAt": null,
+    "cancelAtPeriodEnd": false,
+    "amount": 9900,
+    "currency": "brl",
+    "createdAt": "2026-04-01T00:00:00.000Z",
+    "updatedAt": "2026-04-01T00:00:00.000Z"
   }
-
-  return (
-    <div>
-      <h1>Aulas do Curso</h1>
-      {/* Renderizar conteúdo das aulas aqui */}
-    </div>
-  );
-}
+]
 ```
+
+**Status possíveis:**
+| Status | Significado |
+|--------|-------------|
+| `active` | Assinatura ativa, acesso liberado |
+| `trialing` | Em período de trial, acesso liberado |
+| `past_due` | Pagamento atrasado |
+| `canceled` | Cancelada |
+| `incomplete` | Pagamento inicial pendente |
+| `unpaid` | Não pago |
+
+> Acesso ao conteúdo liberado apenas para `active` e `trialing` com `currentPeriodEnd` no futuro.
 
 ---
 
-## Componentes Sugeridos
+### Cancelar Assinatura
 
-### 1. Catálogo de Cursos
+```
+POST /subscriptions/:id/cancel
+```
 
-```typescript
-// components/CourseCatalog.tsx
-import { useProducts } from '../hooks/useProducts';
-import Link from 'next/link';
+> Cancela ao final do período atual — o acesso continua até `currentPeriodEnd`.
 
-export function CourseCatalog() {
-  const { products, loading, error } = useProducts();
-
-  if (loading) return <div>Carregando cursos...</div>;
-  if (error) return <div>Erro ao carregar cursos: {error}</div>;
-
-  return (
-    <div className="course-catalog">
-      <h1>Nossos Cursos</h1>
-      <div className="grid">
-        {products.map(product => (
-          <Link key={product.id} href={`/curso/${product.slug}`}>
-            <div className="course-card">
-              <h2>{product.name}</h2>
-              <p>{product.description}</p>
-              <div className="price-info">
-                A partir de R$ {(Math.min(...product.prices.map(p => p.unitAmount)) / 100).toFixed(2)}
-              </div>
-            </div>
-          </Link>
-        ))}
-      </div>
-    </div>
-  );
+**Resposta 200:**
+```json
+{
+  "message": "Subscription will be canceled at the end of the current period"
 }
 ```
 
-### 2. Página de Checkout Success
-
-```typescript
-// pages/checkout/success.tsx
-import { useEffect } from 'react';
-import { useRouter } from 'next/router';
-
-export default function CheckoutSuccess() {
-  const router = useRouter();
-
-  useEffect(() => {
-    // Aguardar alguns segundos para o webhook processar
-    setTimeout(() => {
-      router.push('/minhas-assinaturas');
-    }, 3000);
-  }, []);
-
-  return (
-    <div className="success-page">
-      <h1>✅ Pagamento Confirmado!</h1>
-      <p>Sua assinatura foi ativada com sucesso.</p>
-      <p>Redirecionando para suas assinaturas...</p>
-    </div>
-  );
-}
-```
-
-### 3. Página de Checkout Cancel
-
-```typescript
-// pages/checkout/cancel.tsx
-import { useRouter } from 'next/router';
-
-export default function CheckoutCancel() {
-  const router = useRouter();
-
-  return (
-    <div className="cancel-page">
-      <h1>❌ Pagamento Cancelado</h1>
-      <p>Você cancelou o processo de pagamento.</p>
-      <button onClick={() => router.push('/cursos')}>
-        Voltar para Cursos
-      </button>
-    </div>
-  );
-}
-```
+**Erros:**
+- `404` — Assinatura não encontrada ou não pertence ao usuário
+- `400` — Assinatura já cancelada
 
 ---
 
-## Configuração de URLs
+## 4. Webhook (backend only)
 
-### Variáveis de Ambiente (.env.local)
+O frontend não chama este endpoint. O Stripe chama automaticamente após cada evento.
 
-```env
-NEXT_PUBLIC_API_URL=https://api.seudominio.com/api
-NEXT_PUBLIC_SITE_URL=https://cursos.seudominio.com
+```
+POST /webhooks/b2c/stripe
 ```
 
-### URLs de Redirect do Stripe
-
-Configure no backend (`.env`):
-```env
-FRONTEND_URL=https://cursos.seudominio.com
-```
-
-As URLs de sucesso e cancelamento serão:
-- **Success**: `https://cursos.seudominio.com/checkout/success`
-- **Cancel**: `https://cursos.seudominio.com/checkout/cancel`
+Eventos processados:
+- `checkout.session.completed` → cria `UserSubscription`, vincula `stripe_customer_id` ao `User`
+- `customer.subscription.updated` → atualiza status e período
+- `customer.subscription.deleted` → marca como `canceled`
+- `invoice.paid` → renova período, status `active`
+- `invoice.payment_failed` → status `past_due`
 
 ---
 
-## Gerenciamento de Estado (Context API)
+## 5. Exemplo de Implementação (React/Next.js)
+
+### Hook de autenticação
 
 ```typescript
-// contexts/AuthContext.tsx
-import { createContext, useContext, useState, useEffect } from 'react';
+// hooks/useAuth.ts
+import { useState } from 'react';
 
-interface User {
-  id: string;
-  email: string;
-  name: string;
-}
+const API = process.env.NEXT_PUBLIC_API_URL; // https://api.seudominio.com/api
+const TENANT_ID = process.env.NEXT_PUBLIC_TENANT_ID; // fixo por site
 
-interface AuthContextData {
-  user: User | null;
-  token: string | null;
-  login: (email: string, password: string) => Promise<void>;
-  logout: () => void;
-  isAuthenticated: boolean;
-}
+export function useAuth() {
+  const [loading, setLoading] = useState(false);
 
-const AuthContext = createContext<AuthContextData>({} as AuthContextData);
-
-export function AuthProvider({ children }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
-
-  useEffect(() => {
-    const storedToken = localStorage.getItem('authToken');
-    const storedUser = localStorage.getItem('authUser');
-
-    if (storedToken && storedUser) {
-      setToken(storedToken);
-      setUser(JSON.parse(storedUser));
-    }
-  }, []);
+  const register = async (data: {
+    name: string;
+    email: string;
+    phone_number: string;
+    cpf: string;
+    password: string;
+  }) => {
+    setLoading(true);
+    const res = await fetch(`${API}/user/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    setLoading(false);
+    if (!res.ok) throw await res.json();
+    return res.json();
+  };
 
   const login = async (email: string, password: string) => {
-    const response = await fetch('https://api.seudominio.com/api/auth/login', {
+    setLoading(true);
+    const res = await fetch(`${API}/user/authenticate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),
     });
-
-    if (!response.ok) {
-      throw new Error('Credenciais inválidas');
-    }
-
-    const data = await response.json();
-    
-    setUser(data.user);
-    setToken(data.token);
-    
-    localStorage.setItem('authToken', data.token);
-    localStorage.setItem('authUser', JSON.stringify(data.user));
+    setLoading(false);
+    if (!res.ok) throw await res.json();
+    const data = await res.json();
+    // Salvar no localStorage
+    localStorage.setItem('session_token', data.session_token);
+    localStorage.setItem('session_id', data.session_id);
+    return data;
   };
 
   const logout = () => {
-    setUser(null);
-    setToken(null);
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('authUser');
+    localStorage.removeItem('session_token');
+    localStorage.removeItem('session_id');
   };
 
-  return (
-    <AuthContext.Provider value={{
-      user,
-      token,
-      login,
-      logout,
-      isAuthenticated: !!token,
-    }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return { register, login, logout, loading };
+}
+```
+
+### Headers autenticados
+
+```typescript
+// lib/api.ts
+const API = process.env.NEXT_PUBLIC_API_URL;
+const TENANT_ID = process.env.NEXT_PUBLIC_TENANT_ID;
+
+export function authHeaders() {
+  return {
+    'Authorization': `Bearer ${localStorage.getItem('session_token')}`,
+    'session-id': localStorage.getItem('session_id') ?? '',
+    'x-tenant-id': TENANT_ID ?? '',
+    'Content-Type': 'application/json',
+  };
 }
 
-export const useAuth = () => useContext(AuthContext);
+export async function apiFetch(path: string, options?: RequestInit) {
+  const res = await fetch(`${API}${path}`, {
+    ...options,
+    headers: { ...authHeaders(), ...options?.headers },
+  });
+  if (!res.ok) throw await res.json();
+  return res.json();
+}
+```
+
+### Listar cursos
+
+```typescript
+// pages/cursos.tsx
+import { useEffect, useState } from 'react';
+import { apiFetch } from '../lib/api';
+
+export default function CursosPage() {
+  const [products, setProducts] = useState([]);
+
+  useEffect(() => {
+    apiFetch('/products').then(setProducts);
+  }, []);
+
+  return (
+    <div>
+      {products.map((p: any) => (
+        <div key={p.id}>
+          <h2>{p.name}</h2>
+          <p>{p.description}</p>
+          {p.prices.map((price: any) => (
+            <button
+              key={price.id}
+              onClick={async () => {
+                const { checkoutUrl } = await apiFetch('/subscriptions/checkout', {
+                  method: 'POST',
+                  body: JSON.stringify({ priceId: price.id }),
+                });
+                window.location.href = checkoutUrl;
+              }}
+            >
+              {price.interval === 'month' ? 'Mensal' : 'Anual'} —
+              R$ {(price.unitAmount / 100).toFixed(2)}
+            </button>
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+```
+
+### Verificar acesso ao conteúdo
+
+```typescript
+// pages/cursos/[slug]/aulas.tsx
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/router';
+import { apiFetch } from '../../../lib/api';
+
+export default function AulasPage() {
+  const { slug } = useRouter().query;
+  const [hasAccess, setHasAccess] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    if (!slug) return;
+    apiFetch(`/products/${slug}/content`)
+      .then(() => setHasAccess(true))
+      .catch((err) => {
+        if (err.statusCode === 403) setHasAccess(false);
+      });
+  }, [slug]);
+
+  if (hasAccess === null) return <p>Verificando acesso...</p>;
+  if (!hasAccess) return <p>Você precisa de uma assinatura ativa.</p>;
+  return <div>Conteúdo do curso aqui</div>;
+}
+```
+
+### Minhas assinaturas
+
+```typescript
+// pages/minhas-assinaturas.tsx
+import { useEffect, useState } from 'react';
+import { apiFetch } from '../lib/api';
+
+export default function MinhasAssinaturasPage() {
+  const [subs, setSubs] = useState([]);
+
+  useEffect(() => {
+    apiFetch('/subscriptions/my').then(setSubs);
+  }, []);
+
+  return (
+    <ul>
+      {subs.map((s: any) => (
+        <li key={s.id}>
+          Status: {s.status} |
+          Próxima cobrança: {new Date(s.currentPeriodEnd).toLocaleDateString('pt-BR')} |
+          R$ {(s.amount / 100).toFixed(2)}/{s.currency}
+          {s.status !== 'canceled' && !s.cancelAtPeriodEnd && (
+            <button
+              onClick={async () => {
+                await apiFetch(`/subscriptions/${s.id}/cancel`, { method: 'POST' });
+                setSubs((prev: any[]) =>
+                  prev.map((x) => x.id === s.id ? { ...x, cancelAtPeriodEnd: true } : x)
+                );
+              }}
+            >
+              Cancelar
+            </button>
+          )}
+          {s.cancelAtPeriodEnd && (
+            <span> (cancela em {new Date(s.currentPeriodEnd).toLocaleDateString('pt-BR')})</span>
+          )}
+        </li>
+      ))}
+    </ul>
+  );
+}
 ```
 
 ---
 
-## Checklist de Implementação
+## 6. Variáveis de Ambiente (.env.local)
 
-### Backend
-- [ ] Implementar endpoint de registro de usuários (`POST /api/auth/register`)
-- [ ] Implementar endpoint de login (`POST /api/auth/login`)
-- [ ] Configurar `UserJwtGuard` para autenticação de estudantes
-- [ ] Configurar webhook do Stripe com os eventos necessários
-- [ ] Adicionar `FRONTEND_URL` no `.env`
-
-### Frontend
-- [ ] Criar página de listagem de cursos
-- [ ] Criar página de detalhes do curso
-- [ ] Implementar formulário de registro
-- [ ] Implementar formulário de login
-- [ ] Criar fluxo de checkout (botão → API → redirect Stripe)
-- [ ] Criar páginas de success/cancel do checkout
-- [ ] Implementar página "Minhas Assinaturas"
-- [ ] Implementar proteção de rotas (conteúdo exclusivo)
-- [ ] Adicionar gerenciamento de estado (Context API ou Redux)
-
-### Testes
-- [ ] Testar fluxo completo de compra
-- [ ] Testar cancelamento de assinatura
-- [ ] Testar acesso ao conteúdo com e sem assinatura
-- [ ] Testar renovação automática
-- [ ] Testar falha de pagamento
+```env
+NEXT_PUBLIC_API_URL=https://api.seudominio.com/api
+NEXT_PUBLIC_TENANT_ID=cmodat4pt000030kg41fb255o
+```
 
 ---
 
-## Troubleshooting
+## 7. Checklist de Implementação
 
-### Token JWT inválido
-- Verifique se o token está sendo enviado no header `Authorization: Bearer <token>`
-- Confirme que o token não expirou
-- Verifique se o `JWT_SECRET` está correto no backend
-
-### Checkout não redireciona
-- Verifique se o `FRONTEND_URL` está configurado corretamente
-- Confirme que as URLs de success/cancel existem no frontend
-
-### Conteúdo não liberado após pagamento
-- Aguarde alguns segundos para o webhook processar
-- Verifique os logs do webhook no Stripe Dashboard
-- Confirme que a assinatura está com status `active` no banco de dados
-
----
-
-## Próximos Passos
-
-1. Implementar sistema de aulas e módulos
-2. Adicionar progresso do aluno
-3. Implementar certificados de conclusão
-4. Adicionar sistema de avaliações e comentários
-5. Criar área de suporte/FAQ
-
----
-
-## Recursos Adicionais
-
-- [Documentação do Stripe Checkout](https://stripe.com/docs/payments/checkout)
-- [Documentação do Stripe Subscriptions](https://stripe.com/docs/billing/subscriptions/overview)
-- [Next.js Documentation](https://nextjs.org/docs)
-- [React Context API](https://react.dev/reference/react/useContext)
+- [ ] Página de cadastro (`POST /user/`)
+- [ ] Página de login (`POST /user/authenticate`)
+- [ ] Salvar `session_token` e `session_id` após login
+- [ ] Enviar `Authorization`, `session-id` e `x-tenant-id` em todas as chamadas autenticadas
+- [ ] Página de listagem de cursos (`GET /products`)
+- [ ] Página de detalhes do curso com botão de compra
+- [ ] Redirecionar para `checkoutUrl` após `POST /subscriptions/checkout`
+- [ ] Página `/dashboard?checkout=success` (pós-pagamento)
+- [ ] Página de minhas assinaturas (`GET /subscriptions/my`)
+- [ ] Proteção de rotas de conteúdo (`GET /products/:slug/content`)
+- [ ] Botão de cancelamento (`POST /subscriptions/:id/cancel`)
