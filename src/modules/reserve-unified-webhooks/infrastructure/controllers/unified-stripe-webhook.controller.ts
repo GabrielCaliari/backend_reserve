@@ -9,6 +9,7 @@
   Logger,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { SkipThrottle } from '@nestjs/throttler';
 import { Request } from 'express';
 import Stripe from 'stripe';
 import { ProcessB2CWebhookUseCase } from '../../../reserve-b2c-subscriptions/application/use-cases/process-b2c-webhook.use-case';
@@ -22,6 +23,7 @@ const STRIPE_API_VERSION = '2025-02-24.acacia' as const;
 
 @ApiTags('Unified Webhooks')
 @Controller('webhooks/stripe')
+@SkipThrottle()
 export class UnifiedStripeWebhookController {
   private readonly logger = new Logger(UnifiedStripeWebhookController.name);
 

@@ -9,6 +9,7 @@ export interface JwtPayload {
 export interface JwtValidationResult {
   jwt: string;
   expired?: boolean;
+  invalid?: boolean;
   payload?: JwtPayload;
 }
 
@@ -51,10 +52,19 @@ export class JwtProvider {
         payload: decoded,
       };
     } catch (error) {
-      if (error.name === 'TokenExpiredError' || error.name === 'JsonWebTokenError') {
+      if (error.name === 'TokenExpiredError') {
         return {
           jwt: token,
           expired: true,
+        };
+      }
+
+      // Assinatura forjada, token malformado ou nbf no futuro: NÃO é expiração.
+      // Colapsar os dois casos apaga o sinal de ataque no log e na resposta.
+      if (error.name === 'JsonWebTokenError' || error.name === 'NotBeforeError') {
+        return {
+          jwt: token,
+          invalid: true,
         };
       }
 

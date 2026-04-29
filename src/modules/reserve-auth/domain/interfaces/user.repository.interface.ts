@@ -29,6 +29,14 @@ export interface IUserFindInclude {
 
 export interface IUserCredentialRepository {
   compareHashByUserId(value: string, userId: string): Promise<boolean>;
+  findLockoutState(userId: string): Promise<{
+    lockedUntil: Date | null;
+    failedAttempts: number;
+    hashVersion: 1 | 2;
+  } | null>;
+  registerFailedAttempt(userId: string): Promise<void>;
+  clearFailedAttempts(userId: string): Promise<void>;
+  rehashToLatest(userId: string, plainPassword: string): Promise<void>;
 }
 
 export const USER_CREDENTIAL_REPOSITORY = Symbol('USER_CREDENTIAL_REPOSITORY');

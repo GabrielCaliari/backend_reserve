@@ -9,6 +9,7 @@ import { Roles } from '../../../../shared/auth/decorators/roles.decorator';
 import { CurrentAdmin, CurrentAdminPayload } from '../../../../shared/auth/decorators/current-admin.decorator';
 import { EAdminRole } from '../../domain/enums/admin-role.enum';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody, ApiParam } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { ParseCuidPipe } from '../../../../shared/pipes';
 
 function normalizeAdminRole(role: EAdminRole): EAdminRole {
@@ -23,7 +24,8 @@ export class AdminController {
     ) { }
 
     @Post('/authenticate')
-    @ApiOperation({ 
+    @Throttle({ default: { limit: 5, ttl: 60000 } })
+    @ApiOperation({
         summary: 'Authenticate administrator',
         description: 'Authenticates an admin user and returns a session token'
     })
@@ -45,6 +47,7 @@ export class AdminController {
     })
     @ApiResponse({ status: 401, description: 'Invalid credentials' })
     @ApiResponse({ status: 403, description: 'Admin account deactivated' })
+    @ApiResponse({ status: 423, description: 'Conta bloqueada por tentativas de senha incorretas' })
     async authenticateAdmin(@Res() res: Response, @Body() data: AuthAdminDTO) {
         const result = await this.adminService.authenticate(data);
         return res.status(result.status).json(result.data)

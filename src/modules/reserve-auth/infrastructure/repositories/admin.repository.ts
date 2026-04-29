@@ -24,12 +24,13 @@ export default class AdminRepository implements IAdminRepository {
                     }
                 });
 
-                const { hash, salt } = this.hashProvider.hash(data.password);
+                const { hash, salt, version } = this.hashProvider.hash(data.password);
 
                 await tx.adminCredential.create({
                     data: {
                         hash,
                         salt,
+                        hash_version: version,
                         admin_id: admin.id
                     }
                 });

@@ -32,12 +32,13 @@ export default class UserRepository implements IUserRepository {
                     }
                 });
 
-                const { hash, salt } = this.hashProvider.hash(data.password);
+                const { hash, salt, version } = this.hashProvider.hash(data.password);
 
                 await tx.userCredential.create({
                     data: {
                         hash,
                         salt,
+                        hash_version: version,
                         user_id: user.id
                     }
                 });

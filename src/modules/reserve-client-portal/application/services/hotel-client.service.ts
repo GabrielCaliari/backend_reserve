@@ -26,12 +26,12 @@ export class HotelClientService {
 
       if (!admin) {
         const password = dto.password ?? this.generatePassword();
-        const { hash, salt } = this.hashProvider.hash(password);
+        const { hash, salt, version } = this.hashProvider.hash(password);
         admin = await this.prisma.$transaction(async (tx) => {
           const created = await tx.admin.create({
             data: { name: dto.hotel_name, email: dto.email, role: EAdminRole.company_admin },
           });
-          await tx.adminCredential.create({ data: { admin_id: created.id, hash, salt } });
+          await tx.adminCredential.create({ data: { admin_id: created.id, hash, salt, hash_version: version } });
           return created;
         });
       }

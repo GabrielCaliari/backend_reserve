@@ -8,6 +8,7 @@ import { UserJwtGuard, UserRolesGuard } from '../../../../shared/auth/guards';
 import { UserRoles } from '../../../../shared/auth/decorators';
 import PreCreateUserDTO from '../../application/dtos/pre-create-user.dto';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody, ApiParam } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { EUserCollectionRole } from '../../domain/enums/user-collection-role.enum';
 
 @ApiTags('User')
@@ -18,6 +19,7 @@ export class UserController {
     ) { }
 
     @Post('/')
+    @Throttle({ default: { limit: 5, ttl: 60000 } })
     @ApiOperation({ summary: 'Create a new user' })
     @ApiBody({ type: CreateUserDTO })
     @ApiResponse({ status: 201, description: 'User created successfully' })
@@ -41,6 +43,7 @@ export class UserController {
     }
 
     @Post('/pre/create')
+    @Throttle({ default: { limit: 5, ttl: 60000 } })
     @ApiOperation({ summary: 'Pre-create a user (partial registration)' })
     @ApiBody({ type: PreCreateUserDTO })
     @ApiResponse({ status: 201, description: 'User pre-created successfully' })
@@ -62,10 +65,12 @@ export class UserController {
     }
 
     @Post('/authenticate')
+    @Throttle({ default: { limit: 5, ttl: 60000 } })
     @ApiOperation({ summary: 'Authenticate user' })
     @ApiBody({ type: AuthUserDTO })
     @ApiResponse({ status: 200, description: 'Authentication successful' })
     @ApiResponse({ status: 401, description: 'Invalid credentials' })
+    @ApiResponse({ status: 423, description: 'Conta bloqueada por tentativas de senha incorretas' })
     async authenticateUser(@Res() res: Response, @Body() data: AuthUserDTO) {
         const result = await this.userService.authenticate(data);
         return res.status(result.status).json(result.data)

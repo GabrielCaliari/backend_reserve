@@ -1,5 +1,4 @@
 ﻿import { Module } from '@nestjs/common';
-import { ThrottlerModule } from '@nestjs/throttler';
 import { DatabaseModule } from '../../shared/database/database.module';
 
 import { PublicCouponsController } from './infrastructure/controllers/public-coupons.controller';
@@ -19,7 +18,6 @@ import { DISCOUNT_COUPON_REPOSITORY } from './domain/interfaces/discount-coupon.
 @Module({
   imports: [
     DatabaseModule,
-    ThrottlerModule.forRoot([{ ttl: 60000, limit: 10 }]),
   ],
   controllers: [PublicCouponsController],
   providers: [
