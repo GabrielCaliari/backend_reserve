@@ -42,10 +42,16 @@ import { ZarpAuthModule } from '../zarp-auth/zarp-auth.module';
  * Route prefix: /api/cms
  *
  * Storage Provider Configuration:
- * - Default: VercelBlobStorageProvider (uses Vercel Blob Storage)
- * - Alternative: S3StorageProvider (for AWS S3 or S3-compatible services)
+ * - Current: S3StorageProvider (AWS S3 or S3-compatible services)
+ * - Alternative: VercelBlobStorageProvider (Vercel Blob Storage)
  * 
  * To switch storage providers, change the useClass in STORAGE_PROVIDER below.
+ * 
+ * S3 Features:
+ * - Multipart upload for files > 5MB (prevents 503 errors)
+ * - Automatic chunking for large files
+ * - CDN support via CMS_BUCKET_CDN_URL
+ * - Compatible with AWS S3, DigitalOcean Spaces, MinIO, etc.
  * 
  * Generic Media Storage:
  * - MediaAssetService: Upload, manage, and delete media assets
@@ -109,7 +115,7 @@ import { ZarpAuthModule } from '../zarp-auth/zarp-auth.module';
     },
     {
       provide: STORAGE_PROVIDER,
-      useClass: VercelBlobStorageProvider, // Change to S3StorageProvider if needed
+      useClass: VercelBlobStorageProvider, // Using Vercel Blob Storage
     },
     {
       provide: IMAGE_PROCESSOR,
