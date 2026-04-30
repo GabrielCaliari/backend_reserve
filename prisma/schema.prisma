@@ -189,6 +189,7 @@ model Admin {
   NotificationsCreated      Notification[]              @relation("NotificationsCreated")
   NotificationReceipts      TenantNotificationReceipt[] @relation("NotificationReceipts")
   HotelClients              HotelClient[]
+  AdminPermissionOverride   AdminPermissionOverride[]
 }
 
 model Tenant {
@@ -233,6 +234,7 @@ model Tenant {
   NotificationSettings      TenantNotificationSettings?
   HotelConfig               HotelClient?                @relation("HotelTenantConfig")
   HotelReservations         HotelReservation[]
+  AdminPermissionOverride   AdminPermissionOverride[]
 
   @@index([stripe_customer_id])
   @@index([subscription_status])
@@ -306,6 +308,57 @@ model AdminTenant {
   Tenant     Tenant     @relation(fields: [tenant_id], references: [id])
 
   @@unique([admin_id, tenant_id])
+}
+
+enum EPermissionEffect {
+  allow
+  deny
+}
+
+// RBAC Fase 2 (2026-07-26): catálogo de permissões `recurso.ação`, fonte
+// única de verdade em src/shared/auth/rbac/permission-matrix.ts.
+model Permission {
+  id                      String                    @id @default(cuid()) @db.VarChar(25)
+  name                    String                    @unique @db.VarChar(100)
+  created_at              DateTime                  @default(now())
+  RolePermission          RolePermission[]
+  AdminPermissionOverride AdminPermissionOverride[]
+
+  @@map("permissions")
+}
+
+// Concessão papel → permissão. `role` é o EAdminRole global (não é
+// per-tenant); PermissionsService faz cache desta tabela por 5 min.
+model RolePermission {
+  id            String     @id @default(cuid()) @db.VarChar(25)
+  role          EAdminRole
+  permission_id String     @db.VarChar(25)
+  created_at    DateTime   @default(now())
+  Permission    Permission @relation(fields: [permission_id], references: [id], onDelete: Cascade)
+
+  @@unique([role, permission_id])
+  @@index([role])
+  @@map("role_permissions")
+}
+
+// Exceção allow/deny por admin dentro de um tenant, por cima do que o papel
+// concede. effect guarda a string literal 'grant' ou 'deny' (não o enum
+// EPermissionEffect — ver Global Constraints). deny sempre vence no read.
+model AdminPermissionOverride {
+  id            String     @id @default(cuid()) @db.VarChar(25)
+  admin_id      String     @db.VarChar(25)
+  tenant_id     String     @db.VarChar(25)
+  permission_id String     @db.VarChar(25)
+  effect        String     @db.VarChar(5)
+  created_by    String     @db.VarChar(25)
+  created_at    DateTime   @default(now())
+  Admin         Admin      @relation(fields: [admin_id], references: [id], onDelete: Cascade)
+  Tenant        Tenant     @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  Permission    Permission @relation(fields: [permission_id], references: [id], onDelete: Cascade)
+
+  @@unique([admin_id, tenant_id, permission_id])
+  @@index([admin_id, tenant_id])
+  @@map("admin_permission_overrides")
 }
 
 model Blog {
