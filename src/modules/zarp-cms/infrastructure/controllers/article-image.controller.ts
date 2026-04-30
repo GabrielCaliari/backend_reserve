@@ -31,6 +31,7 @@ import { RolesGuard } from '../../../../shared/auth/guards/roles.guard';
 import { Roles } from '../../../../shared/auth/decorators/roles.decorator';
 import { CurrentAdmin, CurrentAdminPayload } from '../../../../shared/auth/decorators/current-admin.decorator';
 import { EAdminRole } from '../../../zarp-auth/domain/enums/admin-role.enum';
+import { UploadErrorInterceptor } from '../../../../shared/interceptors/upload-error.interceptor';
 
 @ApiTags('CMS Image Management')
 @Controller('articles/:articleId/images')
@@ -47,6 +48,7 @@ export class ArticleImageController {
   @Post()
   @Roles(EAdminRole.editor)
   @UseInterceptors(
+    UploadErrorInterceptor,
     FileInterceptor('file', {
       limits: { fileSize: 50 * 1024 * 1024 }, // network ceiling; real validation is done by the collection
     }),

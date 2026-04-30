@@ -36,6 +36,7 @@ import { MediaAssetService } from '../../application/services/media-asset.servic
 import { UploadMediaDTO } from '../../application/dtos/upload-media.dto';
 import { MediaAssetPresenter } from '../presenters/media-asset.presenter';
 import { EAssetStatus } from '../../domain/enums/asset-status.enum';
+import { UploadErrorInterceptor } from '../../../../shared/interceptors/upload-error.interceptor';
 
 /**
  * MediaAssetController
@@ -62,6 +63,7 @@ export class MediaAssetController {
   @Post()
   @Roles(EAdminRole.editor)
   @UseInterceptors(
+    UploadErrorInterceptor,
     FileInterceptor('file', {
       limits: { fileSize: 50 * 1024 * 1024 }, // 50 MB
     }),

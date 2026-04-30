@@ -32,6 +32,7 @@ import { Roles } from '../../../../shared/auth/decorators/roles.decorator';
 import { EAdminRole } from '../../../zarp-auth/domain/enums/admin-role.enum';
 import { CurrentAdmin, CurrentAdminPayload } from '../../../../shared/auth/decorators/current-admin.decorator';
 import { EAssetStatus } from '../../domain/enums/asset-status.enum';
+import { UploadErrorInterceptor } from '../../../../shared/interceptors/upload-error.interceptor';
 
 @ApiTags('CMS Blogs')
 @ApiBearerAuth()
@@ -153,6 +154,7 @@ export class BlogController {
   @Post(':blogId/assets')
   @Roles(EAdminRole.editor)
   @UseInterceptors(
+    UploadErrorInterceptor,
     FileInterceptor('file', {
       limits: { fileSize: 50 * 1024 * 1024 },
     }),

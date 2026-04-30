@@ -5,10 +5,15 @@ import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { MulterExceptionFilter } from './shared/exceptions/multer-exception.filter';
 import { DomainExceptionFilter } from './shared/exceptions/domain-exception.filter';
+import { ConnectionErrorFilter } from './shared/exceptions/connection-error.filter';
+import { Request, Response, NextFunction } from 'express';
 
 async function bootstrap() {
   // rawBody: true enables access to req.rawBody for Stripe webhook signature validation
-  const app = await NestFactory.create(AppModule, { rawBody: true });
+  const app = await NestFactory.create(AppModule, { 
+    rawBody: true,
+    bodyParser: true,
+  });
 
   app.setGlobalPrefix('api');
 
@@ -16,8 +21,39 @@ async function bootstrap() {
     origin: '*',
   });
 
+  // Increase timeouts for file upload routes
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    // Check if this is an upload endpoint
+    const isUploadRoute = 
+      req.path.includes('/upload') || 
+      req.path.includes('/assets') || 
+      req.path.includes('/images') ||
+      req.path.includes('/articles/') && req.method === 'POST';
+
+    if (isUploadRoute) {
+      // Set generous timeout for upload routes (5 minutes)
+      req.setTimeout(5 * 60 * 1000);
+      res.setTimeout(5 * 60 * 1000);
+      
+      // Add error handlers for the request/response streams
+      req.on('error', (error: any) => {
+        console.error('Request stream error:', error.message);
+      });
+      
+      res.on('error', (error: any) => {
+        console.error('Response stream error:', error.message);
+      });
+    }
+    
+    next();
+  });
+
   app.useGlobalPipes(new ValidationPipe({ transform: true }));
-  app.useGlobalFilters(new DomainExceptionFilter(), new MulterExceptionFilter());
+  app.useGlobalFilters(
+    new ConnectionErrorFilter(), // Must be first to catch connection errors
+    new DomainExceptionFilter(), 
+    new MulterExceptionFilter()
+  );
 
   // Configuração do Swagger
   const config = new DocumentBuilder()
