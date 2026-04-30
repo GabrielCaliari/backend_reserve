@@ -1,11 +1,30 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../../shared/database/prisma.service';
-import { IProductPriceRepository } from '../../domain/interfaces/product-price.repository.interface';
+import {
+  IProductPriceRepository,
+  CreateProductPriceData,
+} from '../../domain/interfaces/product-price.repository.interface';
 import { ProductPriceEntity } from '../../domain/entities/product-price.entity';
 
 @Injectable()
 export class PrismaProductPriceRepository implements IProductPriceRepository {
   constructor(private readonly prisma: PrismaService) {}
+
+  async create(data: CreateProductPriceData): Promise<ProductPriceEntity> {
+    const record = await this.prisma.productPrice.create({
+      data: {
+        tenant_id: data.tenantId,
+        product_id: data.productId,
+        stripe_price_id: data.stripePriceId,
+        interval: data.interval,
+        interval_count: data.intervalCount,
+        unit_amount: data.unitAmount,
+        currency: data.currency,
+        active: true,
+      },
+    });
+    return this.toDomain(record);
+  }
 
   async findActiveByProductId(productId: string): Promise<ProductPriceEntity[]> {
     const records = await this.prisma.productPrice.findMany({
