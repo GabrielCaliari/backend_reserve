@@ -1,20 +1,26 @@
-import { IsString, IsNotEmpty, IsOptional, IsInt, IsPositive, IsIn } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsInt, IsPositive, IsIn, Matches, MaxLength } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+
+const SUPPORTED_CURRENCIES = ['brl', 'usd', 'eur', 'gbp', 'cad', 'aud', 'mxn', 'ars', 'cop', 'clp'] as const;
 
 export class CreateB2CProductDTO {
   @ApiProperty({ example: 'Curso de JavaScript' })
   @IsString()
   @IsNotEmpty()
+  @MaxLength(250)
   name: string;
 
   @ApiPropertyOptional({ example: 'Do zero ao avançado' })
   @IsString()
   @IsOptional()
+  @MaxLength(1000)
   description?: string;
 
-  @ApiProperty({ example: 'javascript-avancado', description: 'Unique slug for the product' })
+  @ApiProperty({ example: 'javascript-avancado', description: 'Unique slug for the product (lowercase letters, numbers, and hyphens only)' })
   @IsString()
   @IsNotEmpty()
+  @MaxLength(100)
+  @Matches(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, { message: 'slug must contain only lowercase letters, numbers, and hyphens' })
   slug: string;
 
   @ApiProperty({ example: 'month', enum: ['month', 'year', 'week', 'quarter'] })
@@ -32,8 +38,9 @@ export class CreateB2CProductDTO {
   @IsPositive()
   unitAmount: number;
 
-  @ApiProperty({ example: 'brl' })
+  @ApiProperty({ example: 'brl', enum: SUPPORTED_CURRENCIES })
   @IsString()
   @IsOptional()
+  @IsIn(SUPPORTED_CURRENCIES, { message: `currency must be one of: ${SUPPORTED_CURRENCIES.join(', ')}` })
   currency?: string;
 }
