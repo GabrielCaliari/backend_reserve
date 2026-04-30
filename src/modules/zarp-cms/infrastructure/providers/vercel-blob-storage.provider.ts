@@ -31,6 +31,9 @@ export class VercelBlobStorageProvider implements IStorageProvider {
         access: 'public',
         contentType,
         token: this.token,
+        // multipart splits large files into chunks, preventing intermittent
+        // 503 errors from Vercel Blob when uploading bigger images
+        multipart: true,
       });
 
       return {
