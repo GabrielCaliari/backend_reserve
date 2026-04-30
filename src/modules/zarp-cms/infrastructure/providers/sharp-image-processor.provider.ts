@@ -9,23 +9,44 @@ import {
 @Injectable()
 export class SharpImageProcessorProvider implements IImageProcessor {
   async processToWebp(buffer: Buffer, quality: number = 80): Promise<IProcessedImage> {
-    const processed = await sharp(buffer)
-      .webp({ quality })
-      .toBuffer({ resolveWithObject: true });
+    if (!buffer || buffer.length === 0) {
+      throw new Error('Image buffer is empty or invalid');
+    }
 
-    return {
-      data: processed.data,
-      size: processed.info.size,
-      format: 'webp',
-    };
+    const clampedQuality = Math.min(100, Math.max(1, quality));
+
+    try {
+      const processed = await sharp(buffer, { failOn: 'error' })
+        .rotate()
+        .webp({ quality: clampedQuality })
+        .toBuffer({ resolveWithObject: true });
+
+      return {
+        data: processed.data,
+        size: processed.info.size,
+        format: 'webp',
+      };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`Failed to process image: ${message}`);
+    }
   }
 
   async getMetadata(buffer: Buffer): Promise<IImageMetadata> {
-    const meta = await sharp(buffer).metadata();
-    return {
-      width: meta.width,
-      height: meta.height,
-      format: meta.format,
-    };
+    if (!buffer || buffer.length === 0) {
+      throw new Error('Image buffer is empty or invalid');
+    }
+
+    try {
+      const meta = await sharp(buffer, { failOn: 'error' }).metadata();
+      return {
+        width: meta.width,
+        height: meta.height,
+        format: meta.format,
+      };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`Failed to read image metadata: ${message}`);
+    }
   }
 }

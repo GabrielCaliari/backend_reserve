@@ -1,0 +1,44 @@
+import {
+  ExceptionFilter,
+  Catch,
+  ArgumentsHost,
+  HttpStatus,
+  Logger,
+} from '@nestjs/common';
+import { Response } from 'express';
+import { ArticleNotFoundError } from '../../modules/zarp-cms/domain/errors/article-not-found.error';
+import { ImageLimitExceededError } from '../../modules/zarp-cms/domain/errors/image-limit-exceeded.error';
+import { RepositoryException } from './repository.exception';
+
+/**
+ * Maps domain errors and repository exceptions to proper HTTP responses.
+ * Without this filter, NestJS converts all non-HttpException errors to 500
+ * with no useful message for the client.
+ */
+@Catch(ArticleNotFoundError, ImageLimitExceededError, RepositoryException)
+export class DomainExceptionFilter implements ExceptionFilter {
+  private readonly logger = new Logger(DomainExceptionFilter.name);
+
+  catch(exception: Error, host: ArgumentsHost) {
+    const ctx = host.switchToHttp();
+    const response = ctx.getResponse<Response>();
+
+    let status = HttpStatus.INTERNAL_SERVER_ERROR;
+    let message = exception.message;
+
+    if (exception instanceof ArticleNotFoundError) {
+      status = HttpStatus.NOT_FOUND;
+    } else if (exception instanceof ImageLimitExceededError) {
+      status = HttpStatus.UNPROCESSABLE_ENTITY;
+    } else if (exception instanceof RepositoryException) {
+      this.logger.error(`Repository error [${exception.code}]: ${exception.message}`, exception.details);
+      status = HttpStatus.INTERNAL_SERVER_ERROR;
+      message = 'A database error occurred';
+    }
+
+    response.status(status).json({
+      statusCode: status,
+      message,
+    });
+  }
+}

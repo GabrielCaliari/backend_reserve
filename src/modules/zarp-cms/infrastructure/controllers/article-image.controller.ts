@@ -42,16 +42,13 @@ import { EAdminRole } from '../../../zarp-auth/domain/enums/admin-role.enum';
   required: true,
 })
 export class ArticleImageController {
-  private readonly MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
-  private readonly ALLOWED_FORMATS = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-
   constructor(private readonly imageService: ArticleImageService) {}
 
   @Post()
   @Roles(EAdminRole.editor)
   @UseInterceptors(
     FileInterceptor('file', {
-      limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
+      limits: { fileSize: 50 * 1024 * 1024 }, // network ceiling; real validation is done by the collection
     }),
   )
   @ApiConsumes('multipart/form-data')
@@ -63,7 +60,7 @@ export class ArticleImageController {
         file: {
           type: 'string',
           format: 'binary',
-          description: 'Image file (JPEG, PNG, GIF, WebP, AVIF). Max 10 MB.',
+          description: 'Image file. Allowed types and size limit are defined by the article-images collection.',
         },
         alt_text: {
           type: 'string',
@@ -75,14 +72,15 @@ export class ArticleImageController {
     },
   })
   @ApiResponse({ status: 201, description: 'Image uploaded successfully' })
-  @ApiResponse({ status: 400, description: 'Invalid file format or missing file' })
+  @ApiResponse({ status: 400, description: 'Missing file or mime type not allowed by collection' })
   @ApiResponse({ status: 403, description: 'Insufficient role' })
   @ApiResponse({ status: 404, description: 'Article not found' })
-  @ApiResponse({ status: 413, description: 'File exceeds 10 MB limit' })
-  @ApiResponse({ status: 422, description: 'Article already has 20 images (maximum limit)' })
+  @ApiResponse({ status: 413, description: 'File exceeds network ceiling (50 MB)' })
+  @ApiResponse({ status: 422, description: 'File size exceeds collection limit, or article already has 20 images' })
   async upload(
     @Param('articleId') articleId: string,
     @UploadedFile() file: Express.Multer.File,
+    @CurrentAdmin() admin: CurrentAdminPayload,
     @Body('alt_text') altText?: string,
   ): Promise<any> {
     if (!file) {
@@ -93,20 +91,14 @@ export class ArticleImageController {
       throw new BadRequestException('Uploaded file is empty');
     }
 
-    if (!this.ALLOWED_FORMATS.includes(file.mimetype)) {
-      throw new BadRequestException(
-        'Invalid file format. Allowed formats: JPEG, PNG, GIF, WebP, AVIF',
-      );
-    }
-
-    if (file.size > this.MAX_FILE_SIZE) {
-      throw new BadRequestException('File size exceeds 10 MB limit');
-    }
-
-    // Extract format from mimetype (e.g., 'image/jpeg' -> 'jpeg')
-    const format = file.mimetype.split('/')[1];
-
-    return this.imageService.upload(articleId, file.buffer, format, altText);
+    return this.imageService.upload(
+      articleId,
+      file.buffer,
+      file.mimetype,
+      file.size,
+      admin.tenant_id!,
+      altText,
+    );
   }
 
   @Get()

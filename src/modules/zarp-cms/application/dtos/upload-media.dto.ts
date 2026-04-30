@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { IsOptional, IsString, IsObject } from 'class-validator';
+import { IsOptional, IsString, IsObject, ValidateIf } from 'class-validator';
 
 /**
  * DTO for uploading media assets to a collection
@@ -44,9 +44,10 @@ export class UploadMediaDTO {
     try {
       return JSON.parse(trimmedValue);
     } catch {
-      return value;
+      return undefined;
     }
   })
+  @ValidateIf((o) => o.metadata !== undefined)
   @IsObject()
   metadata?: Record<string, any>;
 }

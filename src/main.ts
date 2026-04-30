@@ -3,6 +3,8 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { MulterExceptionFilter } from './shared/exceptions/multer-exception.filter';
+import { DomainExceptionFilter } from './shared/exceptions/domain-exception.filter';
 
 async function bootstrap() {
   // rawBody: true enables access to req.rawBody for Stripe webhook signature validation
@@ -15,6 +17,7 @@ async function bootstrap() {
   });
 
   app.useGlobalPipes(new ValidationPipe({ transform: true }));
+  app.useGlobalFilters(new DomainExceptionFilter(), new MulterExceptionFilter());
 
   // Configuração do Swagger
   const config = new DocumentBuilder()

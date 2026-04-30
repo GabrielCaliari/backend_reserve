@@ -1,4 +1,4 @@
-import { Injectable, Inject, NotFoundException } from '@nestjs/common';
+import { Injectable, Inject, NotFoundException, BadRequestException, UnprocessableEntityException } from '@nestjs/common';
 import {
   ARTICLE_IMAGE_REPOSITORY,
   IArticleImageRepository,
@@ -12,6 +12,10 @@ import {
   IBlogRepository,
 } from '../../domain/interfaces/blog.repository.interface';
 import {
+  MEDIA_COLLECTION_REPOSITORY,
+  IMediaCollectionRepository,
+} from '../../domain/interfaces/media-collection.repository.interface';
+import {
   STORAGE_PROVIDER,
   IStorageProvider,
 } from '../../domain/interfaces/storage.interface';
@@ -21,6 +25,8 @@ import {
 } from '../../domain/interfaces/image-processor.interface';
 import { ArticleNotFoundError } from '../../domain/errors/article-not-found.error';
 import { ImageLimitExceededError } from '../../domain/errors/image-limit-exceeded.error';
+
+const ARTICLE_IMAGES_COLLECTION_SLUG = 'article-images';
 
 @Injectable()
 export class ArticleImageService {
@@ -34,6 +40,8 @@ export class ArticleImageService {
     private readonly articleRepository: IArticleRepository,
     @Inject(BLOG_REPOSITORY)
     private readonly blogRepository: IBlogRepository,
+    @Inject(MEDIA_COLLECTION_REPOSITORY)
+    private readonly collectionRepository: IMediaCollectionRepository,
     @Inject(STORAGE_PROVIDER)
     private readonly storageProvider: IStorageProvider,
     @Inject(IMAGE_PROCESSOR)
@@ -43,13 +51,33 @@ export class ArticleImageService {
   async upload(
     articleId: string,
     buffer: Buffer,
-    originalFormat: string,
+    mimeType: string,
+    fileSize: number,
+    tenantId: string,
     altText?: string,
   ): Promise<any> {
     // Verify article exists
     const article = await this.articleRepository.findById(articleId);
     if (!article) {
       throw new ArticleNotFoundError();
+    }
+
+    // Validate against the article-images collection rules (size + mime type)
+    const collection = await this.collectionRepository.findBySlug(
+      ARTICLE_IMAGES_COLLECTION_SLUG,
+      tenantId,
+    );
+    if (collection) {
+      if (!collection.validateFileSize(fileSize)) {
+        throw new UnprocessableEntityException(
+          `File size exceeds the maximum allowed (${collection.max_file_size} bytes)`,
+        );
+      }
+      if (!collection.validateMimeType(mimeType)) {
+        throw new BadRequestException(
+          `File type "${mimeType}" is not allowed for article images`,
+        );
+      }
     }
 
     // Check image limit
@@ -59,21 +87,32 @@ export class ArticleImageService {
     }
 
     // Process image to webp
-    const processed = await this.imageProcessor.processToWebp(buffer, this.IMAGE_QUALITY);
+    let processed: Awaited<ReturnType<typeof this.imageProcessor.processToWebp>>;
+    try {
+      processed = await this.imageProcessor.processToWebp(buffer, this.IMAGE_QUALITY);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      throw new UnprocessableEntityException(`Failed to process image: ${message}`);
+    }
 
     // Generate storage key
     const timestamp = Date.now();
     const storageKey = `cms/articles/${articleId}/${timestamp}.webp`;
 
-    // Upload to storage
-    const uploadResult = await this.storageProvider.upload(
-      storageKey,
-      processed.data,
-      'image/webp',
-    );
-
-    // Get next display order
     const displayOrder = currentCount + 1;
+
+    // Upload to storage
+    let uploadResult: Awaited<ReturnType<typeof this.storageProvider.upload>>;
+    try {
+      uploadResult = await this.storageProvider.upload(
+        storageKey,
+        processed.data,
+        'image/webp',
+      );
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`Storage upload failed: ${message}`);
+    }
 
     // Save to database
     return this.imageRepository.create({
@@ -82,7 +121,7 @@ export class ArticleImageService {
       alt_text: altText,
       display_order: displayOrder,
       file_size: processed.size,
-      original_format: originalFormat,
+      original_format: mimeType.split('/')[1],
       article_id: articleId,
     });
   }

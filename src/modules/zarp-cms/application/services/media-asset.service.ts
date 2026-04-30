@@ -106,22 +106,27 @@ export class MediaAssetService {
       let finalMimeType = file.mimetype;
 
       if (file.mimetype.startsWith('image/')) {
-        // Get quality from environment variable (Requirement 4.6)
         const quality = parseInt(process.env.CMS_IMAGE_QUALITY || '80', 10);
 
-        try {
-          // Extract dimensions from original image before processing
-          const metadata = await this.imageProcessor.getMetadata(file.buffer);
-          width = metadata.width;
-          height = metadata.height;
+        let metadata: Awaited<ReturnType<typeof this.imageProcessor.getMetadata>>;
+        let processed: Awaited<ReturnType<typeof this.imageProcessor.processToWebp>>;
 
-          // Process to WebP format
-          const processed = await this.imageProcessor.processToWebp(file.buffer, quality);
-          processedBuffer = processed.data;
-          finalMimeType = 'image/webp';
-        } catch (error) {
-          return errorResponse('422:Invalid or corrupted image file', 422, error);
+        try {
+          metadata = await this.imageProcessor.getMetadata(file.buffer);
+        } catch {
+          return errorResponse('Invalid or corrupted image file', 422);
         }
+
+        try {
+          processed = await this.imageProcessor.processToWebp(file.buffer, quality);
+        } catch {
+          return errorResponse('Failed to process image to WebP', 422);
+        }
+
+        width = metadata.width;
+        height = metadata.height;
+        processedBuffer = processed.data;
+        finalMimeType = 'image/webp';
       }
 
       // 6. Generate unique storage key (Requirement 15.4)
@@ -130,11 +135,16 @@ export class MediaAssetService {
       const storageKey = `cms/${tenantId}/${collection.slug}/${timestamp}-${storageFilename}`;
 
       // 7. Upload to storage provider (Requirement 1.1)
-      const uploadResult = await this.storageProvider.upload(
-        storageKey,
-        processedBuffer,
-        finalMimeType,
-      );
+      let uploadResult: Awaited<ReturnType<typeof this.storageProvider.upload>>;
+      try {
+        uploadResult = await this.storageProvider.upload(
+          storageKey,
+          processedBuffer,
+          finalMimeType,
+        );
+      } catch (err) {
+        return errorResponse(ERROR_STORAGE_PROVIDER_ERROR, 500, err);
+      }
 
       // 8. Create MediaAsset entity (Requirements 1.1, 1.2, 1.3, 1.4)
       const asset = new MediaAsset({
@@ -150,14 +160,14 @@ export class MediaAssetService {
         collection_id: dto.collection_id,
         tenant_id: tenantId,
         created_by: userId,
+        status: EAssetStatus.ready,
       });
 
       // 9. Save to database
       const saved = await this.assetRepo.create(asset);
-      
+
       return successResponse(saved, 201);
     } catch (err) {
-      // Handle storage provider errors
       return errorResponse(ERROR_STORAGE_PROVIDER_ERROR, 500, err);
     }
   }
