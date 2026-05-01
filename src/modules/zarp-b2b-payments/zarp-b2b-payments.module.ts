@@ -35,5 +35,6 @@ import { STRIPE_PROVIDER } from '../zarp-subscriptions/domain/interfaces/stripe.
     { provide: B2B_PURCHASE_REPOSITORY, useClass: PrismaB2BPurchaseRepository },
     { provide: STRIPE_PROVIDER, useClass: StripeProvider },
   ],
+  exports: [ProcessB2BWebhookUseCase],
 })
 export class ZarpB2bPaymentsModule {}

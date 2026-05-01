@@ -39,7 +39,7 @@ import { B2CStripeWebhookController } from './infrastructure/controllers/b2c-str
     { provide: STRIPE_PROVIDER, useClass: StripeProvider },
     ProductAccessGuard,
   ],
-  exports: [ProductAccessGuard, USER_PRODUCT_ACCESS_REPOSITORY],
+  exports: [ProductAccessGuard, USER_PRODUCT_ACCESS_REPOSITORY, ProcessB2CWebhookUseCase],
 })
 export class ZarpB2cSubscriptionsModule {}
 

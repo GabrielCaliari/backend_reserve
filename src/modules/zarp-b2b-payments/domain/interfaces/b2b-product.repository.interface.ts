@@ -8,6 +8,7 @@ export interface CreateB2BProductData {
   stripePriceId: string;
   name: string;
   description?: string;
+  categories?: string[];
   price: number;
   currency: string;
 }
