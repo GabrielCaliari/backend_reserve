@@ -46,9 +46,9 @@ export class B2CSubscriptionsController {
   async cancelSubscription(
     @CurrentUser('user_id') userId: string,
     @CurrentUser('tenant_id') tenantId: string,
-    @Param('id') subscriptionId: string,
+    @Param('id') accessId: string,
   ) {
-    await this.cancelSubscriptionUseCase.execute({ tenantId, subscriptionId, userId });
+    await this.cancelSubscriptionUseCase.execute({ tenantId, accessId, userId });
     return { message: 'Subscription will be canceled at the end of the current period' };
   }
 }

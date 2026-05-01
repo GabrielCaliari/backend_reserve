@@ -1,18 +1,19 @@
 import { Injectable, Inject } from '@nestjs/common';
 import {
-  IUserSubscriptionRepository,
-  USER_SUBSCRIPTION_REPOSITORY,
-} from '../../domain/interfaces/user-subscription.repository.interface';
-import { UserSubscriptionEntity } from '../../domain/entities/user-subscription.entity';
+  IUserProductAccessRepository,
+  USER_PRODUCT_ACCESS_REPOSITORY,
+} from '../../domain/interfaces/user-product-access.repository.interface';
+import { UserProductAccess } from '../../domain/entities/user-product-access.entity';
 
 @Injectable()
 export class ListMySubscriptionsUseCase {
   constructor(
-    @Inject(USER_SUBSCRIPTION_REPOSITORY)
-    private readonly userSubscriptionRepo: IUserSubscriptionRepository,
+    @Inject(USER_PRODUCT_ACCESS_REPOSITORY)
+    private readonly accessRepo: IUserProductAccessRepository,
   ) {}
 
-  async execute(userId: string): Promise<UserSubscriptionEntity[]> {
-    return this.userSubscriptionRepo.findAllByUserId(userId);
+  async execute(userId: string): Promise<UserProductAccess[]> {
+    return this.accessRepo.findByUserId(userId);
   }
 }
+

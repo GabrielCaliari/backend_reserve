@@ -6,6 +6,7 @@ export interface ProductProps {
   name: string;
   description?: string;
   slug: string;
+  categories: string[];
   active: boolean;
   prices: ProductPriceEntity[];
   createdAt: Date;
@@ -18,6 +19,7 @@ export class ProductEntity {
   readonly name: string;
   readonly description?: string;
   readonly slug: string;
+  readonly categories: string[];
   readonly active: boolean;
   readonly prices: ProductPriceEntity[];
   readonly createdAt: Date;
@@ -29,6 +31,7 @@ export class ProductEntity {
     this.name = props.name;
     this.description = props.description;
     this.slug = props.slug;
+    this.categories = props.categories;
     this.active = props.active;
     this.prices = props.prices;
     this.createdAt = props.createdAt;

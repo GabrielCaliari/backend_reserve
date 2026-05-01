@@ -8,6 +8,7 @@ export interface CreateProductData {
   name: string;
   description?: string;
   slug: string;
+  categories?: string[];
 }
 
 export interface IProductRepository {

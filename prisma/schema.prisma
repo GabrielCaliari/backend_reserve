@@ -40,7 +40,7 @@ model User {
   UserCollectionMembership  UserCollectionMembership[]
   UserPasswordChangeSession UserPasswordChangeSession[]
   UserSessionToken          UserSessionToken[]
-  UserSubscription          UserSubscription[]
+  UserProductAccess         UserProductAccess[]
   B2BPurchase               B2BPurchase[]
 }
 
@@ -751,7 +751,7 @@ model Tenant {
   B2BPurchases                 B2BPurchase[]
   B2CProducts                  Product[]
   B2CProductPrices             ProductPrice[] @relation("B2CProductPrices")
-  B2CUserSubscriptions         UserSubscription[] @relation("B2CUserSubscriptions")
+  B2CUserProductAccess         UserProductAccess[] @relation("B2CUserProductAccess")
 
   @@index([stripe_customer_id])
   @@index([subscription_status])
@@ -1477,19 +1477,33 @@ model Product {
   name              String         @db.VarChar(255)
   description       String?        @db.Text
   slug              String         @db.VarChar(100)
+  categories        String[]       @default([])
   active            Boolean        @default(true)
   created_at        DateTime       @default(now())
   updated_at        DateTime       @updatedAt
 
   tenant            Tenant         @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
   ProductPrice      ProductPrice[]
-  UserSubscription  UserSubscription[]
+  UserProductAccess UserProductAccess[]
 
   @@unique([tenant_id, stripe_product_id])
   @@unique([tenant_id, slug])
   @@index([tenant_id])
   @@index([tenant_id, active])
   @@map("b2c_products")
+}
+
+enum EBillingMode {
+  unlimited           // Recorrente ilimitado
+  limited             // Recorrente limitado (N cobranças)
+  one_time            // Pagamento único vitalício
+  one_time_exp        // Pagamento único com expiração
+}
+
+enum EAccessType {
+  subscription        // Acesso via subscription (unlimited/limited)
+  lifetime            // Acesso vitalício (one_time)
+  temporary           // Acesso temporário (one_time_exp)
 }
 
 model ProductPrice {
@@ -1499,61 +1513,86 @@ model ProductPrice {
   product_id      String         @db.VarChar(25)
   Product         Product        @relation(fields: [product_id], references: [id])
   tenant          Tenant         @relation("B2CProductPrices", fields: [tenant_id], references: [id], onDelete: Cascade)
-  interval        String         @db.VarChar(20)   // month | year | week
-  interval_count  Int            @default(1) @db.SmallInt
+  
+  name            String         @db.VarChar(100)  // "Mensal", "Anual", "Vitalício"
+  
+  // Billing configuration
+  billing_mode    String         @default("unlimited") @db.VarChar(20)  // unlimited | limited | one_time | one_time_exp
+  interval        String?        @db.VarChar(20)   // month | year | week (null for one_time)
+  interval_count  Int?           @default(1) @db.SmallInt
   unit_amount     Int                               // cents
   currency        String         @default("brl") @db.VarChar(3)
+  
+  // Limits (mode-specific)
+  max_billing_cycles   Int?      // For limited: max charges before auto-cancel
+  access_duration_days Int?      // For one_time_exp: days of access
+  
   active          Boolean        @default(true)
   created_at      DateTime       @default(now())
   updated_at      DateTime       @updatedAt
 
-  UserSubscription UserSubscription[]
+  UserProductAccess UserProductAccess[]
 
   @@unique([tenant_id, stripe_price_id])
   @@index([tenant_id])
   @@index([product_id, active])
+  @@index([tenant_id, billing_mode])
   @@map("b2c_product_prices")
 }
 
-model UserSubscription {
-  id                     String   @id @default(cuid()) @db.VarChar(25)
-  tenant_id              String   @db.VarChar(25)
-  user_id                String   @db.VarChar(25)
-  User                   User     @relation(fields: [user_id], references: [id])
-  product_id             String   @db.VarChar(25)
-  Product                Product  @relation(fields: [product_id], references: [id])
-  product_price_id       String   @db.VarChar(25)
-  ProductPrice           ProductPrice @relation(fields: [product_price_id], references: [id])
-  tenant                 Tenant   @relation("B2CUserSubscriptions", fields: [tenant_id], references: [id], onDelete: Cascade)
+model UserProductAccess {
+  id                       String    @id @default(cuid()) @db.VarChar(25)
+  tenant_id                String    @db.VarChar(25)
+  user_id                  String    @db.VarChar(25)
+  User                     User      @relation(fields: [user_id], references: [id])
+  product_id               String    @db.VarChar(25)
+  Product                  Product   @relation(fields: [product_id], references: [id])
+  product_price_id         String    @db.VarChar(25)
+  ProductPrice             ProductPrice @relation(fields: [product_price_id], references: [id])
+  tenant                   Tenant    @relation("B2CUserProductAccess", fields: [tenant_id], references: [id], onDelete: Cascade)
 
-  // Stripe identifiers
-  stripe_subscription_id String   @db.VarChar(100)
-  stripe_customer_id     String   @db.VarChar(100)
-  stripe_price_id        String   @db.VarChar(100)
+  // Stripe identifiers (subscription OR payment)
+  stripe_subscription_id   String?   @db.VarChar(100)  // For subscription modes
+  stripe_customer_id       String    @db.VarChar(100)
+  stripe_price_id          String    @db.VarChar(100)
+  stripe_payment_intent_id String?   @db.VarChar(100)  // For one_time modes
 
-  // Status: active | trialing | past_due | canceled | incomplete | unpaid
-  status                 String   @db.VarChar(50)
+  // Access control
+  access_type              String    @db.VarChar(20)   // subscription | lifetime | temporary
+  status                   String    @db.VarChar(50)   // active | expired | canceled | past_due
 
-  // Period
-  current_period_start   DateTime
-  current_period_end     DateTime
-  trial_start            DateTime?
-  trial_end              DateTime?
-  canceled_at            DateTime?
-  cancel_at_period_end   Boolean  @default(false)
+  // Subscription fields (for unlimited/limited)
+  current_period_start     DateTime?
+  current_period_end       DateTime?
+  cancel_at_period_end     Boolean   @default(false)
+  canceled_at              DateTime?
+  trial_start              DateTime?
+  trial_end                DateTime?
+
+  // One-time payment fields (for one_time/one_time_exp)
+  access_granted_at        DateTime  @default(now())
+  access_expires_at        DateTime? // null = lifetime, date = temporary
+
+  // Billing cycle tracking (for limited mode)
+  max_billing_cycles       Int?
+  completed_billing_cycles Int       @default(0)
 
   // Financial
-  amount                 Int      // cents
-  currency               String   @default("brl") @db.VarChar(3)
+  amount                   Int       // cents
+  currency                 String    @default("brl") @db.VarChar(3)
 
-  created_at             DateTime @default(now())
-  updated_at             DateTime @updatedAt
+  created_at               DateTime  @default(now())
+  updated_at               DateTime  @updatedAt
 
   @@unique([tenant_id, stripe_subscription_id])
   @@index([tenant_id])
   @@index([tenant_id, user_id, status])
   @@index([user_id, status])
-  @@map("b2c_user_subscriptions")
+  @@index([user_id, product_id, status])
+  @@index([stripe_subscription_id])
+  @@index([access_type, status])
+  @@index([access_expires_at])
+  @@map("b2c_user_product_access")
 }
 
 // ============================================

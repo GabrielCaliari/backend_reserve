@@ -5,7 +5,7 @@ import { GetProductUseCase } from '../../application/use-cases/get-product.use-c
 import { UserJwtGuard } from '../../../../shared/auth/guards/user-jwt.guard';
 import { UserTenantGuard } from '../../../../shared/auth/guards/user-tenant.guard';
 import { CurrentUser } from '../../../../shared/auth/decorators/current-user.decorator';
-import { SubscriptionAccessGuard } from '../../../zarp-b2c-subscriptions/infrastructure/guards/subscription-access.guard';
+import { ProductAccessGuard } from '../../../zarp-b2c-subscriptions/infrastructure/guards/product-access.guard';
 
 @ApiTags('B2C Products')
 @Controller('products')
@@ -37,7 +37,7 @@ export class ProductsController {
   }
 
   @Get(':slug/content')
-  @UseGuards(SubscriptionAccessGuard)
+  @UseGuards(ProductAccessGuard)
   @ApiOperation({ summary: 'Access product content (requires active subscription)' })
   @ApiResponse({ status: 200, description: 'Content accessible' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })

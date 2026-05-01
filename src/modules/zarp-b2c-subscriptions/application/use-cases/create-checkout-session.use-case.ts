@@ -1,9 +1,9 @@
 import { Injectable, Inject, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../../../shared/database/prisma.service';
 import {
-  IUserSubscriptionRepository,
-  USER_SUBSCRIPTION_REPOSITORY,
-} from '../../domain/interfaces/user-subscription.repository.interface';
+  IUserProductAccessRepository,
+  USER_PRODUCT_ACCESS_REPOSITORY,
+} from '../../domain/interfaces/user-product-access.repository.interface';
 import {
   IStripeProvider,
   STRIPE_PROVIDER,
@@ -12,12 +12,13 @@ import {
   ITenantBillingConfigRepository,
   TENANT_BILLING_CONFIG_REPOSITORY,
 } from '../../../zarp-subscriptions/domain/interfaces/tenant-billing-config.repository.interface';
+import { EBillingMode } from '../../domain/enums/product-type.enum';
 
 @Injectable()
 export class CreateCheckoutSessionUseCase {
   constructor(
-    @Inject(USER_SUBSCRIPTION_REPOSITORY)
-    private readonly userSubscriptionRepo: IUserSubscriptionRepository,
+    @Inject(USER_PRODUCT_ACCESS_REPOSITORY)
+    private readonly accessRepo: IUserProductAccessRepository,
     @Inject(STRIPE_PROVIDER)
     private readonly stripeProvider: IStripeProvider,
     @Inject(TENANT_BILLING_CONFIG_REPOSITORY)
@@ -48,13 +49,10 @@ export class CreateCheckoutSessionUseCase {
       throw new NotFoundException('Price not found or inactive');
     }
 
-    // 3. Check if user already has active subscription for this product
-    const alreadySubscribed = await this.userSubscriptionRepo.hasActiveSubscription(
-      dto.userId,
-      price.Product.slug,
-    );
+    // 3. Check if user already has active access for this product
+    const alreadyHasAccess = await this.accessRepo.hasActiveAccess(dto.userId, price.Product.slug);
 
-    if (alreadySubscribed) {
+    if (alreadyHasAccess) {
       throw new ConflictException('You already have an active subscription for this product');
     }
 
@@ -79,11 +77,19 @@ export class CreateCheckoutSessionUseCase {
       });
     }
 
-    // 5. Create checkout session using tenant's key
+    // 5. Determine checkout mode based on billing_mode
+    const isSubscription = [EBillingMode.UNLIMITED, EBillingMode.LIMITED].includes(
+      price.billing_mode as EBillingMode,
+    );
+    const checkoutMode = isSubscription ? 'subscription' : 'payment';
+
+    // 6. Create checkout session using tenant's key
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3001';
-    const session = await this.stripeProvider.createCheckoutSession({
+
+    const sessionParams: any = {
       customerId,
       priceId: price.stripe_price_id,
+      mode: checkoutMode,
       successUrl: `${frontendUrl}/dashboard?checkout=success&product=${price.Product.slug}`,
       cancelUrl: `${frontendUrl}/products/${price.Product.slug}?checkout=canceled`,
       metadata: {
@@ -91,9 +97,27 @@ export class CreateCheckoutSessionUseCase {
         userId: dto.userId,
         productId: price.Product.id,
         priceId: dto.priceId,
+        billingMode: price.billing_mode,
+        maxBillingCycles: price.max_billing_cycles?.toString() || '',
+        accessDurationDays: price.access_duration_days?.toString() || '',
       },
       stripeSecretKey,
-    });
+    };
+
+    // Add subscription metadata for subscription modes
+    if (isSubscription) {
+      sessionParams.subscriptionData = {
+        metadata: {
+          tenantId: dto.tenantId,
+          userId: dto.userId,
+          productId: price.Product.id,
+          billingMode: price.billing_mode,
+          maxBillingCycles: price.max_billing_cycles?.toString() || '',
+        },
+      };
+    }
+
+    const session = await this.stripeProvider.createCheckoutSession(sessionParams);
 
     return { checkoutUrl: session.url! };
   }

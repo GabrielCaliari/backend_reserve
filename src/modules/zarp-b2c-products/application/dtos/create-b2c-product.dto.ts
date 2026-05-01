@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsOptional, IsInt, IsPositive, IsIn, Matches, MaxLength } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsInt, IsPositive, IsIn, Matches, MaxLength, IsArray } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 const SUPPORTED_CURRENCIES = ['brl', 'usd', 'eur', 'gbp', 'cad', 'aud', 'mxn', 'ars', 'cop', 'clp'] as const;
@@ -22,6 +22,13 @@ export class CreateB2CProductDTO {
   @MaxLength(100)
   @Matches(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, { message: 'slug must contain only lowercase letters, numbers, and hyphens' })
   slug: string;
+
+  @ApiPropertyOptional({ example: ['programação', 'javascript', 'frontend'], description: 'Product categories for filtering' })
+  @IsArray()
+  @IsOptional()
+  @IsString({ each: true })
+  @MaxLength(50, { each: true })
+  categories?: string[];
 
   @ApiProperty({ example: 'month', enum: ['month', 'year', 'week', 'quarter'] })
   @IsString()
