@@ -2,9 +2,9 @@ import { Injectable, Inject, BadRequestException, Logger } from '@nestjs/common'
 import { PrismaService } from '../../../../shared/database/prisma.service';
 import Stripe from 'stripe';
 import {
-  IUserSubscriptionRepository,
-  USER_SUBSCRIPTION_REPOSITORY,
-} from '../../domain/interfaces/user-subscription.repository.interface';
+  IUserProductAccessRepository,
+  USER_PRODUCT_ACCESS_REPOSITORY,
+} from '../../domain/interfaces/user-product-access.repository.interface';
 import {
   IB2CStripeWebhookEventRepository,
   B2C_STRIPE_WEBHOOK_EVENT_REPOSITORY,
@@ -17,15 +17,15 @@ import {
   ITenantBillingConfigRepository,
   TENANT_BILLING_CONFIG_REPOSITORY,
 } from '../../../zarp-subscriptions/domain/interfaces/tenant-billing-config.repository.interface';
-import { EUserSubscriptionStatus } from '../../domain/enums/user-subscription-status.enum';
+import { EBillingMode, EAccessType } from '../../domain/enums/product-type.enum';
 
 @Injectable()
 export class ProcessB2CWebhookUseCase {
   private readonly logger = new Logger(ProcessB2CWebhookUseCase.name);
 
   constructor(
-    @Inject(USER_SUBSCRIPTION_REPOSITORY)
-    private readonly userSubscriptionRepo: IUserSubscriptionRepository,
+    @Inject(USER_PRODUCT_ACCESS_REPOSITORY)
+    private readonly accessRepo: IUserProductAccessRepository,
     @Inject(B2C_STRIPE_WEBHOOK_EVENT_REPOSITORY)
     private readonly webhookEventRepo: IB2CStripeWebhookEventRepository,
     @Inject(STRIPE_PROVIDER)
@@ -77,16 +77,15 @@ export class ProcessB2CWebhookUseCase {
     const productId = session.metadata?.productId;
     const priceId = session.metadata?.priceId;
     const tenantId = session.metadata?.tenantId;
-    const stripeSubscriptionId = session.subscription as string;
+    const billingMode = session.metadata?.billingMode || EBillingMode.UNLIMITED;
+    const maxBillingCycles = session.metadata?.maxBillingCycles ? parseInt(session.metadata.maxBillingCycles) : undefined;
+    const accessDurationDays = session.metadata?.accessDurationDays ? parseInt(session.metadata.accessDurationDays) : undefined;
 
-    if (!userId || !productId || !priceId || !tenantId || !stripeSubscriptionId) {
+    if (!userId || !productId || !priceId || !tenantId) {
       throw new BadRequestException('Missing metadata in checkout.session.completed');
     }
 
     const stripeSecretKey = await this.billingConfigRepo.getStripeSecretKey(tenantId) ?? undefined;
-
-    // Retrieve subscription details from Stripe using tenant's key
-    const stripeSub = await this.stripeProvider.retrieveSubscription(stripeSubscriptionId, stripeSecretKey);
     const customerId = session.customer as string;
 
     // Upsert stripe_customer_id on User
@@ -95,84 +94,141 @@ export class ProcessB2CWebhookUseCase {
       data: { stripe_customer_id: customerId },
     });
 
-    // Create UserSubscription
-    await this.userSubscriptionRepo.create({
-      tenantId,
-      userId,
-      productId,
-      productPriceId: priceId,
-      stripeSubscriptionId,
-      stripeCustomerId: customerId,
-      stripePriceId: stripeSub.items.data[0].price.id,
-      status: stripeSub.status as EUserSubscriptionStatus,
-      currentPeriodStart: new Date(stripeSub.current_period_start * 1000),
-      currentPeriodEnd: new Date(stripeSub.current_period_end * 1000),
-      trialStart: stripeSub.trial_start ? new Date(stripeSub.trial_start * 1000) : undefined,
-      trialEnd: stripeSub.trial_end ? new Date(stripeSub.trial_end * 1000) : undefined,
-      amount: stripeSub.items.data[0].price.unit_amount ?? 0,
-      currency: stripeSub.currency,
-    });
+    const isSubscription = [EBillingMode.UNLIMITED, EBillingMode.LIMITED].includes(billingMode as EBillingMode);
 
-    this.logger.log(`UserSubscription created for user ${userId}, product ${productId}`);
+    if (isSubscription) {
+      // Subscription modes (unlimited/limited)
+      const stripeSubscriptionId = session.subscription as string;
+      if (!stripeSubscriptionId) {
+        throw new BadRequestException('Missing subscription ID for subscription mode');
+      }
+
+      const stripeSub = await this.stripeProvider.retrieveSubscription(stripeSubscriptionId, stripeSecretKey);
+
+      await this.accessRepo.create({
+        tenant_id: tenantId,
+        user_id: userId,
+        product_id: productId,
+        product_price_id: priceId,
+        stripe_subscription_id: stripeSubscriptionId,
+        stripe_customer_id: customerId,
+        stripe_price_id: stripeSub.items.data[0].price.id,
+        access_type: EAccessType.SUBSCRIPTION,
+        status: stripeSub.status,
+        current_period_start: new Date(stripeSub.current_period_start * 1000),
+        current_period_end: new Date(stripeSub.current_period_end * 1000),
+        trial_start: stripeSub.trial_start ? new Date(stripeSub.trial_start * 1000) : undefined,
+        trial_end: stripeSub.trial_end ? new Date(stripeSub.trial_end * 1000) : undefined,
+        access_granted_at: new Date(),
+        max_billing_cycles: maxBillingCycles,
+        completed_billing_cycles: 1,
+        amount: stripeSub.items.data[0].price.unit_amount ?? 0,
+        currency: stripeSub.currency,
+        cancel_at_period_end: false,
+      });
+
+      this.logger.log(`UserProductAccess (subscription) created for user ${userId}, product ${productId}, mode ${billingMode}`);
+    } else {
+      // One-time payment modes (one_time/one_time_exp)
+      const accessType = billingMode === EBillingMode.ONE_TIME ? EAccessType.LIFETIME : EAccessType.TEMPORARY;
+      const expiresAt = billingMode === EBillingMode.ONE_TIME_EXP && accessDurationDays
+        ? new Date(Date.now() + accessDurationDays * 24 * 60 * 60 * 1000)
+        : undefined;
+
+      await this.accessRepo.create({
+        tenant_id: tenantId,
+        user_id: userId,
+        product_id: productId,
+        product_price_id: priceId,
+        stripe_customer_id: customerId,
+        stripe_price_id: session.metadata.priceId!,
+        stripe_payment_intent_id: session.payment_intent as string,
+        access_type: accessType,
+        status: 'active',
+        access_granted_at: new Date(),
+        access_expires_at: expiresAt,
+        completed_billing_cycles: 0,
+        amount: session.amount_total ?? 0,
+        currency: session.currency ?? 'brl',
+        cancel_at_period_end: false,
+      });
+
+      this.logger.log(`UserProductAccess (${accessType}) created for user ${userId}, product ${productId}, mode ${billingMode}`);
+    }
   }
 
   private async handleSubscriptionUpdated(subscription: Stripe.Subscription): Promise<void> {
-    const tenantId = (subscription.metadata as any)?.tenantId;
-    if (!tenantId) return;
+    const access = await this.accessRepo.findByStripeSubscriptionId(subscription.id);
+    if (!access) return;
 
-    await this.userSubscriptionRepo.updateByStripeSubscriptionId(tenantId, subscription.id, {
-      status: subscription.status as EUserSubscriptionStatus,
-      currentPeriodStart: new Date(subscription.current_period_start * 1000),
-      currentPeriodEnd: new Date(subscription.current_period_end * 1000),
-      cancelAtPeriodEnd: subscription.cancel_at_period_end,
+    await this.accessRepo.update(access.id, {
+      status: subscription.status,
+      current_period_start: new Date(subscription.current_period_start * 1000),
+      current_period_end: new Date(subscription.current_period_end * 1000),
+      cancel_at_period_end: subscription.cancel_at_period_end,
     });
 
-    this.logger.log(`UserSubscription updated: ${subscription.id}`);
+    this.logger.log(`UserProductAccess updated: ${subscription.id}`);
   }
 
   private async handleSubscriptionDeleted(subscription: Stripe.Subscription): Promise<void> {
-    const tenantId = (subscription.metadata as any)?.tenantId;
-    if (!tenantId) return;
+    const access = await this.accessRepo.findByStripeSubscriptionId(subscription.id);
+    if (!access) return;
 
-    await this.userSubscriptionRepo.updateByStripeSubscriptionId(tenantId, subscription.id, {
-      status: EUserSubscriptionStatus.CANCELED,
-      canceledAt: new Date(),
+    await this.accessRepo.update(access.id, {
+      status: 'canceled',
+      canceled_at: new Date(),
     });
 
-    this.logger.log(`UserSubscription canceled: ${subscription.id}`);
+    this.logger.log(`UserProductAccess canceled: ${subscription.id}`);
   }
 
   private async handleInvoicePaid(invoice: Stripe.Invoice): Promise<void> {
     const stripeSubscriptionId = invoice.subscription as string;
     if (!stripeSubscriptionId) return;
 
-    const tenantId = (invoice as any).metadata?.tenantId
-      ?? (invoice.subscription_details?.metadata as any)?.tenantId;
-    if (!tenantId) return;
+    const access = await this.accessRepo.findByStripeSubscriptionId(stripeSubscriptionId);
+    if (!access) return;
 
+    const tenantId = access.tenant_id;
     const stripeSecretKey = await this.billingConfigRepo.getStripeSecretKey(tenantId) ?? undefined;
     const stripeSub = await this.stripeProvider.retrieveSubscription(stripeSubscriptionId, stripeSecretKey);
 
-    await this.userSubscriptionRepo.updateByStripeSubscriptionId(tenantId, stripeSubscriptionId, {
-      status: EUserSubscriptionStatus.ACTIVE,
-      currentPeriodStart: new Date(stripeSub.current_period_start * 1000),
-      currentPeriodEnd: new Date(stripeSub.current_period_end * 1000),
-      cancelAtPeriodEnd: stripeSub.cancel_at_period_end,
+    // Increment billing cycle count
+    const newCycleCount = access.completed_billing_cycles + 1;
+
+    // Update period and counter
+    await this.accessRepo.update(access.id, {
+      status: 'active',
+      current_period_start: new Date(stripeSub.current_period_start * 1000),
+      current_period_end: new Date(stripeSub.current_period_end * 1000),
+      completed_billing_cycles: newCycleCount,
     });
 
-    this.logger.log(`Invoice paid, subscription renewed: ${stripeSubscriptionId}`);
+    // If limited mode and reached max cycles, cancel
+    if (access.max_billing_cycles && newCycleCount >= access.max_billing_cycles) {
+      await this.stripeProvider.cancelSubscription(stripeSubscriptionId, false, stripeSecretKey);
+
+      await this.accessRepo.update(access.id, {
+        status: 'canceled',
+        canceled_at: new Date(),
+      });
+
+      this.logger.log(`Limited subscription reached max cycles and canceled: ${stripeSubscriptionId}`);
+    } else {
+      this.logger.log(`Invoice paid, subscription renewed: ${stripeSubscriptionId} (cycle ${newCycleCount}/${access.max_billing_cycles || '∞'})`);
+    }
   }
 
   private async handleInvoicePaymentFailed(invoice: Stripe.Invoice): Promise<void> {
     const stripeSubscriptionId = invoice.subscription as string;
     if (!stripeSubscriptionId) return;
 
-    const tenantId = (invoice as any).metadata?.tenantId
-      ?? (invoice.subscription_details?.metadata as any)?.tenantId;
-    if (!tenantId) return;
+    const access = await this.accessRepo.findByStripeSubscriptionId(stripeSubscriptionId);
+    if (!access) return;
 
-    await this.userSubscriptionRepo.updateByStripeSubscriptionId(tenantId, stripeSubscriptionId, {
-      status: EUserSubscriptionStatus.PAST_DUE,
+    await this.accessRepo.update(access.id, {
+      status: 'past_due',
     });
 
     this.logger.log(`Invoice payment failed, subscription past_due: ${stripeSubscriptionId}`);

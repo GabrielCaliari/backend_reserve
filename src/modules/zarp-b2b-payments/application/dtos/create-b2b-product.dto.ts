@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsOptional, IsInt, IsPositive, IsIn } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsInt, IsPositive, IsIn, IsArray, MaxLength } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateB2BProductDTO {
@@ -11,6 +11,13 @@ export class CreateB2BProductDTO {
   @IsString()
   @IsOptional()
   description?: string;
+
+  @ApiPropertyOptional({ example: ['consultoria', 'premium', 'empresarial'], description: 'Product categories for filtering' })
+  @IsArray()
+  @IsOptional()
+  @IsString({ each: true })
+  @MaxLength(50, { each: true })
+  categories?: string[];
 
   @ApiProperty({ example: 500000, description: 'Price in cents (e.g. 500000 = R$ 5.000,00)' })
   @IsInt()

@@ -6,6 +6,7 @@ export class B2BProductEntity {
     public readonly stripePriceId: string,
     public readonly name: string,
     public readonly description: string | null,
+    public readonly categories: string[],
     public readonly price: number, // cents
     public readonly currency: string,
     public readonly active: boolean,

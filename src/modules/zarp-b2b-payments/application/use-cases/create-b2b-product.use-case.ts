@@ -60,6 +60,7 @@ export class CreateB2BProductUseCase {
       stripePriceId: stripePrice.id,
       name: dto.name,
       description: dto.description,
+      categories: dto.categories,
       price: dto.price,
       currency,
     });
