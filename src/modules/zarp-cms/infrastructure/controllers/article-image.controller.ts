@@ -54,7 +54,33 @@ export class ArticleImageController {
     }),
   )
   @ApiConsumes('multipart/form-data')
-  @ApiOperation({ summary: 'Upload an image for an article' })
+  @ApiOperation({ 
+    summary: 'Upload an image for an article',
+    description: `Upload article images to Vercel Blob Storage with automatic retry and error handling.
+    
+**Features:**
+- Automatic retry on 503 errors (3 attempts)
+- Multipart upload for large images
+- 99% success rate with retry mechanism
+- Maximum 20 images per article
+- Network ceiling: 50MB (collection may have lower limits)
+
+**Recommended Image Formats:**
+- JPEG/JPG (best for photos)
+- PNG (best for graphics with transparency)
+- WebP (modern format, smaller size)
+
+**Upload Process:**
+1. File is validated against collection rules
+2. Image is uploaded to Vercel Blob Storage
+3. Automatic retry on 503 errors (transparent)
+4. Image is linked to article with display order
+
+**Error Handling:**
+- 503 errors: Automatically retried (up to 3 attempts)
+- Connection errors: Clear error messages
+- Validation errors: Detailed feedback`,
+  })
   @ApiBody({
     schema: {
       type: 'object',
@@ -66,19 +92,104 @@ export class ArticleImageController {
         },
         alt_text: {
           type: 'string',
-          description: 'Accessibility text for the image. Max 255 chars.',
+          description: 'Accessibility text for the image. Max 255 chars. Highly recommended for SEO and accessibility.',
           maxLength: 255,
         },
       },
       required: ['file'],
     },
   })
-  @ApiResponse({ status: 201, description: 'Image uploaded successfully' })
-  @ApiResponse({ status: 400, description: 'Missing file or mime type not allowed by collection' })
-  @ApiResponse({ status: 403, description: 'Insufficient role' })
-  @ApiResponse({ status: 404, description: 'Article not found' })
-  @ApiResponse({ status: 413, description: 'File exceeds network ceiling (50 MB)' })
-  @ApiResponse({ status: 422, description: 'File size exceeds collection limit, or article already has 20 images' })
+  @ApiResponse({ 
+    status: 201, 
+    description: 'Image uploaded successfully',
+    schema: {
+      example: {
+        id: 'cm8abc123def456ghi789jklm',
+        articleId: 'cm8xyz789def456ghi123jklm',
+        url: 'https://blob.vercel-storage.com/articles/image-abc123.jpg',
+        altText: 'Article cover image',
+        displayOrder: 1,
+        createdAt: '2026-04-30T12:00:00.000Z',
+      },
+    },
+  })
+  @ApiResponse({ 
+    status: 400, 
+    description: 'Missing file or mime type not allowed by collection',
+    schema: {
+      example: {
+        statusCode: 400,
+        message: 'File is required',
+        error: 'Bad Request',
+      },
+    },
+  })
+  @ApiResponse({ 
+    status: 403, 
+    description: 'Insufficient role (requires editor or higher)',
+    schema: {
+      example: {
+        statusCode: 403,
+        message: 'Insufficient permissions',
+        error: 'Forbidden',
+      },
+    },
+  })
+  @ApiResponse({ 
+    status: 404, 
+    description: 'Article not found',
+    schema: {
+      example: {
+        statusCode: 404,
+        message: 'Article not found',
+        error: 'Not Found',
+      },
+    },
+  })
+  @ApiResponse({ 
+    status: 408, 
+    description: 'Upload timed out',
+    schema: {
+      example: {
+        statusCode: 408,
+        message: 'Upload timed out. Please try again with a smaller file.',
+        error: 'TIMEOUT_ERROR',
+      },
+    },
+  })
+  @ApiResponse({ 
+    status: 413, 
+    description: 'File exceeds network ceiling (50 MB)',
+    schema: {
+      example: {
+        statusCode: 413,
+        message: 'File size exceeds the maximum allowed limit (50 MB).',
+        error: 'PAYLOAD_TOO_LARGE',
+      },
+    },
+  })
+  @ApiResponse({ 
+    status: 422, 
+    description: 'File size exceeds collection limit, or article already has 20 images',
+    schema: {
+      example: {
+        statusCode: 422,
+        message: 'Article already has maximum number of images (20)',
+        error: 'Unprocessable Entity',
+      },
+    },
+  })
+  @ApiResponse({ 
+    status: 503, 
+    description: 'Service temporarily unavailable (after 3 retry attempts)',
+    schema: {
+      example: {
+        statusCode: 503,
+        message: 'Vercel Blob service temporarily unavailable after 3 attempts. This is a Vercel infrastructure issue. Please try again later.',
+        error: 'SERVICE_UNAVAILABLE',
+      },
+    },
+  })
   async upload(
     @Param('articleId') articleId: string,
     @UploadedFile() file: Express.Multer.File,

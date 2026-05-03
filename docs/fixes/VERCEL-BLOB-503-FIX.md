@@ -197,18 +197,20 @@ See full migration guide: `docs/STORAGE-MIGRATION-VERCEL-TO-S3.md`
 
 ## Known Limitations
 
-1. **Retry only on 503**: Other errors (401, 413) fail immediately
-2. **Max 3 retries**: After 3 attempts, upload fails
-3. **No circuit breaker**: Each upload retries independently
-4. **Synchronous retries**: Blocks the request during retries
+1. **Retry only on 503**: Other errors (401, 413) fail immediately (by design)
+2. **Max 3 retries**: After 3 attempts, upload fails (configurable if needed)
+3. **No circuit breaker**: Each upload retries independently (could add if needed)
+4. **Synchronous retries**: Blocks the request during retries (acceptable for uploads)
+5. **SDK also retries**: Double retry layer (SDK + our code) for maximum resilience
 
 ## Future Improvements
 
-- [ ] Add circuit breaker pattern (stop retrying if Vercel is down)
+- [x] Add jitter to exponential backoff (DONE - prevents thundering herd)
+- [ ] Add circuit breaker pattern (stop retrying if Vercel is consistently down)
 - [ ] Add metrics/monitoring for retry rates
-- [ ] Add configurable retry count via environment variable
-- [ ] Add jitter to exponential backoff to prevent thundering herd
-- [ ] Add fallback to S3 if Vercel Blob is down
+- [ ] Make retry count configurable via environment variable
+- [ ] Add fallback to S3 if Vercel Blob is down (S3 provider already ready)
+- [ ] Add health check endpoint to monitor Vercel Blob status
 
 ## Related Issues
 
@@ -220,4 +222,7 @@ See full migration guide: `docs/STORAGE-MIGRATION-VERCEL-TO-S3.md`
 
 - Vercel Blob Documentation: https://vercel.com/docs/storage/vercel-blob
 - Vercel Status Page: https://www.vercel-status.com/
+- Vercel Storage GitHub Issues: https://github.com/vercel/storage/issues
 - Exponential Backoff: https://en.wikipedia.org/wiki/Exponential_backoff
+- Retry added in @vercel/blob@0.19.0 (we're using v2.2.0)
+- Known 503 issues: Rate limiting and CDN instability (April 2026)
