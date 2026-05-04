@@ -11,6 +11,7 @@ import { CreateB2BProductUseCase } from './application/use-cases/create-b2b-prod
 import { ListB2BProductsUseCase } from './application/use-cases/list-b2b-products.use-case';
 import { CreatePaymentLinkUseCase } from './application/use-cases/create-payment-link.use-case';
 import { CreateLeadCheckoutUseCase } from './application/use-cases/create-lead-checkout.use-case';
+import { CreateCartCheckoutUseCase } from './application/use-cases/create-cart-checkout.use-case';
 import { ListPurchasesUseCase } from './application/use-cases/list-purchases.use-case';
 import { GetMetricsUseCase } from './application/use-cases/get-metrics.use-case';
 import { ProcessB2BWebhookUseCase } from './application/use-cases/process-b2b-webhook.use-case';
@@ -36,7 +37,8 @@ import { OptionalUserGuard } from './infrastructure/guards/optional-user.guard';
     CreateB2BProductUseCase,
     ListB2BProductsUseCase,
     CreatePaymentLinkUseCase,
-    CreateLeadCheckoutUseCase, // Novo: checkout para leads
+    CreateLeadCheckoutUseCase,
+    CreateCartCheckoutUseCase, // Novo: checkout de carrinho com múltiplos itens
     ListPurchasesUseCase,
     GetMetricsUseCase,
     ProcessB2BWebhookUseCase,

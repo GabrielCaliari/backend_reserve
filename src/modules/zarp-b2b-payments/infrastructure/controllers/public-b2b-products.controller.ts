@@ -13,7 +13,9 @@ import {
 import { ApiTags, ApiOperation, ApiResponse, ApiHeader } from '@nestjs/swagger';
 import { ListB2BProductsUseCase } from '../../application/use-cases/list-b2b-products.use-case';
 import { CreateLeadCheckoutUseCase } from '../../application/use-cases/create-lead-checkout.use-case';
+import { CreateCartCheckoutUseCase } from '../../application/use-cases/create-cart-checkout.use-case';
 import { CreateLeadCheckoutDTO } from '../../application/dtos/create-lead-checkout.dto';
+import { CreateCartCheckoutDTO } from '../../application/dtos/create-cart-checkout.dto';
 import { OptionalUserGuard } from '../guards/optional-user.guard';
 
 /**
@@ -46,6 +48,7 @@ export class PublicB2BProductsController {
   constructor(
     private readonly listB2BProductsUseCase: ListB2BProductsUseCase,
     private readonly createLeadCheckoutUseCase: CreateLeadCheckoutUseCase,
+    private readonly createCartCheckoutUseCase: CreateCartCheckoutUseCase,
   ) {}
 
   private getTenantId(tenantId: string): string {
@@ -113,6 +116,48 @@ export class PublicB2BProductsController {
       this.getTenantId(tenantId), 
       dto,
       userId, // Opcional: undefined para leads, string para users
+    );
+  }
+
+  // ─── Cart Checkout ─────────────────────────────────────────────────────────
+
+  @Post('checkout')
+  @ApiOperation({
+    summary: 'Create cart checkout with multiple products (public)',
+    description: `
+      Cria uma única Stripe Checkout Session com múltiplos produtos.
+
+      Suporta 2 cenários:
+      1. Lead não autenticado: Captura dados via modal antes do checkout
+      2. User autenticado: Vincula compras ao user existente
+
+      Um B2BPurchase é criado por item para rastreamento granular.
+      Se o lead abandonar, os dados ficam salvos para remarketing.
+    `,
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Cart checkout created successfully',
+    schema: {
+      example: {
+        checkoutUrl: 'https://checkout.stripe.com/c/pay/cs_test_xxxxx',
+        purchaseIds: ['cm5abc123', 'cm5xyz789'],
+      },
+    },
+  })
+  @ApiResponse({ status: 400, description: 'Invalid data or Stripe not configured' })
+  @ApiResponse({ status: 404, description: 'One or more products not found or inactive' })
+  async createCartCheckout(
+    @Headers('x-tenant-id') tenantId: string,
+    @Body() dto: CreateCartCheckoutDTO,
+    @Req() req: any,
+  ) {
+    const userId = req.user_id || undefined;
+
+    return this.createCartCheckoutUseCase.execute(
+      this.getTenantId(tenantId),
+      dto,
+      userId,
     );
   }
 }
