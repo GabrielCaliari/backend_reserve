@@ -42,7 +42,7 @@ import { OptionalUserGuard } from '../guards/optional-user.guard';
  */
 @ApiTags('Public B2B Products')
 @Controller('public/b2b/products')
-@UseGuards(OptionalUserGuard) // Permite acesso com ou sem autenticação
+@UseGuards(OptionalUserGuard)
 @ApiHeader({ name: 'x-tenant-id', required: true, description: 'Tenant ID' })
 export class PublicB2BProductsController {
   constructor(
@@ -58,81 +58,83 @@ export class PublicB2BProductsController {
     return tenantId;
   }
 
-  // ─── Public Endpoints ──────────────────────────────────────────────────────
+  // ─── GET /public/b2b/products ──────────────────────────────────────────────
 
   @Get()
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'List all active B2B products (public)',
-    description: 'Endpoint público para listar produtos B2B. Não requer autenticação.'
+    description: 'Endpoint público para listar produtos B2B. Não requer autenticação.',
   })
   @ApiResponse({ status: 200, description: 'Products listed successfully' })
   async listProducts(@Headers('x-tenant-id') tenantId: string) {
     const products = await this.listB2BProductsUseCase.execute(this.getTenantId(tenantId));
-    
-    // Retorna apenas produtos ativos
     return products.filter(p => p.isActive());
   }
 
+  // ─── POST /public/b2b/products/:productId/checkout ─────────────────────────
+  // DEVE vir antes de qualquer rota estática para não conflitar
+
   @Post(':productId/checkout')
-  @ApiOperation({ 
-    summary: 'Create checkout for lead or authenticated user (public)',
-    description: `
-      Cria checkout do Stripe para produto B2B avulso.
-      
-      Suporta 2 cenários:
-      1. Lead não autenticado: Captura dados básicos (nome, email, telefone)
-      2. User autenticado: Vincula compra ao user existente
-      
-      Não é necessário estar logado, mas se estiver, a compra será vinculada à conta.
-    `
+  @ApiOperation({
+    summary: 'Create checkout for a single product (public)',
+    description: 'Cria checkout do Stripe para um produto B2B avulso. Não requer autenticação.',
   })
-  @ApiResponse({ 
-    status: 201, 
-    description: 'Checkout created successfully',
-    schema: {
-      example: {
-        checkoutUrl: 'https://checkout.stripe.com/c/pay/cs_test_xxxxx',
-        purchaseId: 'cm5abc123'
-      }
-    }
-  })
+  @ApiResponse({ status: 201, description: 'Checkout created successfully' })
   @ApiResponse({ status: 400, description: 'Invalid data or Stripe not configured' })
   @ApiResponse({ status: 404, description: 'Product not found or inactive' })
   async createLeadCheckout(
     @Headers('x-tenant-id') tenantId: string,
     @Param('productId') productId: string,
     @Body() dto: CreateLeadCheckoutDTO,
-    @Req() req: any, // Para acessar req.user_id do OptionalUserGuard
+    @Req() req: any,
   ) {
-    // Valida que o productId do param bate com o do body
     if (dto.productId !== productId) {
       throw new BadRequestException('Product ID mismatch');
     }
 
-    // Passa userId se existir (user autenticado)
     const userId = req.user_id || undefined;
 
     return this.createLeadCheckoutUseCase.execute(
-      this.getTenantId(tenantId), 
+      this.getTenantId(tenantId),
       dto,
-      userId, // Opcional: undefined para leads, string para users
+      userId,
     );
   }
+}
 
-  // ─── Cart Checkout ─────────────────────────────────────────────────────────
+/**
+ * Controller separado para o cart checkout.
+ *
+ * Usa o prefixo /public/b2b/checkout (sem /products) para evitar
+ * conflito com a rota dinâmica POST /public/b2b/products/:productId/checkout.
+ *
+ * Endpoint: POST /api/public/b2b/checkout
+ */
+@ApiTags('Public B2B Products')
+@Controller('public/b2b/checkout')
+@UseGuards(OptionalUserGuard)
+@ApiHeader({ name: 'x-tenant-id', required: true, description: 'Tenant ID' })
+export class PublicB2BCartController {
+  constructor(
+    private readonly createCartCheckoutUseCase: CreateCartCheckoutUseCase,
+  ) {}
 
-  @Post('checkout')
+  private getTenantId(tenantId: string): string {
+    if (!tenantId) {
+      throw new BadRequestException('x-tenant-id header is required');
+    }
+    return tenantId;
+  }
+
+  // ─── POST /public/b2b/checkout ─────────────────────────────────────────────
+
+  @Post()
   @ApiOperation({
     summary: 'Create cart checkout with multiple products (public)',
     description: `
       Cria uma única Stripe Checkout Session com múltiplos produtos.
-
-      Suporta 2 cenários:
-      1. Lead não autenticado: Captura dados via modal antes do checkout
-      2. User autenticado: Vincula compras ao user existente
-
+      Suporta leads (sem login) e users autenticados.
       Um B2BPurchase é criado por item para rastreamento granular.
-      Se o lead abandonar, os dados ficam salvos para remarketing.
     `,
   })
   @ApiResponse({

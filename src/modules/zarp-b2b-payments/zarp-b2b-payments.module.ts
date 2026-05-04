@@ -5,7 +5,7 @@ import { ZarpSubscriptionsModule } from '../zarp-subscriptions/zarp-subscription
 
 import { B2BPaymentsController } from './infrastructure/controllers/b2b-payments.controller';
 import { B2BWebhookController } from './infrastructure/controllers/b2b-webhook.controller';
-import { PublicB2BProductsController } from './infrastructure/controllers/public-b2b-products.controller';
+import { PublicB2BProductsController, PublicB2BCartController } from './infrastructure/controllers/public-b2b-products.controller';
 
 import { CreateB2BProductUseCase } from './application/use-cases/create-b2b-product.use-case';
 import { ListB2BProductsUseCase } from './application/use-cases/list-b2b-products.use-case';
@@ -31,7 +31,8 @@ import { OptionalUserGuard } from './infrastructure/guards/optional-user.guard';
   controllers: [
     B2BPaymentsController,
     B2BWebhookController,
-    PublicB2BProductsController, // Novo: endpoints públicos para leads
+    PublicB2BProductsController,
+    PublicB2BCartController, // POST /api/public/b2b/checkout (rota separada para evitar conflito com /:productId/checkout)
   ],
   providers: [
     CreateB2BProductUseCase,
