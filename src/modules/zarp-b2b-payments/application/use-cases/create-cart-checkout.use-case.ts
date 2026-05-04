@@ -96,35 +96,49 @@ export class CreateCartCheckoutUseCase {
       cancel_url: `${frontendUrl}/b2b/cancel`,
     });
 
-    // 6. Create one B2BPurchase per item (mesmo stripeCheckoutId)
-    // Isso permite rastreamento granular por produto e remarketing por item
-    const purchaseIds: string[] = [];
+    // 6. Create a single B2BPurchase representing the entire cart
+    // Uses the first product as the "primary" product_id (required by schema).
+    // All items are stored in metadata for webhook processing and remarketing.
+    const firstItem = dto.items[0];
+    const firstProduct = products.get(firstItem.productId)!;
 
-    for (const item of dto.items) {
+    const totalAmount = dto.items.reduce((sum, item) => {
       const product = products.get(item.productId)!;
+      return sum + product.price * item.quantity;
+    }, 0);
 
-      const purchase = await this.purchaseRepo.create({
-        tenantId,
+    const cartItems = dto.items.map((item) => {
+      const product = products.get(item.productId)!;
+      return {
         productId: product.id,
-        stripeCheckoutId: stripeSession.id,
-        amount: product.price * item.quantity,
+        productName: product.name,
+        stripePriceId: product.stripePriceId,
+        quantity: item.quantity,
+        unitAmount: product.price,
+        subtotal: product.price * item.quantity,
         currency: product.currency,
-        customerEmail: dto.leadEmail,
-        customerName: dto.leadName,
-        customerPhone: dto.leadPhone,
-        metadata: {
-          quantity: item.quantity,
-          cart_session: stripeSession.id,
-          is_cart_purchase: true,
-        },
-      });
+      };
+    });
 
-      purchaseIds.push(purchase.id);
-    }
+    const purchase = await this.purchaseRepo.create({
+      tenantId,
+      productId: firstProduct.id,
+      stripeCheckoutId: stripeSession.id,
+      amount: totalAmount,
+      currency: firstProduct.currency,
+      customerEmail: dto.leadEmail,
+      customerName: dto.leadName,
+      customerPhone: dto.leadPhone,
+      metadata: {
+        is_cart_purchase: true,
+        cart_items: cartItems,
+        cart_item_count: dto.items.length,
+      },
+    });
 
     return {
       checkoutUrl: stripeSession.url ?? '',
-      purchaseIds,
+      purchaseIds: [purchase.id],
     };
   }
 
