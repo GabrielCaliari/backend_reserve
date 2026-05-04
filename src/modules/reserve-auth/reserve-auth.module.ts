@@ -46,6 +46,7 @@ import {
 
 // DIP Guards
 import { AdminJwtGuard, UserJwtGuard, RolesGuard, TenantGuard, UserTenantGuard, UserRolesGuard } from '../../shared/auth/guards';
+import { PermissionsGuard } from '../../shared/auth/guards/permissions.guard';
 import { ADMIN_TOKEN_VALIDATOR, USER_TOKEN_VALIDATOR } from '../../shared/auth/interfaces/token-validator.interface';
 
 // Token Validators (ITokenValidator implementations)
@@ -93,6 +94,7 @@ import { UserTokenValidator } from './infrastructure/providers/user-token-valida
     TenantGuard,
     UserTenantGuard,
     UserRolesGuard,
+    PermissionsGuard,
 
     // Local repositories
     AdminRepository,
@@ -130,6 +132,7 @@ import { UserTokenValidator } from './infrastructure/providers/user-token-valida
     TenantGuard,
     UserTenantGuard,
     UserRolesGuard,
+    PermissionsGuard,
     ADMIN_TOKEN_VALIDATOR,
     USER_TOKEN_VALIDATOR,
     // Concrete repos (backward compat for cross-context consumers)

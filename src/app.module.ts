@@ -8,6 +8,7 @@ import { AppController } from './app.controller';
 // Shared modules
 import { DatabaseModule } from './shared/database/database.module';
 import { AuthModule } from './shared/auth/auth.module';
+import { RbacModule } from './shared/auth/rbac/rbac.module';
 
 // Bounded Context modules
 import { ReserveAuthModule } from './modules/reserve-auth/reserve-auth.module';
@@ -35,6 +36,7 @@ import { ToLowercaseQueryParamsPipe, ToLowercaseBodyRequestPipe } from './shared
     ThrottlerModule.forRoot([{ ttl: 60000, limit: 100 }]),
     DatabaseModule,
     AuthModule,
+    RbacModule,
     ScheduleModule.forRoot(),
 
     // Bounded Contexts
