@@ -152,17 +152,17 @@ export class PrismaTenantBillingConfigRepository implements ITenantBillingConfig
   async getCheckoutUrls(tenantId: string): Promise<{ successUrl: string; cancelUrl: string }> {
     const row = await this.prisma.tenantBillingConfig.findUnique({
       where: { tenant_id: tenantId },
-      select: {
-        checkout_success_url: true,
-        checkout_cancel_url: true,
-      },
     });
 
     const frontendUrl = process.env.FRONTEND_URL ?? 'http://localhost:3000';
 
+    // Os campos checkout_success_url / checkout_cancel_url existem após a migration
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const record = row as any;
+
     return {
-      successUrl: row?.checkout_success_url ?? `${frontendUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancelUrl: row?.checkout_cancel_url ?? `${frontendUrl}/cancel`,
+      successUrl: record?.checkout_success_url ?? `${frontendUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancelUrl: record?.checkout_cancel_url ?? `${frontendUrl}/cancel`,
     };
   }
 
