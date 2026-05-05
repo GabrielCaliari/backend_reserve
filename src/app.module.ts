@@ -1,5 +1,6 @@
 ﻿import { Module } from '@nestjs/common';
 import { APP_GUARD, RouterModule } from '@nestjs/core';
+import { SecurityPostureGuard } from './shared/auth/guards/security-posture.guard';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ConfigModule } from '@nestjs/config';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
@@ -95,6 +96,7 @@ import { ToLowercaseQueryParamsPipe, ToLowercaseBodyRequestPipe } from './shared
     ToLowercaseQueryParamsPipe,
     ToLowercaseBodyRequestPipe,
     { provide: APP_GUARD, useClass: ThrottlerGuard },
+    { provide: APP_GUARD, useClass: SecurityPostureGuard },
   ],
 })
 export class AppModule {}
