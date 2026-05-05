@@ -13,6 +13,8 @@ export interface ICreateTenantBillingConfig {
   currency: string;
   planName?: string;
   planDescription?: string;
+  checkoutSuccessUrl?: string;
+  checkoutCancelUrl?: string;
   metadata?: Record<string, any>;
 }
 
@@ -28,6 +30,8 @@ export interface IUpdateTenantBillingConfig {
   currency?: string;
   planName?: string;
   planDescription?: string;
+  checkoutSuccessUrl?: string;
+  checkoutCancelUrl?: string;
   metadata?: Record<string, any>;
   active?: boolean;
 }
@@ -44,6 +48,8 @@ export interface ITenantBillingConfigRepository {
   getStripeWebhookSecret(tenantId: string): Promise<string | null>;
   /** Returns whether secret keys are configured (without decrypting) */
   hasSecretKeys(tenantId: string): Promise<{ hasSecretKey: boolean; hasWebhookSecret: boolean }>;
+  /** Returns the checkout redirect URLs for the tenant, falling back to env vars */
+  getCheckoutUrls(tenantId: string): Promise<{ successUrl: string; cancelUrl: string }>;
 }
 
 export const TENANT_BILLING_CONFIG_REPOSITORY = Symbol('TENANT_BILLING_CONFIG_REPOSITORY');

@@ -72,10 +72,9 @@ export class CreateLeadCheckoutUseCase {
       throw new NotFoundException('Product not found or inactive');
     }
 
-    const frontendUrl = process.env.FRONTEND_URL ?? 'http://localhost:3000';
+    const { successUrl, cancelUrl } = await this.billingConfigRepo.getCheckoutUrls(tenantId);
 
     // 3. Create Stripe Checkout Session
-    // Metadata varia se é lead ou user autenticado
     const stripe = new Stripe(stripeSecretKey, { apiVersion: STRIPE_API_VERSION });
     
     const metadata: Record<string, string> = {
@@ -86,12 +85,10 @@ export class CreateLeadCheckoutUseCase {
       lead_phone: dto.leadPhone,
     };
 
-    // Se houver userId, vincula ao user existente
     if (userId) {
       metadata.user_id = userId;
       metadata.is_authenticated_purchase = 'true';
     } else {
-      // Lead não autenticado - webhook deve criar user
       metadata.is_lead_purchase = 'true';
     }
 
@@ -101,8 +98,8 @@ export class CreateLeadCheckoutUseCase {
       line_items: [{ price: product.stripePriceId, quantity: 1 }],
       customer_email: dto.leadEmail,
       metadata,
-      success_url: `${frontendUrl}/b2b/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${frontendUrl}/b2b/cancel`,
+      success_url: successUrl,
+      cancel_url: cancelUrl,
     });
 
     // 4. Create purchase record (status: pending)

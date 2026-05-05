@@ -73,27 +73,85 @@ export class ProcessB2CWebhookUseCase {
   }
 
   private async handleCheckoutCompleted(session: Stripe.Checkout.Session): Promise<void> {
-    const userId = session.metadata?.userId;
     const productId = session.metadata?.productId;
     const priceId = session.metadata?.priceId;
     const tenantId = session.metadata?.tenantId;
     const billingMode = session.metadata?.billingMode || EBillingMode.UNLIMITED;
     const maxBillingCycles = session.metadata?.maxBillingCycles ? parseInt(session.metadata.maxBillingCycles) : undefined;
     const accessDurationDays = session.metadata?.accessDurationDays ? parseInt(session.metadata.accessDurationDays) : undefined;
+    const isLeadPurchase = session.metadata?.is_lead_purchase === 'true';
 
-    if (!userId || !productId || !priceId || !tenantId) {
+    if (!productId || !priceId || !tenantId) {
       throw new BadRequestException('Missing metadata in checkout.session.completed');
     }
 
     const stripeSecretKey = await this.billingConfigRepo.getStripeSecretKey(tenantId) ?? undefined;
     const customerId = session.customer as string;
 
-    // Upsert stripe_customer_id on User
-    await this.prisma.user.update({
-      where: { id: userId },
-      data: { stripe_customer_id: customerId },
-    });
+    // ─── Resolve userId ────────────────────────────────────────────────────────
+    // Usuário autenticado: userId vem direto na metadata
+    // Lead: busca por email ou cria novo user
+    let userId: string;
 
+    if (!isLeadPurchase && session.metadata?.userId) {
+      userId = session.metadata.userId;
+
+      // Atualiza stripe_customer_id no user existente
+      await this.prisma.user.update({
+        where: { id: userId },
+        data: { stripe_customer_id: customerId },
+      });
+    } else {
+      // Lead purchase — resolve user pelo email
+      const leadEmail = session.metadata?.lead_email ?? session.customer_details?.email;
+      const leadName = session.metadata?.lead_name ?? session.customer_details?.name ?? 'Lead';
+
+      if (!leadEmail) {
+        throw new BadRequestException('Missing lead_email in checkout metadata for lead purchase');
+      }
+
+      // Busca user existente pelo email
+      const existingUser = await this.prisma.user.findFirst({
+        where: { email: leadEmail },
+        select: { id: true },
+      });
+
+      if (existingUser) {
+        userId = existingUser.id;
+        // Atualiza customerId se ainda não tiver
+        await this.prisma.user.update({
+          where: { id: userId },
+          data: { stripe_customer_id: customerId },
+        });
+      } else {
+        // Cria novo user a partir dos dados do lead
+        // Busca o plano free para associar ao novo user
+        const freePlan = await this.prisma.plan.findFirst({
+          where: { slug: process.env.FREE_PLAN_SLUG ?? 'free' },
+          select: { id: true },
+        });
+
+        if (!freePlan) {
+          throw new BadRequestException('Free plan not found — cannot create user from lead');
+        }
+
+        const newUser = await this.prisma.user.create({
+          data: {
+            email: leadEmail,
+            name: leadName,
+            cpf: '',
+            phone_number: session.metadata?.lead_phone ?? '',
+            plan_id: freePlan.id,
+            stripe_customer_id: customerId,
+          },
+        });
+
+        userId = newUser.id;
+        this.logger.log(`New user created from lead purchase: ${userId} (${leadEmail})`);
+      }
+    }
+
+    // ─── Create UserProductAccess ──────────────────────────────────────────────
     const isSubscription = [EBillingMode.UNLIMITED, EBillingMode.LIMITED].includes(billingMode as EBillingMode);
 
     if (isSubscription) {

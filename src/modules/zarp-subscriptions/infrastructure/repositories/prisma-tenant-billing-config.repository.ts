@@ -99,6 +99,8 @@ export class PrismaTenantBillingConfigRepository implements ITenantBillingConfig
     if (data.currency !== undefined) updateData.currency = data.currency;
     if (data.planName !== undefined) updateData.plan_name = data.planName;
     if (data.planDescription !== undefined) updateData.plan_description = data.planDescription;
+    if (data.checkoutSuccessUrl !== undefined) updateData.checkout_success_url = data.checkoutSuccessUrl;
+    if (data.checkoutCancelUrl !== undefined) updateData.checkout_cancel_url = data.checkoutCancelUrl;
     if (data.metadata !== undefined) updateData.metadata = data.metadata;
     if (data.active !== undefined) updateData.active = data.active;
 
@@ -147,6 +149,23 @@ export class PrismaTenantBillingConfigRepository implements ITenantBillingConfig
     };
   }
 
+  async getCheckoutUrls(tenantId: string): Promise<{ successUrl: string; cancelUrl: string }> {
+    const row = await this.prisma.tenantBillingConfig.findUnique({
+      where: { tenant_id: tenantId },
+      select: {
+        checkout_success_url: true,
+        checkout_cancel_url: true,
+      },
+    });
+
+    const frontendUrl = process.env.FRONTEND_URL ?? 'http://localhost:3000';
+
+    return {
+      successUrl: row?.checkout_success_url ?? `${frontendUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancelUrl: row?.checkout_cancel_url ?? `${frontendUrl}/cancel`,
+    };
+  }
+
   private toDomain(row: any): TenantBillingConfigEntity {
     return new TenantBillingConfigEntity({
       id: row.id,
@@ -161,6 +180,8 @@ export class PrismaTenantBillingConfigRepository implements ITenantBillingConfig
       currency: row.currency,
       planName: row.plan_name ?? undefined,
       planDescription: row.plan_description ?? undefined,
+      checkoutSuccessUrl: row.checkout_success_url ?? undefined,
+      checkoutCancelUrl: row.checkout_cancel_url ?? undefined,
       metadata: row.metadata as Record<string, any> | undefined,
       active: row.active,
       createdAt: row.created_at,

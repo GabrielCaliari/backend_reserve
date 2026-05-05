@@ -1355,6 +1355,10 @@ model TenantBillingConfig {
   plan_name              String?                @db.VarChar(100)
   plan_description       String?                @db.VarChar(255)
 
+  // Redirect URLs after Stripe Checkout (per-tenant, overrides FRONTEND_URL env var)
+  checkout_success_url   String?                @db.VarChar(500)
+  checkout_cancel_url    String?                @db.VarChar(500)
+
   // Metadata (any extra config the panel needs)
   metadata               Json?
 

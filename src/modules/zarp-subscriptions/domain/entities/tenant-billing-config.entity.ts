@@ -21,6 +21,10 @@ export interface TenantBillingConfigProps {
   planName?: string;
   planDescription?: string;
 
+  // Redirect URLs after Stripe Checkout (per-tenant)
+  checkoutSuccessUrl?: string;
+  checkoutCancelUrl?: string;
+
   metadata?: Record<string, any>;
   active: boolean;
   createdAt: Date;
@@ -49,6 +53,8 @@ export class TenantBillingConfigEntity {
   get currency() { return this.props.currency; }
   get planName() { return this.props.planName; }
   get planDescription() { return this.props.planDescription; }
+  get checkoutSuccessUrl() { return this.props.checkoutSuccessUrl; }
+  get checkoutCancelUrl() { return this.props.checkoutCancelUrl; }
   get metadata() { return this.props.metadata; }
   get active() { return this.props.active; }
   get createdAt() { return this.props.createdAt; }

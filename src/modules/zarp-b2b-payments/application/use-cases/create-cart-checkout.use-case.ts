@@ -83,7 +83,7 @@ export class CreateCartCheckoutUseCase {
     }
 
     // 5. Create single Stripe Checkout Session with all line items
-    const frontendUrl = process.env.FRONTEND_URL ?? 'http://localhost:3000';
+    const { successUrl, cancelUrl } = await this.billingConfigRepo.getCheckoutUrls(tenantId);
     const stripe = new Stripe(stripeSecretKey, { apiVersion: STRIPE_API_VERSION });
 
     const stripeSession = await stripe.checkout.sessions.create({
@@ -92,8 +92,8 @@ export class CreateCartCheckoutUseCase {
       line_items: lineItems,
       customer_email: dto.leadEmail,
       metadata,
-      success_url: `${frontendUrl}/b2b/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${frontendUrl}/b2b/cancel`,
+      success_url: successUrl,
+      cancel_url: cancelUrl,
     });
 
     // 6. Create a single B2BPurchase representing the entire cart

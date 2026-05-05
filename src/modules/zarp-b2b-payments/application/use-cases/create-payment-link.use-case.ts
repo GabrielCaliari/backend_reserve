@@ -56,6 +56,7 @@ export class CreatePaymentLinkUseCase {
 
     // 3. Create Stripe Checkout Session (one-time payment mode) using tenant's key
     const stripe = new Stripe(stripeSecretKey, { apiVersion: STRIPE_API_VERSION });
+    const { successUrl, cancelUrl } = await this.billingConfigRepo.getCheckoutUrls(tenantId);
     const stripeSession = await stripe.checkout.sessions.create({
       mode: 'payment',
       payment_method_types: ['card'],
@@ -66,10 +67,9 @@ export class CreatePaymentLinkUseCase {
         product_id: product.id,
         customer_email: dto.customerEmail,
       },
-      success_url: `${frontendUrl}/b2b/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${frontendUrl}/b2b/cancel`,
+      success_url: successUrl,
+      cancel_url: cancelUrl,
     });
-
     // 4. Create purchase record
     const purchase = await this.purchaseRepo.create({
       tenantId,

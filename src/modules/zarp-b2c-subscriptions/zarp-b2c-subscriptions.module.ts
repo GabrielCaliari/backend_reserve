@@ -19,6 +19,7 @@ import { StripeProvider } from '../zarp-subscriptions/infrastructure/providers/s
 import { STRIPE_PROVIDER } from '../zarp-subscriptions/domain/interfaces/stripe.provider.interface';
 
 import { ProductAccessGuard } from './infrastructure/guards/product-access.guard';
+import { OptionalUserGuard } from '../zarp-b2b-payments/infrastructure/guards/optional-user.guard';
 import { B2CSubscriptionsController } from './infrastructure/controllers/b2c-subscriptions.controller';
 import { B2CStripeWebhookController } from './infrastructure/controllers/b2c-stripe-webhook.controller';
 
@@ -38,6 +39,7 @@ import { B2CStripeWebhookController } from './infrastructure/controllers/b2c-str
     },
     { provide: STRIPE_PROVIDER, useClass: StripeProvider },
     ProductAccessGuard,
+    OptionalUserGuard, // Permite checkout sem login (leads)
   ],
   exports: [ProductAccessGuard, USER_PRODUCT_ACCESS_REPOSITORY, ProcessB2CWebhookUseCase],
 })
