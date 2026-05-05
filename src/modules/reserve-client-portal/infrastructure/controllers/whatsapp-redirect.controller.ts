@@ -1,8 +1,10 @@
 import { Controller, Get, Logger, Param, Req, Res } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { WhatsAppTrackingService } from '../../application/services/whatsapp-tracking.service';
+import { Public } from '../../../../shared/auth/decorators/public.decorator';
 
 @Controller('wa')
+@Public()
 export class WhatsAppRedirectController {
   private readonly logger = new Logger(WhatsAppRedirectController.name);
 

@@ -22,10 +22,12 @@ import {
   IStripeProvider,
   STRIPE_PROVIDER,
 } from '../../domain/interfaces/stripe.provider.interface';
+import { Public } from '../../../../shared/auth/decorators/public.decorator';
 
 @ApiTags('Webhooks')
 @Controller('webhooks')
 @SkipThrottle()
+@Public()
 export class StripeWebhookController {
   private readonly logger = new Logger(StripeWebhookController.name);
 

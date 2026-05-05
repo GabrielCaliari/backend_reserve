@@ -16,6 +16,7 @@ import { ILeadAttachmentRepository, LEAD_ATTACHMENT_REPOSITORY } from '../../dom
 import { ParseUUIDPipe } from '../../../../shared/pipes/parse-uuid.pipe';
 import { TenantGuard } from '../../../../shared/auth/guards/tenant.guard';
 import { GetTenantId } from '../../../../shared/decorators/get-tenant-id.decorator';
+import { Public } from '../../../../shared/auth/decorators/public.decorator';
 
 @ApiTags('Leads')
 @Controller()
@@ -32,6 +33,7 @@ export class LeadController {
   // --- Public endpoint (no authentication required) ---
 
   @Post('/')
+  @Public()
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({
     summary: 'Create lead with optional attachments',

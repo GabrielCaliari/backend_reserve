@@ -18,12 +18,14 @@ import {
   ITenantBillingConfigRepository,
   TENANT_BILLING_CONFIG_REPOSITORY,
 } from '../../../reserve-subscriptions/domain/interfaces/tenant-billing-config.repository.interface';
+import { Public } from '../../../../shared/auth/decorators/public.decorator';
 
 const STRIPE_API_VERSION = '2025-02-24.acacia' as const;
 
 @ApiTags('Unified Webhooks')
 @Controller('webhooks/stripe')
 @SkipThrottle()
+@Public()
 export class UnifiedStripeWebhookController {
   private readonly logger = new Logger(UnifiedStripeWebhookController.name);
 

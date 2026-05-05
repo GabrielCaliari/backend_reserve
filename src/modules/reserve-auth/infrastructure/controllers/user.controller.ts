@@ -10,6 +10,7 @@ import PreCreateUserDTO from '../../application/dtos/pre-create-user.dto';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody, ApiParam } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { EUserCollectionRole } from '../../domain/enums/user-collection-role.enum';
+import { Public } from '../../../../shared/auth/decorators/public.decorator';
 
 @ApiTags('User')
 @Controller('user')
@@ -19,6 +20,7 @@ export class UserController {
     ) { }
 
     @Post('/')
+    @Public()
     @Throttle({ default: { limit: 5, ttl: 60000 } })
     @ApiOperation({ summary: 'Create a new user' })
     @ApiBody({ type: CreateUserDTO })
@@ -43,6 +45,7 @@ export class UserController {
     }
 
     @Post('/pre/create')
+    @Public()
     @Throttle({ default: { limit: 5, ttl: 60000 } })
     @ApiOperation({ summary: 'Pre-create a user (partial registration)' })
     @ApiBody({ type: PreCreateUserDTO })
@@ -65,6 +68,7 @@ export class UserController {
     }
 
     @Post('/authenticate')
+    @Public()
     @Throttle({ default: { limit: 5, ttl: 60000 } })
     @ApiOperation({ summary: 'Authenticate user' })
     @ApiBody({ type: AuthUserDTO })

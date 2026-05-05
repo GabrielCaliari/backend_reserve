@@ -10,6 +10,7 @@ import { ListProductsUseCase } from '../../application/use-cases/list-products.u
 import { GetProductUseCase } from '../../application/use-cases/get-product.use-case';
 import { CalculateOrderCostUseCase } from '../../application/use-cases/calculate-order-cost.use-case';
 import { OrderCostBreakdownResponseDTO } from '../../application/dtos/fee-config.dto';
+import { Public } from '../../../../shared/auth/decorators/public.decorator';
 
 /**
  * Controller público para produtos B2C (cursos, bundles).
@@ -21,6 +22,7 @@ import { OrderCostBreakdownResponseDTO } from '../../application/dtos/fee-config
 @ApiTags('Public B2C Products')
 @Controller('public/b2c/products')
 @ApiHeader({ name: 'x-tenant-id', required: true, description: 'Tenant ID' })
+@Public()
 export class PublicB2CProductsController {
   constructor(
     private readonly listProductsUseCase: ListProductsUseCase,

@@ -12,9 +12,11 @@ import { Throttle } from '@nestjs/throttler';
 import { ValidateCouponUseCase } from '../../application/use-cases/validate-coupon.use-case';
 import { ResolveCouponUseCase } from '../../application/use-cases/resolve-coupon.use-case';
 import { ValidateCouponDTO } from '../../application/dtos/validate-coupon.dto';
+import { Public } from '../../../../shared/auth/decorators/public.decorator';
 
 @ApiTags('Public Coupons')
 @Controller('public/coupons')
+@Public()
 export class PublicCouponsController {
   constructor(
     private readonly validateCouponUseCase: ValidateCouponUseCase,

@@ -2,12 +2,17 @@ import { Body, Controller, Headers, Param, Post, Res } from '@nestjs/common';
 import { SkipThrottle } from '@nestjs/throttler';
 import { Response } from 'express';
 import { ReservationService } from '../../application/services/reservation.service';
+import { Public } from '../../../../shared/auth/decorators/public.decorator';
 
 // Tráfego de terceiros (motores de reserva), autenticado por segredo no
 // header, não por IP — mesmo perfil dos webhooks do Stripe, que também
-// pulam o rate limit global.
+// pulam o rate limit global. Ressalva (Task 8): a checagem do
+// x-webhook-secret acontece dentro de reservationService.processWebhook,
+// não por guard — não é constant-time nem documentado como guard; dívida
+// registrada, fora de escopo trocar aqui.
 @SkipThrottle()
 @Controller('webhooks/booking-engine')
+@Public()
 export class BookingWebhookController {
   constructor(private readonly reservationService: ReservationService) {}
 

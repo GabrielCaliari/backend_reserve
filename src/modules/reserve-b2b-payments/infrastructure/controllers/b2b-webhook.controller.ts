@@ -17,12 +17,14 @@ import {
   ITenantBillingConfigRepository,
   TENANT_BILLING_CONFIG_REPOSITORY,
 } from '../../../reserve-subscriptions/domain/interfaces/tenant-billing-config.repository.interface';
+import { Public } from '../../../../shared/auth/decorators/public.decorator';
 
 const STRIPE_API_VERSION = '2025-02-24.acacia' as const;
 
 @ApiTags('B2B Webhooks')
 @Controller('webhooks/b2b')
 @SkipThrottle()
+@Public()
 export class B2BWebhookController {
   private readonly logger = new Logger(B2BWebhookController.name);
 

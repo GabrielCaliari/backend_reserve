@@ -11,6 +11,7 @@ import { EAdminRole } from '../../domain/enums/admin-role.enum';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody, ApiParam } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { ParseCuidPipe } from '../../../../shared/pipes';
+import { Public } from '../../../../shared/auth/decorators/public.decorator';
 
 function normalizeAdminRole(role: EAdminRole): EAdminRole {
     return role === EAdminRole.company_admin ? EAdminRole.manager : role;
@@ -24,6 +25,7 @@ export class AdminController {
     ) { }
 
     @Post('/authenticate')
+    @Public()
     @Throttle({ default: { limit: 5, ttl: 60000 } })
     @ApiOperation({
         summary: 'Authenticate administrator',
