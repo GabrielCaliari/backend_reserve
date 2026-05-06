@@ -4,8 +4,8 @@ import { Response } from 'express';
 import AuthAdminDTO from '../../application/dtos/auth-admin.dto';
 import { CreateAdminDTO, UpdateAdminRoleDTO, UpdateAdminDTO, AdminResponseDTO, AdminListItemDTO, ScheduleAdminDeletionDTO, AdminDeletionStatusDTO } from '../../application/dtos/admin-management.dto';
 import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
-import { RolesGuard } from '../../../../shared/auth/guards/roles.guard';
-import { Roles } from '../../../../shared/auth/decorators/roles.decorator';
+import { PermissionsGuard } from '../../../../shared/auth/guards/permissions.guard';
+import { RequirePermissions } from '../../../../shared/auth/decorators/require-permissions.decorator';
 import { CurrentAdmin, CurrentAdminPayload } from '../../../../shared/auth/decorators/current-admin.decorator';
 import { EAdminRole } from '../../domain/enums/admin-role.enum';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody, ApiParam } from '@nestjs/swagger';
@@ -77,8 +77,8 @@ export class AdminController {
     }
 
     @Post('/register')
-    @Roles(EAdminRole.super_admin, EAdminRole.manager)
-    @UseGuards(AdminJwtGuard, RolesGuard)
+    @RequirePermissions('admins.create')
+    @UseGuards(AdminJwtGuard, PermissionsGuard)
     @ApiBearerAuth()
     @ApiOperation({ 
         summary: 'Register a new admin (super_admin or manager)',
@@ -110,8 +110,8 @@ export class AdminController {
     }
 
     @Get('/list')
-    @Roles(EAdminRole.super_admin, EAdminRole.manager)
-    @UseGuards(AdminJwtGuard, RolesGuard)
+    @RequirePermissions('admins.read')
+    @UseGuards(AdminJwtGuard, PermissionsGuard)
     @ApiBearerAuth()
     @ApiOperation({ 
         summary: 'List admins (super_admin or manager)',
@@ -134,8 +134,8 @@ export class AdminController {
     }
 
     @Patch('/:id/role')
-    @Roles(EAdminRole.super_admin, EAdminRole.manager)
-    @UseGuards(AdminJwtGuard, RolesGuard)
+    @RequirePermissions('admins.role.update')
+    @UseGuards(AdminJwtGuard, PermissionsGuard)
     @ApiBearerAuth()
     @ApiOperation({ 
         summary: 'Update admin role (super_admin or manager)',
@@ -168,8 +168,8 @@ export class AdminController {
     }
 
     @Patch('/:id/deactivate')
-    @Roles(EAdminRole.super_admin)
-    @UseGuards(AdminJwtGuard, RolesGuard)
+    @RequirePermissions('admins.deactivate')
+    @UseGuards(AdminJwtGuard, PermissionsGuard)
     @ApiBearerAuth()
     @ApiOperation({ 
         summary: 'Deactivate an admin (super_admin only)',
@@ -199,8 +199,8 @@ export class AdminController {
     }
 
     @Patch('/:id/activate')
-    @Roles(EAdminRole.super_admin)
-    @UseGuards(AdminJwtGuard, RolesGuard)
+    @RequirePermissions('admins.activate')
+    @UseGuards(AdminJwtGuard, PermissionsGuard)
     @ApiBearerAuth()
     @ApiOperation({ 
         summary: 'Activate an admin (super_admin only)',
@@ -228,8 +228,8 @@ export class AdminController {
     }
 
     @Get('/:id')
-    @Roles(EAdminRole.super_admin, EAdminRole.manager)
-    @UseGuards(AdminJwtGuard, RolesGuard)
+    @RequirePermissions('admins.read')
+    @UseGuards(AdminJwtGuard, PermissionsGuard)
     @ApiBearerAuth()
     @ApiOperation({
         summary: 'Get admin by ID (super_admin or manager)',
@@ -252,8 +252,8 @@ export class AdminController {
     }
 
     @Patch('/:id')
-    @Roles(EAdminRole.super_admin, EAdminRole.manager)
-    @UseGuards(AdminJwtGuard, RolesGuard)
+    @RequirePermissions('admins.update')
+    @UseGuards(AdminJwtGuard, PermissionsGuard)
     @ApiBearerAuth()
     @ApiOperation({ 
         summary: 'Update admin data (super_admin or manager)',
@@ -286,8 +286,8 @@ export class AdminController {
     }
 
     @Delete('/:id')
-    @Roles(EAdminRole.super_admin)
-    @UseGuards(AdminJwtGuard, RolesGuard)
+    @RequirePermissions('admins.delete')
+    @UseGuards(AdminJwtGuard, PermissionsGuard)
     @ApiBearerAuth()
     @ApiOperation({ 
         summary: 'Schedule admin deletion (super_admin only)',
@@ -322,8 +322,8 @@ export class AdminController {
     }
 
     @Post('/:id/restore-deletion')
-    @Roles(EAdminRole.super_admin)
-    @UseGuards(AdminJwtGuard, RolesGuard)
+    @RequirePermissions('admins.delete')
+    @UseGuards(AdminJwtGuard, PermissionsGuard)
     @ApiBearerAuth()
     @ApiOperation({
         summary: 'Restore admin scheduled for deletion (super_admin only)',
@@ -342,8 +342,8 @@ export class AdminController {
     }
 
     @Get('/:id/deletion-status')
-    @Roles(EAdminRole.super_admin)
-    @UseGuards(AdminJwtGuard, RolesGuard)
+    @RequirePermissions('admins.deletion-status.read')
+    @UseGuards(AdminJwtGuard, PermissionsGuard)
     @ApiBearerAuth()
     @ApiOperation({
         summary: 'Get admin deletion status (super_admin only)',

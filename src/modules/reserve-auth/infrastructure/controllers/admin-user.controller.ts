@@ -20,10 +20,9 @@ import {
   ApiBody,
 } from '@nestjs/swagger';
 import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
-import { RolesGuard } from '../../../../shared/auth/guards/roles.guard';
-import { Roles } from '../../../../shared/auth/decorators/roles.decorator';
+import { PermissionsGuard } from '../../../../shared/auth/guards/permissions.guard';
+import { RequirePermissions } from '../../../../shared/auth/decorators/require-permissions.decorator';
 import { ParseCuidPipe } from '../../../../shared/pipes';
-import { EAdminRole } from '../../domain/enums/admin-role.enum';
 import { UserManagementService } from '../../application/services/user-management.service';
 import { 
   UpdateUserDTO, 
@@ -38,8 +37,8 @@ export class AdminUserController {
   constructor(private readonly userManagementService: UserManagementService) {}
 
   @Get()
-  @Roles(EAdminRole.super_admin, EAdminRole.manager)
-  @UseGuards(AdminJwtGuard, RolesGuard)
+  @RequirePermissions('users.read')
+  @UseGuards(AdminJwtGuard, PermissionsGuard)
   @ApiOperation({ 
     summary: 'List all users with pagination',
     description: 'Returns a paginated list of all users in the system'
@@ -61,8 +60,8 @@ export class AdminUserController {
   }
 
   @Get('/:id')
-  @Roles(EAdminRole.super_admin, EAdminRole.manager)
-  @UseGuards(AdminJwtGuard, RolesGuard)
+  @RequirePermissions('users.read')
+  @UseGuards(AdminJwtGuard, PermissionsGuard)
   @ApiOperation({ 
     summary: 'Get user by CUID',
     description: 'Returns detailed information about a specific user'
@@ -77,8 +76,8 @@ export class AdminUserController {
   }
 
   @Patch('/:id')
-  @Roles(EAdminRole.super_admin)
-  @UseGuards(AdminJwtGuard, RolesGuard)
+  @RequirePermissions('users.update')
+  @UseGuards(AdminJwtGuard, PermissionsGuard)
   @ApiOperation({ 
     summary: 'Update user data by CUID (super_admin only)',
     description: 'Updates user name, email, or phone number'
@@ -110,8 +109,8 @@ export class AdminUserController {
   }
 
   @Patch('/:id/deactivate')
-  @Roles(EAdminRole.super_admin)
-  @UseGuards(AdminJwtGuard, RolesGuard)
+  @RequirePermissions('users.deactivate')
+  @UseGuards(AdminJwtGuard, PermissionsGuard)
   @ApiOperation({ 
     summary: 'Deactivate user by CUID (super_admin only)',
     description: 'Deactivates a user account by setting expiration date to now'
@@ -138,8 +137,8 @@ export class AdminUserController {
   }
 
   @Delete('/:id')
-  @Roles(EAdminRole.super_admin)
-  @UseGuards(AdminJwtGuard, RolesGuard)
+  @RequirePermissions('users.delete')
+  @UseGuards(AdminJwtGuard, PermissionsGuard)
   @ApiOperation({ 
     summary: 'Delete user permanently by CUID (super_admin only)',
     description: 'Permanently deletes a user account and all associated data'

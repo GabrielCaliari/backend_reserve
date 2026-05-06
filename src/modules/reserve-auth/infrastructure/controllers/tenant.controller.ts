@@ -30,9 +30,8 @@ import {
   TenantWithAdminsDTO,
 } from '../../application/dtos/tenant-management.dto';
 import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
-import { RolesGuard } from '../../../../shared/auth/guards/roles.guard';
-import { Roles } from '../../../../shared/auth/decorators/roles.decorator';
-import { EAdminRole } from '../../domain/enums/admin-role.enum';
+import { PermissionsGuard } from '../../../../shared/auth/guards/permissions.guard';
+import { RequirePermissions } from '../../../../shared/auth/decorators/require-permissions.decorator';
 import { CurrentAdmin, CurrentAdminPayload } from '../../../../shared/auth/decorators/current-admin.decorator';
 import { ParseCuidPipe } from '../../../../shared/pipes';
 
@@ -43,8 +42,8 @@ export class TenantController {
   constructor(private readonly tenantService: TenantService) {}
 
   @Post('/')
-  @Roles(EAdminRole.super_admin)
-  @UseGuards(AdminJwtGuard, RolesGuard)
+  @RequirePermissions('tenants.create')
+  @UseGuards(AdminJwtGuard, PermissionsGuard)
   @ApiOperation({ 
     summary: 'Create a new tenant (super_admin only)',
     description: 'Creates a new tenant organization with unique slug'
@@ -63,8 +62,8 @@ export class TenantController {
   }
 
   @Get('/')
-  @Roles(EAdminRole.super_admin)
-  @UseGuards(AdminJwtGuard, RolesGuard)
+  @RequirePermissions('tenants.read')
+  @UseGuards(AdminJwtGuard, PermissionsGuard)
   @ApiOperation({ 
     summary: 'List all tenants (super_admin only)',
     description: 'Returns all tenants with their associated admins'
@@ -99,8 +98,8 @@ export class TenantController {
   }
 
   @Get('/:id')
-  @Roles(EAdminRole.super_admin)
-  @UseGuards(AdminJwtGuard, RolesGuard)
+  @RequirePermissions('tenants.read')
+  @UseGuards(AdminJwtGuard, PermissionsGuard)
   @ApiOperation({ 
     summary: 'Get tenant by ID (super_admin only)',
     description: 'Returns detailed information about a specific tenant'
@@ -118,8 +117,8 @@ export class TenantController {
   }
 
   @Patch('/:id')
-  @Roles(EAdminRole.super_admin)
-  @UseGuards(AdminJwtGuard, RolesGuard)
+  @RequirePermissions('tenants.update')
+  @UseGuards(AdminJwtGuard, PermissionsGuard)
   @ApiOperation({ 
     summary: 'Update tenant (super_admin only)',
     description: 'Updates tenant name, slug, or domain'
@@ -143,8 +142,8 @@ export class TenantController {
   }
 
   @Post('/assign')
-  @Roles(EAdminRole.super_admin)
-  @UseGuards(AdminJwtGuard, RolesGuard)
+  @RequirePermissions('tenants.admin.assign')
+  @UseGuards(AdminJwtGuard, PermissionsGuard)
   @ApiOperation({ 
     summary: 'Assign admin to tenant (super_admin only)',
     description: 'Associates an administrator with a tenant organization'
@@ -170,8 +169,8 @@ export class TenantController {
   }
 
   @Delete('/:tenantId/admins/:adminId')
-  @Roles(EAdminRole.super_admin)
-  @UseGuards(AdminJwtGuard, RolesGuard)
+  @RequirePermissions('tenants.admin.remove')
+  @UseGuards(AdminJwtGuard, PermissionsGuard)
   @ApiOperation({ 
     summary: 'Remove admin from tenant (super_admin only)',
     description: 'Removes the association between an admin and a tenant'
@@ -197,8 +196,8 @@ export class TenantController {
   }
 
   @Get('/:tenantId/admins')
-  @Roles(EAdminRole.super_admin)
-  @UseGuards(AdminJwtGuard, RolesGuard)
+  @RequirePermissions('tenants.admin.read')
+  @UseGuards(AdminJwtGuard, PermissionsGuard)
   @ApiOperation({ 
     summary: 'List admins of a tenant (super_admin only)',
     description: 'Returns all administrators associated with a specific tenant'
@@ -228,8 +227,8 @@ export class TenantController {
   }
 
   @Patch('/:id/deactivate')
-  @Roles(EAdminRole.super_admin)
-  @UseGuards(AdminJwtGuard, RolesGuard)
+  @RequirePermissions('tenants.deactivate')
+  @UseGuards(AdminJwtGuard, PermissionsGuard)
   @ApiOperation({ 
     summary: 'Deactivate tenant (super_admin only)',
     description: 'Deactivates a tenant organization'
@@ -256,8 +255,8 @@ export class TenantController {
   }
 
   @Patch('/:id/activate')
-  @Roles(EAdminRole.super_admin)
-  @UseGuards(AdminJwtGuard, RolesGuard)
+  @RequirePermissions('tenants.activate')
+  @UseGuards(AdminJwtGuard, PermissionsGuard)
   @ApiOperation({ 
     summary: 'Activate tenant (super_admin only)',
     description: 'Reactivates a previously deactivated tenant'
@@ -284,8 +283,8 @@ export class TenantController {
   }
 
   @Delete('/:id')
-  @Roles(EAdminRole.super_admin)
-  @UseGuards(AdminJwtGuard, RolesGuard)
+  @RequirePermissions('tenants.delete')
+  @UseGuards(AdminJwtGuard, PermissionsGuard)
   @ApiOperation({ 
     summary: 'Schedule tenant deletion (super_admin only)',
     description: 'Archives the tenant immediately and schedules permanent deletion after 7 days'
@@ -318,8 +317,8 @@ export class TenantController {
   }
 
   @Post('/:id/restore')
-  @Roles(EAdminRole.super_admin)
-  @UseGuards(AdminJwtGuard, RolesGuard)
+  @RequirePermissions('tenants.delete')
+  @UseGuards(AdminJwtGuard, PermissionsGuard)
   @ApiOperation({
     summary: 'Restore tenant scheduled for deletion (super_admin only)',
     description: 'Cancels the deletion window and restores tenant access before the 7-day purge deadline'
@@ -337,8 +336,8 @@ export class TenantController {
   }
 
   @Get('/:id/deletion-status')
-  @Roles(EAdminRole.super_admin)
-  @UseGuards(AdminJwtGuard, RolesGuard)
+  @RequirePermissions('tenants.read')
+  @UseGuards(AdminJwtGuard, PermissionsGuard)
   @ApiOperation({
     summary: 'Get tenant deletion status (super_admin only)',
     description: 'Returns archival and scheduled deletion information for a tenant'
@@ -355,8 +354,8 @@ export class TenantController {
   }
 
   @Patch('/:tenantId/admins/:adminId/role')
-  @Roles(EAdminRole.super_admin)
-  @UseGuards(AdminJwtGuard, RolesGuard)
+  @RequirePermissions('tenants.admin.role.update')
+  @UseGuards(AdminJwtGuard, PermissionsGuard)
   @ApiOperation({ 
     summary: 'Update admin role in tenant (super_admin only)',
     description: 'Changes the role of an admin within a specific tenant'
