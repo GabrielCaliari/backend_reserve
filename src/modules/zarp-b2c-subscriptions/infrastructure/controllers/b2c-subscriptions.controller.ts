@@ -6,7 +6,7 @@ import { OptionalUserGuard } from '../../../../modules/zarp-b2b-payments/infrast
 import { CreateCheckoutSessionUseCase } from '../../application/use-cases/create-checkout-session.use-case';
 import { ListMySubscriptionsUseCase } from '../../application/use-cases/list-my-subscriptions.use-case';
 import { CancelSubscriptionUseCase } from '../../application/use-cases/cancel-subscription.use-case';
-import { CreateCheckoutSessionDTO } from '../../application/dtos/create-checkout-session.dto';
+import { CreateB2CCheckoutSessionDTO } from '../../application/dtos/create-checkout-session.dto';
 
 @ApiTags('B2C Subscriptions')
 @Controller('subscriptions')
@@ -35,7 +35,7 @@ export class B2CSubscriptionsController {
   async createCheckout(
     @Req() req: any,
     @Headers('x-tenant-id') tenantIdHeader: string,
-    @Body() dto: CreateCheckoutSessionDTO,
+    @Body() dto: CreateB2CCheckoutSessionDTO,
   ) {
     // userId vem do OptionalUserGuard (null se lead)
     const userId: string | undefined = req.user_id ?? undefined;

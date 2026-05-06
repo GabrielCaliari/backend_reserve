@@ -12,6 +12,12 @@ export class B2BProductEntity {
     public readonly active: boolean,
     public readonly createdAt: Date,
     public readonly updatedAt: Date,
+    // Fee overrides — null = herda da categoria ou taxa global do tenant
+    public readonly categoryId: string | null = null,
+    public readonly chipCostOverride: number | null = null,
+    public readonly shippingFeeOverride: number | null = null,
+    public readonly requiresShipping: boolean = false,
+    public readonly slug: string = '',
   ) {}
 
   isActive(): boolean {

@@ -14,23 +14,11 @@ import {
 } from '../../../zarp-subscriptions/domain/interfaces/tenant-billing-config.repository.interface';
 import { B2BProductEntity } from '../../domain/entities/b2b-product.entity';
 import { CreateCartCheckoutDTO } from '../dtos/create-cart-checkout.dto';
+import { CalculateB2BOrderCostUseCase } from './calculate-b2b-order-cost.use-case';
+import { OrderCostBreakdown } from '../../../zarp-b2c-products/application/use-cases/resolve-product-fees.use-case';
 
 const STRIPE_API_VERSION = '2025-02-24.acacia' as const;
 
-/**
- * Use case para criar checkout de carrinho B2B com múltiplos produtos.
- *
- * Suporta 2 cenários:
- * - Lead não autenticado: captura dados via modal, cria purchase por item
- * - User autenticado: vincula purchases ao userId existente
- *
- * Uma única Stripe Checkout Session é criada com todos os line_items.
- * Um B2BPurchase é criado por item para rastreamento granular.
- * O stripeCheckoutId é compartilhado entre todos os purchases do mesmo carrinho.
- *
- * Remarketing: se o lead abandonar, todos os purchases ficam com status "pending"
- * e os dados do lead ficam salvos para campanhas de carrinho abandonado.
- */
 @Injectable()
 export class CreateCartCheckoutUseCase {
   constructor(
@@ -40,6 +28,7 @@ export class CreateCartCheckoutUseCase {
     private readonly purchaseRepo: IB2BPurchaseRepository,
     @Inject(TENANT_BILLING_CONFIG_REPOSITORY)
     private readonly billingConfigRepo: ITenantBillingConfigRepository,
+    private readonly calculateOrderCostUseCase: CalculateB2BOrderCostUseCase,
   ) {}
 
   async execute(
@@ -55,24 +44,82 @@ export class CreateCartCheckoutUseCase {
       );
     }
 
-    // 2. Validate all products exist and are active
+    // 2. Validate all products and calculate fees for each
     const products = await this.resolveProducts(tenantId, dto.items.map((i) => i.productId));
 
-    // 3. Build Stripe line_items
-    const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = dto.items.map((item) => {
-      const product = products.get(item.productId)!;
-      return { price: product.stripePriceId, quantity: item.quantity };
-    });
+    const costBreakdowns = new Map<string, OrderCostBreakdown>();
+    for (const [productId] of products) {
+      const breakdown = await this.calculateOrderCostUseCase.execute(tenantId, productId);
+      costBreakdowns.set(productId, breakdown);
+    }
 
-    // 4. Build metadata
+    // 3. Build Stripe line_items with fees per product
+    // Shipping fee: cobrado uma vez por pedido (o maior entre os produtos físicos)
+    const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [];
+    let maxShippingFee = 0;
+    let shippingCurrency = 'brl';
+
+    for (const item of dto.items) {
+      const product = products.get(item.productId)!;
+      const breakdown = costBreakdowns.get(item.productId)!;
+
+      // Produto base
+      lineItems.push({
+        price_data: {
+          currency: product.currency,
+          product_data: { name: product.name },
+          unit_amount: breakdown.basePrice,
+        },
+        quantity: item.quantity,
+      });
+
+      // Chip cost por produto (se houver)
+      if (breakdown.chipCostAmount > 0) {
+        lineItems.push({
+          price_data: {
+            currency: product.currency,
+            product_data: { name: `Taxa de serviço — ${product.name} (${breakdown.chipCostPercent}%)` },
+            unit_amount: breakdown.chipCostAmount,
+          },
+          quantity: item.quantity,
+        });
+      }
+
+      // Rastreia o maior frete entre produtos físicos
+      if (breakdown.shippingFee > maxShippingFee) {
+        maxShippingFee = breakdown.shippingFee;
+        shippingCurrency = product.currency;
+      }
+    }
+
+    // Frete único por pedido (o maior valor)
+    if (maxShippingFee > 0) {
+      lineItems.push({
+        price_data: {
+          currency: shippingCurrency,
+          product_data: { name: 'Frete' },
+          unit_amount: maxShippingFee,
+        },
+        quantity: 1,
+      });
+    }
+
+    // 4. Calculate total amount for purchase record
+    const totalAmount = dto.items.reduce((sum, item) => {
+      const breakdown = costBreakdowns.get(item.productId)!;
+      return sum + (breakdown.basePrice + breakdown.chipCostAmount) * item.quantity;
+    }, 0) + maxShippingFee;
+
+    // 5. Build metadata
     const metadata: Record<string, string> = {
       tenant_id: tenantId,
-      // Serializa os IDs dos produtos para o webhook conseguir processar cada um
       product_ids: dto.items.map((i) => i.productId).join(','),
       product_quantities: dto.items.map((i) => String(i.quantity)).join(','),
       lead_name: dto.leadName,
       lead_email: dto.leadEmail,
       lead_phone: dto.leadPhone,
+      total_amount: String(totalAmount),
+      shipping_fee: String(maxShippingFee),
     };
 
     if (userId) {
@@ -82,7 +129,7 @@ export class CreateCartCheckoutUseCase {
       metadata.is_lead_purchase = 'true';
     }
 
-    // 5. Create single Stripe Checkout Session with all line items
+    // 6. Create Stripe Checkout Session
     const { successUrl, cancelUrl } = await this.billingConfigRepo.getCheckoutUrls(tenantId);
     const stripe = new Stripe(stripeSecretKey, { apiVersion: STRIPE_API_VERSION });
 
@@ -96,26 +143,21 @@ export class CreateCartCheckoutUseCase {
       cancel_url: cancelUrl,
     });
 
-    // 6. Create a single B2BPurchase representing the entire cart
-    // Uses the first product as the "primary" product_id (required by schema).
-    // All items are stored in metadata for webhook processing and remarketing.
+    // 7. Create purchase record
     const firstItem = dto.items[0];
     const firstProduct = products.get(firstItem.productId)!;
 
-    const totalAmount = dto.items.reduce((sum, item) => {
-      const product = products.get(item.productId)!;
-      return sum + product.price * item.quantity;
-    }, 0);
-
     const cartItems = dto.items.map((item) => {
       const product = products.get(item.productId)!;
+      const breakdown = costBreakdowns.get(item.productId)!;
       return {
         productId: product.id,
         productName: product.name,
-        stripePriceId: product.stripePriceId,
         quantity: item.quantity,
-        unitAmount: product.price,
-        subtotal: product.price * item.quantity,
+        unitAmount: breakdown.basePrice,
+        chipCostAmount: breakdown.chipCostAmount,
+        chipCostPercent: breakdown.chipCostPercent,
+        subtotal: (breakdown.basePrice + breakdown.chipCostAmount) * item.quantity,
         currency: product.currency,
       };
     });
@@ -133,6 +175,7 @@ export class CreateCartCheckoutUseCase {
         is_cart_purchase: true,
         cart_items: cartItems,
         cart_item_count: dto.items.length,
+        shipping_fee: maxShippingFee,
       },
     });
 
@@ -142,22 +185,16 @@ export class CreateCartCheckoutUseCase {
     };
   }
 
-  /**
-   * Busca todos os produtos em paralelo e valida que existem e estão ativos.
-   * Retorna um Map para acesso O(1) por productId.
-   */
   private async resolveProducts(
     tenantId: string,
     productIds: string[],
   ): Promise<Map<string, B2BProductEntity>> {
     const uniqueIds = [...new Set(productIds)];
-
     const results = await Promise.all(
       uniqueIds.map((id) => this.productRepo.findById(id, tenantId)),
     );
 
     const map = new Map<string, B2BProductEntity>();
-
     for (let i = 0; i < uniqueIds.length; i++) {
       const product = results[i];
       if (!product || !product.isActive()) {
@@ -165,7 +202,6 @@ export class CreateCartCheckoutUseCase {
       }
       map.set(uniqueIds[i], product);
     }
-
     return map;
   }
 }

@@ -7,20 +7,32 @@ import {
   IB2CFeeConfigRepository,
   B2C_FEE_CONFIG_REPOSITORY,
 } from '../../domain/interfaces/b2c-fee-config.repository.interface';
-import { ProductEntity } from '../../domain/entities/product.entity';
+
+export interface ProductFeeInput {
+  categoryId: string | null;
+  chipCostOverride: number | null;
+  shippingFeeOverride: number | null;
+  requiresShipping: boolean;
+}
+
+// Generic fee config — works for both B2C and B2B global configs
+export interface IFeeConfig {
+  chipCostPercent: number;
+  shippingFee: number;
+}
 
 export interface ResolvedFees {
-  chipCostPercent: number;  // % aplicado sobre o preço base
-  shippingFee: number;      // centavos fixos de frete
+  chipCostPercent: number;
+  shippingFee: number;
   chipCostSource: 'product' | 'category' | 'global' | 'none';
   shippingFeeSource: 'product' | 'category' | 'global' | 'none';
 }
 
 export interface OrderCostBreakdown {
-  basePrice: number;        // unit_amount original em centavos
-  chipCostAmount: number;   // valor do chip cost em centavos (basePrice * chipCostPercent / 100)
-  shippingFee: number;      // frete em centavos (fixo por pedido)
-  total: number;            // basePrice + chipCostAmount + shippingFee
+  basePrice: number;
+  chipCostAmount: number;
+  shippingFee: number;
+  total: number;
   currency: string;
   chipCostPercent: number;
   chipCostSource: ResolvedFees['chipCostSource'];
@@ -34,24 +46,36 @@ export class ResolveProductFeesUseCase {
     @Inject(PRODUCT_CATEGORY_REPOSITORY)
     private readonly categoryRepo: IProductCategoryRepository,
     @Inject(B2C_FEE_CONFIG_REPOSITORY)
-    private readonly feeConfigRepo: IB2CFeeConfigRepository,
+    private readonly b2cFeeConfigRepo: IB2CFeeConfigRepository,
   ) {}
 
   /**
-   * Resolve as taxas efetivas de um produto seguindo a hierarquia:
-   * 1. Override do produto (chip_cost_override / shipping_fee_override)
-   * 2. Taxa da categoria (chip_cost_percent / shipping_fee)
-   * 3. Taxa global do tenant (B2CFeeConfig)
-   * 4. Zero (sem taxa configurada)
+   * Resolve taxas para produto B2C — usa b2c_fee_config como global.
    */
-  async resolveForProduct(tenantId: string, product: ProductEntity): Promise<ResolvedFees> {
-    // Carrega categoria e config global em paralelo
-    const [category, globalConfig] = await Promise.all([
-      product.categoryId
-        ? this.categoryRepo.findById(product.categoryId, tenantId)
-        : Promise.resolve(null),
-      this.feeConfigRepo.findByTenantId(tenantId),
-    ]);
+  async resolveForProduct(tenantId: string, product: ProductFeeInput): Promise<ResolvedFees> {
+    const globalConfig = await this.b2cFeeConfigRepo.findByTenantId(tenantId);
+    return this.resolve(tenantId, product, globalConfig);
+  }
+
+  /**
+   * Resolve taxas com config global explícita — usar para B2B passando B2BFeeConfig.
+   */
+  async resolveForProductWithConfig(
+    tenantId: string,
+    product: ProductFeeInput,
+    globalConfig: IFeeConfig | null,
+  ): Promise<ResolvedFees> {
+    return this.resolve(tenantId, product, globalConfig);
+  }
+
+  private async resolve(
+    tenantId: string,
+    product: ProductFeeInput,
+    globalConfig: IFeeConfig | null,
+  ): Promise<ResolvedFees> {
+    const category = product.categoryId
+      ? await this.categoryRepo.findById(product.categoryId, tenantId)
+      : null;
 
     // ── Chip Cost ──────────────────────────────────────────────
     let chipCostPercent: number;
@@ -93,17 +117,20 @@ export class ResolveProductFeesUseCase {
   }
 
   /**
-   * Calcula o breakdown completo de custo para um produto + preço base.
-   * O shippingFee é cobrado uma vez por pedido (fixo independente da quantidade).
+   * Calcula o breakdown completo de custo.
+   * globalConfig opcional — se não passado, usa b2c_fee_config (comportamento B2C padrão).
    */
   async calculateBreakdown(
     tenantId: string,
-    product: ProductEntity,
+    product: ProductFeeInput,
     basePrice: number,
     currency: string,
     includeShipping: boolean = true,
+    globalConfig?: IFeeConfig | null,
   ): Promise<OrderCostBreakdown> {
-    const fees = await this.resolveForProduct(tenantId, product);
+    const fees = globalConfig !== undefined
+      ? await this.resolveForProductWithConfig(tenantId, product, globalConfig)
+      : await this.resolveForProduct(tenantId, product);
 
     const chipCostAmount = Math.round(basePrice * (fees.chipCostPercent / 100));
     const shippingFee = includeShipping && product.requiresShipping ? fees.shippingFee : 0;

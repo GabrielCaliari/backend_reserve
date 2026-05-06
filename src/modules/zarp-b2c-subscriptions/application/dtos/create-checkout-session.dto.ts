@@ -1,7 +1,7 @@
 import { IsString, IsNotEmpty, IsEmail, IsOptional } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
-export class CreateCheckoutSessionDTO {
+export class CreateB2CCheckoutSessionDTO {
   @ApiProperty({ description: 'Product price ID (internal, not Stripe price ID)' })
   @IsString()
   @IsNotEmpty()

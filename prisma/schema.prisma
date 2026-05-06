@@ -754,6 +754,7 @@ model Tenant {
   B2CUserProductAccess         UserProductAccess[] @relation("B2CUserProductAccess")
   B2CProductCategories         ProductCategory[] @relation("B2CProductCategories")
   B2CFeeConfig                 B2CFeeConfig? @relation("B2CFeeConfig")
+  B2BFeeConfig                 B2BFeeConfig? @relation("B2BFeeConfig")
 
   @@index([stripe_customer_id])
   @@index([subscription_status])
@@ -1526,6 +1527,7 @@ model ProductCategory {
 
   tenant            Tenant    @relation("B2CProductCategories", fields: [tenant_id], references: [id], onDelete: Cascade)
   products          Product[]
+  b2bProducts       B2BProduct[] @relation("B2BProductCategory")
 
   @@unique([tenant_id, slug])
   @@index([tenant_id])
@@ -1533,7 +1535,7 @@ model ProductCategory {
   @@map("b2c_product_categories")
 }
 
-// Taxa global do tenant — base quando não há categoria ou override
+// Taxa global do tenant para produtos B2C (recurring)
 model B2CFeeConfig {
   id                String   @id @default(cuid()) @db.VarChar(25)
   tenant_id         String   @unique @db.VarChar(25)
@@ -1547,6 +1549,22 @@ model B2CFeeConfig {
   tenant            Tenant   @relation("B2CFeeConfig", fields: [tenant_id], references: [id], onDelete: Cascade)
 
   @@map("b2c_fee_config")
+}
+
+// Taxa global do tenant para produtos B2B (one-time)
+model B2BFeeConfig {
+  id                String   @id @default(cuid()) @db.VarChar(25)
+  tenant_id         String   @unique @db.VarChar(25)
+
+  chip_cost_percent Float    @default(0)  // % global (ex: 2.5 = 2.5%)
+  shipping_fee      Int      @default(0)  // Frete fixo global em centavos
+
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
+
+  tenant            Tenant   @relation("B2BFeeConfig", fields: [tenant_id], references: [id], onDelete: Cascade)
+
+  @@map("b2b_fee_config")
 }
 
 enum EBillingMode {
@@ -1662,6 +1680,7 @@ model B2BProduct {
   stripe_price_id   String   @db.VarChar(100)
   name              String   @db.VarChar(255)
   description       String?  @db.Text
+  slug              String   @db.VarChar(100)  // Identificador único legível para rastreamento
   categories        String[] @default([])
   price             Int      // Centavos
   currency          String   @default("brl") @db.VarChar(3)
@@ -1682,6 +1701,7 @@ model B2BProduct {
 
   @@unique([tenant_id, stripe_product_id])
   @@unique([tenant_id, stripe_price_id])
+  @@unique([tenant_id, slug])
   @@index([tenant_id])
   @@index([tenant_id, active])
   @@index([tenant_id, category_id])

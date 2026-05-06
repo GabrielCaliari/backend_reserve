@@ -139,11 +139,25 @@ export class StripeApiPlanRepository implements IStripePlanRepository {
       
       this.logger.log(`Found ${products.length} products in Stripe for tenant ${tenantId}`);
 
-      const entities = await Promise.all(
-        products.map(product => this.mapProductToEntity(product, stripeSecretKey))
-      );
+      // Process in batches of 5 to avoid Stripe rate limits (429)
+      const BATCH_SIZE = 5;
+      const BATCH_DELAY_MS = 300;
+      const results: StripePlanEntity[] = [];
 
-      return entities.filter(e => e !== null) as StripePlanEntity[];
+      for (let i = 0; i < products.length; i += BATCH_SIZE) {
+        const batch = products.slice(i, i + BATCH_SIZE);
+        const batchResults = await Promise.all(
+          batch.map(product => this.mapProductToEntity(product, stripeSecretKey))
+        );
+        results.push(...(batchResults.filter(e => e !== null) as StripePlanEntity[]));
+
+        // Delay between batches (skip delay after last batch)
+        if (i + BATCH_SIZE < products.length) {
+          await new Promise(resolve => setTimeout(resolve, BATCH_DELAY_MS));
+        }
+      }
+
+      return results;
     } catch (error) {
       this.logger.error('Error fetching plans from Stripe:', error);
       throw error;

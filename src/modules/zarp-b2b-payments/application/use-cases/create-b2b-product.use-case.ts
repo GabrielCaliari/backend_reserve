@@ -1,4 +1,4 @@
-import { Injectable, Inject, BadRequestException } from '@nestjs/common';
+import { Injectable, Inject, BadRequestException, ConflictException } from '@nestjs/common';
 import {
   IB2BProductRepository,
   B2B_PRODUCT_REPOSITORY,
@@ -36,7 +36,13 @@ export class CreateB2BProductUseCase {
       );
     }
 
-    // 2. Create product in Stripe using tenant's key
+    // 2. Check slug uniqueness
+    const existing = await this.productRepo.findBySlug(tenantId, dto.slug);
+    if (existing) {
+      throw new BadRequestException(`A product with slug "${dto.slug}" already exists.`);
+    }
+
+    // 3. Create product in Stripe using tenant's key
     const stripeProduct = await this.stripeProvider.createProduct({
       name: dto.name,
       description: dto.description,
@@ -60,9 +66,11 @@ export class CreateB2BProductUseCase {
       stripePriceId: stripePrice.id,
       name: dto.name,
       description: dto.description,
+      slug: dto.slug,
       categories: dto.categories,
       price: dto.price,
       currency,
+      requiresShipping: dto.requiresShipping ?? false,
     });
   }
 }
