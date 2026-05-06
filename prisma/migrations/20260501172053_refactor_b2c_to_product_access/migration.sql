@@ -1,0 +1,3 @@
+-- Migration applied directly to the database.
+-- Created locally to resolve drift between migration history and database state.
+-- This is an empty placeholder — the actual changes are already in the database.

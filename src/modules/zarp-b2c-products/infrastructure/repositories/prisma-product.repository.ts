@@ -3,6 +3,7 @@ import { PrismaService } from '../../../../shared/database/prisma.service';
 import {
   IProductRepository,
   CreateProductData,
+  UpdateProductFeeData,
 } from '../../domain/interfaces/product.repository.interface';
 import { ProductEntity } from '../../domain/entities/product.entity';
 import { ProductPriceEntity } from '../../domain/entities/product-price.entity';
@@ -20,6 +21,10 @@ export class PrismaProductRepository implements IProductRepository {
         description: data.description,
         slug: data.slug,
         categories: data.categories ?? [],
+        category_id: data.categoryId ?? null,
+        requires_shipping: data.requiresShipping ?? false,
+        chip_cost_override: data.chipCostOverride ?? null,
+        shipping_fee_override: data.shippingFeeOverride ?? null,
         active: true,
       },
       include: { ProductPrice: true },
@@ -63,6 +68,29 @@ export class PrismaProductRepository implements IProductRepository {
     return this.toDomain(record);
   }
 
+  async findByCategoryId(tenantId: string, categoryId: string): Promise<ProductEntity[]> {
+    const records = await this.prisma.product.findMany({
+      where: { tenant_id: tenantId, category_id: categoryId },
+      include: { ProductPrice: { where: { active: true } } },
+      orderBy: { name: 'asc' },
+    });
+    return records.map((r) => this.toDomain(r));
+  }
+
+  async updateFees(id: string, tenantId: string, data: UpdateProductFeeData): Promise<ProductEntity> {
+    const record = await this.prisma.product.update({
+      where: { id },
+      data: {
+        ...(data.categoryId !== undefined && { category_id: data.categoryId }),
+        ...(data.chipCostOverride !== undefined && { chip_cost_override: data.chipCostOverride }),
+        ...(data.shippingFeeOverride !== undefined && { shipping_fee_override: data.shippingFeeOverride }),
+        ...(data.requiresShipping !== undefined && { requires_shipping: data.requiresShipping }),
+      },
+      include: { ProductPrice: { where: { active: true } } },
+    });
+    return this.toDomain(record);
+  }
+
   private toDomain(record: any): ProductEntity {
     return new ProductEntity({
       id: record.id,
@@ -71,7 +99,11 @@ export class PrismaProductRepository implements IProductRepository {
       description: record.description ?? undefined,
       slug: record.slug,
       categories: record.categories ?? [],
+      categoryId: record.category_id ?? null,
       active: record.active,
+      requiresShipping: record.requires_shipping ?? false,
+      chipCostOverride: record.chip_cost_override ?? null,
+      shippingFeeOverride: record.shipping_fee_override ?? null,
       prices: (record.ProductPrice ?? []).map(
         (p: any) =>
           new ProductPriceEntity({

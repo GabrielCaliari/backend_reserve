@@ -87,6 +87,7 @@ export class CreateB2CProductUseCase {
       description: dto.description,
       slug: dto.slug,
       categories: dto.categories,
+      requiresShipping: dto.requiresShipping ?? false,
     });
 
     // 7. Persist price in DB

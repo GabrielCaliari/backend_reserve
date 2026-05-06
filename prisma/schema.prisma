@@ -752,6 +752,8 @@ model Tenant {
   B2CProducts                  Product[]
   B2CProductPrices             ProductPrice[] @relation("B2CProductPrices")
   B2CUserProductAccess         UserProductAccess[] @relation("B2CUserProductAccess")
+  B2CProductCategories         ProductCategory[] @relation("B2CProductCategories")
+  B2CFeeConfig                 B2CFeeConfig? @relation("B2CFeeConfig")
 
   @@index([stripe_customer_id])
   @@index([subscription_status])
@@ -1483,10 +1485,18 @@ model Product {
   slug              String         @db.VarChar(100)
   categories        String[]       @default([])
   active            Boolean        @default(true)
+
+  // Fee overrides — null = herda da categoria ou da taxa global do tenant
+  category_id              String?  @db.VarChar(25)  // null = sem categoria
+  chip_cost_override       Float?                    // % override (ex: 2.5 = 2.5%). null = herda
+  shipping_fee_override    Int?                      // centavos override. null = herda
+  requires_shipping        Boolean  @default(false)  // true para produtos físicos (books, tabs)
+
   created_at        DateTime       @default(now())
   updated_at        DateTime       @updatedAt
 
   tenant            Tenant         @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  category          ProductCategory? @relation(fields: [category_id], references: [id], onDelete: SetNull)
   ProductPrice      ProductPrice[]
   UserProductAccess UserProductAccess[]
 
@@ -1494,7 +1504,49 @@ model Product {
   @@unique([tenant_id, slug])
   @@index([tenant_id])
   @@index([tenant_id, active])
+  @@index([tenant_id, category_id])
   @@map("b2c_products")
+}
+
+// Categorias de produto com taxas padrão por categoria
+// Ex: "Books" com chip_cost 2% e shipping R$15,00
+model ProductCategory {
+  id                String   @id @default(cuid()) @db.VarChar(25)
+  tenant_id         String   @db.VarChar(25)
+  name              String   @db.VarChar(100)  // Ex: "Books", "Tabs", "Courses"
+  slug              String   @db.VarChar(100)  // Ex: "books", "tabs", "courses"
+
+  // Taxas padrão desta categoria (null = herda da taxa global do tenant)
+  chip_cost_percent Float?                     // % sobre o preço (ex: 2.5 = 2.5%)
+  shipping_fee      Int?                       // Frete fixo em centavos. null = herda do tenant
+
+  active            Boolean  @default(true)
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
+
+  tenant            Tenant    @relation("B2CProductCategories", fields: [tenant_id], references: [id], onDelete: Cascade)
+  products          Product[]
+
+  @@unique([tenant_id, slug])
+  @@index([tenant_id])
+  @@index([tenant_id, active])
+  @@map("b2c_product_categories")
+}
+
+// Taxa global do tenant — base quando não há categoria ou override
+model B2CFeeConfig {
+  id                String   @id @default(cuid()) @db.VarChar(25)
+  tenant_id         String   @unique @db.VarChar(25)
+
+  chip_cost_percent Float    @default(0)  // % global (ex: 2.5 = 2.5%)
+  shipping_fee      Int      @default(0)  // Frete fixo global em centavos
+
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
+
+  tenant            Tenant   @relation("B2CFeeConfig", fields: [tenant_id], references: [id], onDelete: Cascade)
+
+  @@map("b2c_fee_config")
 }
 
 enum EBillingMode {
@@ -1614,16 +1666,25 @@ model B2BProduct {
   price             Int      // Centavos
   currency          String   @default("brl") @db.VarChar(3)
   active            Boolean  @default(true)
+
+  // Fee overrides — null = herda da categoria ou da taxa global do tenant
+  category_id              String?  @db.VarChar(25)
+  chip_cost_override       Float?                    // % override. null = herda
+  shipping_fee_override    Int?                      // centavos override. null = herda
+  requires_shipping        Boolean  @default(false)  // true para produtos físicos
+
   created_at        DateTime @default(now())
   updated_at        DateTime @updatedAt
 
-  tenant            Tenant   @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  tenant            Tenant          @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  category          ProductCategory? @relation("B2BProductCategory", fields: [category_id], references: [id], onDelete: SetNull)
   purchases         B2BPurchase[]
 
   @@unique([tenant_id, stripe_product_id])
   @@unique([tenant_id, stripe_price_id])
   @@index([tenant_id])
   @@index([tenant_id, active])
+  @@index([tenant_id, category_id])
   @@map("b2b_products")
 }
 

@@ -6,8 +6,12 @@ export interface ProductProps {
   name: string;
   description?: string;
   slug: string;
-  categories: string[];
+  categories: string[];          // array legado mantido por compatibilidade
+  categoryId: string | null;     // FK para ProductCategory
   active: boolean;
+  requiresShipping: boolean;     // true para produtos físicos (books, tabs)
+  chipCostOverride: number | null;    // % override. null = herda da categoria/tenant
+  shippingFeeOverride: number | null; // centavos override. null = herda da categoria/tenant
   prices: ProductPriceEntity[];
   createdAt: Date;
   updatedAt: Date;
@@ -20,7 +24,11 @@ export class ProductEntity {
   readonly description?: string;
   readonly slug: string;
   readonly categories: string[];
+  readonly categoryId: string | null;
   readonly active: boolean;
+  readonly requiresShipping: boolean;
+  readonly chipCostOverride: number | null;
+  readonly shippingFeeOverride: number | null;
   readonly prices: ProductPriceEntity[];
   readonly createdAt: Date;
   readonly updatedAt: Date;
@@ -32,7 +40,11 @@ export class ProductEntity {
     this.description = props.description;
     this.slug = props.slug;
     this.categories = props.categories;
+    this.categoryId = props.categoryId;
     this.active = props.active;
+    this.requiresShipping = props.requiresShipping;
+    this.chipCostOverride = props.chipCostOverride;
+    this.shippingFeeOverride = props.shippingFeeOverride;
     this.prices = props.prices;
     this.createdAt = props.createdAt;
     this.updatedAt = props.updatedAt;

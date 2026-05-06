@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsOptional, IsInt, IsPositive, IsIn, Matches, MaxLength, IsArray } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsInt, IsPositive, IsIn, Matches, MaxLength, IsArray, IsBoolean, Min } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 const SUPPORTED_CURRENCIES = ['brl', 'usd', 'eur', 'gbp', 'cad', 'aud', 'mxn', 'ars', 'cop', 'clp'] as const;
@@ -50,4 +50,21 @@ export class CreateB2CProductDTO {
   @IsOptional()
   @IsIn(SUPPORTED_CURRENCIES, { message: `currency must be one of: ${SUPPORTED_CURRENCIES.join(', ')}` })
   currency?: string;
+
+  @ApiPropertyOptional({
+    example: 200,
+    description: 'Chip cost (taxa fixa) em centavos adicionada ao preço final (ex: 200 = R$2,00). Padrão: 0',
+  })
+  @IsInt()
+  @IsOptional()
+  @Min(0)
+  chipCost?: number;
+
+  @ApiPropertyOptional({
+    example: false,
+    description: 'Indica se o produto é físico e requer envio pelos Correios (books, tabs). Padrão: false',
+  })
+  @IsBoolean()
+  @IsOptional()
+  requiresShipping?: boolean;
 }

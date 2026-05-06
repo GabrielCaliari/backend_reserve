@@ -1,11 +1,17 @@
-import { Controller, Get, Param, UseGuards, Headers, BadRequestException } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiHeader } from '@nestjs/swagger';
+import { Controller, Get, Post, Body, Param, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiHeader, ApiParam } from '@nestjs/swagger';
 import { ListProductsUseCase } from '../../application/use-cases/list-products.use-case';
 import { GetProductUseCase } from '../../application/use-cases/get-product.use-case';
+import { CalculateOrderCostUseCase } from '../../application/use-cases/calculate-order-cost.use-case';
 import { UserJwtGuard } from '../../../../shared/auth/guards/user-jwt.guard';
 import { UserTenantGuard } from '../../../../shared/auth/guards/user-tenant.guard';
 import { CurrentUser } from '../../../../shared/auth/decorators/current-user.decorator';
 import { ProductAccessGuard } from '../../../zarp-b2c-subscriptions/infrastructure/guards/product-access.guard';
+import { OrderCostBreakdownResponseDTO } from '../../application/dtos/fee-config.dto';
+
+export class CalculateCostBodyDTO {
+  priceId?: string;
+}
 
 @ApiTags('B2C Products')
 @Controller('products')
@@ -16,19 +22,20 @@ export class ProductsController {
   constructor(
     private readonly listProductsUseCase: ListProductsUseCase,
     private readonly getProductUseCase: GetProductUseCase,
+    private readonly calculateOrderCostUseCase: CalculateOrderCostUseCase,
   ) {}
 
   @Get()
-  @ApiOperation({ summary: 'List all active products with prices' })
-  @ApiResponse({ status: 200, description: 'Products listed successfully' })
+  @ApiOperation({ summary: 'Listar produtos ativos com preços' })
+  @ApiResponse({ status: 200, description: 'Produtos listados' })
   async listProducts(@CurrentUser('tenant_id') tenantId: string) {
     return this.listProductsUseCase.execute(tenantId);
   }
 
   @Get(':slug')
-  @ApiOperation({ summary: 'Get product details by slug' })
-  @ApiResponse({ status: 200, description: 'Product found' })
-  @ApiResponse({ status: 404, description: 'Product not found' })
+  @ApiOperation({ summary: 'Buscar produto por slug' })
+  @ApiResponse({ status: 200, description: 'Produto encontrado' })
+  @ApiResponse({ status: 404, description: 'Produto não encontrado' })
   async getProduct(
     @CurrentUser('tenant_id') tenantId: string,
     @Param('slug') slug: string,
@@ -36,12 +43,34 @@ export class ProductsController {
     return this.getProductUseCase.execute(tenantId, slug);
   }
 
+  @Post(':id/calculate-cost')
+  @ApiOperation({
+    summary: 'Calcular custo total do pedido',
+    description:
+      'Retorna breakdown: preço base + chip cost (%) + frete fixo. ' +
+      'Informa a origem de cada taxa (produto/categoria/global). ' +
+      'Frete só é incluído para produtos físicos (requires_shipping = true).',
+  })
+  @ApiParam({ name: 'id', description: 'ID do produto' })
+  @ApiResponse({ status: 200, type: OrderCostBreakdownResponseDTO })
+  @ApiResponse({ status: 404, description: 'Produto não encontrado' })
+  async calculateCost(
+    @CurrentUser('tenant_id') tenantId: string,
+    @Param('id') productId: string,
+    @Body() body: CalculateCostBodyDTO,
+  ): Promise<OrderCostBreakdownResponseDTO> {
+    return this.calculateOrderCostUseCase.execute({
+      tenantId,
+      productId,
+      priceId: body.priceId,
+    });
+  }
+
   @Get(':slug/content')
   @UseGuards(ProductAccessGuard)
-  @ApiOperation({ summary: 'Access product content (requires active subscription)' })
-  @ApiResponse({ status: 200, description: 'Content accessible' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'No active subscription for this product' })
+  @ApiOperation({ summary: 'Acessar conteúdo do produto (requer acesso ativo)' })
+  @ApiResponse({ status: 200, description: 'Conteúdo acessível' })
+  @ApiResponse({ status: 403, description: 'Sem acesso ativo para este produto' })
   async getProductContent(
     @CurrentUser('tenant_id') tenantId: string,
     @Param('slug') slug: string,
