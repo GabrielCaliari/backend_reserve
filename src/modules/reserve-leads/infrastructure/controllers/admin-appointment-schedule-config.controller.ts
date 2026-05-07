@@ -17,8 +17,8 @@ import {
 } from '@nestjs/swagger';
 import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
 import { TenantGuard } from '../../../../shared/auth/guards/tenant.guard';
-import { RolesGuard } from '../../../../shared/auth/guards/roles.guard';
-import { Roles } from '../../../../shared/auth/decorators/roles.decorator';
+import { PermissionsGuard } from '../../../../shared/auth/guards/permissions.guard';
+import { RequirePermissions } from '../../../../shared/auth/decorators/require-permissions.decorator';
 import { GetTenantId } from '../../../../shared/decorators/get-tenant-id.decorator';
 import { EAdminRole } from '../../../reserve-auth/domain/enums/admin-role.enum';
 import { UpsertScheduleConfigUseCase } from '../../application/use-cases/upsert-schedule-config.use-case';
@@ -31,7 +31,7 @@ import { successResponse } from '../../../../shared/helpers/response.helper';
 @ApiTags('Admin - Appointment Schedule Configuration')
 @ApiBearerAuth()
 @Controller('admin/appointments/schedule-config')
-@UseGuards(AdminJwtGuard, TenantGuard, RolesGuard)
+@UseGuards(AdminJwtGuard, TenantGuard, PermissionsGuard)
 export class AdminAppointmentScheduleConfigController {
   constructor(
     private readonly upsertScheduleConfigUseCase: UpsertScheduleConfigUseCase,
@@ -40,7 +40,7 @@ export class AdminAppointmentScheduleConfigController {
 
   @Put()
   @HttpCode(HttpStatus.OK)
-  @Roles(EAdminRole.editor)
+  @RequirePermissions('appointments.schedule-config.manage')
   @ApiOperation({
     summary: 'Create or update appointment schedule configuration',
     description:
@@ -82,7 +82,7 @@ export class AdminAppointmentScheduleConfigController {
 
   @Get()
   @HttpCode(HttpStatus.OK)
-  @Roles(EAdminRole.viewer)
+  @RequirePermissions('appointments.schedule-config.read')
   @ApiOperation({
     summary: 'Get appointment schedule configuration',
     description: 'Retrieves the current schedule configuration for the tenant.',

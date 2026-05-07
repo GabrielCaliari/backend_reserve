@@ -19,8 +19,8 @@ import {
 } from '@nestjs/swagger';
 import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
 import { TenantGuard } from '../../../../shared/auth/guards/tenant.guard';
-import { RolesGuard } from '../../../../shared/auth/guards/roles.guard';
-import { Roles } from '../../../../shared/auth/decorators/roles.decorator';
+import { PermissionsGuard } from '../../../../shared/auth/guards/permissions.guard';
+import { RequirePermissions } from '../../../../shared/auth/decorators/require-permissions.decorator';
 import { GetTenantId } from '../../../../shared/decorators/get-tenant-id.decorator';
 import { EAdminRole } from '../../../reserve-auth/domain/enums/admin-role.enum';
 import { ListAppointmentsUseCase } from '../../application/use-cases/list-appointments.use-case';
@@ -35,7 +35,7 @@ import { successResponse } from '../../../../shared/helpers/response.helper';
 @ApiTags('Admin - Appointments')
 @ApiBearerAuth()
 @Controller('admin/appointments')
-@UseGuards(AdminJwtGuard, TenantGuard, RolesGuard)
+@UseGuards(AdminJwtGuard, TenantGuard, PermissionsGuard)
 export class AdminAppointmentController {
   constructor(
     private readonly listAppointmentsUseCase: ListAppointmentsUseCase,
@@ -46,7 +46,7 @@ export class AdminAppointmentController {
 
   @Get()
   @HttpCode(HttpStatus.OK)
-  @Roles(EAdminRole.viewer)
+  @RequirePermissions('appointments.read')
   @ApiOperation({
     summary: 'List appointments',
     description:
@@ -75,7 +75,7 @@ export class AdminAppointmentController {
 
   @Get(':id')
   @HttpCode(HttpStatus.OK)
-  @Roles(EAdminRole.viewer)
+  @RequirePermissions('appointments.read')
   @ApiOperation({
     summary: 'Get appointment details',
     description:
@@ -114,7 +114,7 @@ export class AdminAppointmentController {
 
   @Patch(':id/cancel')
   @HttpCode(HttpStatus.OK)
-  @Roles(EAdminRole.editor)
+  @RequirePermissions('appointments.update')
   @ApiOperation({
     summary: 'Cancel an appointment',
     description:
@@ -160,7 +160,7 @@ export class AdminAppointmentController {
 
   @Patch(':id/complete')
   @HttpCode(HttpStatus.OK)
-  @Roles(EAdminRole.editor)
+  @RequirePermissions('appointments.update')
   @ApiOperation({
     summary: 'Mark appointment as completed',
     description: 'Transitions appointment status to completed.',

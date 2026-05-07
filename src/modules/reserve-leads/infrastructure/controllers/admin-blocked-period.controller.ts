@@ -24,8 +24,8 @@ import {
 } from '@nestjs/swagger';
 import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
 import { TenantGuard } from '../../../../shared/auth/guards/tenant.guard';
-import { RolesGuard } from '../../../../shared/auth/guards/roles.guard';
-import { Roles } from '../../../../shared/auth/decorators/roles.decorator';
+import { PermissionsGuard } from '../../../../shared/auth/guards/permissions.guard';
+import { RequirePermissions } from '../../../../shared/auth/decorators/require-permissions.decorator';
 import { GetTenantId } from '../../../../shared/decorators/get-tenant-id.decorator';
 import { EAdminRole } from '../../../reserve-auth/domain/enums/admin-role.enum';
 import { CreateBlockedPeriodUseCase } from '../../application/use-cases/create-blocked-period.use-case';
@@ -41,7 +41,7 @@ import { successResponse } from '../../../../shared/helpers/response.helper';
 @ApiTags('Admin - Appointment Blocked Periods')
 @ApiBearerAuth()
 @Controller('admin/appointments/blocked-periods')
-@UseGuards(AdminJwtGuard, TenantGuard, RolesGuard)
+@UseGuards(AdminJwtGuard, TenantGuard, PermissionsGuard)
 export class AdminBlockedPeriodController {
   constructor(
     private readonly createBlockedPeriodUseCase: CreateBlockedPeriodUseCase,
@@ -52,7 +52,7 @@ export class AdminBlockedPeriodController {
 
   @Get()
   @HttpCode(HttpStatus.OK)
-  @Roles(EAdminRole.viewer)
+  @RequirePermissions('appointments.blocked-period.read')
   @ApiOperation({
     summary: 'List blocked periods',
     description:
@@ -83,7 +83,7 @@ export class AdminBlockedPeriodController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  @Roles(EAdminRole.editor)
+  @RequirePermissions('appointments.blocked-period.create')
   @ApiOperation({
     summary: 'Create a blocked period',
     description:
@@ -126,7 +126,7 @@ export class AdminBlockedPeriodController {
 
   @Patch(':id')
   @HttpCode(HttpStatus.OK)
-  @Roles(EAdminRole.editor)
+  @RequirePermissions('appointments.blocked-period.update')
   @ApiOperation({
     summary: 'Update a blocked period',
     description: 'Updates one or more fields of an existing blocked period.',
@@ -157,7 +157,7 @@ export class AdminBlockedPeriodController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
-  @Roles(EAdminRole.editor)
+  @RequirePermissions('appointments.blocked-period.delete')
   @ApiOperation({
     summary: 'Delete a blocked period',
     description: 'Deletes a blocked period, restoring slot availability.',
