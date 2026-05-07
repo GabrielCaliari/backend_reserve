@@ -28,8 +28,8 @@ import {
 } from '@nestjs/swagger';
 import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
 import { TenantGuard } from '../../../../shared/auth/guards/tenant.guard';
-import { RolesGuard } from '../../../../shared/auth/guards/roles.guard';
-import { Roles } from '../../../../shared/auth/decorators/roles.decorator';
+import { PermissionsGuard } from '../../../../shared/auth/guards/permissions.guard';
+import { RequirePermissions } from '../../../../shared/auth/decorators/require-permissions.decorator';
 import { EAdminRole } from '../../../reserve-auth/domain/enums/admin-role.enum';
 import { CurrentAdmin, CurrentAdminPayload } from '../../../../shared/auth/decorators/current-admin.decorator';
 import { MediaAssetService } from '../../application/services/media-asset.service';
@@ -52,7 +52,7 @@ import { UploadErrorInterceptor } from '../../../../shared/interceptors/upload-e
 @ApiTags('CMS - Media Assets')
 @ApiBearerAuth()
 @Controller('assets')
-@UseGuards(AdminJwtGuard, TenantGuard, RolesGuard)
+@UseGuards(AdminJwtGuard, TenantGuard, PermissionsGuard)
 export class MediaAssetController {
   constructor(private readonly assetService: MediaAssetService) {}
 
@@ -61,7 +61,7 @@ export class MediaAssetController {
    * POST /api/cms/assets
    */
   @Post()
-  @Roles(EAdminRole.editor)
+  @RequirePermissions('cms.media-asset.create')
   @UseInterceptors(
     UploadErrorInterceptor,
     FileInterceptor('file', {
@@ -236,7 +236,7 @@ export class MediaAssetController {
    * GET /api/cms/assets
    */
   @Get()
-  @Roles(EAdminRole.viewer)
+  @RequirePermissions('cms.media-asset.read')
   @ApiOperation({ summary: 'List media assets with filtering' })
   @ApiQuery({ name: 'collection_id', required: false, type: String, description: 'Filter by collection CUID' })
   @ApiQuery({ name: 'status', required: false, enum: EAssetStatus })
@@ -272,7 +272,7 @@ export class MediaAssetController {
    * GET /api/cms/assets/:id
    */
   @Get(':id')
-  @Roles(EAdminRole.viewer)
+  @RequirePermissions('cms.media-asset.read')
   @ApiOperation({ summary: 'Get media asset by ID' })
   @ApiParam({ name: 'id', type: String, description: 'Asset UUID' })
   @ApiResponse({ status: 200, description: 'Asset retrieved successfully' })
@@ -294,7 +294,7 @@ export class MediaAssetController {
    * PATCH /api/cms/assets/:id
    */
   @Patch(':id')
-  @Roles(EAdminRole.editor)
+  @RequirePermissions('cms.media-asset.update')
   @ApiOperation({ summary: 'Update asset metadata (alt_text, metadata)' })
   @ApiParam({ name: 'id', type: String, description: 'Asset UUID' })
   @ApiBody({
@@ -331,7 +331,7 @@ export class MediaAssetController {
    * DELETE /api/cms/assets/:id
    */
   @Delete(':id')
-  @Roles(EAdminRole.editor)
+  @RequirePermissions('cms.media-asset.delete')
   @ApiOperation({ summary: 'Delete media asset' })
   @ApiParam({ name: 'id', type: String, description: 'Asset UUID' })
   @ApiResponse({ status: 200, description: 'Asset deleted successfully' })

@@ -42,15 +42,15 @@ import {
 import { AuthorPresenter } from '../presenters/author.presenter';
 import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
 import { TenantGuard } from '../../../../shared/auth/guards/tenant.guard';
-import { RolesGuard } from '../../../../shared/auth/guards/roles.guard';
-import { Roles } from '../../../../shared/auth/decorators/roles.decorator';
+import { PermissionsGuard } from '../../../../shared/auth/guards/permissions.guard';
+import { RequirePermissions } from '../../../../shared/auth/decorators/require-permissions.decorator';
 import { CurrentAdmin, CurrentAdminPayload } from '../../../../shared/auth/decorators/current-admin.decorator';
 import { EAdminRole } from '../../../reserve-auth/domain/enums/admin-role.enum';
 import { UuidValidationPipe } from '../pipes/uuid-validation.pipe';
 
 @ApiTags('CMS Author Management')
 @Controller('authors')
-@UseGuards(AdminJwtGuard, TenantGuard, RolesGuard)
+@UseGuards(AdminJwtGuard, TenantGuard, PermissionsGuard)
 @ApiBearerAuth()
 @ApiExtraModels(AuthorResponseDTO, PaginatedAuthorsResponseDTO, SuccessMessageResponseDTO)
 @ApiHeader({
@@ -62,7 +62,7 @@ export class AuthorController {
   constructor(private readonly authorService: AuthorService) {}
 
   @Post()
-  @Roles(EAdminRole.editor)
+  @RequirePermissions('cms.author.create')
   @ApiOperation({
     summary: 'Create a new author',
     description: 'Creates a tenant-scoped author using the tenant resolved from the x-tenant-id header.',
@@ -88,7 +88,7 @@ export class AuthorController {
   }
 
   @Put(':id')
-  @Roles(EAdminRole.editor)
+  @RequirePermissions('cms.author.update')
   @ApiOperation({ summary: 'Update author information' })
   @ApiParam({
     name: 'id',
@@ -117,7 +117,7 @@ export class AuthorController {
   }
 
   @Get(':id')
-  @Roles(EAdminRole.viewer)
+  @RequirePermissions('cms.author.read')
   @ApiOperation({ summary: 'Get a single author by ID' })
   @ApiParam({
     name: 'id',
@@ -144,7 +144,7 @@ export class AuthorController {
   }
 
   @Get()
-  @Roles(EAdminRole.viewer)
+  @RequirePermissions('cms.author.read')
   @ApiOperation({ summary: 'List all authors with optional filters' })
   @ApiQuery({
     name: 'active',
@@ -201,7 +201,7 @@ export class AuthorController {
   }
 
   @Delete(':id')
-  @Roles(EAdminRole.editor)
+  @RequirePermissions('cms.author.delete')
   @ApiOperation({
     summary: 'Delete an author (prevents deletion if author has published articles)',
   })
@@ -232,7 +232,7 @@ export class AuthorController {
   }
 
   @Post(':id/avatar')
-  @Roles(EAdminRole.editor)
+  @RequirePermissions('cms.author.update')
   @ApiOperation({
     summary: 'Assign an existing media asset as the author avatar',
     description: 'This endpoint links an already uploaded media asset to the author. Direct file upload is not handled here.',

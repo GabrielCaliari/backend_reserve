@@ -27,15 +27,15 @@ import { ArticleImageService } from '../../application/services/article-image.se
 import { ReorderImagesDTO } from '../../application/dtos/reorder-images.dto';
 import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
 import { TenantGuard } from '../../../../shared/auth/guards/tenant.guard';
-import { RolesGuard } from '../../../../shared/auth/guards/roles.guard';
-import { Roles } from '../../../../shared/auth/decorators/roles.decorator';
+import { PermissionsGuard } from '../../../../shared/auth/guards/permissions.guard';
+import { RequirePermissions } from '../../../../shared/auth/decorators/require-permissions.decorator';
 import { CurrentAdmin, CurrentAdminPayload } from '../../../../shared/auth/decorators/current-admin.decorator';
 import { EAdminRole } from '../../../reserve-auth/domain/enums/admin-role.enum';
 import { UploadErrorInterceptor } from '../../../../shared/interceptors/upload-error.interceptor';
 
 @ApiTags('CMS Image Management')
 @Controller('articles/:articleId/images')
-@UseGuards(AdminJwtGuard, TenantGuard, RolesGuard)
+@UseGuards(AdminJwtGuard, TenantGuard, PermissionsGuard)
 @ApiBearerAuth()
 @ApiHeader({
   name: 'x-tenant-id',
@@ -46,7 +46,7 @@ export class ArticleImageController {
   constructor(private readonly imageService: ArticleImageService) {}
 
   @Post()
-  @Roles(EAdminRole.editor)
+  @RequirePermissions('cms.article-image.create')
   @UseInterceptors(
     UploadErrorInterceptor,
     FileInterceptor('file', {
@@ -215,7 +215,7 @@ export class ArticleImageController {
   }
 
   @Get()
-  @Roles(EAdminRole.viewer)
+  @RequirePermissions('cms.article-image.read')
   @ApiOperation({ summary: 'List all images for an article' })
   @ApiResponse({ status: 200, description: 'Images retrieved successfully' })
   @ApiResponse({ status: 404, description: 'Article not found' })
@@ -229,7 +229,7 @@ export class ArticleImageController {
   }
 
   @Delete(':imageId')
-  @Roles(EAdminRole.editor)
+  @RequirePermissions('cms.article-image.delete')
   @ApiOperation({ summary: 'Delete a specific image from an article' })
   @ApiResponse({ status: 200, description: 'Image deleted successfully' })
   @ApiResponse({ status: 403, description: 'Insufficient role' })
@@ -240,7 +240,7 @@ export class ArticleImageController {
   }
 
   @Put('reorder')
-  @Roles(EAdminRole.editor)
+  @RequirePermissions('cms.article-image.update')
   @ApiOperation({ summary: 'Reorder images within an article' })
   @ApiResponse({ status: 200, description: 'Images reordered successfully' })
   @ApiResponse({ status: 400, description: 'Invalid image IDs' })

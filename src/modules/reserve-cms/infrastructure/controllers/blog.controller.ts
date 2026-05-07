@@ -27,8 +27,8 @@ import { MediaAssetService } from '../../application/services/media-asset.servic
 import { MediaAssetPresenter } from '../presenters/media-asset.presenter';
 import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
 import { TenantGuard } from '../../../../shared/auth/guards/tenant.guard';
-import { RolesGuard } from '../../../../shared/auth/guards/roles.guard';
-import { Roles } from '../../../../shared/auth/decorators/roles.decorator';
+import { PermissionsGuard } from '../../../../shared/auth/guards/permissions.guard';
+import { RequirePermissions } from '../../../../shared/auth/decorators/require-permissions.decorator';
 import { EAdminRole } from '../../../reserve-auth/domain/enums/admin-role.enum';
 import { CurrentAdmin, CurrentAdminPayload } from '../../../../shared/auth/decorators/current-admin.decorator';
 import { EAssetStatus } from '../../domain/enums/asset-status.enum';
@@ -36,7 +36,7 @@ import { UploadErrorInterceptor } from '../../../../shared/interceptors/upload-e
 
 @ApiTags('CMS Blogs')
 @ApiBearerAuth()
-@UseGuards(AdminJwtGuard, TenantGuard, RolesGuard)
+@UseGuards(AdminJwtGuard, TenantGuard, PermissionsGuard)
 @Controller('blogs')
 export class BlogController {
   constructor(
@@ -45,7 +45,7 @@ export class BlogController {
   ) {}
 
   @Post()
-  @Roles(EAdminRole.manager)
+  @RequirePermissions('cms.blog.create')
   @ApiOperation({ 
     summary: 'Create a new blog in the current tenant',
     description: 'Creates a blog with a unique name per tenant. Returns a secret key for API access (only shown once).',
@@ -79,7 +79,7 @@ export class BlogController {
   }
 
   @Get()
-  @Roles(EAdminRole.viewer)
+  @RequirePermissions('cms.blog.read')
   @ApiOperation({ 
     summary: 'List all blogs in the current tenant',
     description: 'Returns all blogs for the authenticated admin\'s tenant. Secret keys are not included.',
@@ -110,7 +110,7 @@ export class BlogController {
   }
 
   @Get(':blogId/assets')
-  @Roles(EAdminRole.viewer)
+  @RequirePermissions('cms.blog.read')
   @ApiOperation({
     summary: 'List assets available for articles of a blog',
     description: 'Lists assets from the media collection configured on the blog.',
@@ -152,7 +152,7 @@ export class BlogController {
   }
 
   @Post(':blogId/assets')
-  @Roles(EAdminRole.editor)
+  @RequirePermissions('cms.blog-asset.create')
   @UseInterceptors(
     UploadErrorInterceptor,
     FileInterceptor('file', {
@@ -337,7 +337,7 @@ export class BlogController {
   }
 
   @Put(':blogId')
-  @Roles(EAdminRole.editor)
+  @RequirePermissions('cms.blog.update')
   @ApiOperation({ 
     summary: 'Replace blog metadata',
     description: 'Updates blog fields such as name, description, mediaCollectionId, and active. Name must remain unique within the tenant.',
@@ -377,7 +377,7 @@ export class BlogController {
   }
 
   @Patch(':blogId')
-  @Roles(EAdminRole.editor)
+  @RequirePermissions('cms.blog.update')
   @ApiOperation({
     summary: 'Partially update blog metadata',
     description: 'Partially updates blog fields such as name, description, mediaCollectionId, and active.',
@@ -418,7 +418,7 @@ export class BlogController {
   }
 
   @Delete(':blogId')
-  @Roles(EAdminRole.manager)
+  @RequirePermissions('cms.blog.delete')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ 
     summary: 'Delete a blog (and cascade delete articles)',
@@ -451,7 +451,7 @@ export class BlogController {
   }
 
   @Post(':blogId/regenerate-key')
-  @Roles(EAdminRole.owner)
+  @RequirePermissions('cms.blog.manage-key')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ 
     summary: 'Regenerate blog secret key',

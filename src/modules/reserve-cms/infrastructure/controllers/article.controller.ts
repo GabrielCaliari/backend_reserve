@@ -21,14 +21,14 @@ import { UpdatePublishedAtDTO } from '../../application/dtos/update-published-at
 import { ArticlePresenter } from '../presenters/article.presenter';
 import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
 import { TenantGuard } from '../../../../shared/auth/guards/tenant.guard';
-import { RolesGuard } from '../../../../shared/auth/guards/roles.guard';
-import { Roles } from '../../../../shared/auth/decorators/roles.decorator';
+import { PermissionsGuard } from '../../../../shared/auth/guards/permissions.guard';
+import { RequirePermissions } from '../../../../shared/auth/decorators/require-permissions.decorator';
 import { CurrentAdmin, CurrentAdminPayload } from '../../../../shared/auth/decorators/current-admin.decorator';
 import { EAdminRole } from '../../../reserve-auth/domain/enums/admin-role.enum';
 
 @ApiTags('CMS Article Management')
 @Controller('articles')
-@UseGuards(AdminJwtGuard, TenantGuard, RolesGuard)
+@UseGuards(AdminJwtGuard, TenantGuard, PermissionsGuard)
 @ApiBearerAuth()
 @ApiHeader({
   name: 'x-tenant-id',
@@ -39,7 +39,7 @@ export class ArticleController {
   constructor(private readonly articleService: ArticleService) {}
 
   @Post()
-  @Roles(EAdminRole.editor)
+  @RequirePermissions('cms.article.create')
   @ApiOperation({ summary: 'Create a new article in draft status' })
   @ApiResponse({ status: 201, description: 'Article created successfully' })
   @ApiResponse({ status: 400, description: 'Validation error' })
@@ -66,7 +66,7 @@ export class ArticleController {
   }
 
   @Get()
-  @Roles(EAdminRole.viewer)
+  @RequirePermissions('cms.article.read')
   @ApiOperation({
     summary: 'List articles',
     description: 'Without blogId: lists all articles across all blogs for the tenant. With blogId: lists articles of a specific blog.',
@@ -104,7 +104,7 @@ export class ArticleController {
   }
 
   @Get(':id')
-  @Roles(EAdminRole.viewer)
+  @RequirePermissions('cms.article.read')
   @ApiOperation({ summary: 'Get a single article by ID' })
   @ApiResponse({ status: 200, description: 'Article retrieved successfully' })
   @ApiResponse({ status: 404, description: 'Article not found' })
@@ -124,7 +124,7 @@ export class ArticleController {
   }
 
   @Put(':id')
-  @Roles(EAdminRole.editor)
+  @RequirePermissions('cms.article.update')
   @ApiOperation({ summary: 'Update article content and metadata' })
   @ApiResponse({ status: 200, description: 'Article updated successfully' })
   @ApiResponse({ status: 400, description: 'Validation error' })
@@ -148,7 +148,7 @@ export class ArticleController {
   }
 
   @Delete(':id')
-  @Roles(EAdminRole.editor)
+  @RequirePermissions('cms.article.delete')
   @ApiOperation({ summary: 'Delete an article and its associated relations' })
   @ApiResponse({ status: 200, description: 'Article deleted successfully' })
   @ApiResponse({ status: 403, description: 'Insufficient role' })
@@ -168,7 +168,7 @@ export class ArticleController {
   }
 
   @Post(':id/publish')
-  @Roles(EAdminRole.editor)
+  @RequirePermissions('cms.article.publish')
   @ApiOperation({ summary: 'Publish or schedule an article' })
   @ApiResponse({ status: 200, description: 'Article published or scheduled successfully' })
   @ApiResponse({ status: 400, description: 'Missing required fields or scheduledAt is in the past' })
@@ -191,7 +191,7 @@ export class ArticleController {
   }
 
   @Patch(':id/published-at')
-  @Roles(EAdminRole.editor)
+  @RequirePermissions('cms.article.publish')
   @ApiOperation({ summary: 'Edit the published_at date of a published or scheduled article' })
   @ApiResponse({ status: 200, description: 'Publication date updated successfully' })
   @ApiResponse({ status: 400, description: 'Validation error' })
@@ -219,7 +219,7 @@ export class ArticleController {
   }
 
   @Post(':articleId/archive')
-  @Roles(EAdminRole.editor)
+  @RequirePermissions('cms.article.update')
   @ApiOperation({ summary: 'Transition article status from published to archived' })
   @ApiResponse({ status: 200, description: 'Article archived successfully' })
   @ApiResponse({ status: 403, description: 'Insufficient role' })
@@ -235,7 +235,7 @@ export class ArticleController {
   }
 
   @Post(':articleId/unarchive')
-  @Roles(EAdminRole.editor)
+  @RequirePermissions('cms.article.update')
   @ApiOperation({ summary: 'Restore an archived article back to published status' })
   @ApiResponse({ status: 200, description: 'Article restored to published successfully' })
   @ApiResponse({ status: 403, description: 'Insufficient role' })

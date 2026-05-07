@@ -19,8 +19,8 @@ import {
 } from '@nestjs/swagger';
 import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
 import { TenantGuard } from '../../../../shared/auth/guards/tenant.guard';
-import { RolesGuard } from '../../../../shared/auth/guards/roles.guard';
-import { Roles } from '../../../../shared/auth/decorators/roles.decorator';
+import { PermissionsGuard } from '../../../../shared/auth/guards/permissions.guard';
+import { RequirePermissions } from '../../../../shared/auth/decorators/require-permissions.decorator';
 import { EAdminRole } from '../../../reserve-auth/domain/enums/admin-role.enum';
 import { CurrentAdmin, CurrentAdminPayload } from '../../../../shared/auth/decorators/current-admin.decorator';
 import { MediaRelationService } from '../../application/services/media-relation.service';
@@ -42,7 +42,7 @@ import { MediaAssetPresenter } from '../presenters/media-asset.presenter';
 @ApiTags('CMS - Media Relations')
 @ApiBearerAuth()
 @Controller('relations')
-@UseGuards(AdminJwtGuard, TenantGuard, RolesGuard)
+@UseGuards(AdminJwtGuard, TenantGuard, PermissionsGuard)
 export class MediaRelationController {
   constructor(private readonly relationService: MediaRelationService) {}
 
@@ -51,7 +51,7 @@ export class MediaRelationController {
    * POST /api/cms/relations/attach
    */
   @Post('attach')
-  @Roles(EAdminRole.editor)
+  @RequirePermissions('cms.media-relation.create')
   @ApiOperation({ summary: 'Attach a media asset to an entity' })
   @ApiBody({ type: AttachMediaDTO })
   @ApiResponse({ status: 201, description: 'Asset attached successfully' })
@@ -74,7 +74,7 @@ export class MediaRelationController {
    * POST /api/cms/relations/detach
    */
   @Post('detach')
-  @Roles(EAdminRole.editor)
+  @RequirePermissions('cms.media-relation.delete')
   @ApiOperation({ summary: 'Detach a media asset from an entity' })
   @ApiBody({ type: DetachMediaDTO })
   @ApiResponse({ status: 200, description: 'Asset detached successfully' })
@@ -92,7 +92,7 @@ export class MediaRelationController {
    * GET /api/cms/relations/:entityType/:entityId
    */
   @Get(':entityType/:entityId')
-  @Roles(EAdminRole.viewer)
+  @RequirePermissions('cms.media-relation.read')
   @ApiOperation({ summary: "Get all assets attached to an entity" })
   @ApiParam({ name: 'entityType', type: String, description: 'Entity type (e.g., article, brand, company)' })
   @ApiParam({ name: 'entityId', type: String, description: 'Entity UUID' })
@@ -122,7 +122,7 @@ export class MediaRelationController {
    * PUT /api/cms/relations/reorder
    */
   @Put('reorder')
-  @Roles(EAdminRole.editor)
+  @RequirePermissions('cms.media-relation.update')
   @ApiOperation({ summary: 'Reorder assets for an entity' })
   @ApiBody({ type: ReorderMediaDTO })
   @ApiResponse({ status: 200, description: 'Assets reordered successfully' })
