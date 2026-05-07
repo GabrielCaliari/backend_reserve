@@ -10,13 +10,15 @@ import {
   NotFoundException,
   Req,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiHeader } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiHeader, ApiParam } from '@nestjs/swagger';
 import { ListB2BProductsUseCase } from '../../application/use-cases/list-b2b-products.use-case';
 import { CreateLeadCheckoutUseCase } from '../../application/use-cases/create-lead-checkout.use-case';
 import { CreateCartCheckoutUseCase } from '../../application/use-cases/create-cart-checkout.use-case';
+import { CalculateB2BOrderCostUseCase } from '../../application/use-cases/calculate-b2b-order-cost.use-case';
 import { CreateLeadCheckoutDTO } from '../../application/dtos/create-lead-checkout.dto';
 import { CreateCartCheckoutDTO } from '../../application/dtos/create-cart-checkout.dto';
 import { OptionalUserGuard } from '../guards/optional-user.guard';
+import { OrderCostBreakdownResponseDTO } from '../../../zarp-b2c-products/application/dtos/fee-config.dto';
 
 /**
  * Controller público para produtos B2B avulsos.
@@ -49,6 +51,7 @@ export class PublicB2BProductsController {
     private readonly listB2BProductsUseCase: ListB2BProductsUseCase,
     private readonly createLeadCheckoutUseCase: CreateLeadCheckoutUseCase,
     private readonly createCartCheckoutUseCase: CreateCartCheckoutUseCase,
+    private readonly calculateB2BOrderCostUseCase: CalculateB2BOrderCostUseCase,
   ) {}
 
   private getTenantId(tenantId: string): string {
@@ -69,6 +72,25 @@ export class PublicB2BProductsController {
   async listProducts(@Headers('x-tenant-id') tenantId: string) {
     const products = await this.listB2BProductsUseCase.execute(this.getTenantId(tenantId));
     return products.filter(p => p.isActive());
+  }
+
+  // ─── POST /public/b2b/products/:productId/calculate-cost ──────────────────
+
+  @Post(':productId/calculate-cost')
+  @ApiOperation({
+    summary: 'Calcular custo total de um produto B2B (público)',
+    description:
+      'Retorna breakdown de preço base + chip cost + frete. ' +
+      'Usar para exibir o preço final antes do checkout. Não requer autenticação.',
+  })
+  @ApiParam({ name: 'productId', description: 'ID do produto B2B' })
+  @ApiResponse({ status: 200, type: OrderCostBreakdownResponseDTO })
+  @ApiResponse({ status: 404, description: 'Produto não encontrado' })
+  async calculateCost(
+    @Headers('x-tenant-id') tenantId: string,
+    @Param('productId') productId: string,
+  ): Promise<OrderCostBreakdownResponseDTO> {
+    return this.calculateB2BOrderCostUseCase.execute(this.getTenantId(tenantId), productId);
   }
 
   // ─── POST /public/b2b/products/:productId/checkout ─────────────────────────
