@@ -4,14 +4,12 @@ import { CreateSmtpServerDTO } from '../../application/dtos/config.dto';
 import { Request, Response } from 'express';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
-import { RolesGuard } from '../../../../shared/auth/guards/roles.guard';
-import { Roles } from '../../../../shared/auth/decorators/roles.decorator';
-import { EAdminRole } from '../../../reserve-auth/domain/enums/admin-role.enum';
+import { PermissionsGuard } from '../../../../shared/auth/guards/permissions.guard';
+import { RequirePermissions } from '../../../../shared/auth/decorators/require-permissions.decorator';
 
 @ApiTags('Config (SMTP Server)')
 @ApiBearerAuth()
-@UseGuards(AdminJwtGuard, RolesGuard)
-@Roles(EAdminRole.super_admin)
+@UseGuards(AdminJwtGuard, PermissionsGuard)
 @Controller()
 export class ConfigController {
     public constructor(
@@ -19,6 +17,7 @@ export class ConfigController {
     ) { }
 
     @Post('/smtp-server')
+    @RequirePermissions('mailer.smtp-config.manage')
     @ApiOperation({ summary: 'Create SMTP server', description: 'Creates a new SMTP server or email provider configuration' })
     @ApiResponse({ status: 201, description: 'SMTP server created successfully' })
     @ApiResponse({ status: 400, description: 'Invalid data' })
@@ -40,6 +39,7 @@ export class ConfigController {
     }
 
     @Get('/smtp-server')
+    @RequirePermissions('mailer.smtp-config.read')
     @ApiOperation({ summary: 'List SMTP servers', description: 'Returns all configured SMTP servers' })
     @ApiResponse({ status: 200, description: 'SMTP server list' })
     @ApiResponse({ status: 500, description: 'Failed to fetch SMTP servers' })

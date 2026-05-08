@@ -2,9 +2,8 @@
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBearerAuth } from '@nestjs/swagger';
 import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
 import { TenantGuard } from '../../../../shared/auth/guards/tenant.guard';
-import { RolesGuard } from '../../../../shared/auth/guards/roles.guard';
-import { Roles } from '../../../../shared/auth/decorators/roles.decorator';
-import { EAdminRole } from '../../../reserve-auth/domain/enums/admin-role.enum';
+import { PermissionsGuard } from '../../../../shared/auth/guards/permissions.guard';
+import { RequirePermissions } from '../../../../shared/auth/decorators/require-permissions.decorator';
 import { EmailCampaignService } from '../../application/services';
 import {
   CreateEmailCampaignDto,
@@ -15,8 +14,8 @@ import {
 
 @ApiTags('Email Campaign')
 @ApiBearerAuth()
-@UseGuards(AdminJwtGuard, TenantGuard, RolesGuard)
-@Roles(EAdminRole.manager)
+@UseGuards(AdminJwtGuard, TenantGuard, PermissionsGuard)
+@RequirePermissions('mailer.campaign.manage')
 @Controller()
 export class EmailCampaignController {
   constructor(private readonly emailCampaignService: EmailCampaignService) {}
