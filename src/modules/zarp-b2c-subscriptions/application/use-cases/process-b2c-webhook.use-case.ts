@@ -17,6 +17,10 @@ import {
   ITenantBillingConfigRepository,
   TENANT_BILLING_CONFIG_REPOSITORY,
 } from '../../../zarp-subscriptions/domain/interfaces/tenant-billing-config.repository.interface';
+import {
+  IB2CCheckoutSessionRepository,
+  B2C_CHECKOUT_SESSION_REPOSITORY,
+} from '../../domain/interfaces/b2c-checkout-session.repository.interface';
 import { EBillingMode, EAccessType } from '../../domain/enums/product-type.enum';
 
 @Injectable()
@@ -32,6 +36,8 @@ export class ProcessB2CWebhookUseCase {
     private readonly stripeProvider: IStripeProvider,
     @Inject(TENANT_BILLING_CONFIG_REPOSITORY)
     private readonly billingConfigRepo: ITenantBillingConfigRepository,
+    @Inject(B2C_CHECKOUT_SESSION_REPOSITORY)
+    private readonly checkoutSessionRepo: IB2CCheckoutSessionRepository,
     private readonly prisma: PrismaService,
   ) {}
 
@@ -54,6 +60,9 @@ export class ProcessB2CWebhookUseCase {
     switch (event.type) {
       case 'checkout.session.completed':
         await this.handleCheckoutCompleted(event.data.object as Stripe.Checkout.Session);
+        break;
+      case 'checkout.session.expired':
+        await this.handleCheckoutExpired(event.data.object as Stripe.Checkout.Session);
         break;
       case 'customer.subscription.updated':
         await this.handleSubscriptionUpdated(event.data.object as Stripe.Subscription);
@@ -212,6 +221,23 @@ export class ProcessB2CWebhookUseCase {
       });
 
       this.logger.log(`UserProductAccess (${accessType}) created for user ${userId}, product ${productId}, mode ${billingMode}`);
+    }
+
+    // Mark checkout session as completed
+    try {
+      await this.checkoutSessionRepo.updateStatus(session.id, 'completed', new Date());
+    } catch {
+      // Non-critical — log but don't fail the webhook
+      this.logger.warn(`Could not update B2CCheckoutSession status for ${session.id}`);
+    }
+  }
+
+  private async handleCheckoutExpired(session: Stripe.Checkout.Session): Promise<void> {
+    try {
+      await this.checkoutSessionRepo.updateStatus(session.id, 'expired', undefined, new Date());
+      this.logger.log(`B2CCheckoutSession marked as expired: ${session.id}`);
+    } catch {
+      this.logger.warn(`Could not mark B2CCheckoutSession as expired: ${session.id}`);
     }
   }
 

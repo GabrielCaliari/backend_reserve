@@ -12,6 +12,10 @@ import {
   ITenantBillingConfigRepository,
   TENANT_BILLING_CONFIG_REPOSITORY,
 } from '../../../zarp-subscriptions/domain/interfaces/tenant-billing-config.repository.interface';
+import {
+  IB2CCheckoutSessionRepository,
+  B2C_CHECKOUT_SESSION_REPOSITORY,
+} from '../../domain/interfaces/b2c-checkout-session.repository.interface';
 import { EBillingMode } from '../../domain/enums/product-type.enum';
 
 @Injectable()
@@ -23,6 +27,8 @@ export class CreateCheckoutSessionUseCase {
     private readonly stripeProvider: IStripeProvider,
     @Inject(TENANT_BILLING_CONFIG_REPOSITORY)
     private readonly billingConfigRepo: ITenantBillingConfigRepository,
+    @Inject(B2C_CHECKOUT_SESSION_REPOSITORY)
+    private readonly checkoutSessionRepo: IB2CCheckoutSessionRepository,
     private readonly prisma: PrismaService,
   ) {}
 
@@ -176,6 +182,22 @@ export class CreateCheckoutSessionUseCase {
     }
 
     const session = await this.stripeProvider.createCheckoutSession(sessionParams);
+
+    // 8. Save checkout session as pending for funnel tracking
+    await this.checkoutSessionRepo.create({
+      tenantId: dto.tenantId,
+      userId: userId ?? null,
+      productId: price.Product.id,
+      priceId: dto.priceId,
+      stripeCheckoutId: session.id,
+      stripePriceId: price.stripe_price_id,
+      amount: price.unit_amount,
+      currency: price.currency,
+      customerEmail,
+      customerName,
+      customerPhone: dto.leadPhone ?? null,
+      isLeadPurchase: !dto.userId,
+    });
 
     return { checkoutUrl: session.url! };
   }

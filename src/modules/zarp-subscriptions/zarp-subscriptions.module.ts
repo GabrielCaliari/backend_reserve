@@ -20,6 +20,7 @@ import { CreateStripePlanUseCase } from './application/use-cases/create-stripe-p
 import { ArchiveStripePlanUseCase } from './application/use-cases/archive-stripe-plan.use-case';
 import { ListStripePlansUseCase } from './application/use-cases/list-stripe-plans.use-case';
 import { UpdateStripePlanUseCase } from './application/use-cases/update-stripe-plan.use-case';
+import { ListMovementsUseCase } from './application/use-cases/list-movements.use-case';
 
 // Repositories
 import { PrismaStripeSubscriptionRepository } from './infrastructure/repositories/prisma-stripe-subscription.repository';
@@ -61,6 +62,7 @@ import { ActiveSubscriptionGuard } from './infrastructure/guards/active-subscrip
     ArchiveStripePlanUseCase,
     ListStripePlansUseCase,
     UpdateStripePlanUseCase,
+    ListMovementsUseCase,
 
     // Repositories
     {

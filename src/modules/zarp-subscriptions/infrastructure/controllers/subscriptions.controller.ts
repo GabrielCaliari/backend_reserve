@@ -5,6 +5,7 @@ import {
   Param,
   Body,
   Headers,
+  Query,
   HttpCode,
   HttpStatus,
   UseGuards,
@@ -12,6 +13,8 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { CreateCheckoutSessionUseCase } from '../../application/use-cases/create-checkout-session.use-case';
+import { ListMovementsUseCase } from '../../application/use-cases/list-movements.use-case';
+import { ListMovementsQueryDTO } from '../../application/dtos/list-movements-query.dto';
 import { GetTenantSubscriptionUseCase } from '../../application/use-cases/get-tenant-subscription.use-case';
 import { GetTenantSubscriptionFromStripeUseCase } from '../../application/use-cases/get-tenant-subscription-from-stripe.use-case';
 import { CancelSubscriptionUseCase } from '../../application/use-cases/cancel-subscription.use-case';
@@ -32,7 +35,23 @@ export class SubscriptionsController {
     private readonly getTenantSubscriptionFromStripeUseCase: GetTenantSubscriptionFromStripeUseCase,
     private readonly cancelSubscriptionUseCase: CancelSubscriptionUseCase,
     private readonly createBillingPortalSessionUseCase: CreateBillingPortalSessionUseCase,
+    private readonly listMovementsUseCase: ListMovementsUseCase,
   ) {}
+
+  @Get('movements')
+  @ApiOperation({ summary: 'List all movements (B2B + B2C combined)' })
+  @ApiResponse({ status: 200, description: 'Movements listed' })
+  async listMovements(
+    @Headers('x-tenant-id') tenantId: string,
+    @Query() query: ListMovementsQueryDTO,
+  ) {
+    return this.listMovementsUseCase.execute(tenantId, {
+      source: query.source,
+      status: query.status,
+      limit: query.limit,
+      offset: query.offset,
+    });
+  }
 
   @Post('checkout')
   @HttpCode(HttpStatus.OK)
