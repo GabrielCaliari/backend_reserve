@@ -1,4 +1,4 @@
-import { Injectable, Inject, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Injectable, Inject, BadRequestException, NotFoundException, Logger } from '@nestjs/common';
 import Stripe from 'stripe';
 import {
   IProductRepository,
@@ -22,11 +22,21 @@ import {
 } from '../../../zarp-subscriptions/domain/interfaces/tenant-billing-config.repository.interface';
 import { ResolveProductFeesUseCase } from './resolve-product-fees.use-case';
 import { UnifiedCheckoutDTO } from '../dtos/unified-checkout.dto';
+import { PrismaService } from '../../../../shared/database/prisma.service';
 
 const STRIPE_API_VERSION = '2025-02-24.acacia' as const;
 
+interface B2CItemTrack {
+  productId: string;
+  priceId: string;
+  amount: number;
+  currency: string;
+}
+
 @Injectable()
 export class UnifiedCheckoutUseCase {
+  private readonly logger = new Logger(UnifiedCheckoutUseCase.name);
+
   constructor(
     @Inject(PRODUCT_REPOSITORY)
     private readonly b2cProductRepo: IProductRepository,
@@ -39,6 +49,7 @@ export class UnifiedCheckoutUseCase {
     @Inject(TENANT_BILLING_CONFIG_REPOSITORY)
     private readonly billingConfigRepo: ITenantBillingConfigRepository,
     private readonly resolveFeesUseCase: ResolveProductFeesUseCase,
+    private readonly prisma: PrismaService,
   ) {}
 
   async execute(
@@ -65,6 +76,7 @@ export class UnifiedCheckoutUseCase {
     let primaryCurrency = 'brl';
     const b2bProductIds: string[] = [];
     const b2cPriceIds: string[] = [];
+    const b2cItemsTrack: B2CItemTrack[] = [];
 
     for (const item of dto.items) {
       if (item.type === 'b2b') {
@@ -144,6 +156,12 @@ export class UnifiedCheckoutUseCase {
 
         primaryCurrency = price.currency;
         b2cPriceIds.push(price.id);
+        b2cItemsTrack.push({
+          productId: product.id,
+          priceId: price.id,
+          amount: breakdown.basePrice,
+          currency: price.currency,
+        });
 
         lineItems.push({
           price_data: {
@@ -213,20 +231,22 @@ export class UnifiedCheckoutUseCase {
       cancel_url: cancelUrl,
     });
 
-    // 6. Create B2B purchase records for B2B items
-    const purchaseIds: string[] = [];
-    if (b2bProductIds.length > 0) {
-      const totalAmount = lineItems.reduce((s, li) => {
-        const amount = (li.price_data as any)?.unit_amount ?? 0;
-        const qty = li.quantity ?? 1;
-        return s + amount * qty;
-      }, 0);
+    const totalCartAmount = lineItems.reduce((s, li) => {
+      const amount = (li.price_data as any)?.unit_amount ?? 0;
+      const qty = li.quantity ?? 1;
+      return s + amount * qty;
+    }, 0);
 
+    // 6. Persist movement record — B2B purchase (preferred) or B2C session if B2C-only cart
+    const purchaseIds: string[] = [];
+
+    if (b2bProductIds.length > 0) {
+      // B2B items present: create b2b_purchase (total amount = entire cart)
       const purchase = await this.b2bPurchaseRepo.create({
         tenantId,
         productId: b2bProductIds[0],
         stripeCheckoutId: session.id,
-        amount: totalAmount,
+        amount: totalCartAmount,
         currency: primaryCurrency,
         customerEmail: dto.leadEmail ?? '',
         customerName: dto.leadName,
@@ -238,6 +258,34 @@ export class UnifiedCheckoutUseCase {
         },
       });
       purchaseIds.push(purchase.id);
+    } else if (b2cItemsTrack.length > 0) {
+      // B2C-only cart: create b2c_checkout_session so it appears in movements panel
+      const first = b2cItemsTrack[0];
+      try {
+        await this.prisma.b2CCheckoutSession.create({
+          data: {
+            tenant_id: tenantId,
+            user_id: userId ?? null,
+            product_id: first.productId,
+            price_id: first.priceId,
+            stripe_checkout_id: session.id,
+            stripe_price_id: first.priceId,
+            status: 'pending',
+            amount: totalCartAmount,
+            currency: first.currency,
+            customer_email: dto.leadEmail ?? '',
+            customer_name: dto.leadName ?? null,
+            customer_phone: dto.leadPhone ?? null,
+            is_lead_purchase: !userId,
+            metadata: {
+              is_unified_cart: true,
+              b2c_price_ids: b2cItemsTrack.map((i) => i.priceId),
+            },
+          },
+        });
+      } catch (err) {
+        this.logger.warn(`Could not create B2CCheckoutSession for B2C-only cart ${session.id}: ${err}`);
+      }
     }
 
     return { checkoutUrl: session.url ?? '', purchaseIds };

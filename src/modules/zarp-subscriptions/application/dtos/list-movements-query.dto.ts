@@ -1,37 +1,30 @@
-import { IsOptional, IsString, IsInt, IsIn, Min } from 'class-validator';
+import { IsOptional, IsString, IsInt, Min, Max } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
 export class ListMovementsQueryDTO {
-  @ApiPropertyOptional({
-    example: 'b2b',
-    enum: ['b2b', 'b2c', 'all'],
-    description: 'Filtrar por origem: b2b (one-time), b2c (subscriptions), all (todos)',
-  })
-  @IsString()
+  @ApiPropertyOptional({ enum: ['all', 'b2b', 'b2c'], default: 'all' })
   @IsOptional()
-  @IsIn(['b2b', 'b2c', 'all'])
-  source?: 'b2b' | 'b2c' | 'all';
+  @IsString()
+  source?: string;
 
-  @ApiPropertyOptional({
-    example: 'completed',
-    description: 'Filtrar por status (completed, pending, canceled, etc.)',
-  })
-  @IsString()
+  @ApiPropertyOptional({ description: 'Filter by status (pending, completed, expired, abandoned, etc.)' })
   @IsOptional()
+  @IsString()
   status?: string;
 
-  @ApiPropertyOptional({ example: 50, description: 'Limite de resultados (padrão: 50)' })
-  @IsInt()
+  @ApiPropertyOptional({ default: 50 })
   @IsOptional()
-  @Min(1)
   @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  @Max(500)
   limit?: number;
 
-  @ApiPropertyOptional({ example: 0, description: 'Offset para paginação (padrão: 0)' })
-  @IsInt()
+  @ApiPropertyOptional({ default: 0 })
   @IsOptional()
-  @Min(0)
   @Type(() => Number)
+  @IsInt()
+  @Min(0)
   offset?: number;
 }

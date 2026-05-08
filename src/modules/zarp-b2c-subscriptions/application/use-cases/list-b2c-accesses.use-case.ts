@@ -1,18 +1,17 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../../shared/database/prisma.service';
 
-export interface B2CAccessListItem {
+export interface B2CAccessItem {
   id: string;
-  userId: string;
-  productId: string;
-  productName?: string;
+  customerName: string | null;
+  customerEmail: string;
+  productName: string | null;
   accessType: string;
   status: string;
   amount: number;
   currency: string;
   accessGrantedAt: Date;
   accessExpiresAt: Date | null;
-  currentPeriodEnd: Date | null;
   createdAt: Date;
 }
 
@@ -22,40 +21,40 @@ export class ListB2CAccessesUseCase {
 
   async execute(
     tenantId: string,
-    options?: { limit?: number; offset?: number; status?: string },
-  ): Promise<{ data: B2CAccessListItem[]; total: number }> {
-    const limit = options?.limit ?? 50;
-    const offset = options?.offset ?? 0;
-
+    filter: { status?: string; limit?: number; offset?: number },
+  ): Promise<{ data: B2CAccessItem[]; total: number }> {
     const where: any = { tenant_id: tenantId };
-    if (options?.status && options.status !== 'all') {
-      where.status = options.status;
-    }
+    if (filter.status && filter.status !== 'all') where.status = filter.status;
+
+    const limit = filter.limit ?? 50;
+    const offset = filter.offset ?? 0;
 
     const [records, total] = await Promise.all([
       this.prisma.userProductAccess.findMany({
         where,
-        include: { Product: { select: { name: true } } },
         orderBy: { created_at: 'desc' },
         take: limit,
         skip: offset,
+        include: {
+          User: { select: { name: true, email: true } },
+          Product: { select: { name: true } },
+        },
       }),
       this.prisma.userProductAccess.count({ where }),
     ]);
 
     return {
-      data: records.map((r) => ({
+      data: records.map((r: any) => ({
         id: r.id,
-        userId: r.user_id,
-        productId: r.product_id,
-        productName: (r as any).Product?.name,
+        customerName: r.User?.name ?? null,
+        customerEmail: r.User?.email ?? '',
+        productName: r.Product?.name ?? null,
         accessType: r.access_type,
         status: r.status,
         amount: r.amount,
         currency: r.currency,
         accessGrantedAt: r.access_granted_at,
-        accessExpiresAt: r.access_expires_at,
-        currentPeriodEnd: r.current_period_end,
+        accessExpiresAt: r.access_expires_at ?? null,
         createdAt: r.created_at,
       })),
       total,
