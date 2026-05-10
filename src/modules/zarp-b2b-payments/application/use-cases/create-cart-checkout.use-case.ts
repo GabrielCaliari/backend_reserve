@@ -1,4 +1,4 @@
-import { Injectable, Inject, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, Inject, NotFoundException, BadRequestException, ConflictException } from '@nestjs/common';
 import Stripe from 'stripe';
 import {
   IB2BProductRepository,
@@ -16,6 +16,11 @@ import { B2BProductEntity } from '../../domain/entities/b2b-product.entity';
 import { CreateCartCheckoutDTO } from '../dtos/create-cart-checkout.dto';
 import { CalculateB2BOrderCostUseCase } from './calculate-b2b-order-cost.use-case';
 import { OrderCostBreakdown } from '../../../zarp-b2c-products/application/use-cases/resolve-product-fees.use-case';
+import { ValidateCouponUseCase } from '../../../zarp-coupons/application/use-cases/validate-coupon.use-case';
+import {
+  IDiscountCouponRepository,
+  DISCOUNT_COUPON_REPOSITORY,
+} from '../../../zarp-coupons/domain/interfaces/discount-coupon.repository.interface';
 
 const STRIPE_API_VERSION = '2025-02-24.acacia' as const;
 
@@ -29,6 +34,9 @@ export class CreateCartCheckoutUseCase {
     @Inject(TENANT_BILLING_CONFIG_REPOSITORY)
     private readonly billingConfigRepo: ITenantBillingConfigRepository,
     private readonly calculateOrderCostUseCase: CalculateB2BOrderCostUseCase,
+    private readonly validateCouponUseCase: ValidateCouponUseCase,
+    @Inject(DISCOUNT_COUPON_REPOSITORY)
+    private readonly couponRepo: IDiscountCouponRepository,
   ) {}
 
   async execute(
@@ -104,11 +112,62 @@ export class CreateCartCheckoutUseCase {
       });
     }
 
-    // 4. Calculate total amount for purchase record
-    const totalAmount = dto.items.reduce((sum, item) => {
+    // 4. Calculate total amount for purchase record (before coupons)
+    const totalAmountBeforeDiscount = dto.items.reduce((sum, item) => {
       const breakdown = costBreakdowns.get(item.productId)!;
       return sum + (breakdown.basePrice + breakdown.chipCostAmount) * item.quantity;
     }, 0) + maxShippingFee;
+
+    // 4b. Validate and apply coupon codes (if provided)
+    let stripeCouponId: string | undefined;
+    let totalDiscount = 0;
+    const couponCodes = dto.couponCodes?.filter(Boolean) ?? [];
+
+    if (couponCodes.length > 0) {
+      const cartItemsForValidation = dto.items.map((item) => {
+        const breakdown = costBreakdowns.get(item.productId)!;
+        return {
+          productId: item.productId,
+          basePrice: breakdown.basePrice,
+          quantity: item.quantity,
+        };
+      });
+
+      const validationResult = await this.validateCouponUseCase.execute(
+        tenantId, couponCodes, cartItemsForValidation, 'b2b',
+      );
+      totalDiscount = validationResult.totalDiscount;
+
+      if (totalDiscount > 0) {
+        // Atomically claim redemptions before creating Stripe session
+        for (const { code } of validationResult.coupons) {
+          const coupon = await this.couponRepo.findByCode(tenantId, code);
+          const claimed = await this.couponRepo.incrementRedeemedCount(
+            tenantId, code, coupon?.maxRedemptions ?? null,
+          );
+          if (!claimed) {
+            throw new ConflictException(`Cupom esgotado: ${code}`);
+          }
+        }
+
+        const firstProduct = products.get(dto.items[0].productId)!;
+        const stripeCoupon = await new Stripe(stripeSecretKey, { apiVersion: STRIPE_API_VERSION })
+          .coupons.create({
+            amount_off: totalDiscount,
+            currency: firstProduct.currency,
+            duration: 'once',
+            max_redemptions: 1,
+            name: 'Desconto aplicado',
+            metadata: {
+              tenant_id: tenantId,
+              coupon_codes: couponCodes.join(','),
+            },
+          });
+        stripeCouponId = stripeCoupon.id;
+      }
+    }
+
+    const totalAmount = totalAmountBeforeDiscount - totalDiscount;
 
     // 5. Build metadata
     const metadata: Record<string, string> = {
@@ -121,6 +180,12 @@ export class CreateCartCheckoutUseCase {
       total_amount: String(totalAmount),
       shipping_fee: String(maxShippingFee),
     };
+
+    if (couponCodes.length > 0) {
+      metadata.coupon_codes = couponCodes.join(',');
+      metadata.discount_amount = String(totalDiscount);
+      if (stripeCouponId) metadata.stripe_coupon_id = stripeCouponId;
+    }
 
     if (userId) {
       metadata.user_id = userId;
@@ -141,6 +206,7 @@ export class CreateCartCheckoutUseCase {
       metadata,
       success_url: successUrl,
       cancel_url: cancelUrl,
+      ...(stripeCouponId ? { discounts: [{ coupon: stripeCouponId }] } : {}),
     });
 
     // 7. Create purchase record

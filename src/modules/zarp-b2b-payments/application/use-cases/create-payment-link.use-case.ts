@@ -1,4 +1,4 @@
-import { Injectable, Inject, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, Inject, NotFoundException, BadRequestException, ConflictException } from '@nestjs/common';
 import Stripe from 'stripe';
 import {
   IB2BProductRepository,
@@ -19,6 +19,11 @@ import {
 import { EPurchaseStatus } from '../../domain/enums/purchase-status.enum';
 import { CreatePaymentLinkDTO } from '../dtos/create-payment-link.dto';
 import { CalculateB2BOrderCostUseCase } from './calculate-b2b-order-cost.use-case';
+import { ValidateCouponUseCase } from '../../../zarp-coupons/application/use-cases/validate-coupon.use-case';
+import {
+  IDiscountCouponRepository,
+  DISCOUNT_COUPON_REPOSITORY,
+} from '../../../zarp-coupons/domain/interfaces/discount-coupon.repository.interface';
 
 const STRIPE_API_VERSION = '2025-02-24.acacia' as const;
 
@@ -34,6 +39,9 @@ export class CreatePaymentLinkUseCase {
     @Inject(TENANT_BILLING_CONFIG_REPOSITORY)
     private readonly billingConfigRepo: ITenantBillingConfigRepository,
     private readonly calculateOrderCostUseCase: CalculateB2BOrderCostUseCase,
+    private readonly validateCouponUseCase: ValidateCouponUseCase,
+    @Inject(DISCOUNT_COUPON_REPOSITORY)
+    private readonly couponRepo: IDiscountCouponRepository,
   ) {}
 
   async execute(
@@ -92,26 +100,71 @@ export class CreatePaymentLinkUseCase {
       });
     }
 
-    // 5. Create Stripe Checkout Session with calculated line_items
+    // 5. Validate coupon codes (if any)
+    const couponCodes = dto.couponCodes?.filter(Boolean) ?? [];
+    let stripeCouponId: string | undefined;
+    let totalDiscount = 0;
+
+    if (couponCodes.length > 0) {
+      const validationResult = await this.validateCouponUseCase.execute(
+        tenantId,
+        couponCodes,
+        [{ productId: product.id, basePrice: costBreakdown.basePrice, quantity: 1 }],
+        'b2b',
+      );
+      totalDiscount = validationResult.totalDiscount;
+
+      if (totalDiscount > 0) {
+        for (const { code } of validationResult.coupons) {
+          const coupon = await this.couponRepo.findByCode(tenantId, code);
+          const claimed = await this.couponRepo.incrementRedeemedCount(
+            tenantId, code, coupon?.maxRedemptions ?? null,
+          );
+          if (!claimed) throw new ConflictException(`Cupom esgotado: ${code}`);
+        }
+
+        const stripeCoupon = await new Stripe(stripeSecretKey, { apiVersion: STRIPE_API_VERSION })
+          .coupons.create({
+            amount_off: totalDiscount,
+            currency: product.currency,
+            duration: 'once',
+            max_redemptions: 1,
+            name: 'Desconto aplicado',
+            metadata: { tenant_id: tenantId, coupon_codes: couponCodes.join(',') },
+          });
+        stripeCouponId = stripeCoupon.id;
+      }
+    }
+
+    // 6. Create Stripe Checkout Session with calculated line_items
     const { successUrl, cancelUrl } = await this.billingConfigRepo.getCheckoutUrls(tenantId);
     const stripe = new Stripe(stripeSecretKey, { apiVersion: STRIPE_API_VERSION });
+
+    const sessionMetadata: Record<string, string> = {
+      tenant_id: tenantId,
+      product_id: product.id,
+      customer_email: dto.customerEmail,
+      base_price: String(costBreakdown.basePrice),
+      chip_cost_amount: String(costBreakdown.chipCostAmount),
+      shipping_fee: String(costBreakdown.shippingFee),
+      total_amount: String(costBreakdown.total - totalDiscount),
+    };
+
+    if (couponCodes.length > 0) {
+      sessionMetadata.coupon_codes = couponCodes.join(',');
+      sessionMetadata.discount_amount = String(totalDiscount);
+      if (stripeCouponId) sessionMetadata.stripe_coupon_id = stripeCouponId;
+    }
 
     const stripeSession = await stripe.checkout.sessions.create({
       mode: 'payment',
       payment_method_types: ['card'],
       line_items: lineItems,
       customer_email: dto.customerEmail,
-      metadata: {
-        tenant_id: tenantId,
-        product_id: product.id,
-        customer_email: dto.customerEmail,
-        base_price: String(costBreakdown.basePrice),
-        chip_cost_amount: String(costBreakdown.chipCostAmount),
-        shipping_fee: String(costBreakdown.shippingFee),
-        total_amount: String(costBreakdown.total),
-      },
+      metadata: sessionMetadata,
       success_url: successUrl,
       cancel_url: cancelUrl,
+      ...(stripeCouponId ? { discounts: [{ coupon: stripeCouponId }] } : {}),
     });
 
     // 6. Create purchase record with total amount (including fees)

@@ -1,6 +1,6 @@
-import { IsString, IsNotEmpty, IsEmail, IsArray, ValidateNested, IsInt, Min } from 'class-validator';
+import { IsString, IsNotEmpty, IsEmail, IsArray, ValidateNested, IsInt, Min, IsOptional } from 'class-validator';
 import { Type } from 'class-transformer';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CartItemDTO {
   @ApiProperty({ example: 'cm5abc123', description: 'ID do produto B2B' })
@@ -42,4 +42,10 @@ export class CreateCartCheckoutDTO {
   @IsString()
   @IsNotEmpty()
   leadPhone: string;
+
+  @ApiPropertyOptional({ type: [String], example: ['PROMO10'], description: 'Códigos de cupom (opcionais)' })
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  couponCodes?: string[];
 }

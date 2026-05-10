@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsEmail, IsOptional } from 'class-validator';
+import { IsString, IsNotEmpty, IsEmail, IsOptional, IsArray } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreatePaymentLinkDTO {
@@ -21,4 +21,10 @@ export class CreatePaymentLinkDTO {
   @IsString()
   @IsOptional()
   customerPhone?: string;
+
+  @ApiPropertyOptional({ type: [String], example: ['PROMO10'], description: 'Códigos de cupom (opcionais)' })
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  couponCodes?: string[];
 }
