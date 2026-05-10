@@ -5,7 +5,7 @@ import {
   HttpStatus,
   Logger,
 } from '@nestjs/common';
-import { Response, Request } from 'express';
+import { Response, Request, NextFunction } from 'express';
 
 /**
  * ConnectionErrorFilter
@@ -27,6 +27,7 @@ export class ConnectionErrorFilter implements ExceptionFilter {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
+    const next = ctx.getNext<NextFunction>();
 
     // Only handle connection-related errors
     const isConnectionError = 
@@ -39,8 +40,10 @@ export class ConnectionErrorFilter implements ExceptionFilter {
       exception?.message?.includes('timeout');
 
     if (!isConnectionError) {
-      // Let other filters handle non-connection errors
-      throw exception;
+      // Delegate to Express error middleware chain (NestJS built-in handler picks it up)
+      // NOTE: `throw exception` here escapes NestJS filter chain and hits Express's raw
+      // error handler, which returns HTML. Using next(exception) properly re-enters the chain.
+      return next(exception);
     }
 
     // Log the connection error
