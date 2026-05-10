@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { DatabaseModule } from '../../shared/database/database.module';
+import { ZarpAuthModule } from '../zarp-auth/zarp-auth.module';
 
 import { AdminCouponsController } from './infrastructure/controllers/admin-coupons.controller';
 import { PublicCouponsController } from './infrastructure/controllers/public-coupons.controller';
@@ -18,6 +19,7 @@ import { DISCOUNT_COUPON_REPOSITORY } from './domain/interfaces/discount-coupon.
 @Module({
   imports: [
     DatabaseModule,
+    ZarpAuthModule,
     ThrottlerModule.forRoot([{ ttl: 60000, limit: 10 }]),
   ],
   controllers: [AdminCouponsController, PublicCouponsController],
@@ -30,6 +32,6 @@ import { DISCOUNT_COUPON_REPOSITORY } from './domain/interfaces/discount-coupon.
     ValidateCouponUseCase,
     { provide: DISCOUNT_COUPON_REPOSITORY, useClass: PrismaDiscountCouponRepository },
   ],
-  exports: [ValidateCouponUseCase],
+  exports: [ValidateCouponUseCase, DISCOUNT_COUPON_REPOSITORY],
 })
 export class ZarpCouponsModule {}
