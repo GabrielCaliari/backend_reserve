@@ -1805,11 +1805,11 @@ model DiscountCoupon {
   description         String?  @db.Text
 
   discount_type       String   @db.VarChar(20)   // percentage | fixed_amount
-  discount_value      Float                       // % (0-100) or cents
+  discount_value      Float                       // % (0-100) for percentage; whole cents for fixed_amount
   scope               String   @db.VarChar(20)   // order | product | category
   product_ids         String[] @default([])
   category_ids        String[] @default([])
-  applies_to          String   @db.VarChar(10)   // b2b | b2c | both
+  applies_to          String   @db.VarChar(20)   // b2b | b2c | both
 
   cumulative          Boolean  @default(false)
   min_order_amount    Int?                        // minimum cart total in cents
