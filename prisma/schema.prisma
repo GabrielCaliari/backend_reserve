@@ -757,6 +757,7 @@ model Tenant {
   B2CFeeConfig                 B2CFeeConfig? @relation("B2CFeeConfig")
   B2BFeeConfig                 B2BFeeConfig? @relation("B2BFeeConfig")
   B2CCheckoutSessions          B2CCheckoutSession[] @relation("B2CCheckoutSessions")
+  discountCoupons              DiscountCoupon[] @relation("DiscountCoupons")
 
   @@index([stripe_customer_id])
   @@index([subscription_status])
@@ -1789,4 +1790,43 @@ model B2BPurchase {
   @@index([customer_email])
   @@index([created_at])
   @@map("b2b_purchases")
+}
+
+// ============================================
+// Discount Coupons — Shared B2B + B2C
+// ============================================
+
+model DiscountCoupon {
+  id                  String   @id @default(cuid()) @db.VarChar(25)
+  tenant_id           String   @db.VarChar(25)
+
+  code                String   @db.VarChar(100)
+  name                String   @db.VarChar(255)
+  description         String?  @db.Text
+
+  discount_type       String   @db.VarChar(20)   // percentage | fixed_amount
+  discount_value      Float                       // % (0-100) or cents
+  scope               String   @db.VarChar(20)   // order | product | category
+  product_ids         String[] @default([])
+  category_ids        String[] @default([])
+  applies_to          String   @db.VarChar(10)   // b2b | b2c | both
+
+  cumulative          Boolean  @default(false)
+  min_order_amount    Int?                        // minimum cart total in cents
+  max_discount_amount Int?                        // cap in cents
+  max_redemptions     Int?                        // null = unlimited
+  redeemed_count      Int      @default(0)
+
+  expires_at          DateTime?
+  active              Boolean  @default(true)
+
+  created_at          DateTime @default(now())
+  updated_at          DateTime @updatedAt
+
+  tenant              Tenant   @relation("DiscountCoupons", fields: [tenant_id], references: [id], onDelete: Cascade)
+
+  @@unique([tenant_id, code])
+  @@index([tenant_id])
+  @@index([tenant_id, active])
+  @@map("discount_coupons")
 }
