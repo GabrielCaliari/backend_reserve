@@ -1,0 +1,52 @@
+import {
+  IsArray,
+  IsString,
+  IsNotEmpty,
+  IsInt,
+  Min,
+  IsOptional,
+  ValidateNested,
+  IsEnum,
+} from 'class-validator';
+import { Type } from 'class-transformer';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+
+export class ValidateCouponCartItemDTO {
+  @ApiProperty({ example: 'prod_abc123' })
+  @IsString()
+  @IsNotEmpty()
+  productId: string;
+
+  @ApiPropertyOptional({ example: 'cat_xyz456' })
+  @IsString()
+  @IsOptional()
+  categoryId?: string;
+
+  @ApiProperty({ example: 10000, description: 'Preço base em centavos (por unidade)' })
+  @IsInt()
+  @Min(1)
+  basePrice: number;
+
+  @ApiProperty({ example: 1 })
+  @IsInt()
+  @Min(1)
+  quantity: number;
+}
+
+export class ValidateCouponDTO {
+  @ApiProperty({ type: [String], example: ['PROMO10', 'FRETE20'] })
+  @IsArray()
+  @IsString({ each: true })
+  @IsNotEmpty({ each: true })
+  codes: string[];
+
+  @ApiProperty({ type: [ValidateCouponCartItemDTO] })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => ValidateCouponCartItemDTO)
+  cartItems: ValidateCouponCartItemDTO[];
+
+  @ApiProperty({ enum: ['b2b', 'b2c'], example: 'b2b' })
+  @IsEnum(['b2b', 'b2c'])
+  context: 'b2b' | 'b2c';
+}
