@@ -6,6 +6,14 @@ import {
 } from '../../domain/interfaces/b2b-purchase.repository.interface';
 import { EPurchaseStatus } from '../../domain/enums/purchase-status.enum';
 import { PrismaService } from '../../../../shared/database/prisma.service';
+import {
+  IDiscountCouponRepository,
+  DISCOUNT_COUPON_REPOSITORY,
+} from '../../../zarp-coupons/domain/interfaces/discount-coupon.repository.interface';
+import {
+  ITenantBillingConfigRepository,
+  TENANT_BILLING_CONFIG_REPOSITORY,
+} from '../../../zarp-subscriptions/domain/interfaces/tenant-billing-config.repository.interface';
 
 @Injectable()
 export class ProcessB2BWebhookUseCase {
@@ -15,6 +23,10 @@ export class ProcessB2BWebhookUseCase {
     @Inject(B2B_PURCHASE_REPOSITORY)
     private readonly purchaseRepo: IB2BPurchaseRepository,
     private readonly prisma: PrismaService,
+    @Inject(DISCOUNT_COUPON_REPOSITORY)
+    private readonly couponRepo: IDiscountCouponRepository,
+    @Inject(TENANT_BILLING_CONFIG_REPOSITORY)
+    private readonly billingConfigRepo: ITenantBillingConfigRepository,
   ) {}
 
   async execute(event: Stripe.Event): Promise<void> {
@@ -71,6 +83,21 @@ export class ProcessB2BWebhookUseCase {
       await this.grantUnifiedB2CAccess(session, tenantId, b2cPriceIds, userId, customerEmail, customerName);
     } else if (!purchase) {
       this.logger.warn(`No B2B purchase and no B2C price IDs for checkout ${checkoutId} — nothing to process`);
+    }
+
+    // Archive Stripe coupon if one was used
+    const stripeCouponId = session.metadata?.stripe_coupon_id;
+    if (stripeCouponId) {
+      try {
+        const stripeSecretKey = await this.billingConfigRepo?.getStripeSecretKey?.(tenantId);
+        if (stripeSecretKey) {
+          const stripe = new Stripe(stripeSecretKey, { apiVersion: '2025-02-24.acacia' as any });
+          await stripe.coupons.del(stripeCouponId);
+          this.logger.log(`Archived Stripe coupon ${stripeCouponId} after completed checkout ${checkoutId}`);
+        }
+      } catch (err) {
+        this.logger.warn(`Could not archive Stripe coupon ${stripeCouponId}: ${err}`);
+      }
     }
   }
 
@@ -205,6 +232,28 @@ export class ProcessB2BWebhookUseCase {
     }
 
     this.logger.log(`B2B checkout abandoned: ${session.id} (tenant: ${tenantId})`);
+
+    // Archive Stripe coupon and roll back redemptions if session expired
+    const stripeCouponId = session.metadata?.stripe_coupon_id;
+    const couponCodesStr = session.metadata?.coupon_codes;
+    if (stripeCouponId || couponCodesStr) {
+      const stripeKey = await this.billingConfigRepo?.getStripeSecretKey?.(tenantId);
+      if (stripeCouponId && stripeKey) {
+        try {
+          const stripe = new Stripe(stripeKey, { apiVersion: '2025-02-24.acacia' as any });
+          await stripe.coupons.del(stripeCouponId);
+        } catch (err) {
+          this.logger.warn(`Could not archive Stripe coupon ${stripeCouponId} on expiry: ${err}`);
+        }
+      }
+      if (couponCodesStr) {
+        const codes = couponCodesStr.split(',').filter(Boolean);
+        for (const code of codes) {
+          await this.couponRepo.decrementRedeemedCount(tenantId, code);
+        }
+        this.logger.log(`Rolled back redemptions for coupons [${codes.join(', ')}] — checkout expired`);
+      }
+    }
   }
 
   private async handleChargeRefunded(charge: Stripe.Charge): Promise<void> {
