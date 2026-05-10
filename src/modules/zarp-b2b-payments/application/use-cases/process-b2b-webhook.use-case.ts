@@ -58,12 +58,11 @@ export class ProcessB2BWebhookUseCase {
     const customerName = session.customer_details?.name ?? session.metadata?.lead_name ?? undefined;
 
     // Resolve user by email
-    let userId: string | undefined;
     const existingUser = await this.prisma.user.findFirst({
       where: { email: customerEmail },
       select: { id: true },
     });
-    userId = existingUser?.id;
+    const userId = existingUser?.id;
 
     // Update B2B purchase if it exists (B2B or mixed cart)
     const purchase = await this.purchaseRepo.findByStripeCheckoutId(tenantId, checkoutId);
