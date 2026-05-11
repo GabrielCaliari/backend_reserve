@@ -6,6 +6,7 @@ import {
 import { DiscountCouponEntity } from '../../domain/entities/discount-coupon.entity';
 import { EDiscountType } from '../../domain/enums/discount-type.enum';
 import { ECouponScope } from '../../domain/enums/coupon-scope.enum';
+import { ECouponAppliesTo } from '../../domain/enums/coupon-applies-to.enum';
 
 export interface CartItemForValidation {
   productId: string;
@@ -13,6 +14,15 @@ export interface CartItemForValidation {
   basePrice: number;
   quantity: number;
   isRecurring?: boolean;
+  /**
+   * Type of product in the cart. Used to restrict coupon eligibility:
+   * - A coupon with applies_to='b2b'      only discounts items where itemType='b2b'.
+   * - A coupon with applies_to='b2c*'     only discounts items where itemType='b2c'.
+   * - A coupon with applies_to='both'     discounts all items regardless of itemType.
+   * Items WITHOUT itemType are EXCLUDED from type-restricted coupons (strict/safe default).
+   * Always set this field explicitly in checkout and validate calls.
+   */
+  itemType?: 'b2b' | 'b2c';
 }
 
 export interface CouponLineResult {
@@ -46,7 +56,12 @@ export class ValidateCouponUseCase {
     tenantId: string,
     codes: string[],
     cartItems: CartItemForValidation[],
-    context: 'b2b' | 'b2c',
+    /**
+     * 'b2b'     — pure B2B cart (only B2B items)
+     * 'b2c'     — pure B2C cart (only B2C items)
+     * 'unified' — mixed cart; eligibility is determined solely by itemType on each item
+     */
+    context: 'b2b' | 'b2c' | 'unified',
   ): Promise<CouponValidationResult> {
     const cartTotal = cartItems.reduce((sum, i) => sum + i.basePrice * i.quantity, 0);
     const results: CouponLineResult[] = [];
@@ -60,17 +75,20 @@ export class ValidateCouponUseCase {
         throw new UnprocessableEntityException(`Cupom inválido: ${code}`);
       }
 
-      if (!coupon.appliesToContext(context)) {
+      // In 'unified' context, skip the context gate — per-item itemType filtering handles eligibility.
+      if (context !== 'unified' && !coupon.appliesToContext(context)) {
         throw new UnprocessableEntityException(`Cupom inválido: ${code}`);
       }
 
-      if (coupon.requiresRecurring() && !cartItems.some((i) => i.isRecurring)) {
+      // For recurring/one-time checks, only look at the items that would actually be eligible
+      const typeEligible = this.filterByItemType(coupon, cartItems);
+      if (coupon.requiresRecurring() && !typeEligible.some((i) => i.isRecurring)) {
         throw new UnprocessableEntityException(
           `Cupom ${code} é válido apenas para produtos com assinatura recorrente`,
         );
       }
 
-      if (coupon.requiresOneTime() && !cartItems.some((i) => !i.isRecurring)) {
+      if (coupon.requiresOneTime() && !typeEligible.some((i) => !i.isRecurring)) {
         throw new UnprocessableEntityException(
           `Cupom ${code} é válido apenas para produtos de compra única`,
         );
@@ -117,16 +135,44 @@ export class ValidateCouponUseCase {
     };
   }
 
+  /**
+   * Step 1 — filter items by the coupon's appliesTo.
+   * Items that don't have itemType set are EXCLUDED from type-restricted coupons
+   * (safe / strict default — the caller must explicitly tag each item).
+   */
+  private filterByItemType(
+    coupon: DiscountCouponEntity,
+    cartItems: CartItemForValidation[],
+  ): CartItemForValidation[] {
+    if (coupon.appliesTo === ECouponAppliesTo.B2B) {
+      return cartItems.filter((i) => i.itemType === 'b2b');
+    }
+    if (
+      coupon.appliesTo === ECouponAppliesTo.B2C ||
+      coupon.appliesTo === ECouponAppliesTo.B2C_RECURRING ||
+      coupon.appliesTo === ECouponAppliesTo.B2C_ONE_TIME
+    ) {
+      return cartItems.filter((i) => i.itemType === 'b2c');
+    }
+    // ECouponAppliesTo.BOTH — all items eligible regardless of itemType
+    return cartItems;
+  }
+
   private computeEligibleAmount(
     coupon: DiscountCouponEntity,
     cartItems: CartItemForValidation[],
   ): number {
-    const items = coupon.requiresRecurring()
-      ? cartItems.filter((i) => i.isRecurring)
-      : coupon.requiresOneTime()
-        ? cartItems.filter((i) => !i.isRecurring)
-        : cartItems;
+    // Step 1: filter by item type (strict — no fallback when itemType is absent)
+    let items = this.filterByItemType(coupon, cartItems);
 
+    // Step 2: filter by recurring/one-time requirement
+    if (coupon.requiresRecurring()) {
+      items = items.filter((i) => i.isRecurring);
+    } else if (coupon.requiresOneTime()) {
+      items = items.filter((i) => !i.isRecurring);
+    }
+
+    // Step 3: filter by scope
     if (coupon.scope === ECouponScope.ORDER) {
       return items.reduce((s, i) => s + i.basePrice * i.quantity, 0);
     }

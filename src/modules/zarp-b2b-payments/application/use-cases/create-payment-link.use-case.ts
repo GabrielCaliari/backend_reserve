@@ -102,14 +102,18 @@ export class CreatePaymentLinkUseCase {
 
     // 5. Validate coupon codes (if any)
     const couponCodes = dto.couponCodes?.filter(Boolean) ?? [];
-    let stripeCouponId: string | undefined;
     let totalDiscount = 0;
+    let stripeCouponId: string | undefined;
+
+    // Stripe client needed here to create coupon before the session
+    const { successUrl, cancelUrl } = await this.billingConfigRepo.getCheckoutUrls(tenantId);
+    const stripe = new Stripe(stripeSecretKey, { apiVersion: STRIPE_API_VERSION });
 
     if (couponCodes.length > 0) {
       const validationResult = await this.validateCouponUseCase.execute(
         tenantId,
         couponCodes,
-        [{ productId: product.id, basePrice: costBreakdown.basePrice, quantity: 1 }],
+        [{ productId: product.id, basePrice: costBreakdown.basePrice, quantity: 1, itemType: 'b2b' }],
         'b2b',
       );
       totalDiscount = validationResult.totalDiscount;
@@ -123,22 +127,21 @@ export class CreatePaymentLinkUseCase {
           if (!claimed) throw new ConflictException(`Cupom esgotado: ${code}`);
         }
 
-        const stripeCoupon = await new Stripe(stripeSecretKey, { apiVersion: STRIPE_API_VERSION })
-          .coupons.create({
-            amount_off: totalDiscount,
-            currency: product.currency,
-            duration: 'once',
-            max_redemptions: 1,
-            name: 'Desconto aplicado',
-            metadata: { tenant_id: tenantId, coupon_codes: couponCodes.join(',') },
-          });
+        // Create a Stripe Coupon and apply via discounts[] — this renders visually
+        // on the Stripe Checkout page. Negative unit_amount is NOT supported by Stripe.
+        const stripeCoupon = await stripe.coupons.create({
+          amount_off: totalDiscount,
+          currency: product.currency,
+          duration: 'once',
+          max_redemptions: 1,
+          name: `Desconto (${couponCodes.join(', ')})`,
+          metadata: { tenant_id: tenantId, coupon_codes: couponCodes.join(',') },
+        });
         stripeCouponId = stripeCoupon.id;
       }
     }
 
     // 6. Create Stripe Checkout Session with calculated line_items
-    const { successUrl, cancelUrl } = await this.billingConfigRepo.getCheckoutUrls(tenantId);
-    const stripe = new Stripe(stripeSecretKey, { apiVersion: STRIPE_API_VERSION });
 
     const sessionMetadata: Record<string, string> = {
       tenant_id: tenantId,
@@ -153,7 +156,10 @@ export class CreatePaymentLinkUseCase {
     if (couponCodes.length > 0) {
       sessionMetadata.coupon_codes = couponCodes.join(',');
       sessionMetadata.discount_amount = String(totalDiscount);
-      if (stripeCouponId) sessionMetadata.stripe_coupon_id = stripeCouponId;
+    }
+
+    if (stripeCouponId) {
+      sessionMetadata.stripe_coupon_id = stripeCouponId;
     }
 
     const stripeSession = await stripe.checkout.sessions.create({

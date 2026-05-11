@@ -54,6 +54,7 @@ export class B2CSubscriptionsController {
       leadName: dto.leadName,
       leadEmail: dto.leadEmail,
       leadPhone: dto.leadPhone,
+      couponCodes: dto.couponCodes,
     });
   }
 

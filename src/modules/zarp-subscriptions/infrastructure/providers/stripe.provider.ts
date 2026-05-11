@@ -157,13 +157,31 @@ export class StripeProvider implements IStripeProvider {
     metadata?: Record<string, string>;
     trialPeriodDays?: number;
     stripeSecretKey?: string;
+    mode?: 'subscription' | 'payment';
+    /**
+     * Coupon ID for subscription mode — applied via subscription_data.coupon.
+     * Renders on the first (or all) invoice depending on coupon duration.
+     */
+    subscriptionCoupon?: string;
+    /**
+     * Coupon ID for payment mode — applied via session discounts[].
+     * Renders as a discount line on the Stripe Checkout page.
+     * Stripe does NOT accept negative unit_amount in price_data — always use this.
+     */
+    sessionCoupon?: string;
+    subscriptionData?: { metadata?: Record<string, string>; trial_period_days?: number };
   }): Promise<Stripe.Checkout.Session> {
     const stripe = this.getClient(params.stripeSecretKey);
+    const mode = params.mode ?? 'subscription';
+
+    const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [
+      { price: params.priceId, quantity: 1 },
+    ];
 
     const sessionParams: Stripe.Checkout.SessionCreateParams = {
-      mode: 'subscription',
+      mode,
       payment_method_types: ['card'],
-      line_items: [{ price: params.priceId, quantity: 1 }],
+      line_items: lineItems,
       success_url: params.successUrl,
       cancel_url: params.cancelUrl,
       metadata: params.metadata,
@@ -175,13 +193,23 @@ export class StripeProvider implements IStripeProvider {
       sessionParams.customer_email = params.customerEmail;
     }
 
-    if (params.trialPeriodDays) {
+    // subscription_data only applies to subscription mode
+    if (mode === 'subscription') {
+      const subMeta = params.subscriptionData?.metadata ?? params.metadata;
       sessionParams.subscription_data = {
-        trial_period_days: params.trialPeriodDays,
-        metadata: params.metadata,
+        ...(params.subscriptionCoupon ? { coupon: params.subscriptionCoupon } : {}),
+        ...(params.subscriptionData?.trial_period_days
+          ? { trial_period_days: params.subscriptionData.trial_period_days }
+          : params.trialPeriodDays
+            ? { trial_period_days: params.trialPeriodDays }
+            : {}),
+        ...(subMeta ? { metadata: subMeta } : {}),
       };
-    } else if (params.metadata) {
-      sessionParams.subscription_data = { metadata: params.metadata };
+    }
+
+    // payment mode: apply coupon via discounts[] (not negative line items)
+    if (mode === 'payment' && params.sessionCoupon) {
+      sessionParams.discounts = [{ coupon: params.sessionCoupon }];
     }
 
     return stripe.checkout.sessions.create(sessionParams);

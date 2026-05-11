@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsEmail, IsOptional } from 'class-validator';
+import { IsString, IsNotEmpty, IsEmail, IsOptional, IsArray } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateB2CCheckoutSessionDTO {
@@ -23,4 +23,14 @@ export class CreateB2CCheckoutSessionDTO {
   @IsString()
   @IsOptional()
   leadPhone?: string;
+
+  @ApiPropertyOptional({
+    type: [String],
+    example: ['PROMO10'],
+    description: 'Códigos de cupom a aplicar no checkout. O desconto é calculado sobre o preço base do produto.',
+  })
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  couponCodes?: string[];
 }

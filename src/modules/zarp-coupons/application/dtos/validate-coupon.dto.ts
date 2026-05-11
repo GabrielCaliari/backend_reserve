@@ -8,6 +8,7 @@ import {
   ValidateNested,
   IsEnum,
   IsBoolean,
+  IsIn,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
@@ -37,6 +38,15 @@ export class ValidateCouponCartItemDTO {
   @IsBoolean()
   @IsOptional()
   isRecurring?: boolean;
+
+  @ApiPropertyOptional({
+    enum: ['b2b', 'b2c'],
+    example: 'b2c',
+    description: 'Tipo do item no carrinho. Usado para restringir cupons B2B-only ou B2C-only em carrinhos mistos.',
+  })
+  @IsIn(['b2b', 'b2c'])
+  @IsOptional()
+  itemType?: 'b2b' | 'b2c';
 }
 
 export class ValidateCouponDTO {
@@ -52,7 +62,13 @@ export class ValidateCouponDTO {
   @Type(() => ValidateCouponCartItemDTO)
   cartItems: ValidateCouponCartItemDTO[];
 
-  @ApiProperty({ enum: ['b2b', 'b2c'], example: 'b2b' })
-  @IsEnum(['b2b', 'b2c'])
-  context: 'b2b' | 'b2c';
+  @ApiProperty({
+    enum: ['b2b', 'b2c', 'unified'],
+    example: 'b2c',
+    description:
+      "'b2b' = carrinho puro B2B; 'b2c' = carrinho puro B2C; " +
+      "'unified' = carrinho misto (eligibilidade determinada pelo itemType de cada item)",
+  })
+  @IsEnum(['b2b', 'b2c', 'unified'])
+  context: 'b2b' | 'b2c' | 'unified';
 }

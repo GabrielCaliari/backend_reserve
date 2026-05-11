@@ -219,16 +219,18 @@ export class UnifiedCheckoutUseCase {
     }
 
     // 4. Validate and apply coupon codes (if provided)
-    // The context is 'b2c' because the unified checkout is always a B2C-facing endpoint.
-    // B2B items in a unified cart are treated as one-time (isRecurring: false).
     const couponCodes = dto.couponCodes?.filter(Boolean) ?? [];
-    let stripeCouponId: string | undefined;
     let totalDiscount = 0;
+    let stripeCouponId: string | undefined;
+
+    // Stripe client needed here to create coupon before the session
+    const stripe = new Stripe(stripeSecretKey, { apiVersion: STRIPE_API_VERSION });
+
+    this.logger.log(
+      `[UnifiedCheckout] tenantId=${tenantId} couponCodes received=${JSON.stringify(dto.couponCodes)} filtered=${JSON.stringify(couponCodes)}`,
+    );
 
     if (couponCodes.length > 0) {
-      // Build cart items for coupon validation from the already-resolved item prices.
-      // B2B items are always one-time (isRecurring: false).
-      // B2C items carry the isRecurring flag derived from their billingMode (unlimited/limited = recurring).
       const cartItemsForValidation: CartItemForValidation[] = [
         ...dto.items
           .filter((i) => i.type === 'b2b')
@@ -237,6 +239,7 @@ export class UnifiedCheckoutUseCase {
             basePrice: itemBasePriceMap.get(i.productId) ?? 0,
             quantity: i.quantity,
             isRecurring: false,
+            itemType: 'b2b' as const,
           })),
         ...b2cItemsTrack.map((track) => {
           const dtoItem = dto.items.find((i) => i.type === 'b2c' && i.productId === track.productId);
@@ -245,6 +248,7 @@ export class UnifiedCheckoutUseCase {
             basePrice: track.amount,
             quantity: dtoItem?.quantity ?? 1,
             isRecurring: track.isRecurring,
+            itemType: 'b2c' as const,
           };
         }),
       ];
@@ -253,12 +257,16 @@ export class UnifiedCheckoutUseCase {
         tenantId,
         couponCodes,
         cartItemsForValidation,
-        'b2c',
+        'unified',
       );
       totalDiscount = validationResult.totalDiscount;
 
+      this.logger.log(
+        `[UnifiedCheckout] coupon validation result: totalDiscount=${totalDiscount} orderTotal=${validationResult.orderTotal}`,
+      );
+
       if (totalDiscount > 0) {
-        // Atomically claim redemptions before creating Stripe session
+        // Claim redemptions atomically before creating the Stripe session
         for (const { code } of validationResult.coupons) {
           const coupon = await this.couponRepo.findByCode(tenantId, code);
           const claimed = await this.couponRepo.incrementRedeemedCount(
@@ -271,17 +279,15 @@ export class UnifiedCheckoutUseCase {
           }
         }
 
-        const stripe = new Stripe(stripeSecretKey, { apiVersion: STRIPE_API_VERSION });
+        // Create a Stripe Coupon and apply via discounts[] — this renders visually
+        // on the Stripe Checkout page. Negative unit_amount is NOT supported by Stripe.
         const stripeCoupon = await stripe.coupons.create({
           amount_off: totalDiscount,
           currency: primaryCurrency,
           duration: 'once',
           max_redemptions: 1,
-          name: 'Desconto aplicado',
-          metadata: {
-            tenant_id: tenantId,
-            coupon_codes: couponCodes.join(','),
-          },
+          name: `Desconto (${couponCodes.join(', ')})`,
+          metadata: { tenant_id: tenantId, coupon_codes: couponCodes.join(',') },
         });
         stripeCouponId = stripeCoupon.id;
       }
@@ -301,7 +307,11 @@ export class UnifiedCheckoutUseCase {
     if (couponCodes.length > 0) {
       metadata.coupon_codes = couponCodes.join(',');
       metadata.discount_amount = String(totalDiscount);
-      if (stripeCouponId) metadata.stripe_coupon_id = stripeCouponId;
+    }
+
+    if (stripeCouponId) {
+      // Stored so the webhook can delete it if the session expires (rollback)
+      metadata.stripe_coupon_id = stripeCouponId;
     }
 
     if (userId) {
@@ -311,16 +321,18 @@ export class UnifiedCheckoutUseCase {
     }
 
     // 6. Create Stripe session (payment mode — mixed cart is always one-time)
-    const stripe = new Stripe(stripeSecretKey, { apiVersion: STRIPE_API_VERSION });
+    this.logger.log(
+      `[UnifiedCheckout] creating Stripe session — lineItems=${lineItems.length} stripeCouponId=${stripeCouponId ?? 'none'}`,
+    );
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
       payment_method_types: ['card'],
       line_items: lineItems,
       customer_email: dto.leadEmail,
       metadata,
+      ...(stripeCouponId ? { discounts: [{ coupon: stripeCouponId }] } : {}),
       success_url: successUrl,
       cancel_url: cancelUrl,
-      ...(stripeCouponId ? { discounts: [{ coupon: stripeCouponId }] } : {}),
     });
 
     const totalCartAmount = lineItems.reduce((s, li) => {

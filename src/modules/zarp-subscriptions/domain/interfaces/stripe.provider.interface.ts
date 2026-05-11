@@ -86,6 +86,22 @@ export interface IStripeProvider {
     metadata?: Record<string, string>;
     trialPeriodDays?: number;
     stripeSecretKey?: string;
+    /** Stripe checkout mode. Defaults to 'subscription'. Use 'payment' for one-time billing modes. */
+    mode?: 'subscription' | 'payment';
+    /**
+     * Coupon ID to attach to the Stripe subscription (subscription mode only).
+     * Sets subscription_data.coupon — the most reliable way to discount subscriptions.
+     */
+    subscriptionCoupon?: string;
+    /**
+     * Coupon ID to apply to a payment-mode session via discounts[].
+     * Creates a visual discount line on the Stripe Checkout page.
+     * (Use subscriptionCoupon for subscription mode instead.)
+     * NOTE: Stripe does NOT accept negative unit_amount in price_data — always use this field.
+     */
+    sessionCoupon?: string;
+    /** Extra subscription_data (metadata, trial, etc). Only used when mode='subscription'. */
+    subscriptionData?: { metadata?: Record<string, string>; trial_period_days?: number };
   }): Promise<Stripe.Checkout.Session>;
 
   /**
