@@ -13,9 +13,8 @@
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
-import { RolesGuard } from '../../../../shared/auth/guards/roles.guard';
-import { Roles } from '../../../../shared/auth/decorators/roles.decorator';
-import { EAdminRole } from '../../../reserve-auth/domain/enums/admin-role.enum';
+import { PermissionsGuard } from '../../../../shared/auth/guards/permissions.guard';
+import { RequirePermissions } from '../../../../shared/auth/decorators/require-permissions.decorator';
 import { ParseCuidPipe } from '../../../../shared/pipes';
 import { AnalyticsReportService } from '../../application/services/analytics-report.service';
 import { CreateAnalyticsReportDto } from '../../application/dtos/create-analytics-report.dto';
@@ -23,13 +22,13 @@ import { UpdateAnalyticsReportDto } from '../../application/dtos/update-analytic
 
 @ApiTags('Analytics Reports')
 @ApiBearerAuth()
-@UseGuards(AdminJwtGuard, RolesGuard)
-@Roles(EAdminRole.super_admin)
+@UseGuards(AdminJwtGuard, PermissionsGuard)
 @Controller()
 export class AnalyticsReportController {
   constructor(private readonly service: AnalyticsReportService) {}
 
   @Post()
+  @RequirePermissions('analytics-reports.manage')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Create analytics report link (phone → URL)' })
   async create(@Body() dto: CreateAnalyticsReportDto) {
@@ -37,6 +36,7 @@ export class AnalyticsReportController {
   }
 
   @Get()
+  @RequirePermissions('analytics-reports.manage')
   @ApiOperation({ summary: 'List all analytics report links' })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
@@ -48,6 +48,7 @@ export class AnalyticsReportController {
   }
 
   @Patch(':id')
+  @RequirePermissions('analytics-reports.manage')
   @ApiOperation({ summary: 'Update analytics report link' })
   async update(
     @Param('id', ParseCuidPipe) id: string,
@@ -57,6 +58,7 @@ export class AnalyticsReportController {
   }
 
   @Delete(':id')
+  @RequirePermissions('analytics-reports.manage')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Delete analytics report link' })
   async delete(@Param('id', ParseCuidPipe) id: string) {
