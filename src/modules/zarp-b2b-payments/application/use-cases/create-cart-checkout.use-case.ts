@@ -130,6 +130,8 @@ export class CreateCartCheckoutUseCase {
           productId: item.productId,
           basePrice: breakdown.basePrice,
           quantity: item.quantity,
+          // B2B products are always one-time purchases, never recurring subscriptions
+          isRecurring: false,
         };
       });
 

@@ -1,4 +1,4 @@
-import { Injectable, Inject, BadRequestException, NotFoundException, Logger } from '@nestjs/common';
+import { Injectable, Inject, BadRequestException, NotFoundException, ConflictException, Logger } from '@nestjs/common';
 import Stripe from 'stripe';
 import {
   IProductRepository,
@@ -23,6 +23,11 @@ import {
 import { ResolveProductFeesUseCase } from './resolve-product-fees.use-case';
 import { UnifiedCheckoutDTO } from '../dtos/unified-checkout.dto';
 import { PrismaService } from '../../../../shared/database/prisma.service';
+import { ValidateCouponUseCase, CartItemForValidation } from '../../../zarp-coupons/application/use-cases/validate-coupon.use-case';
+import {
+  IDiscountCouponRepository,
+  DISCOUNT_COUPON_REPOSITORY,
+} from '../../../zarp-coupons/domain/interfaces/discount-coupon.repository.interface';
 
 const STRIPE_API_VERSION = '2025-02-24.acacia' as const;
 
@@ -31,7 +36,12 @@ interface B2CItemTrack {
   priceId: string;
   amount: number;
   currency: string;
+  /** true for unlimited/limited billing modes (recurring subscriptions) */
+  isRecurring: boolean;
 }
+
+/** billingModes that represent recurring subscriptions */
+const RECURRING_BILLING_MODES = new Set(['unlimited', 'limited']);
 
 @Injectable()
 export class UnifiedCheckoutUseCase {
@@ -50,6 +60,9 @@ export class UnifiedCheckoutUseCase {
     private readonly billingConfigRepo: ITenantBillingConfigRepository,
     private readonly resolveFeesUseCase: ResolveProductFeesUseCase,
     private readonly prisma: PrismaService,
+    private readonly validateCouponUseCase: ValidateCouponUseCase,
+    @Inject(DISCOUNT_COUPON_REPOSITORY)
+    private readonly couponRepo: IDiscountCouponRepository,
   ) {}
 
   async execute(
@@ -63,7 +76,6 @@ export class UnifiedCheckoutUseCase {
       throw new BadRequestException('Stripe not configured for this tenant');
     }
 
-    const frontendUrl = process.env.FRONTEND_URL ?? 'http://localhost:3000';
     const { successUrl, cancelUrl } = await this.billingConfigRepo.getCheckoutUrls(tenantId);
 
     // 2. Load B2B global config
@@ -77,6 +89,8 @@ export class UnifiedCheckoutUseCase {
     const b2bProductIds: string[] = [];
     const b2cPriceIds: string[] = [];
     const b2cItemsTrack: B2CItemTrack[] = [];
+    // Maps productId → resolved basePrice (cents) for coupon validation
+    const itemBasePriceMap = new Map<string, number>();
 
     for (const item of dto.items) {
       if (item.type === 'b2b') {
@@ -101,6 +115,7 @@ export class UnifiedCheckoutUseCase {
 
         primaryCurrency = product.currency;
         b2bProductIds.push(product.id);
+        itemBasePriceMap.set(product.id, breakdown.basePrice);
 
         lineItems.push({
           price_data: {
@@ -161,6 +176,7 @@ export class UnifiedCheckoutUseCase {
           priceId: price.id,
           amount: breakdown.basePrice,
           currency: price.currency,
+          isRecurring: RECURRING_BILLING_MODES.has(price.billingMode),
         });
 
         lineItems.push({
@@ -202,7 +218,76 @@ export class UnifiedCheckoutUseCase {
       });
     }
 
-    // 4. Build metadata
+    // 4. Validate and apply coupon codes (if provided)
+    // The context is 'b2c' because the unified checkout is always a B2C-facing endpoint.
+    // B2B items in a unified cart are treated as one-time (isRecurring: false).
+    const couponCodes = dto.couponCodes?.filter(Boolean) ?? [];
+    let stripeCouponId: string | undefined;
+    let totalDiscount = 0;
+
+    if (couponCodes.length > 0) {
+      // Build cart items for coupon validation from the already-resolved item prices.
+      // B2B items are always one-time (isRecurring: false).
+      // B2C items carry the isRecurring flag derived from their billingMode (unlimited/limited = recurring).
+      const cartItemsForValidation: CartItemForValidation[] = [
+        ...dto.items
+          .filter((i) => i.type === 'b2b')
+          .map((i) => ({
+            productId: i.productId,
+            basePrice: itemBasePriceMap.get(i.productId) ?? 0,
+            quantity: i.quantity,
+            isRecurring: false,
+          })),
+        ...b2cItemsTrack.map((track) => {
+          const dtoItem = dto.items.find((i) => i.type === 'b2c' && i.productId === track.productId);
+          return {
+            productId: track.productId,
+            basePrice: track.amount,
+            quantity: dtoItem?.quantity ?? 1,
+            isRecurring: track.isRecurring,
+          };
+        }),
+      ];
+
+      const validationResult = await this.validateCouponUseCase.execute(
+        tenantId,
+        couponCodes,
+        cartItemsForValidation,
+        'b2c',
+      );
+      totalDiscount = validationResult.totalDiscount;
+
+      if (totalDiscount > 0) {
+        // Atomically claim redemptions before creating Stripe session
+        for (const { code } of validationResult.coupons) {
+          const coupon = await this.couponRepo.findByCode(tenantId, code);
+          const claimed = await this.couponRepo.incrementRedeemedCount(
+            tenantId,
+            code,
+            coupon?.maxRedemptions ?? null,
+          );
+          if (!claimed) {
+            throw new ConflictException(`Cupom esgotado: ${code}`);
+          }
+        }
+
+        const stripe = new Stripe(stripeSecretKey, { apiVersion: STRIPE_API_VERSION });
+        const stripeCoupon = await stripe.coupons.create({
+          amount_off: totalDiscount,
+          currency: primaryCurrency,
+          duration: 'once',
+          max_redemptions: 1,
+          name: 'Desconto aplicado',
+          metadata: {
+            tenant_id: tenantId,
+            coupon_codes: couponCodes.join(','),
+          },
+        });
+        stripeCouponId = stripeCoupon.id;
+      }
+    }
+
+    // 5. Build metadata
     const metadata: Record<string, string> = {
       tenant_id: tenantId,
       checkout_type: 'unified',
@@ -213,13 +298,19 @@ export class UnifiedCheckoutUseCase {
       lead_phone: dto.leadPhone ?? '',
     };
 
+    if (couponCodes.length > 0) {
+      metadata.coupon_codes = couponCodes.join(',');
+      metadata.discount_amount = String(totalDiscount);
+      if (stripeCouponId) metadata.stripe_coupon_id = stripeCouponId;
+    }
+
     if (userId) {
       metadata.user_id = userId;
     } else {
       metadata.is_lead_purchase = 'true';
     }
 
-    // 5. Create Stripe session (payment mode — mixed cart is always one-time)
+    // 6. Create Stripe session (payment mode — mixed cart is always one-time)
     const stripe = new Stripe(stripeSecretKey, { apiVersion: STRIPE_API_VERSION });
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
@@ -229,6 +320,7 @@ export class UnifiedCheckoutUseCase {
       metadata,
       success_url: successUrl,
       cancel_url: cancelUrl,
+      ...(stripeCouponId ? { discounts: [{ coupon: stripeCouponId }] } : {}),
     });
 
     const totalCartAmount = lineItems.reduce((s, li) => {

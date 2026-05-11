@@ -3,6 +3,7 @@ import { DatabaseModule } from '../../shared/database/database.module';
 import { ZarpAuthModule } from '../zarp-auth/zarp-auth.module';
 import { ZarpSubscriptionsModule } from '../zarp-subscriptions/zarp-subscriptions.module';
 import { ZarpB2bPaymentsModule } from '../zarp-b2b-payments/zarp-b2b-payments.module';
+import { ZarpCouponsModule } from '../zarp-coupons/zarp-coupons.module';
 
 // Controllers
 import { ProductsController } from './infrastructure/controllers/products.controller';
@@ -54,6 +55,7 @@ import { OptionalUserGuard } from '../zarp-b2b-payments/infrastructure/guards/op
     DatabaseModule,
     ZarpAuthModule,
     ZarpSubscriptionsModule,
+    ZarpCouponsModule,
     forwardRef(() =>
       import('../zarp-b2c-subscriptions/zarp-b2c-subscriptions.module').then(
         (m) => m.ZarpB2cSubscriptionsModule,

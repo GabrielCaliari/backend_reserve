@@ -10,6 +10,7 @@ import {
   IsPositive,
   ValidateNested,
 } from 'class-validator';
+
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
@@ -60,6 +61,16 @@ export class UnifiedCheckoutDTO {
   @IsString()
   @IsOptional()
   leadPhone?: string;
+
+  @ApiPropertyOptional({
+    type: [String],
+    example: ['PROMO10'],
+    description: 'Códigos de cupom (opcionais). Aplicados sobre os itens elegíveis do carrinho.',
+  })
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  couponCodes?: string[];
 }
 
 export class UnifiedCalculateCostDTO {
