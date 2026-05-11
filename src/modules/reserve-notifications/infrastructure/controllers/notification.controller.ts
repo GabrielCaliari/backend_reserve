@@ -2,18 +2,17 @@
 import { Response } from 'express';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
-import { RolesGuard } from '../../../../shared/auth/guards/roles.guard';
-import { Roles } from '../../../../shared/auth/decorators/roles.decorator';
+import { PermissionsGuard } from '../../../../shared/auth/guards/permissions.guard';
+import { RequirePermissions } from '../../../../shared/auth/decorators/require-permissions.decorator';
 import { CurrentAdmin, CurrentAdminPayload } from '../../../../shared/auth/decorators/current-admin.decorator';
-import { EAdminRole } from '../../../reserve-auth/domain/enums/admin-role.enum';
 import { ParseCuidPipe } from '../../../../shared/pipes';
 import { NotificationService } from '../../application/services/notification.service';
 import { CreateNotificationDTO, UpdateNotificationDTO, ListNotificationsQueryDTO } from '../../application/dtos';
 
 @ApiTags('Notifications (super_admin)')
 @ApiBearerAuth()
-@Roles(EAdminRole.super_admin)
-@UseGuards(AdminJwtGuard, RolesGuard)
+@RequirePermissions('notifications.platform.manage')
+@UseGuards(AdminJwtGuard, PermissionsGuard)
 @Controller('notifications')
 export class NotificationController {
   constructor(private readonly service: NotificationService) {}

@@ -2,9 +2,8 @@
 import { Response } from 'express';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
-import { RolesGuard } from '../../../../shared/auth/guards/roles.guard';
-import { Roles } from '../../../../shared/auth/decorators/roles.decorator';
-import { EAdminRole } from '../../../reserve-auth/domain/enums/admin-role.enum';
+import { PermissionsGuard } from '../../../../shared/auth/guards/permissions.guard';
+import { RequirePermissions } from '../../../../shared/auth/decorators/require-permissions.decorator';
 import { ParseCuidPipe } from '../../../../shared/pipes';
 import { NotificationSettingsService } from '../../application/services/notification-settings.service';
 import { UpdateNotificationSettingsDTO } from '../../application/dtos';
@@ -31,8 +30,8 @@ export class NotificationSettingsController {
   }
 
   @Get('/:tenantId')
-  @Roles(EAdminRole.super_admin)
-  @UseGuards(RolesGuard)
+  @RequirePermissions('notifications.platform.manage')
+  @UseGuards(PermissionsGuard)
   @ApiOperation({ summary: 'Get any tenant notification settings (super_admin)' })
   async getForTenant(@Param('tenantId', ParseCuidPipe) tenantId: string, @Res() res: Response) {
     const result = await this.service.getSettings(tenantId);
@@ -40,8 +39,8 @@ export class NotificationSettingsController {
   }
 
   @Patch('/:tenantId')
-  @Roles(EAdminRole.super_admin)
-  @UseGuards(RolesGuard)
+  @RequirePermissions('notifications.platform.manage')
+  @UseGuards(PermissionsGuard)
   @ApiOperation({ summary: 'Update any tenant notification settings (super_admin)' })
   async updateForTenant(@Param('tenantId', ParseCuidPipe) tenantId: string, @Body() dto: UpdateNotificationSettingsDTO, @Res() res: Response) {
     const result = await this.service.updateSettings(tenantId, dto);
