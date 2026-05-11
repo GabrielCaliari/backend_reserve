@@ -18,6 +18,12 @@ export interface CouponLineResult {
   code: string;
   discountAmount: number;
   description: string;
+  /** Scope that determined discount: 'order' | 'product' | 'category' */
+  scope: string;
+  /** Product IDs this coupon specifically targets (empty if scope is 'order') */
+  affectedProductIds: string[];
+  /** Category IDs this coupon specifically targets (empty if scope is 'order' or 'product') */
+  affectedCategoryIds: string[];
 }
 
 export interface CouponValidationResult {
@@ -80,6 +86,9 @@ export class ValidateCouponUseCase {
         code,
         discountAmount: discount,
         description: this.buildDescription(coupon),
+        scope: coupon.scope,
+        affectedProductIds: coupon.scope === ECouponScope.PRODUCT ? coupon.productIds : [],
+        affectedCategoryIds: coupon.scope === ECouponScope.CATEGORY ? coupon.categoryIds : [],
       });
     }
 
