@@ -226,7 +226,7 @@ export class AdminController {
     @Roles(EAdminRole.super_admin, EAdminRole.manager)
     @UseGuards(AdminJwtGuard, RolesGuard)
     @ApiBearerAuth()
-    @ApiOperation({ 
+    @ApiOperation({
         summary: 'Get admin by ID (super_admin or manager)',
         description: 'Returns detailed information about a specific administrator'
     })

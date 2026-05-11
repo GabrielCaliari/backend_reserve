@@ -7,6 +7,7 @@ import {
   IsOptional,
   ValidateNested,
   IsEnum,
+  IsBoolean,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
@@ -31,6 +32,11 @@ export class ValidateCouponCartItemDTO {
   @IsInt()
   @Min(1)
   quantity: number;
+
+  @ApiPropertyOptional({ example: false, description: 'true se o item é uma assinatura recorrente (billing_mode unlimited ou limited)' })
+  @IsBoolean()
+  @IsOptional()
+  isRecurring?: boolean;
 }
 
 export class ValidateCouponDTO {

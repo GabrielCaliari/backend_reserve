@@ -5,7 +5,8 @@ import {
   HttpStatus,
   Logger,
 } from '@nestjs/common';
-import { Response, Request, NextFunction } from 'express';
+import { BaseExceptionFilter } from '@nestjs/core';
+import { Response, Request } from 'express';
 
 /**
  * ConnectionErrorFilter
@@ -20,14 +21,13 @@ import { Response, Request, NextFunction } from 'express';
  * Without this filter, these errors result in silent 503 responses with no body.
  */
 @Catch()
-export class ConnectionErrorFilter implements ExceptionFilter {
+export class ConnectionErrorFilter extends BaseExceptionFilter {
   private readonly logger = new Logger(ConnectionErrorFilter.name);
 
   catch(exception: any, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
-    const next = ctx.getNext<NextFunction>();
 
     // Only handle connection-related errors
     const isConnectionError = 
@@ -40,10 +40,8 @@ export class ConnectionErrorFilter implements ExceptionFilter {
       exception?.message?.includes('timeout');
 
     if (!isConnectionError) {
-      // Delegate to Express error middleware chain (NestJS built-in handler picks it up)
-      // NOTE: `throw exception` here escapes NestJS filter chain and hits Express's raw
-      // error handler, which returns HTML. Using next(exception) properly re-enters the chain.
-      return next(exception);
+      // Delegate to default NestJS exception handling
+      return super.catch(exception, host);
     }
 
     // Log the connection error

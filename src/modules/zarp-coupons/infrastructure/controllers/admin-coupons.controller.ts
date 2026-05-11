@@ -10,8 +10,6 @@ import {
   UseGuards,
   Headers,
   BadRequestException,
-  ParseIntPipe,
-  DefaultValuePipe,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -57,10 +55,12 @@ export class AdminCouponsController {
   @ApiResponse({ status: 200, description: 'Lista de cupons' })
   async list(
     @Headers('x-tenant-id') tenantId: string,
-    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
-    @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit: number,
+    @Query('page') pageStr?: string,
+    @Query('limit') limitStr?: string,
   ) {
-    return this.listCouponsUseCase.execute(this.getTenantId(tenantId), page, limit);
+    const page = pageStr ? parseInt(pageStr, 10) : 1;
+    const limit = limitStr ? parseInt(limitStr, 10) : 20;
+    return this.listCouponsUseCase.execute(this.getTenantId(tenantId), isNaN(page) ? 1 : page, isNaN(limit) ? 20 : limit);
   }
 
   @Get(':id')

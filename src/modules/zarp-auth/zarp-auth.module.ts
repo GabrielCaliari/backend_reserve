@@ -1,4 +1,6 @@
 ﻿import { Module } from '@nestjs/common';
+import { ZarpCouponsModule } from '../zarp-coupons/zarp-coupons.module';
+import { AdminCouponsController } from '../zarp-coupons/infrastructure/controllers/admin-coupons.controller';
 import { AdminService } from './application/services/admin.service';
 import { AdminController } from './infrastructure/controllers/admin.controller';
 import { UserService } from './application/services/user.service';
@@ -66,8 +68,10 @@ import { FXGoogleAPITokenProvider } from './infrastructure/providers/fx-google-a
  * Route prefix: /api/auth
  */
 @Module({
+  imports: [ZarpCouponsModule],
   controllers: [
     AdminUserController, // must be before AdminController to avoid /:id route conflict
+    AdminCouponsController, // must be before AdminController to avoid /:id route conflict
     AdminController,
     UserController,
     EmailController,

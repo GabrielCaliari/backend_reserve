@@ -34,6 +34,17 @@ export class DiscountCouponEntity {
   }
 
   appliesToContext(context: 'b2b' | 'b2c'): boolean {
-    return this.appliesTo === ECouponAppliesTo.BOTH || this.appliesTo === context;
+    if (this.appliesTo === ECouponAppliesTo.BOTH) return true;
+    if (this.appliesTo === ECouponAppliesTo.B2C_RECURRING) return context === 'b2c';
+    if (this.appliesTo === ECouponAppliesTo.B2C_ONE_TIME) return context === 'b2c';
+    return this.appliesTo === (context as ECouponAppliesTo);
+  }
+
+  requiresRecurring(): boolean {
+    return this.appliesTo === ECouponAppliesTo.B2C_RECURRING;
+  }
+
+  requiresOneTime(): boolean {
+    return this.appliesTo === ECouponAppliesTo.B2C_ONE_TIME;
   }
 }

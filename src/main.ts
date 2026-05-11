@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { NestFactory } from '@nestjs/core';
+import { NestFactory, HttpAdapterHost } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
@@ -49,8 +49,10 @@ async function bootstrap() {
   });
 
   app.useGlobalPipes(new ValidationPipe({ transform: true }));
+  
+  const httpAdapterHost = app.get(HttpAdapterHost);
   app.useGlobalFilters(
-    new ConnectionErrorFilter(), // Must be first to catch connection errors
+    new ConnectionErrorFilter(httpAdapterHost.httpAdapter), // Must be first to catch connection errors
     new DomainExceptionFilter(), 
     new MulterExceptionFilter()
   );

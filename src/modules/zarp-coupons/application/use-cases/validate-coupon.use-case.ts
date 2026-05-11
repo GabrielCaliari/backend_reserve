@@ -12,6 +12,7 @@ export interface CartItemForValidation {
   categoryId?: string | null;
   basePrice: number;
   quantity: number;
+  isRecurring?: boolean;
 }
 
 export interface CouponLineResult {
@@ -63,6 +64,18 @@ export class ValidateCouponUseCase {
         throw new UnprocessableEntityException(`Cupom inválido: ${code}`);
       }
 
+      if (coupon.requiresRecurring() && !cartItems.some((i) => i.isRecurring)) {
+        throw new UnprocessableEntityException(
+          `Cupom ${code} é válido apenas para produtos com assinatura recorrente`,
+        );
+      }
+
+      if (coupon.requiresOneTime() && !cartItems.some((i) => !i.isRecurring)) {
+        throw new UnprocessableEntityException(
+          `Cupom ${code} é válido apenas para produtos de compra única`,
+        );
+      }
+
       if (results.length > 0 && (!coupon.cumulative || hasNonCumulative)) {
         throw new UnprocessableEntityException(
           `O cupom ${code} não pode ser combinado com outros cupons`,
@@ -108,15 +121,21 @@ export class ValidateCouponUseCase {
     coupon: DiscountCouponEntity,
     cartItems: CartItemForValidation[],
   ): number {
+    const items = coupon.requiresRecurring()
+      ? cartItems.filter((i) => i.isRecurring)
+      : coupon.requiresOneTime()
+        ? cartItems.filter((i) => !i.isRecurring)
+        : cartItems;
+
     if (coupon.scope === ECouponScope.ORDER) {
-      return cartItems.reduce((s, i) => s + i.basePrice * i.quantity, 0);
+      return items.reduce((s, i) => s + i.basePrice * i.quantity, 0);
     }
     if (coupon.scope === ECouponScope.PRODUCT) {
-      return cartItems
+      return items
         .filter((i) => coupon.productIds.includes(i.productId))
         .reduce((s, i) => s + i.basePrice * i.quantity, 0);
     }
-    return cartItems
+    return items
       .filter((i) => i.categoryId != null && coupon.categoryIds.includes(i.categoryId))
       .reduce((s, i) => s + i.basePrice * i.quantity, 0);
   }
