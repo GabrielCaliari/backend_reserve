@@ -5,9 +5,10 @@
  * and persists them in the b2c_products + b2c_product_prices tables.
  *
  * Product types:
- *   basic-course            → digital (requires_shipping: false)
- *   complete-course         → digital (requires_shipping: false)
- *   bundle-course-book-tabs → physical (requires_shipping: true)
+ *   complete-course                    → digital  (requires_shipping: false)
+ *   complete-course-in-person          → digital  (requires_shipping: false)
+ *   bundle-course-book-tabs            → physical (requires_shipping: true)
+ *   bundle-course-book-tabs-in-person  → physical (requires_shipping: true)
  *
  * Idempotency: checked by slug (unique per tenant).
  *
@@ -46,7 +47,7 @@ function decrypt(ciphertext: string): string {
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type ProductType = 'basic-course' | 'complete-course' | 'bundle-course-book-tabs';
+type ProductType = 'complete-course' | 'complete-course-in-person' | 'bundle-course-book-tabs' | 'bundle-course-book-tabs-in-person';
 
 interface B2CProduct {
   name: string;
@@ -62,99 +63,26 @@ const PHYSICAL_TYPES: ProductType[] = ['bundle-course-book-tabs'];
 
 const PRODUCTS: B2CProduct[] = [
 
-  // ── Basic Courses ───────────────────────────────────────────────────────────
-
-  {
-    name: 'Air A Basic Course',
-    slug: 'air-a-basic-course',
-    priceInCents: 80000,
-    type: 'basic-course',
-    description: null,
-  },
-  {
-    name: 'Air B Basic Course',
-    slug: 'air-b-basic-course',
-    priceInCents: 80000,
-    type: 'basic-course',
-    description: null,
-  },
-  {
-    name: 'Building Contractor Basic Course',
-    slug: 'building-contractor-basic-course',
-    priceInCents: 80000,
-    type: 'basic-course',
-    description: null,
-  },
-  {
-    name: 'Business and Finance Basic Course',
-    slug: 'business-and-finance-basic-course',
-    priceInCents: 30000,
-    type: 'basic-course',
-    description: null,
-  },
-  {
-    name: 'General Contractor Basic Course',
-    slug: 'general-contractor-basic-course',
-    priceInCents: 80000,
-    type: 'basic-course',
-    description: null,
-  },
-  {
-    name: 'Mechanical Basic Course',
-    slug: 'mechanical-basic-course',
-    priceInCents: 80000,
-    type: 'basic-course',
-    description: null,
-  },
-  {
-    name: 'Residential Contractor Basic Course',
-    slug: 'residential-contractor-basic-course',
-    priceInCents: 80000,
-    type: 'basic-course',
-    description: null,
-  },
-  {
-    name: 'Roofing Basic Course',
-    slug: 'roofing-basic-course',
-    priceInCents: 50000,
-    type: 'basic-course',
-    description: null,
-  },
-  {
-    name: 'Solar Basic Course',
-    slug: 'solar-basic-course',
-    priceInCents: 50000,
-    type: 'basic-course',
-    description: null,
-  },
-  {
-    name: 'Specialty Structure Basic Course',
-    slug: 'specialty-structure-basic-course',
-    priceInCents: 50000,
-    type: 'basic-course',
-    description: null,
-  },
-
   // ── Complete Courses ────────────────────────────────────────────────────────
 
   {
     name: 'Air A Complete Course',
     slug: 'air-a-complete-course',
-    priceInCents: 120000,
+    priceInCents: 80000,
     type: 'complete-course',
     description: null,
   },
   {
     name: 'Air B Complete Course',
     slug: 'air-b-complete-course',
-    priceInCents: 120000,
+    priceInCents: 80000,
     type: 'complete-course',
     description: null,
   },
   {
     name: 'Building Contractor Complete Course',
     slug: 'building-contractor-complete-course',
-    priceInCents: 120000,
+    priceInCents: 80000,
     type: 'complete-course',
     description: null,
   },
@@ -168,43 +96,130 @@ const PRODUCTS: B2CProduct[] = [
   {
     name: 'General Contractor Complete Course',
     slug: 'general-contractor-complete-course',
-    priceInCents: 120000,
+    priceInCents: 80000,
     type: 'complete-course',
     description: null,
   },
   {
     name: 'Mechanical Complete Course',
     slug: 'mechanical-complete-course',
-    priceInCents: 120000,
+    priceInCents: 80000,
+    type: 'complete-course',
+    description: null,
+  },
+  {
+    name: 'Plumbing Complete Course',
+    slug: 'plumbing-complete-course',
+    priceInCents: 80000,
     type: 'complete-course',
     description: null,
   },
   {
     name: 'Residential Contractor Complete Course',
     slug: 'residential-contractor-complete-course',
-    priceInCents: 120000,
+    priceInCents: 80000,
     type: 'complete-course',
     description: null,
   },
   {
     name: 'Roofing Complete Course',
     slug: 'roofing-complete-course',
-    priceInCents: 75000,
+    priceInCents: 50000,
     type: 'complete-course',
     description: null,
   },
   {
     name: 'Solar Complete Course',
     slug: 'solar-complete-course',
-    priceInCents: 75000,
+    priceInCents: 50000,
     type: 'complete-course',
     description: null,
   },
   {
     name: 'Specialty Structure Complete Course',
     slug: 'specialty-structure-complete-course',
-    priceInCents: 75000,
+    priceInCents: 50000,
     type: 'complete-course',
+    description: null,
+  },
+
+  // ── Complete Courses In Person ──────────────────────────────────────────────
+
+  {
+    name: 'Air A Complete Course In Person Business & Finance',
+    slug: 'air-a-complete-course-in-person-business-and-finance',
+    priceInCents: 180000,
+    type: 'complete-course-in-person',
+    description: null,
+  },
+  {
+    name: 'Air B Complete Course In Person Business & Finance',
+    slug: 'air-b-complete-course-in-person-business-and-finance',
+    priceInCents: 180000,
+    type: 'complete-course-in-person',
+    description: null,
+  },
+  {
+    name: 'Building Contractor Complete Course In Person Business & Finance',
+    slug: 'building-contractor-complete-course-in-person-business-and-finance',
+    priceInCents: 180000,
+    type: 'complete-course-in-person',
+    description: null,
+  },
+  {
+    name: 'Business and Finance Complete Course In Person Business & Finance',
+    slug: 'business-and-finance-complete-course-in-person-business-and-finance',
+    priceInCents: 145000,
+    type: 'complete-course-in-person',
+    description: null,
+  },
+  {
+    name: 'General Contractor Complete Course In Person Business & Finance',
+    slug: 'general-contractor-complete-course-in-person-business-and-finance',
+    priceInCents: 180000,
+    type: 'complete-course-in-person',
+    description: null,
+  },
+  {
+    name: 'Mechanical Complete Course In Person Business & Finance',
+    slug: 'mechanical-complete-course-in-person-business-and-finance',
+    priceInCents: 180000,
+    type: 'complete-course-in-person',
+    description: null,
+  },
+  {
+    name: 'Plumbing Complete Course In Person Business & Finance',
+    slug: 'plumbing-complete-course-in-person-business-and-finance',
+    priceInCents: 180000,
+    type: 'complete-course-in-person',
+    description: null,
+  },
+  {
+    name: 'Residential Contractor Complete Course In Person Business & Finance',
+    slug: 'residential-contractor-complete-course-in-person-business-and-finance',
+    priceInCents: 180000,
+    type: 'complete-course-in-person',
+    description: null,
+  },
+  {
+    name: 'Roofing Complete Course In Person Business & Finance',
+    slug: 'roofing-complete-course-in-person-business-and-finance',
+    priceInCents: 150000,
+    type: 'complete-course-in-person',
+    description: null,
+  },
+  {
+    name: 'Solar Complete Course In Person Business & Finance',
+    slug: 'solar-complete-course-in-person-business-and-finance',
+    priceInCents: 150000,
+    type: 'complete-course-in-person',
+    description: null,
+  },
+  {
+    name: 'Specialty Structure Complete Course In Person Business & Finance',
+    slug: 'specialty-structure-complete-course-in-person-business-and-finance',
+    priceInCents: 150000,
+    type: 'complete-course-in-person',
     description: null,
   },
 
@@ -213,78 +228,158 @@ const PRODUCTS: B2CProduct[] = [
   {
     name: 'Air A Complete Course + Books + Tabs',
     slug: 'air-a-complete-course-books-tabs',
-    priceInCents: 322000,
+    priceInCents: 311000,
     type: 'bundle-course-book-tabs',
     description: null,
   },
   {
     name: 'Air B Complete Course + Books + Tabs',
     slug: 'air-b-complete-course-books-tabs',
-    priceInCents: 322000,
+    priceInCents: 311000,
     type: 'bundle-course-book-tabs',
     description: null,
   },
   {
     name: 'Building Contractor Complete Course + Books + Tabs',
     slug: 'building-contractor-complete-course-books-tabs',
-    priceInCents: 294500,
+    priceInCents: 284000,
     type: 'bundle-course-book-tabs',
     description: null,
   },
   {
     name: 'Business and Finance Complete Course + Books + Tabs',
     slug: 'business-and-finance-complete-course-books-tabs',
-    priceInCents: 82100,
+    priceInCents: 82600,
     type: 'bundle-course-book-tabs',
     description: null,
   },
   {
     name: 'General Contractor Complete Course + Books + Tabs',
     slug: 'general-contractor-complete-course-books-tabs',
-    priceInCents: 294500,
+    priceInCents: 284000,
     type: 'bundle-course-book-tabs',
     description: null,
   },
   {
     name: 'Mechanical Complete Course + Books + Tabs',
     slug: 'mechanical-complete-course-books-tabs',
-    priceInCents: 366000,
+    priceInCents: 355100,
     type: 'bundle-course-book-tabs',
     description: null,
   },
   {
     name: 'Plumbing Complete Course + Books + Tabs',
     slug: 'plumbing-complete-course-books-tabs',
-    priceInCents: 520000,
+    priceInCents: 267100,
     type: 'bundle-course-book-tabs',
     description: null,
   },
   {
     name: 'Residential Contractor Complete Course + Books + Tabs',
     slug: 'residential-contractor-complete-course-books-tabs',
-    priceInCents: 294500,
+    priceInCents: 284000,
     type: 'bundle-course-book-tabs',
     description: null,
   },
   {
     name: 'Roofing Complete Course + Books + Tabs',
     slug: 'roofing-complete-course-books-tabs',
-    priceInCents: 249500,
+    priceInCents: 253600,
     type: 'bundle-course-book-tabs',
     description: null,
   },
   {
     name: 'Solar Complete Course + Books + Tabs',
     slug: 'solar-complete-course-books-tabs',
-    priceInCents: 266000,
+    priceInCents: 270100,
     type: 'bundle-course-book-tabs',
     description: null,
   },
   {
     name: 'Specialty Structure Complete Course + Books + Tabs',
     slug: 'specialty-structure-complete-course-books-tabs',
-    priceInCents: 172500,
+    priceInCents: 176600,
     type: 'bundle-course-book-tabs',
+    description: null,
+  },
+
+  // ── Bundle Course + Books + Tabs + In Person ────────────────────────────────
+
+  {
+    name: 'Air A Complete Course + Books + Tabs + In Person Business & Finance',
+    slug: 'air-a-complete-course-books-tabs-in-person',
+    priceInCents: 411000,
+    type: 'bundle-course-book-tabs-in-person',
+    description: null,
+  },
+  {
+    name: 'Air B Complete Course + Books + Tabs + In Person Business & Finance',
+    slug: 'air-b-complete-course-books-tabs-in-person',
+    priceInCents: 411000,
+    type: 'bundle-course-book-tabs-in-person',
+    description: null,
+  },
+  {
+    name: 'Building Contractor Complete Course + Books + Tabs + In Person Business & Finance',
+    slug: 'building-contractor-complete-course-books-tabs-in-person',
+    priceInCents: 384000,
+    type: 'bundle-course-book-tabs-in-person',
+    description: null,
+  },
+  {
+    name: 'Business and Finance Complete Course + Books + Tabs + In Person Business & Finance',
+    slug: 'business-and-finance-complete-course-books-tabs-in-person',
+    priceInCents: 182600,
+    type: 'bundle-course-book-tabs-in-person',
+    description: null,
+  },
+  {
+    name: 'General Contractor Complete Course + Books + Tabs + In Person Business & Finance',
+    slug: 'general-contractor-complete-course-books-tabs-in-person',
+    priceInCents: 384000,
+    type: 'bundle-course-book-tabs-in-person',
+    description: null,
+  },
+  {
+    name: 'Mechanical Complete Course + Books + Tabs + In Person Business & Finance',
+    slug: 'mechanical-complete-course-books-tabs-in-person',
+    priceInCents: 455100,
+    type: 'bundle-course-book-tabs-in-person',
+    description: null,
+  },
+  {
+    name: 'Plumbing Complete Course + Books + Tabs + In Person Business & Finance',
+    slug: 'plumbing-complete-course-books-tabs-in-person',
+    priceInCents: 367100,
+    type: 'bundle-course-book-tabs-in-person',
+    description: null,
+  },
+  {
+    name: 'Residential Contractor Complete Course + Books + Tabs + In Person Business & Finance',
+    slug: 'residential-contractor-complete-course-books-tabs-in-person',
+    priceInCents: 384000,
+    type: 'bundle-course-book-tabs-in-person',
+    description: null,
+  },
+  {
+    name: 'Roofing Complete Course + Books + Tabs + In Person Business & Finance',
+    slug: 'roofing-complete-course-books-tabs-in-person',
+    priceInCents: 353600,
+    type: 'bundle-course-book-tabs-in-person',
+    description: null,
+  },
+  {
+    name: 'Solar Complete Course + Books + Tabs + In Person Business & Finance',
+    slug: 'solar-complete-course-books-tabs-in-person',
+    priceInCents: 370100,
+    type: 'bundle-course-book-tabs-in-person',
+    description: null,
+  },
+  {
+    name: 'Specialty Structure Complete Course + Books + Tabs + In Person Business & Finance',
+    slug: 'specialty-structure-complete-course-books-tabs-in-person',
+    priceInCents: 276600,
+    type: 'bundle-course-book-tabs-in-person',
     description: null,
   },
 ];
