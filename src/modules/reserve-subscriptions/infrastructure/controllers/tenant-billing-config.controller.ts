@@ -24,14 +24,14 @@ import {
   UpdateTenantBillingConfigDTO,
   TenantBillingConfigResponseDTO,
 } from '../../application/dtos/tenant-billing-config.dto';
-import { AdminJwtGuard, TenantGuard, RolesGuard } from '../../../../shared/auth/guards';
-import { Roles } from '../../../../shared/auth/decorators/roles.decorator';
-import { EAdminRole } from '../../../reserve-auth/domain/enums/admin-role.enum';
+import { AdminJwtGuard, TenantGuard } from '../../../../shared/auth/guards';
+import { PermissionsGuard } from '../../../../shared/auth/guards/permissions.guard';
+import { RequirePermissions } from '../../../../shared/auth/decorators/require-permissions.decorator';
 
 @ApiTags('Payments - Billing Config')
 @ApiBearerAuth()
 @ApiHeader({ name: 'x-tenant-id', required: true, description: 'Tenant ID' })
-@UseGuards(AdminJwtGuard, TenantGuard, RolesGuard)
+@UseGuards(AdminJwtGuard, TenantGuard, PermissionsGuard)
 @Controller('payments/billing-config')
 export class TenantBillingConfigController {
   constructor(
@@ -39,7 +39,7 @@ export class TenantBillingConfigController {
   ) {}
 
   @Get('/')
-  @Roles(EAdminRole.viewer)
+  @RequirePermissions('billing-config.read')
   @ApiOperation({
     summary: 'Get billing config for the current tenant',
     description:
@@ -60,7 +60,7 @@ export class TenantBillingConfigController {
   }
 
   @Post('/')
-  @Roles(EAdminRole.manager)
+  @RequirePermissions('billing-config.manage')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({
     summary: 'Create billing config for the current tenant',
@@ -82,7 +82,7 @@ export class TenantBillingConfigController {
   }
 
   @Patch('/')
-  @Roles(EAdminRole.manager)
+  @RequirePermissions('billing-config.manage')
   @ApiOperation({
     summary: 'Update billing config for the current tenant',
     description:
@@ -103,7 +103,7 @@ export class TenantBillingConfigController {
   }
 
   @Delete('/')
-  @Roles(EAdminRole.manager)
+  @RequirePermissions('billing-config.manage')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
     summary: 'Delete billing config for the current tenant',
