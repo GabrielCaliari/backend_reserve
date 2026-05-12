@@ -9,9 +9,13 @@ import {
   IsISO8601,
   IsPositive,
   IsEnum,
+  ValidateNested,
+  ArrayMaxSize,
 } from 'class-validator';
+import { Type } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { ECouponAppliesTo } from '../../domain/enums/coupon-applies-to.enum';
+import { ProductOverrideDTO } from './create-coupon.dto';
 
 export class UpdateCouponDTO {
   @ApiPropertyOptional()
@@ -79,4 +83,17 @@ export class UpdateCouponDTO {
   @IsBoolean()
   @IsOptional()
   active?: boolean;
+
+  @ApiPropertyOptional({
+    type: [ProductOverrideDTO],
+    description:
+      'Descontos específicos por produto. Válido apenas quando scope="product". ' +
+      'Passe null ou array vazio para remover todos os overrides.',
+  })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => ProductOverrideDTO)
+  @ArrayMaxSize(50)
+  @IsOptional()
+  productOverrides?: ProductOverrideDTO[] | null;
 }

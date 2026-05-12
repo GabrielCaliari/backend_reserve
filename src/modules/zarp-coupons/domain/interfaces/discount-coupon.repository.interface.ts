@@ -1,4 +1,5 @@
 import { DiscountCouponEntity } from '../entities/discount-coupon.entity';
+import { ProductOverride } from '../entities/discount-coupon.entity';
 
 export const DISCOUNT_COUPON_REPOSITORY = Symbol('DISCOUNT_COUPON_REPOSITORY');
 
@@ -18,6 +19,7 @@ export interface CreateCouponData {
   maxDiscountAmount?: number | null;
   maxRedemptions?: number | null;
   expiresAt?: Date | null;
+  productOverrides?: ProductOverride[];
 }
 
 export interface UpdateCouponData {
@@ -33,6 +35,7 @@ export interface UpdateCouponData {
   maxRedemptions?: number | null;
   expiresAt?: Date | null;
   active?: boolean;
+  productOverrides?: ProductOverride[] | null;
 }
 
 export interface CouponListResult {

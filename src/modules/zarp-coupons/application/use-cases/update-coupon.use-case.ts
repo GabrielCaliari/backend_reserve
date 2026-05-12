@@ -31,6 +31,9 @@ export class UpdateCouponUseCase {
       expiresAt:
         dto.expiresAt !== undefined ? (dto.expiresAt ? new Date(dto.expiresAt) : null) : undefined,
       active: dto.active,
+      productOverrides: dto.productOverrides !== undefined
+        ? (dto.productOverrides ?? null)
+        : undefined,
     });
   }
 }

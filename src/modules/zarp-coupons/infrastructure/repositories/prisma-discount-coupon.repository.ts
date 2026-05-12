@@ -6,7 +6,7 @@ import {
   UpdateCouponData,
   CouponListResult,
 } from '../../domain/interfaces/discount-coupon.repository.interface';
-import { DiscountCouponEntity } from '../../domain/entities/discount-coupon.entity';
+import { DiscountCouponEntity, ProductOverride } from '../../domain/entities/discount-coupon.entity';
 import { EDiscountType } from '../../domain/enums/discount-type.enum';
 import { ECouponScope } from '../../domain/enums/coupon-scope.enum';
 import { ECouponAppliesTo } from '../../domain/enums/coupon-applies-to.enum';
@@ -33,6 +33,9 @@ export class PrismaDiscountCouponRepository implements IDiscountCouponRepository
         max_discount_amount: data.maxDiscountAmount ?? null,
         max_redemptions: data.maxRedemptions ?? null,
         expires_at: data.expiresAt ?? null,
+        product_overrides: data.productOverrides?.length
+          ? (data.productOverrides as unknown as any)
+          : undefined,
       },
     });
     return this.toDomain(record);
@@ -82,6 +85,11 @@ export class PrismaDiscountCouponRepository implements IDiscountCouponRepository
         ...(data.maxRedemptions !== undefined && { max_redemptions: data.maxRedemptions }),
         ...(data.expiresAt !== undefined && { expires_at: data.expiresAt }),
         ...(data.active !== undefined && { active: data.active }),
+        ...(data.productOverrides !== undefined && {
+          product_overrides: data.productOverrides === null
+            ? null
+            : (data.productOverrides as unknown as any),
+        }),
       },
     });
     return this.toDomain(record);
@@ -127,6 +135,7 @@ export class PrismaDiscountCouponRepository implements IDiscountCouponRepository
   }
 
   private toDomain(record: any): DiscountCouponEntity {
+    const overrides = this.parseProductOverrides(record.product_overrides);
     return new DiscountCouponEntity(
       record.id,
       record.tenant_id,
@@ -148,6 +157,24 @@ export class PrismaDiscountCouponRepository implements IDiscountCouponRepository
       record.active,
       record.created_at,
       record.updated_at,
+      overrides,
     );
+  }
+
+  private parseProductOverrides(raw: unknown): ProductOverride[] {
+    if (!raw || !Array.isArray(raw)) return [];
+    return raw
+      .filter(
+        (o): o is Record<string, unknown> =>
+          typeof o === 'object' && o !== null &&
+          typeof (o as any).productId === 'string' &&
+          typeof (o as any).discountType === 'string' &&
+          typeof (o as any).discountValue === 'number',
+      )
+      .map((o) => ({
+        productId: o.productId as string,
+        discountType: o.discountType as EDiscountType,
+        discountValue: o.discountValue as number,
+      }));
   }
 }

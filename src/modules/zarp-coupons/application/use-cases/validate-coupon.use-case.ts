@@ -35,6 +35,13 @@ export interface CouponLineResult {
   affectedProductIds: string[];
   /** Category IDs this coupon specifically targets (empty if scope is 'order' or 'product') */
   affectedCategoryIds: string[];
+  /**
+   * Which item types this coupon applies to.
+   * - 'b2b'  — only B2B products (books, tabs, etc.)
+   * - 'b2c'  — only B2C products (courses, subscriptions)
+   * - 'all'  — all item types
+   */
+  applicableItemType: 'b2b' | 'b2c' | 'all';
 }
 
 export interface CouponValidationResult {
@@ -105,7 +112,10 @@ export class ValidateCouponUseCase {
       }
 
       const eligible = this.computeEligibleAmount(coupon, cartItems);
-      const rawDiscount = this.computeRawDiscount(coupon, eligible);
+      const rawDiscount =
+        coupon.scope === ECouponScope.PRODUCT && coupon.productOverrides.length > 0
+          ? this.computeRawDiscountWithOverrides(coupon, cartItems)
+          : this.computeRawDiscount(coupon, eligible);
       const discount =
         coupon.maxDiscountAmount !== null
           ? Math.min(rawDiscount, coupon.maxDiscountAmount)
@@ -120,6 +130,7 @@ export class ValidateCouponUseCase {
         scope: coupon.scope,
         affectedProductIds: coupon.scope === ECouponScope.PRODUCT ? coupon.productIds : [],
         affectedCategoryIds: coupon.scope === ECouponScope.CATEGORY ? coupon.categoryIds : [],
+        applicableItemType: this.resolveApplicableItemType(coupon.appliesTo),
       });
     }
 
@@ -162,6 +173,12 @@ export class ValidateCouponUseCase {
     coupon: DiscountCouponEntity,
     cartItems: CartItemForValidation[],
   ): number {
+    // When productOverrides exist, discount is computed per-item in computeRawDiscountWithOverrides.
+    // Return 0 here so the generic computeRawDiscount path is bypassed.
+    if (coupon.scope === ECouponScope.PRODUCT && coupon.productOverrides.length > 0) {
+      return 0;
+    }
+
     // Step 1: filter by item type (strict — no fallback when itemType is absent)
     let items = this.filterByItemType(coupon, cartItems);
 
@@ -191,6 +208,53 @@ export class ValidateCouponUseCase {
       return Math.round(eligibleAmount * (coupon.discountValue / 100));
     }
     return Math.min(coupon.discountValue, eligibleAmount);
+  }
+
+  /**
+   * Computes the total discount when productOverrides are present.
+   * Each eligible product uses its override's discountType/discountValue if one exists,
+   * falling back to the coupon's global discountType/discountValue otherwise.
+   */
+  private computeRawDiscountWithOverrides(
+    coupon: DiscountCouponEntity,
+    cartItems: CartItemForValidation[],
+  ): number {
+    let items = this.filterByItemType(coupon, cartItems);
+
+    if (coupon.requiresRecurring()) {
+      items = items.filter((i) => i.isRecurring);
+    } else if (coupon.requiresOneTime()) {
+      items = items.filter((i) => !i.isRecurring);
+    }
+
+    // Only items whose productId is in the coupon's productIds list are eligible
+    const eligible = items.filter((i) => coupon.productIds.includes(i.productId));
+
+    return eligible.reduce((total, item) => {
+      const override = coupon.getProductOverride(item.productId);
+      const type = override ? override.discountType : coupon.discountType;
+      const value = override ? override.discountValue : coupon.discountValue;
+      const itemTotal = item.basePrice * item.quantity;
+
+      const itemDiscount =
+        type === EDiscountType.PERCENTAGE
+          ? Math.round(itemTotal * (value / 100))
+          : Math.min(value * item.quantity, itemTotal);
+
+      return total + itemDiscount;
+    }, 0);
+  }
+
+  private resolveApplicableItemType(appliesTo: ECouponAppliesTo): 'b2b' | 'b2c' | 'all' {
+    if (appliesTo === ECouponAppliesTo.B2B) return 'b2b';
+    if (
+      appliesTo === ECouponAppliesTo.B2C ||
+      appliesTo === ECouponAppliesTo.B2C_RECURRING ||
+      appliesTo === ECouponAppliesTo.B2C_ONE_TIME
+    ) {
+      return 'b2c';
+    }
+    return 'all'; // ECouponAppliesTo.BOTH
   }
 
   private buildDescription(coupon: DiscountCouponEntity): string {

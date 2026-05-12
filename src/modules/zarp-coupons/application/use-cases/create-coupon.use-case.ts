@@ -33,6 +33,7 @@ export class CreateCouponUseCase {
       maxDiscountAmount: dto.maxDiscountAmount ?? null,
       maxRedemptions: dto.maxRedemptions ?? null,
       expiresAt: dto.expiresAt ? new Date(dto.expiresAt) : null,
+      productOverrides: dto.productOverrides ?? [],
     });
   }
 }

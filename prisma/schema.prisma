@@ -1810,6 +1810,7 @@ model DiscountCoupon {
   product_ids         String[] @default([])
   category_ids        String[] @default([])
   applies_to          String   @db.VarChar(20)   // b2b | b2c | both
+  product_overrides   Json?                       // [{ productId, discountType, discountValue }] — per-product discount overrides (scope=product only)
 
   cumulative          Boolean  @default(false)
   min_order_amount    Int?                        // minimum cart total in cents

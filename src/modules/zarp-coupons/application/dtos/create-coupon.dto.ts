@@ -10,12 +10,34 @@ import {
   IsInt,
   IsISO8601,
   IsPositive,
+  ValidateNested,
+  Max,
+  ArrayMaxSize,
 } from 'class-validator';
-import { Transform } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { EDiscountType } from '../../domain/enums/discount-type.enum';
 import { ECouponScope } from '../../domain/enums/coupon-scope.enum';
 import { ECouponAppliesTo } from '../../domain/enums/coupon-applies-to.enum';
+
+export class ProductOverrideDTO {
+  @ApiProperty({ example: 'prod_abc123', description: 'ID do produto' })
+  @IsString()
+  @IsNotEmpty()
+  productId: string;
+
+  @ApiProperty({ enum: EDiscountType, example: EDiscountType.FIXED_AMOUNT })
+  @IsEnum(EDiscountType)
+  discountType: EDiscountType;
+
+  @ApiProperty({
+    example: 4000,
+    description: 'Percentual (0-100) ou valor em centavos. Deve ser > 0.',
+  })
+  @IsNumber()
+  @Min(1)
+  discountValue: number;
+}
 
 export class CreateCouponDTO {
   @ApiProperty({ example: 'PROMO10', description: 'Código único do cupom (convertido para maiúsculas)' })
@@ -90,4 +112,18 @@ export class CreateCouponDTO {
   @IsISO8601()
   @IsOptional()
   expiresAt?: string;
+
+  @ApiPropertyOptional({
+    type: [ProductOverrideDTO],
+    description:
+      'Descontos específicos por produto. Válido apenas quando scope="product". ' +
+      'Cada productId deve estar presente em productIds. ' +
+      'O discountValue global serve como fallback para produtos sem override.',
+  })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => ProductOverrideDTO)
+  @ArrayMaxSize(50)
+  @IsOptional()
+  productOverrides?: ProductOverrideDTO[];
 }

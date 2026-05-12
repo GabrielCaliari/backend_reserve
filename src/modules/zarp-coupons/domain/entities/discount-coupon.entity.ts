@@ -2,6 +2,12 @@ import { EDiscountType } from '../enums/discount-type.enum';
 import { ECouponScope } from '../enums/coupon-scope.enum';
 import { ECouponAppliesTo } from '../enums/coupon-applies-to.enum';
 
+export interface ProductOverride {
+  productId: string;
+  discountType: EDiscountType;
+  discountValue: number;
+}
+
 export class DiscountCouponEntity {
   constructor(
     public readonly id: string,
@@ -24,6 +30,8 @@ export class DiscountCouponEntity {
     public readonly active: boolean,
     public readonly createdAt: Date,
     public readonly updatedAt: Date,
+    /** Per-product discount overrides. Only relevant when scope === 'product'. */
+    public readonly productOverrides: ProductOverride[] = [],
   ) {}
 
   isValid(): boolean {
@@ -46,5 +54,10 @@ export class DiscountCouponEntity {
 
   requiresOneTime(): boolean {
     return this.appliesTo === ECouponAppliesTo.B2C_ONE_TIME;
+  }
+
+  /** Returns the override for a given productId, or null if none exists. */
+  getProductOverride(productId: string): ProductOverride | null {
+    return this.productOverrides.find((o) => o.productId === productId) ?? null;
   }
 }
