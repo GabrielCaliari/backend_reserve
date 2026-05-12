@@ -26,20 +26,20 @@ import {
   StatsIntegrationResponseDto,
   AvailableIntegrationDto,
 } from '../../application/dtos/stats-integration.dto';
-import { AdminJwtGuard, TenantGuard, RolesGuard } from '../../../../shared/auth/guards';
-import { Roles } from '../../../../shared/auth/decorators/roles.decorator';
-import { EAdminRole } from '../../../reserve-auth/domain/enums/admin-role.enum';
+import { AdminJwtGuard, TenantGuard } from '../../../../shared/auth/guards';
+import { PermissionsGuard } from '../../../../shared/auth/guards/permissions.guard';
+import { RequirePermissions } from '../../../../shared/auth/decorators/require-permissions.decorator';
 
 @ApiTags('Stats - Integrations')
 @ApiBearerAuth()
 @ApiHeader({ name: 'x-tenant-id', required: true, description: 'Tenant ID' })
-@UseGuards(AdminJwtGuard, TenantGuard, RolesGuard)
+@UseGuards(AdminJwtGuard, TenantGuard, PermissionsGuard)
 @Controller('/integrations')
 export class StatsIntegrationController {
   constructor(private readonly integrationService: StatsIntegrationService) {}
 
   @Get('/')
-  @Roles(EAdminRole.viewer)
+  @RequirePermissions('metrics.integrations.read')
   @ApiOperation({
     summary: 'List tenant integrations',
     description: 'Returns all external metric integrations configured for the current tenant.',
@@ -51,7 +51,7 @@ export class StatsIntegrationController {
   }
 
   @Get('/providers')
-  @Roles(EAdminRole.viewer)
+  @RequirePermissions('metrics.integrations.read')
   @ApiOperation({
     summary: 'List available providers',
     description: 'Returns all registered external metric providers with config schemas.',
@@ -62,7 +62,7 @@ export class StatsIntegrationController {
   }
 
   @Get('/:id')
-  @Roles(EAdminRole.viewer)
+  @RequirePermissions('metrics.integrations.read')
   @ApiOperation({ summary: 'Get integration by ID' })
   @ApiParam({ name: 'id', type: 'string' })
   @ApiResponse({ status: 200, description: 'Integration details', type: StatsIntegrationResponseDto })
@@ -75,7 +75,7 @@ export class StatsIntegrationController {
   }
 
   @Post('/')
-  @Roles(EAdminRole.manager)
+  @RequirePermissions('metrics.integrations.manage')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({
     summary: 'Create integration',
@@ -92,7 +92,7 @@ export class StatsIntegrationController {
   }
 
   @Patch('/:id')
-  @Roles(EAdminRole.manager)
+  @RequirePermissions('metrics.integrations.manage')
   @ApiOperation({
     summary: 'Update integration',
     description: 'Updates label, config, or active status of an existing integration.',
@@ -110,7 +110,7 @@ export class StatsIntegrationController {
   }
 
   @Delete('/:id')
-  @Roles(EAdminRole.manager)
+  @RequirePermissions('metrics.integrations.manage')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Delete integration' })
   @ApiParam({ name: 'id', type: 'string' })

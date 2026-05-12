@@ -24,9 +24,9 @@ import {
   TimeSeriesResponseDto,
 } from '../../application/dtos/stats.dto';
 import { AvailableIntegrationDto } from '../../application/dtos/stats-integration.dto';
-import { AdminJwtGuard, TenantGuard, RolesGuard } from '../../../../shared/auth/guards';
-import { Roles } from '../../../../shared/auth/decorators/roles.decorator';
-import { EAdminRole } from '../../../reserve-auth/domain/enums/admin-role.enum';
+import { AdminJwtGuard, TenantGuard } from '../../../../shared/auth/guards';
+import { PermissionsGuard } from '../../../../shared/auth/guards/permissions.guard';
+import { RequirePermissions } from '../../../../shared/auth/decorators/require-permissions.decorator';
 import { DateRange } from '../../domain/interfaces/metric-provider.interface';
 import { ParseCuidPipe } from '../../../../shared/pipes/parse-cuid.pipe';
 
@@ -37,8 +37,8 @@ export class StatsDashboardController {
   constructor(private readonly statsService: StatsService) {}
 
   @Get('/dashboard')
-  @UseGuards(AdminJwtGuard, TenantGuard, RolesGuard)
-  @Roles(EAdminRole.viewer)
+  @UseGuards(AdminJwtGuard, TenantGuard, PermissionsGuard)
+  @RequirePermissions('metrics.dashboard.read')
   @ApiHeader({ name: 'x-tenant-id', required: true, description: 'Tenant ID' })
   @ApiOperation({
     summary: 'Get stats dashboard',
@@ -66,8 +66,8 @@ export class StatsDashboardController {
   }
 
   @Get('/dashboard/tenants/:tenantId')
-  @UseGuards(AdminJwtGuard, TenantGuard, RolesGuard)
-  @Roles(EAdminRole.viewer)
+  @UseGuards(AdminJwtGuard, TenantGuard, PermissionsGuard)
+  @RequirePermissions('metrics.dashboard.read')
   @ApiOperation({
     summary: 'Get stats dashboard for a tenant',
     description:
@@ -90,8 +90,8 @@ export class StatsDashboardController {
   }
 
   @Get('/dashboard/global')
-  @UseGuards(AdminJwtGuard, RolesGuard)
-  @Roles(EAdminRole.super_admin)
+  @UseGuards(AdminJwtGuard, PermissionsGuard)
+  @RequirePermissions('metrics.dashboard.global.read')
   @ApiOperation({
     summary: 'Get aggregated dashboard across all tenants',
     description:
@@ -108,8 +108,8 @@ export class StatsDashboardController {
   }
 
   @Get('/available-integrations')
-  @UseGuards(AdminJwtGuard, RolesGuard)
-  @Roles(EAdminRole.viewer)
+  @UseGuards(AdminJwtGuard, PermissionsGuard)
+  @RequirePermissions('metrics.integrations.read')
   @ApiOperation({
     summary: 'List available external integrations',
     description: 'Returns all registered external metric providers with their config schemas.',
@@ -121,8 +121,8 @@ export class StatsDashboardController {
   }
 
   @Get('/module/:moduleKey')
-  @UseGuards(AdminJwtGuard, TenantGuard, RolesGuard)
-  @Roles(EAdminRole.viewer)
+  @UseGuards(AdminJwtGuard, TenantGuard, PermissionsGuard)
+  @RequirePermissions('metrics.dashboard.read')
   @ApiHeader({ name: 'x-tenant-id', required: true, description: 'Tenant ID' })
   @ApiOperation({
     summary: 'Get metrics for a single module',
@@ -155,8 +155,8 @@ export class StatsDashboardController {
   }
 
   @Get('/timeseries')
-  @UseGuards(AdminJwtGuard, TenantGuard, RolesGuard)
-  @Roles(EAdminRole.viewer)
+  @UseGuards(AdminJwtGuard, TenantGuard, PermissionsGuard)
+  @RequirePermissions('metrics.dashboard.read')
   @ApiHeader({ name: 'x-tenant-id', required: true, description: 'Tenant ID' })
   @ApiOperation({
     summary: 'Get time-series data',
