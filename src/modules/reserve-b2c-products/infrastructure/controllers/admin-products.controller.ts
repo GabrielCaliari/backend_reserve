@@ -1,8 +1,8 @@
 ﻿import { Controller, Get, Post, Body, Param, UseGuards, Req } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiHeader, ApiParam } from '@nestjs/swagger';
-import { AdminJwtGuard, TenantGuard, RolesGuard } from '../../../../shared/auth/guards';
-import { Roles } from '../../../../shared/auth/decorators/roles.decorator';
-import { EAdminRole } from '../../../reserve-auth/domain/enums/admin-role.enum';
+import { AdminJwtGuard, TenantGuard } from '../../../../shared/auth/guards';
+import { PermissionsGuard } from '../../../../shared/auth/guards/permissions.guard';
+import { RequirePermissions } from '../../../../shared/auth/decorators/require-permissions.decorator';
 import { AdminListProductsUseCase } from '../../application/use-cases/admin-list-products.use-case';
 import { CreateB2CProductUseCase } from '../../application/use-cases/create-b2c-product.use-case';
 import { CalculateOrderCostUseCase } from '../../application/use-cases/calculate-order-cost.use-case';
@@ -11,7 +11,7 @@ import { OrderCostBreakdownResponseDTO } from '../../application/dtos/fee-config
 
 @ApiTags('Admin B2C Products')
 @Controller('b2c/products')
-@UseGuards(AdminJwtGuard, TenantGuard, RolesGuard)
+@UseGuards(AdminJwtGuard, TenantGuard, PermissionsGuard)
 @ApiBearerAuth()
 @ApiHeader({ name: 'x-tenant-id', required: true, description: 'Tenant ID' })
 export class AdminProductsController {
@@ -22,7 +22,7 @@ export class AdminProductsController {
   ) {}
 
   @Get()
-  @Roles(EAdminRole.viewer)
+  @RequirePermissions('b2c-products.read')
   @ApiOperation({ summary: 'List all B2C products for the tenant (admin)' })
   @ApiResponse({ status: 200, description: 'Products listed' })
   async listProducts(@Req() req: any) {
@@ -30,7 +30,7 @@ export class AdminProductsController {
   }
 
   @Post()
-  @Roles(EAdminRole.manager)
+  @RequirePermissions('b2c-products.manage')
   @ApiOperation({ summary: 'Create a B2C recurring product (syncs with Stripe)' })
   @ApiResponse({ status: 201, description: 'Product created and synced with Stripe' })
   @ApiResponse({ status: 400, description: 'Stripe not configured or invalid data' })
@@ -40,7 +40,7 @@ export class AdminProductsController {
   }
 
   @Post(':id/calculate-cost')
-  @Roles(EAdminRole.viewer)
+  @RequirePermissions('b2c-products.read')
   @ApiOperation({
     summary: 'Calcular custo total de um produto B2C (admin)',
     description: 'Retorna breakdown: preço base + chip cost (%) + frete. Usado no painel para exibir taxas aplicadas.',

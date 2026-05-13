@@ -20,9 +20,9 @@ import {
   ApiHeader,
   ApiParam,
 } from '@nestjs/swagger';
-import { AdminJwtGuard, TenantGuard, RolesGuard } from '../../../../shared/auth/guards';
-import { Roles } from '../../../../shared/auth/decorators/roles.decorator';
-import { EAdminRole } from '../../../reserve-auth/domain/enums/admin-role.enum';
+import { AdminJwtGuard, TenantGuard } from '../../../../shared/auth/guards';
+import { PermissionsGuard } from '../../../../shared/auth/guards/permissions.guard';
+import { RequirePermissions } from '../../../../shared/auth/decorators/require-permissions.decorator';
 import { ManageFeeConfigUseCase } from '../../application/use-cases/manage-fee-config.use-case';
 import {
   UpsertFeeConfigDTO,
@@ -33,7 +33,7 @@ import {
 
 @ApiTags('Admin B2C Fee Config')
 @Controller('b2c/fees')
-@UseGuards(AdminJwtGuard, TenantGuard, RolesGuard)
+@UseGuards(AdminJwtGuard, TenantGuard, PermissionsGuard)
 @ApiBearerAuth()
 @ApiHeader({ name: 'x-tenant-id', required: true, description: 'Tenant ID' })
 export class AdminFeeConfigController {
@@ -42,7 +42,7 @@ export class AdminFeeConfigController {
   // ─── Taxa Global ─────────────────────────────────────────────────────────────
 
   @Get('global')
-  @Roles(EAdminRole.viewer)
+  @RequirePermissions('b2c-fees.read')
   @ApiOperation({
     summary: 'Buscar taxa global do tenant',
     description:
@@ -54,7 +54,7 @@ export class AdminFeeConfigController {
   }
 
   @Put('global')
-  @Roles(EAdminRole.manager)
+  @RequirePermissions('b2c-fees.manage')
   @ApiOperation({
     summary: 'Criar ou atualizar taxa global do tenant',
     description:
@@ -68,7 +68,7 @@ export class AdminFeeConfigController {
   // ─── Categorias ──────────────────────────────────────────────────────────────
 
   @Get('categories')
-  @Roles(EAdminRole.viewer)
+  @RequirePermissions('b2c-fees.read')
   @ApiOperation({
     summary: 'Listar categorias de produto com suas taxas',
     description: 'Retorna todas as categorias do tenant com chip cost % e shipping fee configurados.',
@@ -79,7 +79,7 @@ export class AdminFeeConfigController {
   }
 
   @Post('categories')
-  @Roles(EAdminRole.manager)
+  @RequirePermissions('b2c-fees.manage')
   @ApiOperation({
     summary: 'Criar categoria de produto',
     description:
@@ -92,7 +92,7 @@ export class AdminFeeConfigController {
   }
 
   @Patch('categories/:id')
-  @Roles(EAdminRole.manager)
+  @RequirePermissions('b2c-fees.manage')
   @ApiOperation({ summary: 'Atualizar categoria de produto' })
   @ApiParam({ name: 'id', description: 'ID da categoria' })
   @ApiResponse({ status: 200, description: 'Categoria atualizada' })
@@ -106,7 +106,7 @@ export class AdminFeeConfigController {
   }
 
   @Delete('categories/:id')
-  @Roles(EAdminRole.manager)
+  @RequirePermissions('b2c-fees.manage')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Remover categoria de produto' })
   @ApiParam({ name: 'id', description: 'ID da categoria' })
@@ -117,7 +117,7 @@ export class AdminFeeConfigController {
   }
 
   @Get('categories/:id/products')
-  @Roles(EAdminRole.viewer)
+  @RequirePermissions('b2c-fees.read')
   @ApiOperation({
     summary: 'Listar produtos de uma categoria',
     description: 'Filtro: retorna todos os produtos associados a esta categoria.',
@@ -132,7 +132,7 @@ export class AdminFeeConfigController {
   // ─── Override por Produto ─────────────────────────────────────────────────────
 
   @Patch('products/:productId')
-  @Roles(EAdminRole.manager)
+  @RequirePermissions('b2c-fees.manage')
   @ApiOperation({
     summary: 'Configurar taxas de um produto específico',
     description:
