@@ -15,6 +15,8 @@ import { AdminRetentionService } from './application/services/admin-retention.se
 import { TenantController } from './infrastructure/controllers/tenant.controller';
 import { UserManagementService } from './application/services/user-management.service';
 import { AdminUserController } from './infrastructure/controllers/admin-user.controller';
+import { GetTenantCapabilitiesUseCase } from './application/use-cases/get-tenant-capabilities.use-case';
+import { TenantCapabilitiesController } from './infrastructure/controllers/tenant-capabilities.controller';
 
 // Legacy repositories (will be replaced by DIP interfaces incrementally)
 import AdminRepository from './infrastructure/repositories/admin.repository';
@@ -69,6 +71,7 @@ import { UserTokenValidator } from './infrastructure/providers/user-token-valida
     EmailController,
     AdminPostController,
     TenantController,
+    TenantCapabilitiesController,
   ],
   providers: [
     // Application services
@@ -80,6 +83,7 @@ import { UserTokenValidator } from './infrastructure/providers/user-token-valida
     TenantRetentionService,
     AdminRetentionService,
     UserManagementService,
+    GetTenantCapabilitiesUseCase,
 
     // Token Validators (DIP implementations)
     AdminTokenValidator,
