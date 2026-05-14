@@ -578,18 +578,23 @@ model LeadQualificationMessage {
 }
 
 model Admin {
-  id                 String              @id @default(cuid()) @db.VarChar(25)
-  name               String              @db.VarChar(100)
-  email              String              @unique
-  role               EAdminRole          @default(company_admin)
-  active             Boolean             @default(true)
-  created_at         DateTime            @default(now())
-  updated_at         DateTime            @updatedAt
-  AdminCredential    AdminCredential?
-  AdminSessionToken  AdminSessionToken[]
-  AdminTenant        AdminTenant[]
-  ArticlesCreated    Article[]           @relation("ArticleCreatedBy")
-  ArticlesLastEdited Article[]           @relation("ArticleLastEditedBy")
+  id                          String              @id @default(cuid()) @db.VarChar(25)
+  name                        String              @db.VarChar(100)
+  email                       String              @unique
+  role                        EAdminRole          @default(company_admin)
+  active                      Boolean             @default(true)
+  archived_at                 DateTime?
+  deletion_requested_at       DateTime?
+  deletion_scheduled_for_at   DateTime?
+  deletion_requested_by       String?             @db.VarChar(25)
+  deletion_reason             String?             @db.VarChar(255)
+  created_at                  DateTime            @default(now())
+  updated_at                  DateTime            @updatedAt
+  AdminCredential             AdminCredential?
+  AdminSessionToken           AdminSessionToken[]
+  AdminTenant                 AdminTenant[]
+  ArticlesCreated             Article[]           @relation("ArticleCreatedBy")
+  ArticlesLastEdited          Article[]           @relation("ArticleLastEditedBy")
 }
 
 model Tenant {

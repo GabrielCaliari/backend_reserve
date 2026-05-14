@@ -20,7 +20,7 @@ import {
   UpdateTenantDTO,
 } from '../dtos/tenant-management.dto';
 
-const TENANT_DELETION_RETENTION_DAYS = 15;
+const TENANT_DELETION_RETENTION_DAYS = 7;
 
 function isTenantScopedRole(role: EAdminRole): boolean {
   return [EAdminRole.owner, EAdminRole.manager, EAdminRole.editor, EAdminRole.viewer].includes(role);
@@ -307,7 +307,7 @@ export class TenantService {
       return successResponse({
         id: tenant.id,
         active: tenant.active,
-        scheduled_for_deletion: tenant.deletion_scheduled_for_at !== null,
+        scheduled_for_deletion: !!tenant.deletion_scheduled_for_at,
         archived_at: tenant.archived_at,
         deletion_requested_at: tenant.deletion_requested_at,
         deletion_scheduled_for_at: tenant.deletion_scheduled_for_at,

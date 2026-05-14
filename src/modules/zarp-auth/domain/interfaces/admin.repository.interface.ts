@@ -20,6 +20,15 @@ export interface IAdminRepository {
     deactivate(id: string): Promise<any>;
     activate(id: string): Promise<any>;
     delete(id: string): Promise<any>;
+    scheduleDeletion(id: string, data: {
+        archived_at: Date;
+        deletion_requested_at: Date;
+        deletion_scheduled_for_at: Date;
+        deletion_requested_by: string;
+        deletion_reason: string | null;
+    }): Promise<any>;
+    restoreDeletion(id: string): Promise<any>;
+    findDueForDeletion(now: Date): Promise<any[]>;
 }
 
 export const ADMIN_REPOSITORY = Symbol('ADMIN_REPOSITORY');

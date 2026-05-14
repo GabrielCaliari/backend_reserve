@@ -1,4 +1,4 @@
-﻿import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import AuthAdminDTO, { IValidateAdminToken } from '../dtos/auth-admin.dto';
 import { CreateAdminDTO } from '../dtos/admin-management.dto';
 import {
@@ -263,6 +263,8 @@ export class AdminService {
                 email: admin.email,
                 role: normalizeAdminRole(admin.role as EAdminRole),
                 active: admin.active,
+                scheduled_for_deletion: !!admin.deletion_scheduled_for_at,
+                deletion_scheduled_for_at: admin.deletion_scheduled_for_at,
                 tenants: normalizeAdminRole(admin.role as EAdminRole) === EAdminRole.super_admin
                     ? allTenantsSlim
                     : admin.AdminTenant?.map((at: any) => ({
@@ -331,6 +333,10 @@ export class AdminService {
                 return safety.response;
             }
 
+            if (safety.admin.deletion_scheduled_for_at) {
+                return errorResponse('409:ADMIN_DELETION_ALREADY_SCHEDULED', 409);
+            }
+
             const deactivated = await this.adminRepository.deactivate(adminId);
             return successResponse({
                 id: deactivated.id,
@@ -346,6 +352,10 @@ export class AdminService {
             const admin = await this.adminRepository.selectById(adminId);
             if (!admin) {
                 return errorResponse(errorTypes._404.admin_nf, 404);
+            }
+
+            if (admin.deletion_scheduled_for_at) {
+                return errorResponse('409:ADMIN_DELETION_ALREADY_SCHEDULED_USE_RESTORE', 409);
             }
 
             const activated = await this.adminRepository.activate(adminId);
@@ -432,6 +442,8 @@ export class AdminService {
                 role: normalizeAdminRole(admin.role as EAdminRole),
                 active: admin.active,
                 tenants,
+                scheduled_for_deletion: !!admin.deletion_scheduled_for_at,
+                deletion_scheduled_for_at: admin.deletion_scheduled_for_at,
                 created_at: admin.created_at,
             });
         } catch (error) {
@@ -458,5 +470,106 @@ export class AdminService {
         } catch (error) {
             return errorResponse('500:ADMIN_NOT_DELETED', 500, error);
         }
+    }
+
+    async scheduleDeletion(adminId: string, currentAdminId: string, dto?: { reason?: string }) {
+        try {
+            if (adminId === currentAdminId) {
+                return errorResponse('400:CANNOT_DELETE_SELF', 400);
+            }
+
+            const admin = await this.adminRepository.selectById(adminId);
+            if (!admin) {
+                return errorResponse(errorTypes._404.admin_nf, 404);
+            }
+
+            if (admin.deletion_scheduled_for_at) {
+                return errorResponse(errorTypes._409.admin_deletion_already_scheduled, 409);
+            }
+
+            const safety = await this.assertSuperAdminSafety(adminId, {
+                currentAdminId,
+                delete: true,
+            });
+            if (!safety.ok) {
+                return safety.response;
+            }
+
+            const ADMIN_DELETION_RETENTION_DAYS = 7;
+            const deletionRequestedAt = new Date();
+            const deletionScheduledForAt = new Date(deletionRequestedAt);
+            deletionScheduledForAt.setDate(deletionScheduledForAt.getDate() + ADMIN_DELETION_RETENTION_DAYS);
+
+            const scheduled = await this.adminRepository.scheduleDeletion(adminId, {
+                archived_at: deletionRequestedAt,
+                deletion_requested_at: deletionRequestedAt,
+                deletion_scheduled_for_at: deletionScheduledForAt,
+                deletion_requested_by: currentAdminId,
+                deletion_reason: dto?.reason ?? null,
+            });
+
+            return successResponse({
+                id: scheduled.id,
+                active: scheduled.active,
+                archived_at: scheduled.archived_at,
+                deletion_requested_at: scheduled.deletion_requested_at,
+                deletion_scheduled_for_at: scheduled.deletion_scheduled_for_at,
+                deletion_requested_by: scheduled.deletion_requested_by,
+                deletion_reason: scheduled.deletion_reason,
+                scheduled_for_deletion: true,
+            });
+        } catch (error) {
+            return errorResponse('500:ADMIN_DELETION_NOT_SCHEDULED', 500, error);
+        }
+    }
+
+    async restoreDeletion(adminId: string) {
+        try {
+            const admin = await this.adminRepository.selectById(adminId);
+            if (!admin) {
+                return errorResponse(errorTypes._404.admin_nf, 404);
+            }
+
+            if (!admin.deletion_scheduled_for_at) {
+                return errorResponse(errorTypes._409.admin_deletion_not_scheduled, 409);
+            }
+
+            const restored = await this.adminRepository.restoreDeletion(adminId);
+            return successResponse(restored);
+        } catch (error) {
+            return errorResponse('500:ADMIN_DELETION_NOT_RESTORED', 500, error);
+        }
+    }
+
+    async getDeletionStatus(adminId: string) {
+        try {
+            const admin = await this.adminRepository.selectById(adminId);
+            if (!admin) {
+                return errorResponse(errorTypes._404.admin_nf, 404);
+            }
+
+            return successResponse({
+                id: admin.id,
+                active: admin.active,
+                scheduled_for_deletion: !!admin.deletion_scheduled_for_at,
+                archived_at: admin.archived_at,
+                deletion_requested_at: admin.deletion_requested_at,
+                deletion_scheduled_for_at: admin.deletion_scheduled_for_at,
+                deletion_requested_by: admin.deletion_requested_by,
+                deletion_reason: admin.deletion_reason,
+            });
+        } catch (error) {
+            return errorResponse('500:ADMIN_DELETION_STATUS_NOT_AVAILABLE', 500, error);
+        }
+    }
+
+    async purgeDueAdmins(now = new Date()) {
+        const dueAdmins = await this.adminRepository.findDueForDeletion(now);
+
+        for (const admin of dueAdmins) {
+            await this.adminRepository.delete(admin.id);
+        }
+
+        return dueAdmins.length;
     }
 }

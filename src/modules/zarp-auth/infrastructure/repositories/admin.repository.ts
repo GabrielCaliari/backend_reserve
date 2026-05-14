@@ -243,11 +243,71 @@ export default class AdminRepository implements IAdminRepository {
 
     async delete(id: string) {
         try {
-            await this.prisma.admin.delete({
-                where: { id },
+            await this.prisma.$transaction(async (tx) => {
+                await tx.adminTenant.deleteMany({ where: { admin_id: id } });
+                await tx.adminCredential.deleteMany({ where: { admin_id: id } });
+                await tx.adminSessionToken.deleteMany({ where: { admin_id: id } });
+                await tx.admin.delete({ where: { id } });
             });
         } catch (error) {
             throw new RepositoryException('Erro ao deletar admin.', error);
+        }
+    }
+
+    async scheduleDeletion(id: string, data: {
+        archived_at: Date;
+        deletion_requested_at: Date;
+        deletion_scheduled_for_at: Date;
+        deletion_requested_by: string;
+        deletion_reason: string | null;
+    }) {
+        try {
+            return await this.prisma.admin.update({
+                where: { id },
+                data: {
+                    active: false,
+                    archived_at: data.archived_at ?? new Date(),
+                    deletion_requested_at: data.deletion_requested_at ?? new Date(),
+                    deletion_scheduled_for_at: data.deletion_scheduled_for_at ?? null,
+                    deletion_requested_by: data.deletion_requested_by ?? null,
+                    deletion_reason: data.deletion_reason ?? null,
+                },
+            });
+        } catch (error) {
+            throw new RepositoryException('Erro ao agendar exclusao do admin.', error);
+        }
+    }
+
+    async restoreDeletion(id: string) {
+        try {
+            return await this.prisma.admin.update({
+                where: { id },
+                data: {
+                    active: true,
+                    archived_at: null,
+                    deletion_requested_at: null,
+                    deletion_scheduled_for_at: null,
+                    deletion_requested_by: null,
+                    deletion_reason: null,
+                },
+            });
+        } catch (error) {
+            throw new RepositoryException('Erro ao restaurar admin agendado para exclusao.', error);
+        }
+    }
+
+    async findDueForDeletion(now: Date) {
+        try {
+            return await this.prisma.admin.findMany({
+                where: {
+                    deletion_scheduled_for_at: {
+                        lte: now,
+                    },
+                },
+                orderBy: { deletion_scheduled_for_at: 'asc' },
+            });
+        } catch (error) {
+            throw new RepositoryException('Erro ao listar admins com exclusao vencida.', error);
         }
     }
 }

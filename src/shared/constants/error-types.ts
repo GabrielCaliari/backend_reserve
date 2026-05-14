@@ -3,6 +3,12 @@
  * Migrated from core/error-types.ts
  */
 export const errorTypes = {
+  _409: {
+    admin_deletion_already_scheduled: '409:ADMIN_DELETION_ALREADY_SCHEDULED',
+    admin_deletion_not_scheduled: '409:ADMIN_DELETION_NOT_SCHEDULED',
+    tenant_deletion_already_scheduled: '409:TENANT_DELETION_ALREADY_SCHEDULED',
+    tenant_deletion_not_scheduled: '409:TENANT_DELETION_NOT_SCHEDULED',
+  },
   _400: {
     brand_alr_ex: '400:BRAND_ALREADY_EXISTS',
     user_alr_exe: '400:USER_EMAIL_ALREADY_EXISTS',
