@@ -1,4 +1,4 @@
-﻿import { ViewCompany } from "../../../../generated/prisma/client";
+﻿﻿import { ViewCompany } from "../../../../generated/prisma/client";
 import { EBranchType, ESize, EStatus } from '../../domain/enums/company.enum';
 import { EStatus as ECompanyExportStatus } from '../../domain/enums/company-export-status.enum';
 import { Injectable } from '@nestjs/common';

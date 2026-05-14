@@ -1525,6 +1525,51 @@ model DiscountCoupon {
   @@map("discount_coupons")
 }
 
+view ViewCompany {
+  company_id                               String    @db.VarChar(25)
+  auxiliary_company_information_id         String    @db.VarChar(25)
+  cnpj                                     String?
+  branch_type                              Int?
+  business_name                            String?
+  status                                   String?
+  date_status                              DateTime?
+  code_detail_status                       String?
+  outer_city                               String?
+  coutry_code                              String?
+  main_cnae                                String?
+  secondary_cnae                           String?
+  start_date                               DateTime?
+  type_of_place                            String?
+  place                                    String?
+  house_number                             String?
+  address_complement                       String?
+  district                                 String?
+  cep                                      String?
+  uf                                       String?
+  city_code                                String?
+  ddd_1                                    String?
+  phone_1                                  String?
+  ddd_2                                    String?
+  phone_2                                  String?
+  ddd_fax                                  String?
+  fax                                      String?
+  email                                    String?
+  special_citation                         String?
+  special_citation_date                    DateTime?
+  load_update_date                         DateTime?
+  fantasy_name                             String?
+  legal_nature                             String?
+  qualification_representative_before_cnpj String?
+  social_capital                           Decimal?
+  size                                     String?
+  federative_entity                        String?
+  company_created_at                       DateTime
+  company_updated_at                       DateTime
+
+  @@unique([company_id])
+  @@map("viewcompany")
+}
+
 view pg_stat_statements_info {
   dealloc     BigInt?
   stats_reset DateTime? @db.Timestamptz(6)
