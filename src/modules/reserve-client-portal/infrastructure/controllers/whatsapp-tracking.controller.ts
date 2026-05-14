@@ -12,9 +12,8 @@ import {
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
-import { RolesGuard } from '../../../../shared/auth/guards/roles.guard';
-import { Roles } from '../../../../shared/auth/decorators/roles.decorator';
-import { EAdminRole } from '../../../reserve-auth/domain/enums/admin-role.enum';
+import { PermissionsGuard } from '../../../../shared/auth/guards/permissions.guard';
+import { RequirePermissions } from '../../../../shared/auth/decorators/require-permissions.decorator';
 import { WhatsAppTrackingService } from '../../application/services/whatsapp-tracking.service';
 import {
   CreateWhatsAppTrackingLinkDto,
@@ -22,8 +21,8 @@ import {
 } from '../../application/dtos/whatsapp-tracking-link.dto';
 
 @Controller('admin/hotel-portal/whatsapp-links')
-@UseGuards(AdminJwtGuard, RolesGuard)
-@Roles(EAdminRole.super_admin, EAdminRole.owner, EAdminRole.manager)
+@UseGuards(AdminJwtGuard, PermissionsGuard)
+@RequirePermissions('hotel-portal.whatsapp-links.manage')
 export class WhatsAppTrackingController {
   constructor(private readonly trackingService: WhatsAppTrackingService) {}
 

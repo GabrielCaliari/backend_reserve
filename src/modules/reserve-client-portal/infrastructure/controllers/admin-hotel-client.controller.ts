@@ -19,14 +19,13 @@ import { CreateClientDto } from '../../application/dtos/create-client.dto';
 import { UpdateClientDto } from '../../application/dtos/update-client.dto';
 import { InsertOtaDataDto } from '../../application/dtos/insert-ota-data.dto';
 import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
-import { RolesGuard } from '../../../../shared/auth/guards/roles.guard';
-import { Roles } from '../../../../shared/auth/decorators/roles.decorator';
+import { PermissionsGuard } from '../../../../shared/auth/guards/permissions.guard';
+import { RequirePermissions } from '../../../../shared/auth/decorators/require-permissions.decorator';
 import { CurrentAdmin, CurrentAdminPayload } from '../../../../shared/auth/decorators/current-admin.decorator';
-import { EAdminRole } from '../../../reserve-auth/domain/enums/admin-role.enum';
 
 @Controller('admin/hotel-portal/clients')
-@UseGuards(AdminJwtGuard, RolesGuard)
-@Roles(EAdminRole.super_admin, EAdminRole.owner, EAdminRole.manager)
+@UseGuards(AdminJwtGuard, PermissionsGuard)
+@RequirePermissions('hotel-portal.clients.manage')
 export class AdminHotelClientController {
   constructor(
     private readonly hotelClientService: HotelClientService,
@@ -85,7 +84,7 @@ export class AdminHotelClientController {
   }
 
   @Delete(':id')
-  @Roles(EAdminRole.super_admin)
+  @RequirePermissions('hotel-portal.clients.deactivate')
   async deactivate(@Param('id') id: string, @Res() res: Response) {
     const result = await this.hotelClientService.deactivate(id);
     return res.status(result.status).json(result.data);

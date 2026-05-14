@@ -10,15 +10,14 @@ import {
 } from '@nestjs/common';
 import { Response } from 'express';
 import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
-import { RolesGuard } from '../../../../shared/auth/guards/roles.guard';
-import { Roles } from '../../../../shared/auth/decorators/roles.decorator';
-import { EAdminRole } from '../../../reserve-auth/domain/enums/admin-role.enum';
+import { PermissionsGuard } from '../../../../shared/auth/guards/permissions.guard';
+import { RequirePermissions } from '../../../../shared/auth/decorators/require-permissions.decorator';
 import { WhatsAppService } from '../../application/services/whatsapp.service';
 import { CreateWhatsAppTemplateDto, SendWhatsAppMessageDto } from '../../application/dtos/whatsapp.dto';
 
 @Controller('admin/hotel-portal/whatsapp')
-@UseGuards(AdminJwtGuard, RolesGuard)
-@Roles(EAdminRole.super_admin, EAdminRole.owner, EAdminRole.manager)
+@UseGuards(AdminJwtGuard, PermissionsGuard)
+@RequirePermissions('hotel-portal.whatsapp.manage')
 export class WhatsAppController {
   constructor(private readonly whatsappService: WhatsAppService) {}
 

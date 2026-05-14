@@ -12,15 +12,14 @@ import { Response } from 'express';
 import { ReservationService } from '../../application/services/reservation.service';
 import { CreateReservationDto } from '../../application/dtos/reservation.dto';
 import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
-import { RolesGuard } from '../../../../shared/auth/guards/roles.guard';
-import { Roles } from '../../../../shared/auth/decorators/roles.decorator';
+import { PermissionsGuard } from '../../../../shared/auth/guards/permissions.guard';
+import { RequirePermissions } from '../../../../shared/auth/decorators/require-permissions.decorator';
 import { CurrentAdmin, CurrentAdminPayload } from '../../../../shared/auth/decorators/current-admin.decorator';
-import { EAdminRole } from '../../../reserve-auth/domain/enums/admin-role.enum';
 import { EReservationSource, EReservationStatus } from '../../domain/enums/reservation.enum';
 
 @Controller('admin/hotel-portal/reservations')
-@UseGuards(AdminJwtGuard, RolesGuard)
-@Roles(EAdminRole.super_admin, EAdminRole.owner, EAdminRole.manager)
+@UseGuards(AdminJwtGuard, PermissionsGuard)
+@RequirePermissions('hotel-portal.reservations.manage')
 export class AdminReservationsController {
   constructor(private readonly reservationService: ReservationService) {}
 

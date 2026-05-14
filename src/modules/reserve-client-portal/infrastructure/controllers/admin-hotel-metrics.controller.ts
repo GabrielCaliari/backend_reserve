@@ -10,10 +10,9 @@ import {
 } from '@nestjs/common';
 import { Response } from 'express';
 import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
-import { RolesGuard } from '../../../../shared/auth/guards/roles.guard';
-import { Roles } from '../../../../shared/auth/decorators/roles.decorator';
+import { PermissionsGuard } from '../../../../shared/auth/guards/permissions.guard';
+import { RequirePermissions } from '../../../../shared/auth/decorators/require-permissions.decorator';
 import { CurrentAdmin, CurrentAdminPayload } from '../../../../shared/auth/decorators/current-admin.decorator';
-import { EAdminRole } from '../../../reserve-auth/domain/enums/admin-role.enum';
 import { ReputationService } from '../../application/services/reputation.service';
 import { HotelKpiService } from '../../application/services/hotel-kpi.service';
 import { BookingWindowService } from '../../application/services/booking-window.service';
@@ -26,8 +25,8 @@ import { InsertRateParityDto } from '../../application/dtos/insert-rate-parity.d
 import { InsertMarketingBudgetDto } from '../../application/dtos/insert-marketing-budget.dto';
 
 @Controller('admin/hotel-portal/metrics')
-@UseGuards(AdminJwtGuard, RolesGuard)
-@Roles(EAdminRole.super_admin, EAdminRole.owner, EAdminRole.manager)
+@UseGuards(AdminJwtGuard, PermissionsGuard)
+@RequirePermissions('hotel-portal.metrics.manage')
 export class AdminHotelMetricsController {
   constructor(
     private readonly reputationService: ReputationService,

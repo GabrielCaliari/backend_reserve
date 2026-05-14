@@ -13,13 +13,12 @@ import { Response } from 'express';
 import { ReportService } from '../../application/services/report.service';
 import { CreateReportDto, PublishReportDto } from '../../application/dtos/publish-report.dto';
 import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
-import { RolesGuard } from '../../../../shared/auth/guards/roles.guard';
-import { Roles } from '../../../../shared/auth/decorators/roles.decorator';
-import { EAdminRole } from '../../../reserve-auth/domain/enums/admin-role.enum';
+import { PermissionsGuard } from '../../../../shared/auth/guards/permissions.guard';
+import { RequirePermissions } from '../../../../shared/auth/decorators/require-permissions.decorator';
 
 @Controller('admin/hotel-portal/reports')
-@UseGuards(AdminJwtGuard, RolesGuard)
-@Roles(EAdminRole.super_admin, EAdminRole.owner, EAdminRole.manager)
+@UseGuards(AdminJwtGuard, PermissionsGuard)
+@RequirePermissions('hotel-portal.reports.manage')
 export class ReportController {
   constructor(private readonly reportService: ReportService) {}
 
@@ -53,7 +52,7 @@ export class ReportController {
   }
 
   @Patch(':id/publish')
-  @Roles(EAdminRole.super_admin, EAdminRole.owner)
+  @RequirePermissions('hotel-portal.reports.publish')
   async publish(
     @Param('id') id: string,
     @Body() dto: PublishReportDto,

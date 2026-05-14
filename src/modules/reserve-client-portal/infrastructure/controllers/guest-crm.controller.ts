@@ -10,16 +10,15 @@ import {
 } from '@nestjs/common';
 import { Response } from 'express';
 import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
-import { RolesGuard } from '../../../../shared/auth/guards/roles.guard';
-import { Roles } from '../../../../shared/auth/decorators/roles.decorator';
-import { EAdminRole } from '../../../reserve-auth/domain/enums/admin-role.enum';
+import { PermissionsGuard } from '../../../../shared/auth/guards/permissions.guard';
+import { RequirePermissions } from '../../../../shared/auth/decorators/require-permissions.decorator';
 import { GuestCrmService } from '../../application/services/guest-crm.service';
 import { CreateGuestDto, CreateGuestStayDto } from '../../application/dtos/create-guest.dto';
 import { EGuestSegment } from '../../domain/enums/guest-segment.enum';
 
 @Controller('admin/hotel-portal/guests')
-@UseGuards(AdminJwtGuard, RolesGuard)
-@Roles(EAdminRole.super_admin, EAdminRole.owner, EAdminRole.manager)
+@UseGuards(AdminJwtGuard, PermissionsGuard)
+@RequirePermissions('hotel-portal.guests.manage')
 export class GuestCrmController {
   constructor(private readonly guestCrmService: GuestCrmService) {}
 
