@@ -21,6 +21,7 @@ export const errorTypes = {
     search_limit_reached: '403:SEARCH_LIMIT_REACHED',
     analysis_limit_reached: '403:ANALYSIS_LIMIT_REACHED',
     unauthorized_access: '403:UNAUTHORIZED_ACCESS',
+    insufficient_permissions_update_password: '403:INSUFFICIENT_PERMISSIONS_TO_UPDATE_PASSWORD',
   },
   _404: {
     brand_nf_user: '404:BRAND_NOT_FOUND_FOR_THIS_USER',

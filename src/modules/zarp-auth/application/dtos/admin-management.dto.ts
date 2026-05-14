@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, IsOptional, IsEnum, IsEmail } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsEnum, IsEmail, MinLength } from 'class-validator';
 import { EAdminRole } from '../../domain/enums/admin-role.enum';
 
 const adminCuidExample = 'cma1admin0001ghijklmno23p';
@@ -48,6 +48,12 @@ export class UpdateAdminDTO {
   @IsEmail()
   @IsOptional()
   email?: string;
+
+  @ApiPropertyOptional({ description: 'Administrator password (super_admin only)', example: 'Str0ng!Pass' })
+  @IsString()
+  @IsOptional()
+  @MinLength(6)
+  password?: string;
 }
 
 export class AdminResponseDTO {

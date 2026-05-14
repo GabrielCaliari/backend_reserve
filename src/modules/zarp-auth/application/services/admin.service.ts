@@ -358,11 +358,20 @@ export class AdminService {
         }
     }
 
-    async update(adminId: string, data: { name?: string; email?: string }) {
+    async update(
+        adminId: string,
+        data: { name?: string; email?: string; password?: string },
+        callerRole?: EAdminRole,
+    ) {
         try {
             const admin = await this.adminRepository.selectById(adminId);
             if (!admin) {
                 return errorResponse(errorTypes._404.admin_nf, 404);
+            }
+
+            // Only super_admin can update passwords of other admins
+            if (data.password && normalizeAdminRole(callerRole ?? EAdminRole.manager) !== EAdminRole.super_admin) {
+                return errorResponse(errorTypes._403.insufficient_permissions_update_password, 403);
             }
 
             if (data.email && data.email !== admin.email) {
@@ -372,7 +381,13 @@ export class AdminService {
                 }
             }
 
-            const updated = await this.adminRepository.update(adminId, data);
+            const { password, ...adminData } = data;
+            const updated = await this.adminRepository.update(adminId, adminData);
+
+            if (password) {
+                await this.adminCredentialRepository.updatePasswordByAdminId(adminId, password);
+            }
+
             return successResponse({
                 id: updated.id,
                 name: updated.name,

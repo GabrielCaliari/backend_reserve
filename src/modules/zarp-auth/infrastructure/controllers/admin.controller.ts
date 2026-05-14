@@ -252,7 +252,7 @@ export class AdminController {
     @ApiBearerAuth()
     @ApiOperation({ 
         summary: 'Update admin data (super_admin or manager)',
-        description: 'Updates administrator name and/or email'
+        description: 'Updates administrator name and/or email. Only super_admin can update password.'
     })
     @ApiParam({ name: 'id', type: String, description: 'Admin CUID (25-character identifier)', example: 'cma1admin0001ghijklmno23p' })
     @ApiBody({ type: UpdateAdminDTO })
@@ -273,9 +273,10 @@ export class AdminController {
     async update(
         @Param('id', ParseCuidPipe) id: string,
         @Body() data: UpdateAdminDTO,
+        @CurrentAdmin() admin: CurrentAdminPayload,
         @Res() res: Response,
     ) {
-        const result = await this.adminService.update(id, data);
+        const result = await this.adminService.update(id, data, admin.admin_role as EAdminRole | undefined);
         return res.status(result.status).json(result.data)
     }
 

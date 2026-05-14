@@ -26,6 +26,7 @@ export const ADMIN_REPOSITORY = Symbol('ADMIN_REPOSITORY');
 
 export interface IAdminCredentialRepository {
     compareHashByAdminId(value: string, adminId: string): Promise<boolean>;
+    updatePasswordByAdminId(adminId: string, password: string): Promise<void>;
 }
 
 export const ADMIN_CREDENTIAL_REPOSITORY = Symbol('ADMIN_CREDENTIAL_REPOSITORY');
