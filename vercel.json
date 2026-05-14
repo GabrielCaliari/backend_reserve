@@ -1,7 +1,3 @@
 {
-  "functions": {
-    "src/**/*.js": {
-      "includeFiles": "certs/**"
-    }
-  }
+  "includeFiles": "certs/**"
 }
