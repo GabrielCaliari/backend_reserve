@@ -11,6 +11,12 @@ export class PrismaService
   implements OnModuleInit, OnModuleDestroy
 {
   constructor() {
+    console.log(
+  'CERT EXISTS:',
+  fs.existsSync(
+    path.join(process.cwd(), 'certs', 'global-bundle.pem'),
+  ),
+);
     // Caminho do certificado SSL
     const caCert = fs.readFileSync(
       path.join(process.cwd(), "certs", "global-bundle.pem"),
