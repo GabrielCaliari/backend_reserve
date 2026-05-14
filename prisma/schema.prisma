@@ -9,7 +9,7 @@ datasource db {
 }
 
 model User {
-  id                        String                         @id @default(cuid()) @db.VarChar(25)
+  id                        String                      @id @default(cuid()) @db.VarChar(25)
   email                     String                      @unique
   name                      String                      @db.VarChar(100)
   cpf                       String                      @db.VarChar(11)
@@ -17,11 +17,10 @@ model User {
   sex                       Int?                        @default(1) @db.SmallInt
   date_of_birth             DateTime?                   @db.Date
   date_expires_in           DateTime?                   @db.Date
-  plan_id                   String @db.VarChar(25)
-  // B2C: Stripe customer ID cached to avoid duplicate customers
-  stripe_customer_id        String?                     @unique @db.VarChar(100)
+  plan_id                   String                      @db.VarChar(25)
   created_at                DateTime                    @default(now())
   updated_at                DateTime                    @updatedAt
+  stripe_customer_id        String?                     @unique @db.VarChar(100)
   Brand                     Brand[]
   BrandAlert                BrandAlert[]
   BrandAnalysis             BrandAnalysis[]
@@ -36,17 +35,17 @@ model User {
   Search                    Search[]
   Subscription              Subscription[]
   Plan                      Plan                        @relation(fields: [plan_id], references: [id])
-  Credential                UserCredential?
   UserCollectionMembership  UserCollectionMembership[]
+  Credential                UserCredential?
   UserPasswordChangeSession UserPasswordChangeSession[]
   UserSessionToken          UserSessionToken[]
-  UserProductAccess         UserProductAccess[]
   B2BPurchase               B2BPurchase[]
-  B2CCheckoutSessions       B2CCheckoutSession[] @relation("B2CCheckoutSessionUser")
+  B2CCheckoutSessions       B2CCheckoutSession[]        @relation("B2CCheckoutSessionUser")
+  UserProductAccess         UserProductAccess[]
 }
 
 model Plan {
-  id                        String              @id @default(cuid()) @db.VarChar(25)
+  id                        String           @id @default(cuid()) @db.VarChar(25)
   name                      String           @db.VarChar(100)
   slug                      String           @unique
   maximum_queries           Int
@@ -61,114 +60,22 @@ model Plan {
   User                      User[]
 }
 
-// SELECT
-//     c.id AS company_id,
-// 	a.id AS auxiliary_company_information_id,
-// 	c.cnpj,
-// 	c.branch_type,
-// 	c.business_name,
-// 	c.status,
-// 	c.date_status,
-// 	c.code_detail_status,
-// 	c.outer_city,
-// 	c.coutry_code,
-// 	c.start_date,
-// 	c.main_cnae_id,
-// 	c.type_of_place,
-// 	c.place,
-// 	c.house_number,
-// 	c.address_complement,
-// 	c.district,
-// 	c.cep,
-// 	c.uf,
-// 	c.city_code,
-// 	c.ddd_1,
-// 	c.phone_1,
-// 	c.ddd_2,
-// 	c.phone_2,
-// 	c.ddd_fax,
-// 	c.fax,
-// 	c.email,
-// 	c.special_citation,
-// 	c.special_citation_date,
-// 	c.load_update_date,
-// 	a.fantasy_name,
-// 	a.legal_nature,
-// 	a.qualification_representative_before_cnpj,
-// 	a.social_capital,
-// 	a.size,
-// 	a.federative_entity,
-// 	c.created_at AS company_created_at, 
-// 	c.updated_at AS company_updated_at
-// FROM
-//     "public"."Company" c
-// JOIN
-//     "public"."AuxiliaryCompanyInformation" a
-// ON
-//     LEFT(c.cnpj, 8) = a.cnpj
-
-view ViewCompany {
-  company_id                               String @db.VarChar(25)
-  auxiliary_company_information_id         String @db.VarChar(25)
-  cnpj                                     String?
-  branch_type                              Int?
-  business_name                            String?
-  status                                   String?
-  date_status                              DateTime?
-  code_detail_status                       String?
-  outer_city                               String?
-  coutry_code                              String?
-  main_cnae                                String?
-  secondary_cnae                           String?
-  start_date                               DateTime?
-  type_of_place                            String?
-  place                                    String?
-  house_number                             String?
-  address_complement                       String?
-  district                                 String?
-  cep                                      String?
-  uf                                       String?
-  city_code                                String?
-  ddd_1                                    String?
-  phone_1                                  String?
-  ddd_2                                    String?
-  phone_2                                  String?
-  ddd_fax                                  String?
-  fax                                      String?
-  email                                    String?
-  special_citation                         String?
-  special_citation_date                    DateTime?
-  load_update_date                         DateTime?
-  fantasy_name                             String?
-  legal_nature                             String?
-  qualification_representative_before_cnpj String?
-  social_capital                           Decimal?
-  size                                     String?
-  federative_entity                        String?
-  company_created_at                       DateTime
-  company_updated_at                       DateTime
-  // @@index([business_name, cnpj], type: )
-
-  @@unique([company_id])
-  @@map("viewcompany")
-}
-
 model PibotMessages {
-  id                String      @id @default(cuid()) @db.VarChar(25)
+  id                String   @id @default(cuid()) @db.VarChar(25)
   chat_id           String   @db.VarChar(100)
   choices           Json
   completion_tokens Int
   prompt_tokens     Int
   total_tokens      Int
   usage             Json
-  user_id           String @db.VarChar(25)
+  user_id           String   @db.VarChar(25)
   created_at        DateTime @default(now())
   updated_at        DateTime @updatedAt
   User              User     @relation(fields: [user_id], references: [id])
 }
 
 model Subscription {
-  id                     String       @id @default(cuid()) @db.VarChar(25)
+  id                     String    @id @default(cuid()) @db.VarChar(25)
   name                   String
   subscription_id        String    @unique
   customer_id            String
@@ -200,8 +107,8 @@ model Subscription {
   event_history          Json?
   created_at             DateTime  @default(now())
   updated_at             DateTime  @updatedAt
-  plan_id                String @db.VarChar(25)
-  user_id                String @db.VarChar(25)
+  plan_id                String    @db.VarChar(25)
+  user_id                String    @db.VarChar(25)
   Plan                   Plan      @relation(fields: [plan_id], references: [id])
   User                   User      @relation(fields: [user_id], references: [id])
 
@@ -210,7 +117,7 @@ model Subscription {
 }
 
 model AdditionalTokenPack {
-  id          String      @id @default(cuid()) @db.VarChar(25)
+  id          String   @id @default(cuid()) @db.VarChar(25)
   slug        String
   external_id String
   created_at  DateTime @default(now())
@@ -218,7 +125,7 @@ model AdditionalTokenPack {
 }
 
 model Order {
-  id                   String      @id @default(cuid()) @db.VarChar(25)
+  id                   String   @id @default(cuid()) @db.VarChar(25)
   amount               Int
   currency             String
   product_name         String
@@ -229,14 +136,14 @@ model Order {
   customer_id          String
   created_at           DateTime @default(now())
   updated_at           DateTime @updatedAt
-  user_id              String @db.VarChar(25)
+  user_id              String   @db.VarChar(25)
   User                 User     @relation(fields: [user_id], references: [id])
 
   @@index([customer_id])
 }
 
 model MonitoringPlan {
-  id                   String       @id @default(cuid()) @db.VarChar(25)
+  id                   String    @id @default(cuid()) @db.VarChar(25)
   plan_amount          Decimal   @db.Money
   status               Int       @db.SmallInt
   checkout_status      String
@@ -251,10 +158,10 @@ model MonitoringPlan {
   canceled_at          DateTime?
   ended_at             DateTime?
   billing_cycle_anchor DateTime
-  plan_id              String? @db.VarChar(25)
-  brand_id             String? @db.VarChar(25)
+  plan_id              String?   @db.VarChar(25)
+  brand_id             String?   @db.VarChar(25)
   subscription_id      String    @unique
-  user_id              String @db.VarChar(25)
+  user_id              String    @db.VarChar(25)
   created_at           DateTime  @default(now())
   updated_at           DateTime  @updatedAt
   Brand                Brand?    @relation(fields: [brand_id], references: [id])
@@ -263,18 +170,18 @@ model MonitoringPlan {
 }
 
 model UserSessionToken {
-  id         String      @id @default(cuid()) @db.VarChar(25)
+  id         String   @id @default(cuid()) @db.VarChar(25)
   hash_token String
   salt       String
-  user_id    String @db.VarChar(25)
+  user_id    String   @db.VarChar(25)
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
   User       User     @relation(fields: [user_id], references: [id])
 }
 
 model UserCredential {
-  id         String      @id @default(cuid()) @db.VarChar(25)
-  user_id    String @db.VarChar(25)      @unique
+  id         String   @id @default(cuid()) @db.VarChar(25)
+  user_id    String   @unique @db.VarChar(25)
   hash       String
   salt       String
   created_at DateTime @default(now())
@@ -283,8 +190,8 @@ model UserCredential {
 }
 
 model UserCredentialHistory {
-  id         String      @id @default(cuid()) @db.VarChar(25)
-  user_id    String @db.VarChar(25)
+  id         String   @id @default(cuid()) @db.VarChar(25)
+  user_id    String   @db.VarChar(25)
   hash       String
   salt       String
   created_at DateTime @default(now())
@@ -292,7 +199,7 @@ model UserCredentialHistory {
 }
 
 model UserPasswordChangeSession {
-  id         String       @id @default(cuid()) @db.VarChar(25)
+  id         String    @id @default(cuid()) @db.VarChar(25)
   slug       String    @db.VarChar(64)
   status     Int       @db.SmallInt
   hash_token String
@@ -302,14 +209,14 @@ model UserPasswordChangeSession {
   device_ip  String    @db.VarChar(16)
   expires_in DateTime
   expired_at DateTime?
-  user_id    String @db.VarChar(25)
+  user_id    String    @db.VarChar(25)
   created_at DateTime  @default(now())
   updated_at DateTime  @updatedAt
   User       User      @relation(fields: [user_id], references: [id])
 }
 
 model Company {
-  id                    String       @id @default(cuid()) @db.VarChar(25)
+  id                    String    @id @default(cuid()) @db.VarChar(25)
   cnpj                  String    @unique @db.VarChar(14)
   branch_type           Int       @db.SmallInt
   business_name         String?   @db.VarChar(255)
@@ -346,7 +253,7 @@ model Company {
 }
 
 model AuxiliaryCompanyInformation {
-  id                                       String      @id @default(cuid()) @db.VarChar(25)
+  id                                       String   @id @default(cuid()) @db.VarChar(25)
   cnpj                                     String   @unique @db.VarChar(14)
   fantasy_name                             String?  @db.VarChar(150)
   legal_nature                             String?  @db.VarChar(4)
@@ -359,31 +266,31 @@ model AuxiliaryCompanyInformation {
 }
 
 model Search {
-  id         String      @id @default(cuid()) @db.VarChar(25)
+  id         String   @id @default(cuid()) @db.VarChar(25)
   amount     Int
   limit      Int      @db.SmallInt
   hash       String   @unique @db.VarChar(100)
   filters    Json
-  user_id    String @db.VarChar(25)
+  user_id    String   @db.VarChar(25)
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
   User       User     @relation(fields: [user_id], references: [id])
 }
 
 model TaxRegime {
-  id               String      @id @default(cuid()) @db.VarChar(25)
+  id               String   @id @default(cuid()) @db.VarChar(25)
   cnpj             String   @db.VarChar(14)
   year             DateTime @db.Date
   scp_cnpj         String   @db.VarChar(115)
   type_of_taxation Int      @db.SmallInt
   taxation         String   @db.VarChar(115)
-  company_id       String? @db.VarChar(25)
+  company_id       String?  @db.VarChar(25)
   created_at       DateTime @default(now())
   updated_at       DateTime @updatedAt
 }
 
 model Partner {
-  id                           String       @id @default(cuid()) @db.VarChar(25)
+  id                           String    @id @default(cuid()) @db.VarChar(25)
   cnpj                         String    @db.VarChar(14)
   partner_type                 String    @db.VarChar(2)
   name                         String?   @db.VarChar(150)
@@ -394,18 +301,18 @@ model Partner {
   cpf_representative           String?   @db.VarChar(11)
   name_representative          String?   @db.VarChar(150)
   representative_qualification String?   @db.VarChar(2)
-  company_id                   String? @db.VarChar(25)
+  company_id                   String?   @db.VarChar(25)
   created_at                   DateTime  @default(now())
   updated_at                   DateTime  @updatedAt
 }
 
 model Brand {
-  id                String                 @id @default(cuid()) @db.VarChar(25)
+  id                String              @id @default(cuid()) @db.VarChar(25)
   name              String
   identifier        String?             @db.VarChar(14)
   email             String
   phone_number      String
-  user_id           String @db.VarChar(25)
+  user_id           String              @db.VarChar(25)
   inpi_number       String?             @db.VarChar(30)
   created_at        DateTime            @default(now())
   updated_at        DateTime            @updatedAt
@@ -417,7 +324,7 @@ model Brand {
 }
 
 model Cnae {
-  id         String      @id @default(cuid()) @db.VarChar(25)
+  id         String   @id @default(cuid()) @db.VarChar(25)
   code       String   @db.VarChar(11)
   name       String   @db.VarChar(255)
   created_at DateTime @default(now())
@@ -425,7 +332,7 @@ model Cnae {
 }
 
 model Journal {
-  id         String      @id @default(cuid()) @db.VarChar(25)
+  id         String   @id @default(cuid()) @db.VarChar(25)
   name       String   @unique
   extension  String   @db.VarChar(10)
   size       String
@@ -435,7 +342,7 @@ model Journal {
 }
 
 model JournalToFetch {
-  id           String            @id @default(cuid()) @db.VarChar(25)
+  id           String         @id @default(cuid()) @db.VarChar(25)
   zip_name     String         @unique @db.VarChar(100)
   name         String         @db.VarChar(100)
   searched     Boolean        @default(false)
@@ -446,7 +353,7 @@ model JournalToFetch {
 }
 
 model BrandAlert {
-  id                   String             @id @default(cuid()) @db.VarChar(25)
+  id                   String          @id @default(cuid()) @db.VarChar(25)
   brand                String?
   deposit_date         DateTime?
   conception_date      DateTime?
@@ -464,10 +371,10 @@ model BrandAlert {
   titular              Json
   despacho             Json
   sobrestador          Json
-  brand_id             String @db.VarChar(25)
-  brand_monitoring_id  String @db.VarChar(25)
-  user_id              String @db.VarChar(25)
-  jornal_to_fetch_id   String @db.VarChar(25)
+  brand_id             String          @db.VarChar(25)
+  brand_monitoring_id  String          @db.VarChar(25)
+  user_id              String          @db.VarChar(25)
+  jornal_to_fetch_id   String          @db.VarChar(25)
   created_at           DateTime        @default(now())
   updated_at           DateTime        @updatedAt
   Brand                Brand           @relation(fields: [brand_id], references: [id])
@@ -477,13 +384,13 @@ model BrandAlert {
 }
 
 model BrandMonitoring {
-  id                      String                 @id @default(cuid()) @db.VarChar(25)
+  id                      String              @id @default(cuid()) @db.VarChar(25)
   processed_last_analysis Int                 @default(0)
   total_processed         Int                 @default(0)
   triggered_notifications Int                 @default(0)
   status                  Int                 @db.SmallInt
-  user_id                 String @db.VarChar(25)
-  brand_id                String @db.VarChar(25)
+  user_id                 String              @db.VarChar(25)
+  brand_id                String              @db.VarChar(25)
   inpi_number             String?             @db.VarChar(30)
   last_magazine_searched  String?             @db.VarChar(20)
   last_movement           DateTime?
@@ -498,7 +405,7 @@ model BrandMonitoring {
 }
 
 model JournalAlert {
-  id                   String            @id @default(cuid()) @db.VarChar(25)
+  id                   String         @id @default(cuid()) @db.VarChar(25)
   brand                String?
   deposit_date         DateTime?
   conception_date      DateTime?
@@ -516,7 +423,7 @@ model JournalAlert {
   titular              Json
   despacho             Json
   sobrestador          Json
-  jornal_to_fetch_id   String @db.VarChar(25)
+  jornal_to_fetch_id   String         @db.VarChar(25)
   created_at           DateTime       @default(now())
   updated_at           DateTime       @updatedAt
   Journal_to_fetch     JournalToFetch @relation(fields: [jornal_to_fetch_id], references: [id])
@@ -525,7 +432,7 @@ model JournalAlert {
 }
 
 model BrandAnalysis {
-  id                   String                    @id @default(cuid()) @db.VarChar(25)
+  id                   String                 @id @default(cuid()) @db.VarChar(25)
   user_message         Json
   response             Json
   json_data_response   Json
@@ -534,7 +441,7 @@ model BrandAnalysis {
   brand                String                 @db.VarChar(255)
   niche                String                 @db.VarChar(155)
   description          String                 @db.VarChar(255)
-  user_id              String @db.VarChar(25)
+  user_id              String                 @db.VarChar(25)
   created_at           DateTime               @default(now())
   updated_at           DateTime               @updatedAt
   User                 User                   @relation(fields: [user_id], references: [id])
@@ -545,23 +452,23 @@ model BrandAnalysis {
 }
 
 model BrandAnalysisRequest {
-  id                      String                @id @default(cuid()) @db.VarChar(25)
+  id                      String             @id @default(cuid()) @db.VarChar(25)
   valid                   Boolean
-  brand_analysis_id       String? @db.VarChar(25)
-  user_id                 String @db.VarChar(25)
+  brand_analysis_id       String?            @db.VarChar(25)
+  user_id                 String             @db.VarChar(25)
   created_at              DateTime           @default(now())
   updated_at              DateTime           @updatedAt
-  brand_analysis_token_id String @db.VarChar(25)
+  brand_analysis_token_id String             @db.VarChar(25)
   Brand_analysis          BrandAnalysis?     @relation(fields: [brand_analysis_id], references: [id])
   Brand_analysis_token    BrandAnalysisToken @relation(fields: [brand_analysis_token_id], references: [id])
   User                    User               @relation(fields: [user_id], references: [id])
 }
 
 model BrandAnalysisToken {
-  id                   String                    @id @default(cuid()) @db.VarChar(25)
+  id                   String                 @id @default(cuid()) @db.VarChar(25)
   status               Int                    @db.SmallInt
-  brand_analysis_id    String? @db.VarChar(25)
-  user_id              String @db.VarChar(25)
+  brand_analysis_id    String?                @db.VarChar(25)
+  user_id              String                 @db.VarChar(25)
   created_at           DateTime               @default(now())
   updated_at           DateTime               @updatedAt
   BrandAnalysisRequest BrandAnalysisRequest[]
@@ -570,10 +477,10 @@ model BrandAnalysisToken {
 }
 
 model BrandNotification {
-  id                  String             @id @default(cuid()) @db.VarChar(25)
-  brand_id            String @db.VarChar(25)
-  user_id             String @db.VarChar(25)
-  brand_monitoring_id String @db.VarChar(25)
+  id                  String          @id @default(cuid()) @db.VarChar(25)
+  brand_id            String          @db.VarChar(25)
+  user_id             String          @db.VarChar(25)
+  brand_monitoring_id String          @db.VarChar(25)
   created_at          DateTime        @default(now())
   updated_at          DateTime        @updatedAt
   Brand               Brand           @relation(fields: [brand_id], references: [id])
@@ -582,7 +489,7 @@ model BrandNotification {
 }
 
 model CompanyExport {
-  id             String       @id @default(cuid()) @db.VarChar(25)
+  id             String    @id @default(cuid()) @db.VarChar(25)
   total_exported Int
   company_count  Int
   status         Int       @db.SmallInt
@@ -591,14 +498,14 @@ model CompanyExport {
   public_link    String?
   deletion_date  DateTime?
   filters        Json
-  user_id        String @db.VarChar(25)
+  user_id        String    @db.VarChar(25)
   created_at     DateTime  @default(now())
   updated_at     DateTime  @updatedAt
   User           User      @relation(fields: [user_id], references: [id])
 }
 
 model PublicBrandSearch {
-  id         String      @id @default(cuid()) @db.VarChar(25)
+  id         String   @id @default(cuid()) @db.VarChar(25)
   name       String
   email      String
   brand      String
@@ -608,7 +515,7 @@ model PublicBrandSearch {
 }
 
 model APIToken {
-  id                 String      @id @default(cuid()) @db.VarChar(25)
+  id                 String   @id @default(cuid()) @db.VarChar(25)
   api_identifier     String   @unique @db.VarChar(25)
   hash_id_token      String
   hash_acess_token   String
@@ -631,19 +538,19 @@ model Lead {
   description    String?
   data           Json?
   status         Int?             @default(1) @db.SmallInt
-  collection_id  String? @db.VarChar(25)
-  tenant_id      String? @db.VarChar(25)
+  collection_id  String?          @db.VarChar(25)
+  tenant_id      String?          @db.VarChar(25)
   ip_address     String?          @db.VarChar(45)
-  user_agent     String?          @db.Text
+  user_agent     String?
   country        String?          @db.VarChar(100)
   city           String?          @db.VarChar(100)
   region         String?          @db.VarChar(100)
   created_at     DateTime         @default(now())
   updated_at     DateTime         @updatedAt
+  Appointments   Appointment[]
   LeadCollection LeadCollection?  @relation(fields: [collection_id], references: [id])
   Tenant         Tenant?          @relation(fields: [tenant_id], references: [id])
   LeadAttachment LeadAttachment[]
-  Appointments   Appointment[]
 
   @@index([tenant_id])
   @@index([country])
@@ -652,7 +559,7 @@ model Lead {
 }
 
 model LeadQualificationMessage {
-  id                 String      @id @default(cuid()) @db.VarChar(25)
+  id                 String   @id @default(cuid()) @db.VarChar(25)
   analyzed           Boolean  @default(false)
   temperature        Int?     @db.SmallInt
   prompt_token       Int
@@ -670,13 +577,1021 @@ model LeadQualificationMessage {
   updated_at         DateTime @updatedAt
 }
 
+model Admin {
+  id                 String              @id @default(cuid()) @db.VarChar(25)
+  name               String              @db.VarChar(100)
+  email              String              @unique
+  role               EAdminRole          @default(company_admin)
+  active             Boolean             @default(true)
+  created_at         DateTime            @default(now())
+  updated_at         DateTime            @updatedAt
+  AdminCredential    AdminCredential?
+  AdminSessionToken  AdminSessionToken[]
+  AdminTenant        AdminTenant[]
+  ArticlesCreated    Article[]           @relation("ArticleCreatedBy")
+  ArticlesLastEdited Article[]           @relation("ArticleLastEditedBy")
+}
+
+model Tenant {
+  id                        String                     @id @default(cuid()) @db.VarChar(25)
+  name                      String                     @db.VarChar(100)
+  slug                      String                     @unique @db.VarChar(50)
+  domain                    String?                    @db.VarChar(255)
+  active                    Boolean                    @default(true)
+  created_at                DateTime                   @default(now())
+  updated_at                DateTime                   @updatedAt
+  archived_at               DateTime?
+  deletion_requested_at     DateTime?
+  deletion_scheduled_for_at DateTime?
+  deletion_requested_by     String?                    @db.VarChar(25)
+  deletion_reason           String?                    @db.VarChar(255)
+  stripe_customer_id        String?                    @db.VarChar(255)
+  subscription_status       String                     @default("none") @db.VarChar(50)
+  AdminTenant               AdminTenant[]
+  Appointments              Appointment[]
+  AppointmentBlockedPeriods AppointmentBlockedPeriod[]
+  AppointmentScheduleConfig AppointmentScheduleConfig?
+  Author                    Author[]
+  Blog                      Blog[]
+  leads                     Lead[]
+  LeadCollection            LeadCollection[]
+  UserCollection            UserCollection[]
+  B2BFeeConfig              B2BFeeConfig?              @relation("B2BFeeConfig")
+  B2BProducts               B2BProduct[]
+  B2BPurchases              B2BPurchase[]
+  B2CCheckoutSessions       B2CCheckoutSession[]       @relation("B2CCheckoutSessions")
+  B2CFeeConfig              B2CFeeConfig?              @relation("B2CFeeConfig")
+  B2CProductCategories      ProductCategory[]          @relation("B2CProductCategories")
+  B2CProductPrices          ProductPrice[]             @relation("B2CProductPrices")
+  B2CProducts               Product[]
+  B2CUserProductAccess      UserProductAccess[]        @relation("B2CUserProductAccess")
+  discountCoupons           DiscountCoupon[]           @relation("DiscountCoupons")
+  StatsIntegration          StatsIntegration[]
+  StripeSubscription        StripeSubscription?
+  TenantBillingConfig       TenantBillingConfig?
+
+  @@index([stripe_customer_id])
+  @@index([subscription_status])
+}
+
+model LeadCollection {
+  id              String                @id @default(cuid()) @db.VarChar(25)
+  name            String                @db.VarChar(150)
+  slug            String                @db.VarChar(100)
+  source          String                @db.VarChar(100)
+  source_type     String?               @db.VarChar(50)
+  source_channel  String?               @db.VarChar(50)
+  source_campaign String?               @db.VarChar(100)
+  access_mode     ECollectionAccessMode @default(public)
+  allowed_domains String[]              @default([])
+  secret_key_hash String?
+  secret_key_salt String?
+  active          Boolean               @default(true)
+  metadata        Json?
+  tenant_id       String                @db.VarChar(25)
+  created_at      DateTime              @default(now())
+  updated_at      DateTime              @updatedAt
+  Lead            Lead[]
+  Tenant          Tenant                @relation(fields: [tenant_id], references: [id])
+
+  @@unique([slug, tenant_id])
+  @@index([tenant_id])
+}
+
+model UserCollection {
+  id          String                     @id @default(cuid()) @db.VarChar(25)
+  name        String                     @db.VarChar(150)
+  slug        String                     @db.VarChar(100)
+  description String?                    @db.VarChar(255)
+  active      Boolean                    @default(true)
+  tenant_id   String                     @db.VarChar(25)
+  created_at  DateTime                   @default(now())
+  updated_at  DateTime                   @updatedAt
+  Tenant      Tenant                     @relation(fields: [tenant_id], references: [id])
+  Memberships UserCollectionMembership[]
+
+  @@unique([tenant_id, slug])
+  @@index([tenant_id])
+}
+
+model UserCollectionMembership {
+  id            String              @id @default(cuid()) @db.VarChar(25)
+  user_id       String              @db.VarChar(25)
+  collection_id String              @db.VarChar(25)
+  role          EUserCollectionRole @default(member)
+  active        Boolean             @default(true)
+  created_at    DateTime            @default(now())
+  updated_at    DateTime            @updatedAt
+  Collection    UserCollection      @relation(fields: [collection_id], references: [id], onDelete: Cascade)
+  User          User                @relation(fields: [user_id], references: [id])
+
+  @@unique([user_id, collection_id])
+  @@index([user_id])
+  @@index([collection_id])
+}
+
+model AdminTenant {
+  id         String     @id @default(cuid()) @db.VarChar(25)
+  admin_id   String     @db.VarChar(25)
+  tenant_id  String     @db.VarChar(25)
+  role       EAdminRole @default(manager)
+  active     Boolean    @default(true)
+  created_at DateTime   @default(now())
+  updated_at DateTime   @updatedAt
+  Admin      Admin      @relation(fields: [admin_id], references: [id])
+  Tenant     Tenant     @relation(fields: [tenant_id], references: [id])
+
+  @@unique([admin_id, tenant_id])
+}
+
+model Blog {
+  id                  String           @id @default(cuid()) @db.VarChar(25)
+  name                String           @db.VarChar(150)
+  description         String?
+  secret_key_hash     String
+  secret_key_salt     String
+  tenant_id           String           @db.VarChar(25)
+  active              Boolean          @default(true)
+  created_at          DateTime         @default(now())
+  updated_at          DateTime         @updatedAt
+  media_collection_id String?          @db.VarChar(25)
+  Article             Article[]
+  MediaCollection     MediaCollection? @relation(fields: [media_collection_id], references: [id])
+  Tenant              Tenant           @relation(fields: [tenant_id], references: [id])
+
+  @@unique([name, tenant_id])
+  @@index([tenant_id])
+  @@index([media_collection_id])
+}
+
+model Article {
+  id                String         @id @default(cuid()) @db.VarChar(25)
+  display_title     String         @db.VarChar(255)
+  meta_title        String         @db.VarChar(60)
+  meta_description  String?        @db.VarChar(160)
+  focus_keyword     String?        @db.VarChar(100)
+  content           String
+  slug              String         @db.VarChar(255)
+  status            EArticleStatus @default(draft)
+  published_at      DateTime?
+  cover_image_id    String?        @db.VarChar(25)
+  author_id         String?        @db.VarChar(25)
+  blog_id           String         @db.VarChar(25)
+  created_by        String?        @db.VarChar(25)
+  last_edited_by    String?        @db.VarChar(25)
+  created_at        DateTime       @default(now())
+  updated_at        DateTime       @updatedAt
+  language          String         @default("en_us") @db.VarChar(10)
+  Author            Author?        @relation(fields: [author_id], references: [id])
+  Blog              Blog           @relation(fields: [blog_id], references: [id], onDelete: Cascade)
+  CoverImage        MediaAsset?    @relation("ArticleCoverImage", fields: [cover_image_id], references: [id])
+  CreatedByAdmin    Admin?         @relation("ArticleCreatedBy", fields: [created_by], references: [id])
+  LastEditedByAdmin Admin?         @relation("ArticleLastEditedBy", fields: [last_edited_by], references: [id])
+  ArticleImage      ArticleImage[]
+
+  @@unique([slug, blog_id])
+  @@index([blog_id, status, published_at])
+  @@index([author_id])
+  @@index([created_by])
+  @@index([last_edited_by])
+}
+
+model Author {
+  id         String      @id @default(cuid()) @db.VarChar(25)
+  first_name String      @db.VarChar(100)
+  last_name  String      @db.VarChar(100)
+  biography  String?
+  avatar_id  String?     @db.VarChar(25)
+  tenant_id  String      @db.VarChar(25)
+  active     Boolean     @default(true)
+  created_at DateTime    @default(now())
+  updated_at DateTime    @updatedAt
+  Article    Article[]
+  Avatar     MediaAsset? @relation("AuthorAvatar", fields: [avatar_id], references: [id])
+  Tenant     Tenant      @relation(fields: [tenant_id], references: [id])
+
+  @@index([tenant_id])
+  @@index([active])
+}
+
+model ArticleImage {
+  id              String   @id @default(cuid()) @db.VarChar(25)
+  url             String
+  storage_key     String
+  alt_text        String?  @db.VarChar(255)
+  display_order   Int      @default(0)
+  file_size       Int
+  original_format String   @db.VarChar(10)
+  article_id      String   @db.VarChar(25)
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+  Article         Article  @relation(fields: [article_id], references: [id], onDelete: Cascade)
+
+  @@index([article_id, display_order])
+  @@map("article_images_deprecated")
+}
+
+model AdminSessionToken {
+  id         String   @id @default(cuid()) @db.VarChar(25)
+  hash_token String
+  salt       String
+  admin_id   String   @db.VarChar(25)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  Admin      Admin    @relation(fields: [admin_id], references: [id])
+}
+
+model AdminCredential {
+  id         String   @id @default(cuid()) @db.VarChar(25)
+  admin_id   String   @unique @db.VarChar(25)
+  hash       String
+  salt       String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  Admin      Admin    @relation(fields: [admin_id], references: [id])
+}
+
+model SMSNotification {
+  id                   String                 @id @default(cuid()) @db.VarChar(25)
+  webhook              String                 @unique @db.VarChar(255)
+  name                 String
+  total_notifications  Int                    @db.SmallInt
+  created_at           DateTime               @default(now())
+  updated_at           DateTime               @updatedAt
+  SMSNotificationEvent SMSNotificationEvent[]
+}
+
+model SMSNotificationEvent {
+  id                        String          @id @default(cuid()) @db.VarChar(25)
+  message                   String          @db.VarChar(160)
+  destination_number        String          @db.VarChar(18)
+  sender_number             String          @db.VarChar(18)
+  destination_country       Int             @db.SmallInt
+  sms_provider              Int             @db.SmallInt
+  payload_provider_response Json?
+  payload_message           Json?
+  status                    Int             @db.SmallInt
+  sms_notification_id       String          @db.VarChar(25)
+  created_at                DateTime        @default(now())
+  updated_at                DateTime        @updatedAt
+  SMSNotification           SMSNotification @relation(fields: [sms_notification_id], references: [id])
+}
+
+model Config {
+  id         String   @id @default(cuid()) @db.VarChar(25)
+  name       String   @unique
+  value      String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+model EmailCampaign {
+  id                  String          @id @default(cuid()) @db.VarChar(25)
+  name                String
+  total_leads         Int
+  open_rate           Int
+  click_rate          Int
+  campaign_batch_size Int?
+  uploaded_leads      Boolean         @default(false)
+  copy_variation_type Int?            @db.SmallInt
+  funnel_campaign     Boolean         @default(false)
+  main_email_id       String?         @db.VarChar(25)
+  status              Int             @db.SmallInt
+  started_at          DateTime?
+  finished_at         DateTime?
+  smtp_server_id      String          @db.VarChar(25)
+  created_at          DateTime        @default(now())
+  updated_at          DateTime        @updatedAt
+  CampaignBatch       CampaignBatch[]
+  main_email          Email?          @relation(fields: [main_email_id], references: [id])
+  smtp_server         SMTPServer      @relation(fields: [smtp_server_id], references: [id])
+  EmailLead           EmailLead[]
+}
+
+model Email {
+  id                String          @id @default(cuid()) @db.VarChar(25)
+  type              Int             @db.SmallInt
+  name              String
+  html_content      String
+  md_content        String
+  used_ai           Boolean
+  from_name         String          @db.VarChar(255)
+  edited            Boolean         @default(false)
+  subject           String          @db.VarChar(255)
+  pre_header        String?         @db.VarChar(255)
+  use_header        Boolean         @default(false)
+  use_footer        Boolean         @default(false)
+  tracking_image    String?
+  prompt_tokens     Int?
+  completion_tokens Int?
+  total_tokens      Int?
+  created_at        DateTime        @default(now())
+  updated_at        DateTime        @updatedAt
+  CampaignBatch     CampaignBatch[]
+  Delivery          Delivery[]
+  EmailCampaign     EmailCampaign[]
+}
+
+model Delivery {
+  id                   String          @id @default(cuid()) @db.VarChar(25)
+  email_lead_id        String          @db.VarChar(25)
+  campaign_batch_id    String          @db.VarChar(25)
+  email_id             String          @db.VarChar(25)
+  server_response      Json?
+  send_date            DateTime?
+  server_response_date DateTime?
+  last_open_date       DateTime?
+  last_click_date      DateTime?
+  clicked              Boolean         @default(false)
+  opened               Boolean         @default(false)
+  tracking_code        String?
+  email_provider       String
+  email_sent_to        String
+  status               Int             @db.SmallInt
+  unsubscribe          Boolean         @default(false)
+  unsubscribe_date     DateTime?
+  created_at           DateTime        @default(now())
+  updated_at           DateTime        @updatedAt
+  ClickTracking        ClickTracking[]
+  campaign_batch       CampaignBatch   @relation(fields: [campaign_batch_id], references: [id])
+  email                Email           @relation(fields: [email_id], references: [id])
+  email_lead           EmailLead       @relation(fields: [email_lead_id], references: [id])
+  OpenTracking         OpenTracking[]
+}
+
+model OpenTracking {
+  id                String   @id @default(cuid()) @db.VarChar(25)
+  delivery_id       String   @db.VarChar(25)
+  bot_chance        Int      @db.SmallInt
+  open_date         DateTime
+  request_open_json Json?
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
+  delivery          Delivery @relation(fields: [delivery_id], references: [id])
+}
+
+model ClickTracking {
+  id                 String   @id @default(cuid()) @db.VarChar(25)
+  delivery_id        String   @db.VarChar(25)
+  bot_chance         Int      @db.SmallInt
+  link_clicked       String
+  link_clicked_date  DateTime
+  request_click_json Json?
+  created_at         DateTime @default(now())
+  updated_at         DateTime @updatedAt
+  delivery           Delivery @relation(fields: [delivery_id], references: [id])
+}
+
+model EmailLead {
+  id                String        @id @default(cuid()) @db.VarChar(25)
+  email             String
+  email_campaign_id String        @db.VarChar(25)
+  status            Int           @db.SmallInt
+  created_at        DateTime      @default(now())
+  updated_at        DateTime      @updatedAt
+  Delivery          Delivery[]
+  EmailCampaign     EmailCampaign @relation(fields: [email_campaign_id], references: [id])
+}
+
+model CampaignBatch {
+  id                String        @id @default(cuid()) @db.VarChar(25)
+  total_leads       Int
+  un_open_rate      Int           @default(0)
+  un_click_rate     Int           @default(0)
+  un_unsubscribe    Int           @default(0)
+  un_success_rate   Int?
+  un_failed_rate    Int?
+  email_campaign_id String        @db.VarChar(25)
+  status            Int           @db.SmallInt
+  email_id          String?       @db.VarChar(25)
+  started_at        DateTime?
+  finished_at       DateTime?
+  created_at        DateTime      @default(now())
+  updated_at        DateTime      @updatedAt
+  email_campaign    EmailCampaign @relation(fields: [email_campaign_id], references: [id])
+  email             Email?        @relation(fields: [email_id], references: [id])
+  Delivery          Delivery[]
+}
+
+model SMTPServer {
+  id                 String          @id @default(cuid()) @db.VarChar(25)
+  name               String          @db.VarChar(255)
+  email              String          @db.VarChar(255)
+  domain             String          @db.VarChar(255)
+  host               String?         @db.VarChar(255)
+  port               String?         @db.VarChar(255)
+  username           String?         @db.VarChar(255)
+  hash_password      String?
+  hash_access_token  String?
+  hash_private_token String?
+  region             String?         @db.VarChar(255)
+  provider           Int             @db.SmallInt
+  default            Boolean         @default(false)
+  created_at         DateTime        @default(now())
+  updated_at         DateTime        @updatedAt
+  EmailCampaign      EmailCampaign[]
+}
+
+model MediaCollection {
+  id                 String       @id @default(cuid()) @db.VarChar(25)
+  name               String       @db.VarChar(100)
+  slug               String       @db.VarChar(100)
+  description        String?
+  type               String       @db.VarChar(20)
+  max_file_size      Int?
+  allowed_mime_types String?
+  max_items          Int?
+  tenant_id          String       @db.VarChar(25)
+  created_at         DateTime     @default(now())
+  updated_at         DateTime     @updatedAt
+  blogs              Blog[]
+  assets             MediaAsset[]
+
+  @@unique([tenant_id, slug])
+  @@index([tenant_id])
+  @@map("media_collections")
+}
+
+model MediaAsset {
+  id                 String               @id @default(cuid()) @db.VarChar(25)
+  url                String               @db.VarChar(500)
+  storage_key        String               @db.VarChar(500)
+  filename           String               @db.VarChar(255)
+  mime_type          String               @db.VarChar(100)
+  file_size          Int
+  width              Int?
+  height             Int?
+  alt_text           String?              @db.VarChar(255)
+  metadata           Json?
+  status             String               @default("ready") @db.VarChar(20)
+  collection_id      String               @db.VarChar(25)
+  tenant_id          String               @db.VarChar(25)
+  created_by         String               @db.VarChar(25)
+  created_at         DateTime             @default(now())
+  updated_at         DateTime             @updatedAt
+  ArticleCoverImages Article[]            @relation("ArticleCoverImage")
+  AuthorAvatars      Author[]             @relation("AuthorAvatar")
+  LeadAttachment     LeadAttachment[]
+  relations          MediaAssetRelation[]
+  collection         MediaCollection      @relation(fields: [collection_id], references: [id], onDelete: Cascade)
+
+  @@index([collection_id])
+  @@index([tenant_id])
+  @@index([created_by])
+  @@index([status])
+  @@map("media_assets")
+}
+
+model MediaAssetRelation {
+  id             String     @id @default(cuid()) @db.VarChar(25)
+  asset_id       String     @db.VarChar(25)
+  entity_type    String     @db.VarChar(50)
+  entity_id      String     @db.VarChar(50)
+  entity_id_type String     @db.VarChar(10)
+  relation_type  String     @db.VarChar(50)
+  display_order  Int?
+  metadata       Json?
+  created_at     DateTime   @default(now())
+  asset          MediaAsset @relation(fields: [asset_id], references: [id], onDelete: Cascade)
+
+  @@unique([asset_id, entity_type, entity_id, relation_type])
+  @@index([entity_type, entity_id])
+  @@index([asset_id])
+  @@map("media_asset_relations")
+}
+
+model LeadAttachment {
+  id         String     @id @default(cuid()) @db.VarChar(25)
+  lead_id    String     @db.Uuid
+  asset_id   String     @db.VarChar(25)
+  label      String?    @db.VarChar(100)
+  created_at DateTime   @default(now())
+  Asset      MediaAsset @relation(fields: [asset_id], references: [id])
+  Lead       Lead       @relation(fields: [lead_id], references: [id], onDelete: Cascade)
+
+  @@index([lead_id])
+  @@index([asset_id])
+  @@map("lead_attachments")
+}
+
+model StatsIntegration {
+  id         String   @id @default(cuid()) @db.VarChar(25)
+  tenant_id  String   @db.VarChar(25)
+  key        String   @db.VarChar(50)
+  label      String   @db.VarChar(100)
+  config     Json
+  active     Boolean  @default(true)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  Tenant     Tenant   @relation(fields: [tenant_id], references: [id])
+
+  @@unique([tenant_id, key])
+  @@index([tenant_id])
+  @@map("stats_integrations")
+}
+
+model AnalyticsReport {
+  id         String   @id @default(cuid()) @db.VarChar(25)
+  phone      String   @unique @db.VarChar(20)
+  url        String
+  label      String?  @db.VarChar(150)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@map("analytics_reports")
+}
+
+model AppointmentScheduleConfig {
+  id                    String                     @id @default(uuid()) @db.Uuid
+  tenant_id             String                     @unique @db.VarChar(25)
+  working_days          Int[]
+  work_start_time       String                     @db.VarChar(5)
+  work_end_time         String                     @db.VarChar(5)
+  slot_interval_minutes Int                        @db.SmallInt
+  capacity_per_slot     Int                        @db.SmallInt
+  lunch_start_time      String?                    @db.VarChar(5)
+  lunch_end_time        String?                    @db.VarChar(5)
+  created_at            DateTime                   @default(now())
+  updated_at            DateTime                   @updatedAt
+  days_config           Json?
+  Appointments          Appointment[]
+  BlockedPeriods        AppointmentBlockedPeriod[]
+  Tenant                Tenant                     @relation(fields: [tenant_id], references: [id])
+
+  @@index([tenant_id])
+  @@map("AppointmentScheduleConfig")
+}
+
+model AppointmentBlockedPeriod {
+  id                 String                    @id @default(uuid()) @db.Uuid
+  tenant_id          String                    @db.VarChar(25)
+  schedule_config_id String                    @db.Uuid
+  start_datetime     DateTime
+  end_datetime       DateTime
+  label              String?                   @db.VarChar(255)
+  created_at         DateTime                  @default(now())
+  updated_at         DateTime                  @updatedAt
+  ScheduleConfig     AppointmentScheduleConfig @relation(fields: [schedule_config_id], references: [id])
+  Tenant             Tenant                    @relation(fields: [tenant_id], references: [id])
+
+  @@index([tenant_id])
+  @@index([tenant_id, start_datetime, end_datetime])
+  @@map("AppointmentBlockedPeriod")
+}
+
+model Appointment {
+  id                 String                    @id @default(uuid()) @db.Uuid
+  tenant_id          String                    @db.VarChar(25)
+  lead_id            String                    @db.Uuid
+  schedule_config_id String                    @db.Uuid
+  appointment_date   DateTime                  @db.Date
+  slot_start_time    String                    @db.VarChar(5)
+  slot_end_time      String                    @db.VarChar(5)
+  status             EAppointmentStatus        @default(confirmed)
+  selected_product   String?                   @db.VarChar(255)
+  notes              String?
+  created_at         DateTime                  @default(now())
+  updated_at         DateTime                  @updatedAt
+  Lead               Lead                      @relation(fields: [lead_id], references: [id])
+  ScheduleConfig     AppointmentScheduleConfig @relation(fields: [schedule_config_id], references: [id])
+  Tenant             Tenant                    @relation(fields: [tenant_id], references: [id])
+
+  @@index([tenant_id])
+  @@index([tenant_id, appointment_date, slot_start_time])
+  @@map("Appointment")
+}
+
+model TenantBillingConfig {
+  id                         String                 @id @default(cuid()) @db.VarChar(25)
+  tenant_id                  String                 @unique @db.VarChar(25)
+  stripe_publishable_key     String?                @db.VarChar(255)
+  stripe_secret_key_hash     String?                @db.VarChar(255)
+  stripe_webhook_secret_hash String?                @db.VarChar(255)
+  stripe_price_ids           Json?
+  billing_interval           EBillingInterval       @default(monthly)
+  billing_collection_mode    EBillingCollectionMode @default(upfront)
+  trial_enabled              Boolean                @default(false)
+  trial_days                 Int                    @default(7) @db.SmallInt
+  currency                   String                 @default("brl") @db.VarChar(3)
+  plan_name                  String?                @db.VarChar(100)
+  plan_description           String?                @db.VarChar(255)
+  metadata                   Json?
+  active                     Boolean                @default(true)
+  created_at                 DateTime               @default(now())
+  updated_at                 DateTime               @updatedAt
+  checkout_success_url       String?                @db.VarChar(500)
+  checkout_cancel_url        String?                @db.VarChar(500)
+  Tenant                     Tenant                 @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+
+  @@index([tenant_id])
+  @@map("tenant_billing_configs")
+}
+
+model StripeSubscription {
+  id                     String    @id @default(cuid()) @db.VarChar(25)
+  tenant_id              String    @unique @db.VarChar(25)
+  stripe_subscription_id String    @unique @db.VarChar(255)
+  stripe_customer_id     String    @db.VarChar(255)
+  stripe_price_id        String    @db.VarChar(255)
+  stripe_product_id      String?   @db.VarChar(255)
+  status                 String    @db.VarChar(50)
+  current_period_start   DateTime
+  current_period_end     DateTime
+  trial_start            DateTime?
+  trial_end              DateTime?
+  canceled_at            DateTime?
+  cancel_at_period_end   Boolean   @default(false)
+  amount                 Int
+  currency               String    @default("brl") @db.VarChar(3)
+  interval               String    @db.VarChar(20)
+  interval_count         Int       @default(1) @db.SmallInt
+  metadata               Json?
+  created_at             DateTime  @default(now())
+  updated_at             DateTime  @updatedAt
+  Tenant                 Tenant    @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+
+  @@index([stripe_subscription_id])
+  @@index([stripe_customer_id])
+  @@index([tenant_id, status])
+  @@index([status])
+  @@map("stripe_subscriptions")
+}
+
+model StripeWebhookEvent {
+  id                  String   @id @default(cuid()) @db.VarChar(25)
+  stripe_event_id     String   @unique @db.VarChar(255)
+  event_type          String   @db.VarChar(100)
+  payload             Json
+  processed           Boolean  @default(false)
+  error_message       String?
+  processing_attempts Int      @default(0) @db.SmallInt
+  created_at          DateTime @default(now())
+  updated_at          DateTime @updatedAt
+
+  @@index([event_type, processed])
+  @@index([created_at])
+  @@index([processed, processing_attempts])
+  @@map("stripe_webhook_events")
+}
+
+model StripePlan {
+  id                            String   @id @default(cuid()) @db.VarChar(25)
+  slug                          String   @unique @db.VarChar(100)
+  plan_name                     String   @db.VarChar(100)
+  description                   String?
+  stripe_product_id             String   @unique @db.VarChar(255)
+  stripe_price_id               String   @unique @db.VarChar(255)
+  stripe_trial_price_id         String?  @unique @db.VarChar(255)
+  billing_interval              Int      @db.SmallInt
+  unit_amount                   Int
+  currency                      String   @default("brl") @db.VarChar(3)
+  released_credits              Int      @default(0)
+  credits_released_trial_period Int      @default(0)
+  guest_limit                   Int      @default(0)
+  trial_days                    Int      @default(7) @db.SmallInt
+  active                        Boolean  @default(true)
+  created_at                    DateTime @default(now())
+  updated_at                    DateTime @updatedAt
+
+  @@index([active])
+  @@index([slug])
+  @@map("stripe_plans")
+}
+
+model Product {
+  id                    String              @id @default(cuid()) @db.VarChar(25)
+  stripe_product_id     String              @db.VarChar(100)
+  name                  String              @db.VarChar(255)
+  description           String?
+  slug                  String              @db.VarChar(100)
+  active                Boolean             @default(true)
+  created_at            DateTime            @default(now())
+  updated_at            DateTime            @updatedAt
+  tenant_id             String              @db.VarChar(25)
+  categories            String[]            @default([])
+  category_id           String?             @db.VarChar(25)
+  chip_cost_override    Float?
+  shipping_fee_override Int?
+  requires_shipping     Boolean             @default(false)
+  ProductPrice          ProductPrice[]
+  category              ProductCategory?    @relation(fields: [category_id], references: [id])
+  tenant                Tenant              @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  UserProductAccess     UserProductAccess[]
+
+  @@unique([tenant_id, stripe_product_id])
+  @@unique([tenant_id, slug])
+  @@index([tenant_id])
+  @@index([tenant_id, active])
+  @@index([tenant_id, category_id])
+  @@map("b2c_products")
+}
+
+model ProductCategory {
+  id                String       @id @default(cuid()) @db.VarChar(25)
+  tenant_id         String       @db.VarChar(25)
+  name              String       @db.VarChar(100)
+  slug              String       @db.VarChar(100)
+  chip_cost_percent Float?
+  shipping_fee      Int?
+  active            Boolean      @default(true)
+  created_at        DateTime     @default(now())
+  updated_at        DateTime     @updatedAt
+  b2bProducts       B2BProduct[] @relation("B2BProductCategory")
+  tenant            Tenant       @relation("B2CProductCategories", fields: [tenant_id], references: [id], onDelete: Cascade)
+  products          Product[]
+
+  @@unique([tenant_id, slug])
+  @@index([tenant_id])
+  @@index([tenant_id, active])
+  @@map("b2c_product_categories")
+}
+
+model B2CFeeConfig {
+  id                String   @id @default(cuid()) @db.VarChar(25)
+  tenant_id         String   @unique @db.VarChar(25)
+  chip_cost_percent Float    @default(0)
+  shipping_fee      Int      @default(0)
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
+  tenant            Tenant   @relation("B2CFeeConfig", fields: [tenant_id], references: [id], onDelete: Cascade)
+
+  @@map("b2c_fee_config")
+}
+
+model B2BFeeConfig {
+  id                String   @id @default(cuid()) @db.VarChar(25)
+  tenant_id         String   @unique @db.VarChar(25)
+  chip_cost_percent Float    @default(0)
+  shipping_fee      Int      @default(0)
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
+  tenant            Tenant   @relation("B2BFeeConfig", fields: [tenant_id], references: [id], onDelete: Cascade)
+
+  @@map("b2b_fee_config")
+}
+
+model ProductPrice {
+  id                   String              @id @default(cuid()) @db.VarChar(25)
+  stripe_price_id      String              @db.VarChar(100)
+  product_id           String              @db.VarChar(25)
+  interval             String?             @db.VarChar(20)
+  interval_count       Int?                @default(1) @db.SmallInt
+  unit_amount          Int
+  currency             String              @default("brl") @db.VarChar(3)
+  active               Boolean             @default(true)
+  created_at           DateTime            @default(now())
+  updated_at           DateTime            @updatedAt
+  tenant_id            String              @db.VarChar(25)
+  access_duration_days Int?
+  billing_mode         String              @default("unlimited") @db.VarChar(20)
+  max_billing_cycles   Int?
+  name                 String              @db.VarChar(100)
+  Product              Product             @relation(fields: [product_id], references: [id])
+  tenant               Tenant              @relation("B2CProductPrices", fields: [tenant_id], references: [id], onDelete: Cascade)
+  UserProductAccess    UserProductAccess[]
+
+  @@unique([tenant_id, stripe_price_id])
+  @@index([tenant_id])
+  @@index([product_id, active])
+  @@index([tenant_id, billing_mode])
+  @@map("b2c_product_prices")
+}
+
+model UserProductAccess {
+  id                       String       @id @default(cuid()) @db.VarChar(25)
+  tenant_id                String       @db.VarChar(25)
+  user_id                  String       @db.VarChar(25)
+  product_id               String       @db.VarChar(25)
+  product_price_id         String       @db.VarChar(25)
+  stripe_subscription_id   String?      @db.VarChar(100)
+  stripe_customer_id       String       @db.VarChar(100)
+  stripe_price_id          String       @db.VarChar(100)
+  stripe_payment_intent_id String?      @db.VarChar(100)
+  access_type              String       @db.VarChar(20)
+  status                   String       @db.VarChar(50)
+  current_period_start     DateTime?
+  current_period_end       DateTime?
+  cancel_at_period_end     Boolean      @default(false)
+  canceled_at              DateTime?
+  trial_start              DateTime?
+  trial_end                DateTime?
+  access_granted_at        DateTime     @default(now())
+  access_expires_at        DateTime?
+  max_billing_cycles       Int?
+  completed_billing_cycles Int          @default(0)
+  amount                   Int
+  currency                 String       @default("brl") @db.VarChar(3)
+  created_at               DateTime     @default(now())
+  updated_at               DateTime     @updatedAt
+  Product                  Product      @relation(fields: [product_id], references: [id])
+  ProductPrice             ProductPrice @relation(fields: [product_price_id], references: [id])
+  tenant                   Tenant       @relation("B2CUserProductAccess", fields: [tenant_id], references: [id], onDelete: Cascade)
+  User                     User         @relation(fields: [user_id], references: [id])
+
+  @@unique([tenant_id, stripe_subscription_id])
+  @@index([tenant_id])
+  @@index([tenant_id, user_id, status])
+  @@index([user_id, status])
+  @@index([user_id, product_id, status])
+  @@index([stripe_subscription_id])
+  @@index([access_type, status])
+  @@index([access_expires_at])
+  @@map("b2c_user_product_access")
+}
+
+model B2CCheckoutSession {
+  id                    String    @id @default(cuid()) @db.VarChar(25)
+  tenant_id             String    @db.VarChar(25)
+  user_id               String?   @db.VarChar(25)
+  product_id            String    @db.VarChar(25)
+  price_id              String    @db.VarChar(25)
+  stripe_checkout_id    String    @unique @db.VarChar(200)
+  stripe_price_id       String    @db.VarChar(100)
+  status                String    @db.VarChar(20)
+  amount                Int
+  currency              String    @default("brl") @db.VarChar(3)
+  customer_email        String    @db.VarChar(255)
+  customer_name         String?   @db.VarChar(255)
+  customer_phone        String?   @db.VarChar(50)
+  is_lead_purchase      Boolean   @default(false)
+  checkout_started_at   DateTime  @default(now())
+  checkout_completed_at DateTime?
+  checkout_expired_at   DateTime?
+  metadata              Json?
+  created_at            DateTime  @default(now())
+  updated_at            DateTime  @updatedAt
+  tenant                Tenant    @relation("B2CCheckoutSessions", fields: [tenant_id], references: [id], onDelete: Cascade)
+  user                  User?     @relation("B2CCheckoutSessionUser", fields: [user_id], references: [id])
+
+  @@index([tenant_id])
+  @@index([tenant_id, status])
+  @@index([tenant_id, customer_email])
+  @@index([stripe_checkout_id])
+  @@map("b2c_checkout_sessions")
+}
+
+model B2BProduct {
+  id                    String           @id @default(cuid()) @db.VarChar(25)
+  stripe_product_id     String           @db.VarChar(100)
+  stripe_price_id       String           @db.VarChar(100)
+  name                  String           @db.VarChar(255)
+  description           String?
+  price                 Int
+  currency              String           @default("brl") @db.VarChar(3)
+  active                Boolean          @default(true)
+  created_at            DateTime         @default(now())
+  updated_at            DateTime         @updatedAt
+  tenant_id             String           @db.VarChar(25)
+  categories            String[]         @default([])
+  category_id           String?          @db.VarChar(25)
+  chip_cost_override    Float?
+  shipping_fee_override Int?
+  requires_shipping     Boolean          @default(false)
+  slug                  String           @db.VarChar(100)
+  category              ProductCategory? @relation("B2BProductCategory", fields: [category_id], references: [id])
+  tenant                Tenant           @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  purchases             B2BPurchase[]
+
+  @@unique([tenant_id, stripe_product_id])
+  @@unique([tenant_id, stripe_price_id])
+  @@unique([tenant_id, slug])
+  @@index([tenant_id])
+  @@index([tenant_id, active])
+  @@index([tenant_id, category_id])
+  @@map("b2b_products")
+}
+
+model B2BPurchase {
+  id                    String     @id @default(cuid()) @db.VarChar(25)
+  user_id               String?    @db.VarChar(25)
+  product_id            String     @db.VarChar(25)
+  stripe_checkout_id    String?    @db.VarChar(200)
+  stripe_payment_intent String?    @db.VarChar(200)
+  checkout_started_at   DateTime?  @db.Timestamptz(6)
+  checkout_completed_at DateTime?  @db.Timestamptz(6)
+  checkout_abandoned_at DateTime?  @db.Timestamptz(6)
+  status                String     @db.VarChar(20)
+  amount                Int
+  currency              String     @db.VarChar(3)
+  customer_email        String     @db.VarChar(255)
+  customer_name         String?    @db.VarChar(255)
+  customer_phone        String?    @db.VarChar(50)
+  metadata              Json?
+  created_at            DateTime   @default(now())
+  updated_at            DateTime   @updatedAt
+  tenant_id             String     @db.VarChar(25)
+  product               B2BProduct @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  tenant                Tenant     @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  user                  User?      @relation(fields: [user_id], references: [id])
+
+  @@unique([tenant_id, stripe_checkout_id])
+  @@unique([tenant_id, stripe_payment_intent])
+  @@index([tenant_id])
+  @@index([tenant_id, status])
+  @@index([user_id])
+  @@index([product_id])
+  @@index([customer_email])
+  @@index([created_at])
+  @@map("b2b_purchases")
+}
+
+model DiscountCoupon {
+  id                  String    @id @default(cuid()) @db.VarChar(25)
+  tenant_id           String    @db.VarChar(25)
+  code                String    @db.VarChar(100)
+  name                String    @db.VarChar(255)
+  description         String?
+  discount_type       String    @db.VarChar(20)
+  discount_value      Float
+  scope               String    @db.VarChar(20)
+  product_ids         String[]  @default([])
+  category_ids        String[]  @default([])
+  applies_to          String    @db.VarChar(20)
+  cumulative          Boolean   @default(false)
+  min_order_amount    Int?
+  max_discount_amount Int?
+  max_redemptions     Int?
+  redeemed_count      Int       @default(0)
+  expires_at          DateTime?
+  active              Boolean   @default(true)
+  created_at          DateTime  @default(now())
+  updated_at          DateTime  @updatedAt
+  product_overrides   Json?
+  tenant              Tenant    @relation("DiscountCoupons", fields: [tenant_id], references: [id], onDelete: Cascade)
+
+  @@unique([tenant_id, code])
+  @@index([tenant_id])
+  @@index([tenant_id, active])
+  @@map("discount_coupons")
+}
+
+view pg_stat_statements_info {
+  dealloc     BigInt?
+  stats_reset DateTime? @db.Timestamptz(6)
+}
+
+view pg_stat_statements {
+  userid                     Int?      @db.Oid
+  dbid                       Int?      @db.Oid
+  toplevel                   Boolean?
+  queryid                    BigInt?
+  query                      String?
+  plans                      BigInt?
+  total_plan_time            Float?
+  min_plan_time              Float?
+  max_plan_time              Float?
+  mean_plan_time             Float?
+  stddev_plan_time           Float?
+  calls                      BigInt?
+  total_exec_time            Float?
+  min_exec_time              Float?
+  max_exec_time              Float?
+  mean_exec_time             Float?
+  stddev_exec_time           Float?
+  rows                       BigInt?
+  shared_blks_hit            BigInt?
+  shared_blks_read           BigInt?
+  shared_blks_dirtied        BigInt?
+  shared_blks_written        BigInt?
+  local_blks_hit             BigInt?
+  local_blks_read            BigInt?
+  local_blks_dirtied         BigInt?
+  local_blks_written         BigInt?
+  temp_blks_read             BigInt?
+  temp_blks_written          BigInt?
+  shared_blk_read_time       Float?
+  shared_blk_write_time      Float?
+  local_blk_read_time        Float?
+  local_blk_write_time       Float?
+  temp_blk_read_time         Float?
+  temp_blk_write_time        Float?
+  wal_records                BigInt?
+  wal_fpi                    BigInt?
+  wal_bytes                  Decimal?  @db.Decimal
+  wal_buffers_full           BigInt?
+  jit_functions              BigInt?
+  jit_generation_time        Float?
+  jit_inlining_count         BigInt?
+  jit_inlining_time          Float?
+  jit_optimization_count     BigInt?
+  jit_optimization_time      Float?
+  jit_emission_count         BigInt?
+  jit_emission_time          Float?
+  jit_deform_count           BigInt?
+  jit_deform_time            Float?
+  parallel_workers_to_launch BigInt?
+  parallel_workers_launched  BigInt?
+  stats_since                DateTime? @db.Timestamptz(6)
+  minmax_stats_since         DateTime? @db.Timestamptz(6)
+}
+
 enum EAdminRole {
   super_admin
   owner
   manager
   editor
   viewer
-  company_admin // DEPRECATED: retained for backward compatibility
+  company_admin
 }
 
 enum EArticleStatus {
@@ -697,632 +1612,11 @@ enum EUserCollectionRole {
   operator
 }
 
-model Admin {
-  id                 String              @id @default(cuid()) @db.VarChar(25)
-  name               String              @db.VarChar(100)
-  email              String              @unique
-  role               EAdminRole          @default(company_admin)
-  active             Boolean             @default(true)
-  created_at         DateTime            @default(now())
-  updated_at         DateTime            @updatedAt
-  AdminSessionToken  AdminSessionToken[]
-  AdminCredential    AdminCredential?
-  AdminTenant        AdminTenant[]
-  ArticlesCreated    Article[]           @relation("ArticleCreatedBy")
-  ArticlesLastEdited Article[]           @relation("ArticleLastEditedBy")
-}
-
-model Tenant {
-  id             String              @id @default(cuid()) @db.VarChar(25)
-  name           String           @db.VarChar(100)
-  slug           String           @unique @db.VarChar(50)
-  domain         String?          @db.VarChar(255)
-  active         Boolean          @default(true)
-  archived_at    DateTime?
-  deletion_requested_at DateTime?
-  deletion_scheduled_for_at DateTime?
-  deletion_requested_by String?  @db.VarChar(25)
-  deletion_reason String?        @db.VarChar(255)
-
-  // Stripe — cached fields to avoid extra queries
-  // stripe_customer_id: persisted here so the same Stripe Customer is reused
-  //   across subscription cancellations and re-subscriptions.
-  stripe_customer_id   String?  @db.VarChar(255)
-  // subscription_status: denormalized cache of the current subscription state.
-  //   Kept in sync by webhook handlers. Allows guards to check access without
-  //   an extra JOIN to stripe_subscriptions.
-  //   Values: none | active | trialing | past_due | canceled | paused | unpaid
-  subscription_status  String   @default("none") @db.VarChar(50)
-
-  created_at     DateTime         @default(now())
-  updated_at     DateTime         @updatedAt
-  AdminTenant                  AdminTenant[]
-  Blog                         Blog[]
-  LeadCollection               LeadCollection[]
-  UserCollection               UserCollection[]
-  leads                        Lead[]
-  Author                       Author[]
-  StatsIntegration             StatsIntegration[]
-  AppointmentScheduleConfig    AppointmentScheduleConfig?
-  AppointmentBlockedPeriods    AppointmentBlockedPeriod[]
-  Appointments                 Appointment[]
-  StripeSubscription           StripeSubscription?
-  TenantBillingConfig          TenantBillingConfig?
-  B2BProducts                  B2BProduct[]
-  B2BPurchases                 B2BPurchase[]
-  B2CProducts                  Product[]
-  B2CProductPrices             ProductPrice[] @relation("B2CProductPrices")
-  B2CUserProductAccess         UserProductAccess[] @relation("B2CUserProductAccess")
-  B2CProductCategories         ProductCategory[] @relation("B2CProductCategories")
-  B2CFeeConfig                 B2CFeeConfig? @relation("B2CFeeConfig")
-  B2BFeeConfig                 B2BFeeConfig? @relation("B2BFeeConfig")
-  B2CCheckoutSessions          B2CCheckoutSession[] @relation("B2CCheckoutSessions")
-  discountCoupons              DiscountCoupon[] @relation("DiscountCoupons")
-
-  @@index([stripe_customer_id])
-  @@index([subscription_status])
-}
-
-model LeadCollection {
-  id              String                   @id @default(cuid()) @db.VarChar(25)
-  name            String                @db.VarChar(150)
-  slug            String                @db.VarChar(100)
-  source          String                @db.VarChar(100)
-  source_type     String?               @db.VarChar(50)
-  source_channel  String?               @db.VarChar(50)
-  source_campaign String?               @db.VarChar(100)
-  access_mode     ECollectionAccessMode @default(public)
-  allowed_domains String[]              @default([])
-  secret_key_hash String?
-  secret_key_salt String?
-  active          Boolean               @default(true)
-  metadata        Json?
-  tenant_id       String @db.VarChar(25)
-  created_at      DateTime              @default(now())
-  updated_at      DateTime              @updatedAt
-  Tenant          Tenant                @relation(fields: [tenant_id], references: [id])
-  Lead            Lead[]
-
-  @@unique([slug, tenant_id])
-  @@index([tenant_id])
-}
-
-model UserCollection {
-  id              String                    @id @default(cuid()) @db.VarChar(25)
-  name            String                    @db.VarChar(150)
-  slug            String                    @db.VarChar(100)
-  description     String?                   @db.VarChar(255)
-  active          Boolean                   @default(true)
-  tenant_id       String                    @db.VarChar(25)
-  created_at      DateTime                  @default(now())
-  updated_at      DateTime                  @updatedAt
-  Tenant          Tenant                    @relation(fields: [tenant_id], references: [id])
-  Memberships     UserCollectionMembership[]
-
-  @@unique([tenant_id, slug])
-  @@index([tenant_id])
-}
-
-model UserCollectionMembership {
-  id            String              @id @default(cuid()) @db.VarChar(25)
-  user_id       String              @db.VarChar(25)
-  collection_id String              @db.VarChar(25)
-  role          EUserCollectionRole @default(member)
-  active        Boolean             @default(true)
-  created_at    DateTime            @default(now())
-  updated_at    DateTime            @updatedAt
-  User          User                @relation(fields: [user_id], references: [id])
-  Collection    UserCollection      @relation(fields: [collection_id], references: [id], onDelete: Cascade)
-
-  @@unique([user_id, collection_id])
-  @@index([user_id])
-  @@index([collection_id])
-}
-
-model AdminTenant {
-  id         String        @id @default(cuid()) @db.VarChar(25)
-  admin_id   String     @db.VarChar(25)
-  tenant_id  String @db.VarChar(25)
-  role       EAdminRole @default(manager)
-  active     Boolean    @default(true)
-  created_at DateTime   @default(now())
-  updated_at DateTime   @updatedAt
-  Admin      Admin      @relation(fields: [admin_id], references: [id])
-  Tenant     Tenant     @relation(fields: [tenant_id], references: [id])
-
-  @@unique([admin_id, tenant_id])
-}
-
-model Blog {
-  id              String    @id @default(cuid()) @db.VarChar(25)
-  name            String    @db.VarChar(150)
-  description     String?
-  secret_key_hash String
-  secret_key_salt String
-  media_collection_id String? @db.VarChar(25)
-  tenant_id       String @db.VarChar(25)
-  active          Boolean   @default(true)
-  created_at      DateTime  @default(now())
-  updated_at      DateTime  @updatedAt
-  Tenant          Tenant    @relation(fields: [tenant_id], references: [id])
-  MediaCollection MediaCollection? @relation(fields: [media_collection_id], references: [id], onDelete: SetNull)
-  Article         Article[]
-
-  @@unique([name, tenant_id])
-  @@index([tenant_id])
-  @@index([media_collection_id])
-}
-
-model Article {
-  id               String         @id @default(cuid()) @db.VarChar(25)
-  display_title    String         @db.VarChar(255)
-  language         String         @default("en_us") @db.VarChar(10)
-  meta_title       String         @db.VarChar(60)
-  meta_description String?        @db.VarChar(160)
-  focus_keyword    String?        @db.VarChar(100)
-  content          String
-  slug             String         @db.VarChar(255)
-  status           EArticleStatus @default(draft)
-  published_at     DateTime?
-  cover_image_id   String?        @db.VarChar(25)
-  author_id        String?        @db.VarChar(25)
-  blog_id          String         @db.VarChar(25)
-  created_by       String?        @db.VarChar(25)
-  last_edited_by   String?        @db.VarChar(25)
-  created_at       DateTime       @default(now())
-  updated_at       DateTime       @updatedAt
-
-  Blog              Blog           @relation(fields: [blog_id], references: [id], onDelete: Cascade)
-  CoverImage        MediaAsset?    @relation("ArticleCoverImage", fields: [cover_image_id], references: [id])
-  Author            Author?        @relation(fields: [author_id], references: [id])
-  CreatedByAdmin    Admin?         @relation("ArticleCreatedBy", fields: [created_by], references: [id])
-  LastEditedByAdmin Admin?         @relation("ArticleLastEditedBy", fields: [last_edited_by], references: [id])
-  ArticleImage      ArticleImage[]
-
-  @@unique([slug, blog_id])
-  @@index([blog_id, status, published_at])
-  @@index([author_id])
-  @@index([created_by])
-  @@index([last_edited_by])
-}
-
-model Author {
-  id         String   @id @default(cuid()) @db.VarChar(25)
-  first_name String   @db.VarChar(100)
-  last_name  String   @db.VarChar(100)
-  biography  String?  @db.Text
-  avatar_id  String?  @db.VarChar(25)
-  tenant_id  String @db.VarChar(25)
-  active     Boolean  @default(true)
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-
-  Avatar  MediaAsset? @relation("AuthorAvatar", fields: [avatar_id], references: [id])
-  Tenant  Tenant      @relation(fields: [tenant_id], references: [id])
-  Article Article[]
-
-  @@index([tenant_id])
-  @@index([active])
-}
-
-model ArticleImage {
-  id              String      @id @default(cuid()) @db.VarChar(25)
-  url             String
-  storage_key     String
-  alt_text        String?  @db.VarChar(255)
-  display_order   Int      @default(0)
-  file_size       Int
-  original_format String   @db.VarChar(10)
-  article_id      String   @db.VarChar(25)
-  created_at      DateTime @default(now())
-  updated_at      DateTime @updatedAt
-  Article         Article  @relation(fields: [article_id], references: [id], onDelete: Cascade)
-
-  @@index([article_id, display_order])
-  @@map("article_images_deprecated")
-}
-
-model AdminSessionToken {
-  id         String      @id @default(cuid()) @db.VarChar(25)
-  hash_token String
-  salt       String
-  admin_id   String   @db.VarChar(25)
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-  Admin      Admin    @relation(fields: [admin_id], references: [id])
-}
-
-model AdminCredential {
-  id         String      @id @default(cuid()) @db.VarChar(25)
-  admin_id   String   @unique @db.VarChar(25)
-  hash       String
-  salt       String
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-  Admin      Admin    @relation(fields: [admin_id], references: [id])
-}
-
-model SMSNotification {
-  id                   String                    @id @default(cuid()) @db.VarChar(25)
-  webhook              String                 @unique @db.VarChar(255)
-  name                 String
-  total_notifications  Int                    @db.SmallInt
-  created_at           DateTime               @default(now())
-  updated_at           DateTime               @updatedAt
-  SMSNotificationEvent SMSNotificationEvent[]
-}
-
-model SMSNotificationEvent {
-  id                        String             @id @default(cuid()) @db.VarChar(25)
-  message                   String          @db.VarChar(160)
-  destination_number        String          @db.VarChar(18)
-  sender_number             String          @db.VarChar(18)
-  destination_country       Int             @db.SmallInt
-  sms_provider              Int             @db.SmallInt
-  payload_provider_response Json?
-  payload_message           Json?
-  status                    Int             @db.SmallInt
-  SMSNotification           SMSNotification @relation(fields: [sms_notification_id], references: [id])
-  sms_notification_id       String @db.VarChar(25)
-  created_at                DateTime        @default(now())
-  updated_at                DateTime        @updatedAt
-}
-
-model Config {
-  id         String      @id @default(cuid()) @db.VarChar(25)
-  name       String   @unique
-  value      String
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-}
-
-model EmailCampaign {
-  id                  String          @id @default(cuid()) @db.VarChar(25)
-  name                String
-  total_leads         Int
-  open_rate           Int
-  click_rate          Int
-  campaign_batch_size Int?
-  uploaded_leads      Boolean         @default(false)
-  copy_variation_type Int?            @db.SmallInt
-  funnel_campaign     Boolean         @default(false)
-  main_email          Email?          @relation(fields: [main_email_id], references: [id])
-  main_email_id       String? @db.VarChar(25)
-  status              Int             @db.SmallInt
-  started_at          DateTime?
-  finished_at         DateTime?
-  smtp_server         SMTPServer      @relation(fields: [smtp_server_id], references: [id])
-  smtp_server_id      String @db.VarChar(25)
-  created_at          DateTime        @default(now())
-  updated_at          DateTime        @updatedAt
-  EmailLead           EmailLead[]
-  CampaignBatch       CampaignBatch[]
-}
-
-model Email {
-  id                String             @id @default(cuid()) @db.VarChar(25)
-  type              Int             @db.SmallInt
-  name              String
-  html_content      String
-  md_content        String
-  used_ai           Boolean
-  from_name         String          @db.VarChar(255)
-  edited            Boolean         @default(false)
-  subject           String          @db.VarChar(255)
-  pre_header        String?         @db.VarChar(255)
-  use_header        Boolean         @default(false)
-  use_footer        Boolean         @default(false)
-  tracking_image    String?
-  prompt_tokens     Int?
-  completion_tokens Int?
-  total_tokens      Int?
-  created_at        DateTime        @default(now())
-  updated_at        DateTime        @updatedAt
-  EmailCampaign     EmailCampaign[]
-  CampaignBatch     CampaignBatch[]
-  Delivery          Delivery[]
-}
-
-model Delivery {
-  id                   String             @id @default(cuid()) @db.VarChar(25)
-  email_lead_id        String @db.VarChar(25)
-  email_lead           EmailLead       @relation(fields: [email_lead_id], references: [id])
-  email                Email           @relation(fields: [email_id], references: [id])
-  campaign_batch_id    String @db.VarChar(25)
-  campaign_batch       CampaignBatch   @relation(fields: [campaign_batch_id], references: [id])
-  email_id             String @db.VarChar(25)
-  server_response      Json?
-  send_date            DateTime?
-  server_response_date DateTime?
-  last_open_date       DateTime?
-  last_click_date      DateTime?
-  clicked              Boolean         @default(false)
-  opened               Boolean         @default(false)
-  tracking_code        String?
-  email_provider       String
-  email_sent_to        String
-  status               Int             @db.SmallInt
-  unsubscribe          Boolean         @default(false)
-  unsubscribe_date     DateTime?
-  created_at           DateTime        @default(now())
-  updated_at           DateTime        @updatedAt
-  OpenTracking         OpenTracking[]
-  ClickTracking        ClickTracking[]
-}
-
-model OpenTracking {
-  id                String      @id @default(cuid()) @db.VarChar(25)
-  delivery_id       String @db.VarChar(25)
-  delivery          Delivery @relation(fields: [delivery_id], references: [id])
-  bot_chance        Int      @db.SmallInt
-  open_date         DateTime
-  request_open_json Json?
-  created_at        DateTime @default(now())
-  updated_at        DateTime @updatedAt
-}
-
-model ClickTracking {
-  id                 String      @id @default(cuid()) @db.VarChar(25)
-  delivery_id        String @db.VarChar(25)
-  delivery           Delivery @relation(fields: [delivery_id], references: [id])
-  bot_chance         Int      @db.SmallInt
-  link_clicked       String
-  link_clicked_date  DateTime
-  request_click_json Json?
-  created_at         DateTime @default(now())
-  updated_at         DateTime @updatedAt
-}
-
-model EmailLead {
-  id                String           @id @default(cuid()) @db.VarChar(25)
-  email             String
-  EmailCampaign     EmailCampaign @relation(fields: [email_campaign_id], references: [id])
-  email_campaign_id String        @db.VarChar(25)
-  status            Int           @db.SmallInt
-  created_at        DateTime      @default(now())
-  updated_at        DateTime      @updatedAt
-  Delivery          Delivery[]
-}
-
-model CampaignBatch {
-  id                String           @id @default(cuid()) @db.VarChar(25)
-  total_leads       Int
-  un_open_rate      Int           @default(0)
-  un_click_rate     Int           @default(0)
-  un_unsubscribe    Int           @default(0)
-  un_success_rate   Int?
-  un_failed_rate    Int?
-  email_campaign    EmailCampaign @relation(fields: [email_campaign_id], references: [id])
-  email_campaign_id String        @db.VarChar(25)
-  status            Int           @db.SmallInt
-  email             Email?        @relation(fields: [email_id], references: [id])
-  email_id          String? @db.VarChar(25)
-  started_at        DateTime?
-  finished_at       DateTime?
-  created_at        DateTime      @default(now())
-  updated_at        DateTime      @updatedAt
-  Delivery          Delivery[]
-}
-
-model SMTPServer {
-  id                 String             @id @default(cuid()) @db.VarChar(25)
-  name               String          @db.VarChar(255)
-  email              String          @db.VarChar(255)
-  domain             String          @db.VarChar(255)
-  host               String?         @db.VarChar(255)
-  port               String?         @db.VarChar(255)
-  username           String?         @db.VarChar(255)
-  hash_password      String?
-  hash_access_token  String?
-  hash_private_token String?
-  region             String?         @db.VarChar(255)
-  provider           Int             @db.SmallInt
-  default            Boolean         @default(false)
-  created_at         DateTime        @default(now())
-  updated_at         DateTime        @updatedAt
-  EmailCampaign      EmailCampaign[]
-}
-
-// ============================================
-// CMS - Generic Media Asset Management
-// ============================================
-
-model MediaCollection {
-  id                 String   @id @default(cuid()) @db.VarChar(25)
-  name               String   @db.VarChar(100)
-  slug               String   @db.VarChar(100)
-  description        String?  @db.Text
-  type               String   @db.VarChar(20) // image, document, video, audio, mixed
-  max_file_size      Int? // bytes
-  allowed_mime_types String?  @db.Text // JSON array
-  max_items          Int?
-  tenant_id          String @db.VarChar(25)
-  created_at         DateTime @default(now())
-  updated_at         DateTime @updatedAt
-
-  assets MediaAsset[]
-  blogs  Blog[]
-
-  @@unique([tenant_id, slug])
-  @@index([tenant_id])
-  @@map("media_collections")
-}
-
-model MediaAsset {
-  id            String   @id @default(cuid()) @db.VarChar(25)
-  url           String   @db.VarChar(500)
-  storage_key   String   @db.VarChar(500)
-  filename      String   @db.VarChar(255)
-  mime_type     String   @db.VarChar(100)
-  file_size     Int
-  width         Int?
-  height        Int?
-  alt_text      String?  @db.VarChar(255)
-  metadata      Json? // Flexible metadata
-  status        String   @default("ready") @db.VarChar(20)
-  collection_id String   @db.VarChar(25)
-  tenant_id     String @db.VarChar(25)
-  created_by    String @db.VarChar(25)
-  created_at    DateTime @default(now())
-  updated_at    DateTime @updatedAt
-
-  collection         MediaCollection      @relation(fields: [collection_id], references: [id], onDelete: Cascade)
-  relations          MediaAssetRelation[]
-  LeadAttachment     LeadAttachment[]
-  ArticleCoverImages Article[]            @relation("ArticleCoverImage")
-  AuthorAvatars      Author[]             @relation("AuthorAvatar")
-
-  @@index([collection_id])
-  @@index([tenant_id])
-  @@index([created_by])
-  @@index([status])
-  @@map("media_assets")
-}
-
-model MediaAssetRelation {
-  id              String   @id @default(cuid()) @db.VarChar(25)
-  asset_id        String   @db.VarChar(25)
-  entity_type     String   @db.VarChar(50) // 'article', 'brand', 'company', etc.
-  entity_id       String   @db.VarChar(50) // Polymorphic - can be Int or UUID
-  entity_id_type  String   @db.VarChar(10) // 'int' or 'uuid'
-  relation_type   String   @db.VarChar(50) // 'featured', 'gallery', 'attachment', 'avatar'
-  display_order   Int?
-  metadata        Json?
-  created_at      DateTime @default(now())
-
-  asset MediaAsset @relation(fields: [asset_id], references: [id], onDelete: Cascade)
-
-  @@unique([asset_id, entity_type, entity_id, relation_type])
-  @@index([entity_type, entity_id])
-  @@index([asset_id])
-  @@map("media_asset_relations")
-}
-
-model LeadAttachment {
-  id         String      @id @default(cuid()) @db.VarChar(25)
-  lead_id    String   @db.Uuid
-  asset_id   String   @db.VarChar(25)
-  label      String?  @db.VarChar(100)
-  created_at DateTime @default(now())
-
-  Lead  Lead       @relation(fields: [lead_id], references: [id], onDelete: Cascade)
-  Asset MediaAsset @relation(fields: [asset_id], references: [id])
-
-  @@index([lead_id])
-  @@index([asset_id])
-  @@map("lead_attachments")
-}
-
-// ============================================
-// Stats - External Integration API Key Management
-// ============================================
-
-model StatsIntegration {
-  id         String      @id @default(cuid()) @db.VarChar(25)
-  tenant_id  String @db.VarChar(25)
-  key        String   @db.VarChar(50) // e.g. 'google_search_console'
-  label      String   @db.VarChar(100)
-  config     Json // Provider-specific config (API keys, site URLs, etc.)
-  active     Boolean  @default(true)
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-  Tenant     Tenant   @relation(fields: [tenant_id], references: [id])
-
-  @@unique([tenant_id, key])
-  @@index([tenant_id])
-  @@map("stats_integrations")
-}
-
-// ============================================
-// Analytics Reports — QR Code Phone Lookup
-// ============================================
-
-model AnalyticsReport {
-  id         String   @id @default(cuid()) @db.VarChar(25)
-  phone      String   @unique @db.VarChar(20)
-  url        String   @db.Text
-  label      String?  @db.VarChar(150)
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-
-  @@map("analytics_reports")
-}
-
-// ============================================
-// Appointments — Scheduling sub-domain
-// ============================================
-
 enum EAppointmentStatus {
   confirmed
   cancelled
   completed
 }
-
-model AppointmentScheduleConfig {
-  id                    String                     @id @default(uuid()) @db.Uuid
-  tenant_id             String                     @db.VarChar(25)
-  working_days          Int[]                      // Legacy: array of working days
-  work_start_time       String                     @db.VarChar(5)  // Legacy: global start time
-  work_end_time         String                     @db.VarChar(5)  // Legacy: global end time
-  slot_interval_minutes Int                        @db.SmallInt
-  capacity_per_slot     Int                        @db.SmallInt
-  lunch_start_time      String?                    @db.VarChar(5)  // Legacy: global lunch start
-  lunch_end_time        String?                    @db.VarChar(5)  // Legacy: global lunch end
-  days_config           Json?                      // New: per-day configuration
-  created_at            DateTime                   @default(now())
-  updated_at            DateTime                   @updatedAt
-  Tenant                Tenant                     @relation(fields: [tenant_id], references: [id])
-  Appointments          Appointment[]
-  BlockedPeriods        AppointmentBlockedPeriod[]
-
-  @@unique([tenant_id])
-  @@index([tenant_id])
-  @@map("AppointmentScheduleConfig")
-}
-
-model AppointmentBlockedPeriod {
-  id                 String                    @id @default(uuid()) @db.Uuid
-  tenant_id          String                    @db.VarChar(25)
-  schedule_config_id String                    @db.Uuid
-  start_datetime     DateTime
-  end_datetime       DateTime
-  label              String?                   @db.VarChar(255)
-  created_at         DateTime                  @default(now())
-  updated_at         DateTime                  @updatedAt
-  Tenant             Tenant                    @relation(fields: [tenant_id], references: [id])
-  ScheduleConfig     AppointmentScheduleConfig @relation(fields: [schedule_config_id], references: [id])
-
-  @@index([tenant_id])
-  @@index([tenant_id, start_datetime, end_datetime])
-  @@map("AppointmentBlockedPeriod")
-}
-
-model Appointment {
-  id                 String                    @id @default(uuid()) @db.Uuid
-  tenant_id          String                    @db.VarChar(25)
-  lead_id            String                    @db.Uuid
-  schedule_config_id String                    @db.Uuid
-  appointment_date   DateTime                  @db.Date
-  slot_start_time    String                    @db.VarChar(5)
-  slot_end_time      String                    @db.VarChar(5)
-  status             EAppointmentStatus        @default(confirmed)
-  selected_product   String?                   @db.VarChar(255)
-  notes              String?                   @db.Text
-  created_at         DateTime                  @default(now())
-  updated_at         DateTime                  @updatedAt
-  Tenant             Tenant                    @relation(fields: [tenant_id], references: [id])
-  Lead               Lead                      @relation(fields: [lead_id], references: [id])
-  ScheduleConfig     AppointmentScheduleConfig @relation(fields: [schedule_config_id], references: [id])
-
-  @@index([tenant_id])
-  @@index([tenant_id, appointment_date, slot_start_time])
-  @@map("Appointment")
-}
-
-
-// ============================================
-// Tenant Billing Config — Per-tenant payment settings
-// ============================================
 
 enum EBillingInterval {
   monthly
@@ -1332,502 +1626,19 @@ enum EBillingInterval {
 }
 
 enum EBillingCollectionMode {
-  upfront    // Full period charged at once (e.g. R$479 for annual)
-  installments // Monthly installments with discount (e.g. R$39.92/mo x12)
-}
-
-model TenantBillingConfig {
-  id                     String                 @id @default(cuid()) @db.VarChar(25)
-  tenant_id              String                 @unique @db.VarChar(25)
-
-  // Stripe keys (per-tenant, overrides global env vars)
-  stripe_publishable_key String?                @db.VarChar(255)
-  stripe_secret_key_hash String?                @db.VarChar(255) // stored encrypted
-  stripe_webhook_secret_hash String?            @db.VarChar(255) // stored encrypted
-
-  // Stripe Price IDs configured for this tenant
-  stripe_price_ids       Json?                  // { monthly: "price_xxx", annual: "price_yyy", ... }
-
-  // Billing behavior
-  billing_interval       EBillingInterval       @default(monthly)
-  billing_collection_mode EBillingCollectionMode @default(upfront)
-
-  // Trial settings
-  trial_enabled          Boolean                @default(false)
-  trial_days             Int                    @default(7) @db.SmallInt
-
-  // Display / UI hints (sent to panel for rendering)
-  currency               String                 @default("brl") @db.VarChar(3)
-  plan_name              String?                @db.VarChar(100)
-  plan_description       String?                @db.VarChar(255)
-
-  // Redirect URLs after Stripe Checkout (per-tenant, overrides FRONTEND_URL env var)
-  checkout_success_url   String?                @db.VarChar(500)
-  checkout_cancel_url    String?                @db.VarChar(500)
-
-  // Metadata (any extra config the panel needs)
-  metadata               Json?
-
-  active                 Boolean                @default(true)
-  created_at             DateTime               @default(now())
-  updated_at             DateTime               @updatedAt
-
-  Tenant                 Tenant                 @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
-
-  @@index([tenant_id])
-  @@map("tenant_billing_configs")
-}
-
-// ============================================
-// Stripe Subscriptions — Payment Integration
-// ============================================
-
-model StripeSubscription {
-  id                     String    @id @default(cuid()) @db.VarChar(25)
-  tenant_id              String    @unique @db.VarChar(25)
-  
-  // Stripe IDs
-  stripe_subscription_id String    @unique @db.VarChar(255)
-  stripe_customer_id     String    @db.VarChar(255)
-  stripe_price_id        String    @db.VarChar(255)
-  stripe_product_id      String?   @db.VarChar(255)
-  
-  // Status
-  status                 String    @db.VarChar(50) // active, canceled, past_due, trialing, incomplete, etc.
-  
-  // Dates
-  current_period_start   DateTime
-  current_period_end     DateTime
-  trial_start            DateTime?
-  trial_end              DateTime?
-  canceled_at            DateTime?
-  cancel_at_period_end   Boolean   @default(false)
-  
-  // Financial
-  amount                 Int       // Amount in cents
-  currency               String    @default("brl") @db.VarChar(3)
-  interval               String    @db.VarChar(20) // month, year, week, day
-  interval_count         Int       @default(1) @db.SmallInt
-  
-  // Metadata
-  metadata               Json?
-  created_at             DateTime  @default(now())
-  updated_at             DateTime  @updatedAt
-  
-  Tenant                 Tenant    @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
-  
-  @@index([stripe_subscription_id])
-  @@index([stripe_customer_id])
-  @@index([tenant_id, status])
-  @@index([status])
-  @@map("stripe_subscriptions")
-}
-
-model StripeWebhookEvent {
-  id              String    @id @default(cuid()) @db.VarChar(25)
-  stripe_event_id String    @unique @db.VarChar(255)
-  event_type      String    @db.VarChar(100)
-  payload         Json
-  processed       Boolean   @default(false)
-  error_message   String?   @db.Text
-  processing_attempts Int   @default(0) @db.SmallInt
-  created_at      DateTime  @default(now())
-  updated_at      DateTime  @updatedAt
-  
-  @@index([event_type, processed])
-  @@index([created_at])
-  @@index([processed, processing_attempts])
-  @@map("stripe_webhook_events")
-}
-
-// ============================================
-// Stripe Plans — Product+Price pairs managed via API
-// ============================================
-
-model StripePlan {
-  id                              String   @id @default(cuid()) @db.VarChar(25)
-  slug                            String   @unique @db.VarChar(100)
-  plan_name                       String   @db.VarChar(100)
-  description                     String?  @db.Text
-
-  // Stripe IDs
-  stripe_product_id               String   @unique @db.VarChar(255)
-  stripe_price_id                 String   @unique @db.VarChar(255)  // recurring price
-  stripe_trial_price_id           String?  @unique @db.VarChar(255)  // optional free-trial price
-
-  // Billing configuration
-  billing_interval                Int      @db.SmallInt              // 1=weekly 2=monthly 3=quarterly 4=annual
-  unit_amount                     Int                                // in cents
-  currency                        String   @default("brl") @db.VarChar(3)
-
-  // Credits / limits
-  released_credits                Int      @default(0)
-  credits_released_trial_period   Int      @default(0)
-  guest_limit                     Int      @default(0)
-  trial_days                      Int      @default(7) @db.SmallInt
-
-  // Control
-  active                          Boolean  @default(true)
-  created_at                      DateTime @default(now())
-  updated_at                      DateTime @updatedAt
-
-  @@index([active])
-  @@index([slug])
-  @@map("stripe_plans")
-}
-
-// ============================================
-// B2C Student Subscriptions
-// ============================================
-
-model Product {
-  id                String         @id @default(cuid()) @db.VarChar(25)
-  tenant_id         String         @db.VarChar(25)
-  stripe_product_id String         @db.VarChar(100)
-  name              String         @db.VarChar(255)
-  description       String?        @db.Text
-  slug              String         @db.VarChar(100)
-  categories        String[]       @default([])
-  active            Boolean        @default(true)
-
-  // Fee overrides — null = herda da categoria ou da taxa global do tenant
-  category_id              String?  @db.VarChar(25)  // null = sem categoria
-  chip_cost_override       Float?                    // % override (ex: 2.5 = 2.5%). null = herda
-  shipping_fee_override    Int?                      // centavos override. null = herda
-  requires_shipping        Boolean  @default(false)  // true para produtos físicos (books, tabs)
-
-  created_at        DateTime       @default(now())
-  updated_at        DateTime       @updatedAt
-
-  tenant            Tenant         @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
-  category          ProductCategory? @relation(fields: [category_id], references: [id], onDelete: SetNull)
-  ProductPrice      ProductPrice[]
-  UserProductAccess UserProductAccess[]
-
-  @@unique([tenant_id, stripe_product_id])
-  @@unique([tenant_id, slug])
-  @@index([tenant_id])
-  @@index([tenant_id, active])
-  @@index([tenant_id, category_id])
-  @@map("b2c_products")
-}
-
-// Categorias de produto com taxas padrão por categoria
-// Ex: "Books" com chip_cost 2% e shipping R$15,00
-model ProductCategory {
-  id                String   @id @default(cuid()) @db.VarChar(25)
-  tenant_id         String   @db.VarChar(25)
-  name              String   @db.VarChar(100)  // Ex: "Books", "Tabs", "Courses"
-  slug              String   @db.VarChar(100)  // Ex: "books", "tabs", "courses"
-
-  // Taxas padrão desta categoria (null = herda da taxa global do tenant)
-  chip_cost_percent Float?                     // % sobre o preço (ex: 2.5 = 2.5%)
-  shipping_fee      Int?                       // Frete fixo em centavos. null = herda do tenant
-
-  active            Boolean  @default(true)
-  created_at        DateTime @default(now())
-  updated_at        DateTime @updatedAt
-
-  tenant            Tenant    @relation("B2CProductCategories", fields: [tenant_id], references: [id], onDelete: Cascade)
-  products          Product[]
-  b2bProducts       B2BProduct[] @relation("B2BProductCategory")
-
-  @@unique([tenant_id, slug])
-  @@index([tenant_id])
-  @@index([tenant_id, active])
-  @@map("b2c_product_categories")
-}
-
-// Taxa global do tenant para produtos B2C (recurring)
-model B2CFeeConfig {
-  id                String   @id @default(cuid()) @db.VarChar(25)
-  tenant_id         String   @unique @db.VarChar(25)
-
-  chip_cost_percent Float    @default(0)  // % global (ex: 2.5 = 2.5%)
-  shipping_fee      Int      @default(0)  // Frete fixo global em centavos
-
-  created_at        DateTime @default(now())
-  updated_at        DateTime @updatedAt
-
-  tenant            Tenant   @relation("B2CFeeConfig", fields: [tenant_id], references: [id], onDelete: Cascade)
-
-  @@map("b2c_fee_config")
-}
-
-// Taxa global do tenant para produtos B2B (one-time)
-model B2BFeeConfig {
-  id                String   @id @default(cuid()) @db.VarChar(25)
-  tenant_id         String   @unique @db.VarChar(25)
-
-  chip_cost_percent Float    @default(0)  // % global (ex: 2.5 = 2.5%)
-  shipping_fee      Int      @default(0)  // Frete fixo global em centavos
-
-  created_at        DateTime @default(now())
-  updated_at        DateTime @updatedAt
-
-  tenant            Tenant   @relation("B2BFeeConfig", fields: [tenant_id], references: [id], onDelete: Cascade)
-
-  @@map("b2b_fee_config")
+  upfront
+  installments
 }
 
 enum EBillingMode {
-  unlimited           // Recorrente ilimitado
-  limited             // Recorrente limitado (N cobranças)
-  one_time            // Pagamento único vitalício
-  one_time_exp        // Pagamento único com expiração
+  unlimited
+  limited
+  one_time
+  one_time_exp
 }
 
 enum EAccessType {
-  subscription        // Acesso via subscription (unlimited/limited)
-  lifetime            // Acesso vitalício (one_time)
-  temporary           // Acesso temporário (one_time_exp)
-}
-
-model ProductPrice {
-  id              String         @id @default(cuid()) @db.VarChar(25)
-  tenant_id       String         @db.VarChar(25)
-  stripe_price_id String         @db.VarChar(100)
-  product_id      String         @db.VarChar(25)
-  Product         Product        @relation(fields: [product_id], references: [id])
-  tenant          Tenant         @relation("B2CProductPrices", fields: [tenant_id], references: [id], onDelete: Cascade)
-  
-  name            String         @db.VarChar(100)  // "Mensal", "Anual", "Vitalício"
-  
-  // Billing configuration
-  billing_mode    String         @default("unlimited") @db.VarChar(20)  // unlimited | limited | one_time | one_time_exp
-  interval        String?        @db.VarChar(20)   // month | year | week (null for one_time)
-  interval_count  Int?           @default(1) @db.SmallInt
-  unit_amount     Int                               // cents
-  currency        String         @default("brl") @db.VarChar(3)
-  
-  // Limits (mode-specific)
-  max_billing_cycles   Int?      // For limited: max charges before auto-cancel
-  access_duration_days Int?      // For one_time_exp: days of access
-  
-  active          Boolean        @default(true)
-  created_at      DateTime       @default(now())
-  updated_at      DateTime       @updatedAt
-
-  UserProductAccess UserProductAccess[]
-
-  @@unique([tenant_id, stripe_price_id])
-  @@index([tenant_id])
-  @@index([product_id, active])
-  @@index([tenant_id, billing_mode])
-  @@map("b2c_product_prices")
-}
-
-model UserProductAccess {
-  id                       String    @id @default(cuid()) @db.VarChar(25)
-  tenant_id                String    @db.VarChar(25)
-  user_id                  String    @db.VarChar(25)
-  User                     User      @relation(fields: [user_id], references: [id])
-  product_id               String    @db.VarChar(25)
-  Product                  Product   @relation(fields: [product_id], references: [id])
-  product_price_id         String    @db.VarChar(25)
-  ProductPrice             ProductPrice @relation(fields: [product_price_id], references: [id])
-  tenant                   Tenant    @relation("B2CUserProductAccess", fields: [tenant_id], references: [id], onDelete: Cascade)
-
-  // Stripe identifiers (subscription OR payment)
-  stripe_subscription_id   String?   @db.VarChar(100)  // For subscription modes
-  stripe_customer_id       String    @db.VarChar(100)
-  stripe_price_id          String    @db.VarChar(100)
-  stripe_payment_intent_id String?   @db.VarChar(100)  // For one_time modes
-
-  // Access control
-  access_type              String    @db.VarChar(20)   // subscription | lifetime | temporary
-  status                   String    @db.VarChar(50)   // active | expired | canceled | past_due
-
-  // Subscription fields (for unlimited/limited)
-  current_period_start     DateTime?
-  current_period_end       DateTime?
-  cancel_at_period_end     Boolean   @default(false)
-  canceled_at              DateTime?
-  trial_start              DateTime?
-  trial_end                DateTime?
-
-  // One-time payment fields (for one_time/one_time_exp)
-  access_granted_at        DateTime  @default(now())
-  access_expires_at        DateTime? // null = lifetime, date = temporary
-
-  // Billing cycle tracking (for limited mode)
-  max_billing_cycles       Int?
-  completed_billing_cycles Int       @default(0)
-
-  // Financial
-  amount                   Int       // cents
-  currency                 String    @default("brl") @db.VarChar(3)
-
-  created_at               DateTime  @default(now())
-  updated_at               DateTime  @updatedAt
-
-  @@unique([tenant_id, stripe_subscription_id])
-  @@index([tenant_id])
-  @@index([tenant_id, user_id, status])
-  @@index([user_id, status])
-  @@index([user_id, product_id, status])
-  @@index([stripe_subscription_id])
-  @@index([access_type, status])
-  @@index([access_expires_at])
-  @@map("b2c_user_product_access")
-}
-
-// ============================================
-// B2C Checkout Sessions — rastreamento de checkouts (pending/completed/expired)
-// ============================================
-
-model B2CCheckoutSession {
-  id                    String    @id @default(cuid()) @db.VarChar(25)
-  tenant_id             String    @db.VarChar(25)
-  user_id               String?   @db.VarChar(25)   // null = lead não autenticado
-  product_id            String    @db.VarChar(25)
-  price_id              String    @db.VarChar(25)
-
-  stripe_checkout_id    String    @unique @db.VarChar(200)
-  stripe_price_id       String    @db.VarChar(100)
-
-  status                String    @db.VarChar(20)   // pending | completed | expired | abandoned
-
-  amount                Int       // centavos (preço base + taxas)
-  currency              String    @default("brl") @db.VarChar(3)
-
-  // Dados do cliente (lead ou user)
-  customer_email        String    @db.VarChar(255)
-  customer_name         String?   @db.VarChar(255)
-  customer_phone        String?   @db.VarChar(50)
-  is_lead_purchase      Boolean   @default(false)
-
-  // Timestamps do funil
-  checkout_started_at   DateTime  @default(now())
-  checkout_completed_at DateTime?
-  checkout_expired_at   DateTime?
-
-  metadata              Json?     @db.JsonB
-
-  created_at            DateTime  @default(now())
-  updated_at            DateTime  @updatedAt
-
-  tenant                Tenant    @relation("B2CCheckoutSessions", fields: [tenant_id], references: [id], onDelete: Cascade)
-  user                  User?     @relation("B2CCheckoutSessionUser", fields: [user_id], references: [id], onDelete: SetNull)
-
-  @@index([tenant_id])
-  @@index([tenant_id, status])
-  @@index([tenant_id, customer_email])
-  @@index([stripe_checkout_id])
-  @@map("b2c_checkout_sessions")
-}
-
-model B2BProduct {
-  id                String   @id @default(cuid()) @db.VarChar(25)
-  tenant_id         String   @db.VarChar(25)
-  stripe_product_id String   @db.VarChar(100)
-  stripe_price_id   String   @db.VarChar(100)
-  name              String   @db.VarChar(255)
-  description       String?  @db.Text
-  slug              String   @db.VarChar(100)  // Identificador único legível para rastreamento
-  categories        String[] @default([])
-  price             Int      // Centavos
-  currency          String   @default("brl") @db.VarChar(3)
-  active            Boolean  @default(true)
-
-  // Fee overrides — null = herda da categoria ou da taxa global do tenant
-  category_id              String?  @db.VarChar(25)
-  chip_cost_override       Float?                    // % override. null = herda
-  shipping_fee_override    Int?                      // centavos override. null = herda
-  requires_shipping        Boolean  @default(false)  // true para produtos físicos
-
-  created_at        DateTime @default(now())
-  updated_at        DateTime @updatedAt
-
-  tenant            Tenant          @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
-  category          ProductCategory? @relation("B2BProductCategory", fields: [category_id], references: [id], onDelete: SetNull)
-  purchases         B2BPurchase[]
-
-  @@unique([tenant_id, stripe_product_id])
-  @@unique([tenant_id, stripe_price_id])
-  @@unique([tenant_id, slug])
-  @@index([tenant_id])
-  @@index([tenant_id, active])
-  @@index([tenant_id, category_id])
-  @@map("b2b_products")
-}
-
-model B2BPurchase {
-  id                      String    @id @default(cuid()) @db.VarChar(25)
-  tenant_id               String    @db.VarChar(25)
-  user_id                 String?   @db.VarChar(25)
-  product_id              String    @db.VarChar(25)
-  stripe_checkout_id      String?   @db.VarChar(200)
-  stripe_payment_intent   String?   @db.VarChar(200)
-  
-  checkout_started_at     DateTime? @db.Timestamptz
-  checkout_completed_at   DateTime? @db.Timestamptz
-  checkout_abandoned_at   DateTime? @db.Timestamptz
-  
-  status                  String    @db.VarChar(20) // pending, completed, abandoned, refunded
-  amount                  Int       // Centavos
-  currency                String    @db.VarChar(3)
-  
-  customer_email          String    @db.VarChar(255)
-  customer_name           String?   @db.VarChar(255)
-  customer_phone          String?   @db.VarChar(50)
-  
-  metadata                Json?     @db.JsonB
-  
-  created_at              DateTime  @default(now())
-  updated_at              DateTime  @updatedAt
-
-  tenant                  Tenant     @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
-  product                 B2BProduct @relation(fields: [product_id], references: [id], onDelete: Cascade)
-  user                    User?      @relation(fields: [user_id], references: [id], onDelete: SetNull)
-
-  @@unique([tenant_id, stripe_checkout_id])
-  @@unique([tenant_id, stripe_payment_intent])
-  @@index([tenant_id])
-  @@index([tenant_id, status])
-  @@index([user_id])
-  @@index([product_id])
-  @@index([customer_email])
-  @@index([created_at])
-  @@map("b2b_purchases")
-}
-
-// ============================================
-// Discount Coupons — Shared B2B + B2C
-// ============================================
-
-model DiscountCoupon {
-  id                  String   @id @default(cuid()) @db.VarChar(25)
-  tenant_id           String   @db.VarChar(25)
-
-  code                String   @db.VarChar(100)
-  name                String   @db.VarChar(255)
-  description         String?  @db.Text
-
-  discount_type       String   @db.VarChar(20)   // percentage | fixed_amount
-  discount_value      Float                       // % (0-100) for percentage; whole cents for fixed_amount
-  scope               String   @db.VarChar(20)   // order | product | category
-  product_ids         String[] @default([])
-  category_ids        String[] @default([])
-  applies_to          String   @db.VarChar(20)   // b2b | b2c | both
-  product_overrides   Json?                       // [{ productId, discountType, discountValue }] — per-product discount overrides (scope=product only)
-
-  cumulative          Boolean  @default(false)
-  min_order_amount    Int?                        // minimum cart total in cents
-  max_discount_amount Int?                        // cap in cents
-  max_redemptions     Int?                        // null = unlimited
-  redeemed_count      Int      @default(0)
-
-  expires_at          DateTime?
-  active              Boolean  @default(true)
-
-  created_at          DateTime @default(now())
-  updated_at          DateTime @updatedAt
-
-  tenant              Tenant   @relation("DiscountCoupons", fields: [tenant_id], references: [id], onDelete: Cascade)
-
-  @@unique([tenant_id, code])
-  @@index([tenant_id])
-  @@index([tenant_id, active])
-  @@map("discount_coupons")
+  subscription
+  lifetime
+  temporary
 }
