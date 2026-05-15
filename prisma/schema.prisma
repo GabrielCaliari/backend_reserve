@@ -207,6 +207,7 @@ model Tenant {
   stripe_customer_id        String?                     @db.VarChar(255)
   subscription_status       String                      @default("none") @db.VarChar(50)
   timezone                  String                      @default("America/Sao_Paulo") @db.VarChar(100)
+  tenant_type               ETenantType                 @default(COMMON)
   AdminTenant               AdminTenant[]
   Appointments              Appointment[]
   AppointmentBlockedPeriods AppointmentBlockedPeriod[]
@@ -236,6 +237,7 @@ model Tenant {
 
   @@index([stripe_customer_id])
   @@index([subscription_status])
+  @@index([tenant_type])
 }
 
 model LeadCollection {
@@ -1314,6 +1316,12 @@ enum EAdminRole {
   editor
   viewer
   company_admin
+}
+
+enum ETenantType {
+  MASTER
+  COMMON
+  EDUCATIONAL
 }
 
 enum EArticleStatus {
