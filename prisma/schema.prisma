@@ -195,7 +195,10 @@ model Tenant {
   id                        String                      @id @default(cuid()) @db.VarChar(25)
   name                      String                      @db.VarChar(100)
   slug                      String                      @unique @db.VarChar(50)
-  domain                    String                      @db.VarChar(255)
+  /// @deprecated Fonte de verdade é TenantDomain (is_primary = true). Mantida
+  /// por compatibilidade com o payload de tenant que o painel consome; será
+  /// removida quando a última leitura sair do frontend.
+  domain                    String?                     @db.VarChar(255)
   active                    Boolean                     @default(true)
   created_at                DateTime                    @default(now())
   updated_at                DateTime                    @updatedAt
@@ -234,10 +237,27 @@ model Tenant {
   NotificationSettings      TenantNotificationSettings?
   HotelConfig               HotelClient?                @relation("HotelTenantConfig")
   HotelReservations         HotelReservation[]
+  TenantDomains             TenantDomain[]
 
   @@index([stripe_customer_id])
   @@index([subscription_status])
   @@index([tenant_type])
+}
+
+model TenantDomain {
+  id         String   @id @default(cuid()) @db.VarChar(25)
+  tenant_id  String   @db.VarChar(25)
+  /// "domain" = host + subdomínios, https only. "regex" = padrão casado literalmente contra o Origin.
+  type       String   @default("domain") @db.VarChar(10)
+  value      String   @unique @db.VarChar(500)
+  is_primary Boolean  @default(false)
+  active     Boolean  @default(true)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  Tenant Tenant @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+
+  @@index([tenant_id])
 }
 
 model LeadCollection {
