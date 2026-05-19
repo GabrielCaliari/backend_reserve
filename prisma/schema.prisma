@@ -238,10 +238,27 @@ model Tenant {
   HotelConfig               HotelClient?                @relation("HotelTenantConfig")
   HotelReservations         HotelReservation[]
   TenantDomains             TenantDomain[]
+  TenantSettings            TenantSetting[]
 
   @@index([stripe_customer_id])
   @@index([subscription_status])
   @@index([tenant_type])
+}
+
+model TenantSetting {
+  id         String   @id @default(cuid()) @db.VarChar(25)
+  tenant_id  String   @db.VarChar(25)
+  module     String   @db.VarChar(50)
+  key        String   @db.VarChar(100)
+  value      Json
+  updated_by String?  @db.VarChar(25)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  Tenant Tenant @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+
+  @@unique([tenant_id, module, key])
+  @@index([tenant_id, module])
 }
 
 model TenantDomain {

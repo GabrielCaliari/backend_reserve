@@ -49,3 +49,24 @@ describe('20260728000002_add_tenant_domain', () => {
     expect(sql).not.toContain('DROP COLUMN "domain"');
   });
 });
+
+describe('20260728000003_add_tenant_setting', () => {
+  const sql = readMigration('20260728000003_add_tenant_setting');
+
+  it('creates TenantSetting with a JSONB value in snake_case', () => {
+    expect(sql).toContain('CREATE TABLE "TenantSetting"');
+    expect(sql).toContain('"tenant_id" VARCHAR(25) NOT NULL');
+    expect(sql).toContain('"value" JSONB NOT NULL');
+    expect(sql).toContain('"updated_by" VARCHAR(25)');
+    expect(sql).not.toMatch(/"tenantId"|"updatedBy"/);
+  });
+
+  it('enforces one row per tenant/module/key', () => {
+    expect(sql).toContain('CREATE UNIQUE INDEX "TenantSetting_tenant_id_module_key_key"');
+    expect(sql).toContain('CREATE INDEX "TenantSetting_tenant_id_module_idx"');
+  });
+
+  it('cascades on tenant delete', () => {
+    expect(sql).toMatch(/TenantSetting_tenant_id_fkey[\s\S]*ON DELETE CASCADE/);
+  });
+});
