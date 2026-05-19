@@ -215,6 +215,70 @@ model UserPasswordChangeSession {
   User       User      @relation(fields: [user_id], references: [id])
 }
 
+model ActivationToken {
+  id          String    @id @default(cuid()) @db.VarChar(25)
+  customer_id String    @db.VarChar(25)
+  tenant_id   String    @db.VarChar(25)
+  token       String    @unique @db.VarChar(64)
+  type        String    @db.VarChar(20)
+  expires_at  DateTime
+  used_at     DateTime?
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
+  Customer    Customer  @relation(fields: [customer_id], references: [id])
+
+  @@index([token])
+  @@index([customer_id, type])
+  @@index([tenant_id])
+  @@index([customer_id, tenant_id, type])
+}
+
+model Customer {
+  id                 String                 @id @default(cuid()) @db.VarChar(25)
+  tenant_id          String                 @db.VarChar(25)
+  email              String                 @db.VarChar(255)
+  name               String                 @db.VarChar(100)
+  phone_number       String?                @db.VarChar(13)
+  stripe_customer_id String?                @db.VarChar(100)
+  created_at         DateTime               @default(now())
+  updated_at         DateTime               @updatedAt
+  Tenant             Tenant                 @relation(fields: [tenant_id], references: [id])
+  Credential         CustomerCredential?
+  SessionTokens      CustomerSessionToken[]
+  ActivationTokens   ActivationToken[]
+  ProductAccess      UserProductAccess[]
+
+  @@unique([tenant_id, email])
+  @@index([tenant_id])
+  @@index([email])
+  @@map("customers")
+}
+
+model CustomerCredential {
+  id          String   @id @default(cuid()) @db.VarChar(25)
+  customer_id String   @unique @db.VarChar(25)
+  hash        String
+  salt        String
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+  Customer    Customer @relation(fields: [customer_id], references: [id])
+
+  @@map("customer_credentials")
+}
+
+model CustomerSessionToken {
+  id          String   @id @default(cuid()) @db.VarChar(25)
+  customer_id String   @db.VarChar(25)
+  hash_token  String
+  salt        String
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+  Customer    Customer @relation(fields: [customer_id], references: [id])
+
+  @@index([customer_id])
+  @@map("customer_session_tokens")
+}
+
 model Company {
   id                    String    @id @default(cuid()) @db.VarChar(25)
   cnpj                  String    @unique @db.VarChar(14)
@@ -630,6 +694,7 @@ model Tenant {
   B2CProductPrices          ProductPrice[]             @relation("B2CProductPrices")
   B2CProducts               Product[]
   B2CUserProductAccess      UserProductAccess[]        @relation("B2CUserProductAccess")
+  Customers                 Customer[]
   discountCoupons           DiscountCoupon[]           @relation("DiscountCoupons")
   StatsIntegration          StatsIntegration[]
   StripeSubscription        StripeSubscription?
@@ -1365,7 +1430,7 @@ model ProductPrice {
 model UserProductAccess {
   id                       String       @id @default(cuid()) @db.VarChar(25)
   tenant_id                String       @db.VarChar(25)
-  user_id                  String       @db.VarChar(25)
+  user_id                  String?      @db.VarChar(25)
   product_id               String       @db.VarChar(25)
   product_price_id         String       @db.VarChar(25)
   stripe_subscription_id   String?      @db.VarChar(100)
@@ -1388,16 +1453,20 @@ model UserProductAccess {
   currency                 String       @default("brl") @db.VarChar(3)
   created_at               DateTime     @default(now())
   updated_at               DateTime     @updatedAt
+  customer_id              String?      @db.VarChar(25)
   Product                  Product      @relation(fields: [product_id], references: [id])
   ProductPrice             ProductPrice @relation(fields: [product_price_id], references: [id])
   tenant                   Tenant       @relation("B2CUserProductAccess", fields: [tenant_id], references: [id], onDelete: Cascade)
-  User                     User         @relation(fields: [user_id], references: [id])
+  User                     User?        @relation(fields: [user_id], references: [id])
+  Customer                 Customer?    @relation(fields: [customer_id], references: [id])
 
   @@unique([tenant_id, stripe_subscription_id])
   @@index([tenant_id])
   @@index([tenant_id, user_id, status])
   @@index([user_id, status])
   @@index([user_id, product_id, status])
+  @@index([customer_id])
+  @@index([tenant_id, customer_id, status])
   @@index([stripe_subscription_id])
   @@index([access_type, status])
   @@index([access_expires_at])

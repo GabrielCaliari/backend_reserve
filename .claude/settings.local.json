@@ -2,7 +2,15 @@
   "permissions": {
     "allow": [
       "Bash(grep -r \"payload\\\\\\\\.tenant\\\\|tenantId.*payload\\\\|payload.*tenantId\" \"/c/Users/gabri/Git/backend_api_zarp-admin/src/modules/zarp-auth\" --include=\"*.ts\")",
-      "Bash(grep -E \"\\\\.\\(ts|js\\)$\")"
+      "Bash(grep -E \"\\\\.\\(ts|js\\)$\")",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\gabri\\\\Git\\\\backend_api_zarp-admin\" -Directory)",
+      "Bash(Select-Object Name)",
+      "Bash(npx prisma *)",
+      "Bash(npx tsc *)",
+      "Bash(npm list *)",
+      "Bash(cd C:\\\\\\\\Users\\\\\\\\gabri\\\\\\\\Git\\\\\\\\backend_api_zarp-admin)",
+      "Bash(npm install *)",
+      "PowerShell(npm install *)"
     ]
   }
 }
