@@ -10,7 +10,10 @@
       "Bash(npm list *)",
       "Bash(cd C:\\\\\\\\Users\\\\\\\\gabri\\\\\\\\Git\\\\\\\\backend_api_zarp-admin)",
       "Bash(npm install *)",
-      "PowerShell(npm install *)"
+      "PowerShell(npm install *)",
+      "Bash(node *)",
+      "Bash(curl *)",
+      "Bash(pnpm exec *)"
     ]
   }
 }

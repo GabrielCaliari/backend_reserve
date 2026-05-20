@@ -31,17 +31,28 @@ export class LoginCustomerUseCase {
       throw new UnauthorizedException('Credenciais inválidas.');
     }
 
-    // Validate active product access for this tenant
-    const access = await this.prisma.userProductAccess.findFirst({
-      where: {
-        customer_id: customer.id,
-        tenant_id: tenantId,
-        status: { in: ['active', 'trialing'] },
-      },
-      select: { id: true, product_id: true, access_type: true, status: true, access_expires_at: true },
-    });
+    // Validate active product access: check B2C UserProductAccess OR completed B2B digital purchase
+    const [access, b2bPurchase] = await Promise.all([
+      this.prisma.userProductAccess.findFirst({
+        where: {
+          customer_id: customer.id,
+          tenant_id: tenantId,
+          status: { in: ['active', 'trialing'] },
+        },
+        select: { id: true, product_id: true, access_type: true, status: true, access_expires_at: true },
+      }),
+      this.prisma.b2BPurchase.findFirst({
+        where: {
+          customer_email: customer.email,
+          tenant_id: tenantId,
+          status: 'completed',
+          product: { requires_shipping: false },
+        },
+        select: { id: true, product_id: true },
+      }),
+    ]);
 
-    if (!access) {
+    if (!access && !b2bPurchase) {
       this.logger.warn(`Login: customer ${customer.id} has no active access in tenant ${tenantId}`);
       throw new UnauthorizedException('Sem acesso ativo para este portal.');
     }
@@ -71,12 +82,19 @@ export class LoginCustomerUseCase {
         email: customer.email,
         tenant_id: tenantId,
       },
-      access: {
-        product_id: access.product_id,
-        access_type: access.access_type,
-        status: access.status,
-        access_expires_at: access.access_expires_at,
-      },
+      access: access
+        ? {
+            product_id: access.product_id,
+            access_type: access.access_type,
+            status: access.status,
+            access_expires_at: access.access_expires_at,
+          }
+        : {
+            product_id: b2bPurchase!.product_id,
+            access_type: 'lifetime',
+            status: 'active',
+            access_expires_at: null,
+          },
     };
   }
 }

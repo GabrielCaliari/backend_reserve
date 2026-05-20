@@ -1,0 +1,116 @@
+import { Injectable, Inject, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  IPracticeExamRepository,
+  PRACTICE_EXAM_REPOSITORY,
+} from '../../domain/interfaces/practice-exam.repository.interface';
+import {
+  IExamAttemptRepository,
+  EXAM_ATTEMPT_REPOSITORY,
+} from '../../domain/interfaces/exam-attempt.repository.interface';
+import { EAttemptStatus } from '../../domain/enums/attempt-status.enum';
+
+@Injectable()
+export class ExamAttemptUseCase {
+  constructor(
+    @Inject(PRACTICE_EXAM_REPOSITORY) private readonly examRepo: IPracticeExamRepository,
+    @Inject(EXAM_ATTEMPT_REPOSITORY) private readonly attemptRepo: IExamAttemptRepository,
+  ) {}
+
+  async startAttempt(customerId: string, practiceExamId: string) {
+    const exam = await this.examRepo.findById(practiceExamId);
+    if (!exam) throw new NotFoundException('Practice exam não encontrado.');
+    if (!exam.is_active) throw new BadRequestException('Este exam não está disponível.');
+    return this.attemptRepo.create(customerId, practiceExamId);
+  }
+
+  async getAttempt(id: string, customerId: string) {
+    const attempt = await this.attemptRepo.findById(id);
+    if (!attempt || attempt.customer_id !== customerId) throw new NotFoundException('Tentativa não encontrada.');
+    return attempt;
+  }
+
+  async answerQuestion(attemptId: string, questionId: string, selectedOption: string, customerId: string) {
+    const attempt = await this.attemptRepo.findById(attemptId);
+    if (!attempt || attempt.customer_id !== customerId) throw new NotFoundException('Tentativa não encontrada.');
+    if (attempt.status !== EAttemptStatus.IN_PROGRESS) throw new BadRequestException('Esta tentativa já foi finalizada.');
+
+    const question = attempt.PracticeExam.Questions.find((q: any) => q.id === questionId);
+    if (!question) throw new NotFoundException('Questão não encontrada nesta tentativa.');
+
+    const isCorrect = question.correct_option === selectedOption;
+    return this.attemptRepo.upsertResponse(attemptId, questionId, selectedOption, isCorrect);
+  }
+
+  async flagQuestion(attemptId: string, questionId: string, flagged: boolean, customerId: string) {
+    const attempt = await this.attemptRepo.findById(attemptId);
+    if (!attempt || attempt.customer_id !== customerId) throw new NotFoundException('Tentativa não encontrada.');
+    if (attempt.status !== EAttemptStatus.IN_PROGRESS) throw new BadRequestException('Esta tentativa já foi finalizada.');
+    await this.attemptRepo.setFlagged(attemptId, questionId, flagged);
+  }
+
+  async submitAttempt(attemptId: string, customerId: string) {
+    const attempt = await this.attemptRepo.findById(attemptId);
+    if (!attempt || attempt.customer_id !== customerId) throw new NotFoundException('Tentativa não encontrada.');
+    if (attempt.status !== EAttemptStatus.IN_PROGRESS) throw new BadRequestException('Esta tentativa já foi finalizada.');
+
+    const totalQuestions = attempt.PracticeExam.Questions.length;
+    const correct = attempt.Responses.filter((r: any) => r.is_correct === true).length;
+    const score = totalQuestions > 0 ? (correct / totalQuestions) * 100 : 0;
+
+    return this.attemptRepo.finish(attemptId, EAttemptStatus.COMPLETED, Math.round(score * 100) / 100);
+  }
+
+  async timedOutAttempt(attemptId: string, customerId: string) {
+    const attempt = await this.attemptRepo.findById(attemptId);
+    if (!attempt || attempt.customer_id !== customerId) throw new NotFoundException('Tentativa não encontrada.');
+    if (attempt.status !== EAttemptStatus.IN_PROGRESS) throw new BadRequestException('Esta tentativa já foi finalizada.');
+
+    const totalQuestions = attempt.PracticeExam.Questions.length;
+    const correct = attempt.Responses.filter((r: any) => r.is_correct === true).length;
+    const score = totalQuestions > 0 ? (correct / totalQuestions) * 100 : 0;
+
+    return this.attemptRepo.finish(attemptId, EAttemptStatus.TIMED_OUT, Math.round(score * 100) / 100);
+  }
+
+  getStudentHistory(customerId: string) {
+    return this.attemptRepo.findByCustomer(customerId);
+  }
+
+  getAllAttemptsForAdmin() {
+    return this.attemptRepo.findAllWithDetails();
+  }
+
+  async exportHistoryCSV(): Promise<string> {
+    const attempts = await this.attemptRepo.findAllWithDetails();
+    const rows: string[] = [
+      'student_name,student_email,exam_title,started_at,finished_at,score,question_id,selected_option,correct_option,is_correct',
+    ];
+
+    for (const attempt of attempts) {
+      const base = [
+        `"${attempt.Customer.name}"`,
+        `"${attempt.Customer.email}"`,
+        `"${attempt.PracticeExam.title}"`,
+        attempt.started_at.toISOString(),
+        attempt.finished_at?.toISOString() ?? '',
+        attempt.score ?? '',
+      ];
+
+      if (attempt.Responses.length === 0) {
+        rows.push([...base, '', '', '', ''].join(','));
+      } else {
+        for (const r of attempt.Responses) {
+          rows.push([
+            ...base,
+            r.Question.id,
+            r.selected_option ?? '',
+            r.Question.correct_option,
+            r.is_correct ?? '',
+          ].join(','));
+        }
+      }
+    }
+
+    return rows.join('\n');
+  }
+}

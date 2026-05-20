@@ -247,6 +247,7 @@ model Customer {
   SessionTokens      CustomerSessionToken[]
   ActivationTokens   ActivationToken[]
   ProductAccess      UserProductAccess[]
+  ExamAttempts       ExamAttempt[]
 
   @@unique([tenant_id, email])
   @@index([tenant_id])
@@ -665,7 +666,7 @@ model Tenant {
   id                        String                     @id @default(cuid()) @db.VarChar(25)
   name                      String                     @db.VarChar(100)
   slug                      String                     @unique @db.VarChar(50)
-  domain                    String?                    @db.VarChar(255)
+  domain                    String                     @db.VarChar(255)
   active                    Boolean                    @default(true)
   created_at                DateTime                   @default(now())
   updated_at                DateTime                   @updatedAt
@@ -699,6 +700,7 @@ model Tenant {
   StatsIntegration          StatsIntegration[]
   StripeSubscription        StripeSubscription?
   TenantBillingConfig       TenantBillingConfig?
+  PracticeExams             PracticeExam[]
 
   @@index([stripe_customer_id])
   @@index([subscription_status])
@@ -1760,4 +1762,103 @@ enum EAccessType {
   subscription
   lifetime
   temporary
+}
+
+enum EExamSection {
+  B_AND_F
+  TRADE
+  B_AND_F_TRADE
+}
+
+enum EAttemptStatus {
+  IN_PROGRESS
+  COMPLETED
+  TIMED_OUT
+}
+
+model PracticeExam {
+  id          String       @id @default(cuid()) @db.VarChar(25)
+  tenant_id   String       @db.VarChar(25)
+  title       String       @db.VarChar(255)
+  section     EExamSection
+  time_limit  Int
+  description String?      @db.Text
+  is_active   Boolean      @default(true)
+  created_at  DateTime     @default(now())
+  updated_at  DateTime     @updatedAt
+  Tenant      Tenant       @relation(fields: [tenant_id], references: [id])
+  Questions   Question[]
+  Attempts    ExamAttempt[]
+
+  @@index([tenant_id, is_active])
+  @@map("practice_exams")
+}
+
+model Question {
+  id               String           @id @default(cuid()) @db.VarChar(25)
+  practice_exam_id String           @db.VarChar(25)
+  statement        String           @db.Text
+  correct_option   String           @db.VarChar(1)
+  explanation      String?          @db.Text
+  order            Int
+  deleted_at       DateTime?
+  created_at       DateTime         @default(now())
+  updated_at       DateTime         @updatedAt
+  PracticeExam     PracticeExam     @relation(fields: [practice_exam_id], references: [id])
+  Options          OptionQuestion[]
+  Responses        QuestionResponse[]
+
+  @@index([practice_exam_id, order])
+  @@map("questions")
+}
+
+model OptionQuestion {
+  id          String   @id @default(cuid()) @db.VarChar(25)
+  question_id String   @db.VarChar(25)
+  label       String   @db.VarChar(1)
+  text        String   @db.Text
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+  Question    Question @relation(fields: [question_id], references: [id])
+
+  @@unique([question_id, label])
+  @@index([question_id])
+  @@map("option_questions")
+}
+
+model ExamAttempt {
+  id               String            @id @default(cuid()) @db.VarChar(25)
+  customer_id      String            @db.VarChar(25)
+  practice_exam_id String            @db.VarChar(25)
+  started_at       DateTime          @default(now())
+  finished_at      DateTime?
+  score            Float?
+  status           EAttemptStatus    @default(IN_PROGRESS)
+  created_at       DateTime          @default(now())
+  updated_at       DateTime          @updatedAt
+  Customer         Customer          @relation(fields: [customer_id], references: [id])
+  PracticeExam     PracticeExam      @relation(fields: [practice_exam_id], references: [id])
+  Responses        QuestionResponse[]
+
+  @@index([customer_id, practice_exam_id])
+  @@index([customer_id, status])
+  @@map("exam_attempts")
+}
+
+model QuestionResponse {
+  id              String      @id @default(cuid()) @db.VarChar(25)
+  attempt_id      String      @db.VarChar(25)
+  question_id     String      @db.VarChar(25)
+  selected_option String?     @db.VarChar(1)
+  is_correct      Boolean?
+  flagged         Boolean     @default(false)
+  answered_at     DateTime?
+  created_at      DateTime    @default(now())
+  updated_at      DateTime    @updatedAt
+  Attempt         ExamAttempt @relation(fields: [attempt_id], references: [id])
+  Question        Question    @relation(fields: [question_id], references: [id])
+
+  @@unique([attempt_id, question_id])
+  @@index([attempt_id])
+  @@map("question_responses")
 }
