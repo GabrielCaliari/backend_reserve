@@ -7,8 +7,8 @@ function readMigration(folder: string): string {
   return fs.readFileSync(path.join(MIGRATIONS_DIR, folder, 'migration.sql'), 'utf8');
 }
 
-describe('20260728000002_add_tenant_domain', () => {
-  const sql = readMigration('20260728000002_add_tenant_domain');
+describe('20260801000002_add_tenant_domain', () => {
+  const sql = readMigration('20260801000002_add_tenant_domain');
 
   it('creates the TenantDomain table in snake_case', () => {
     expect(sql).toContain('CREATE TABLE "TenantDomain"');
@@ -50,8 +50,8 @@ describe('20260728000002_add_tenant_domain', () => {
   });
 });
 
-describe('20260728000003_add_tenant_setting', () => {
-  const sql = readMigration('20260728000003_add_tenant_setting');
+describe('20260801000003_add_tenant_setting', () => {
+  const sql = readMigration('20260801000003_add_tenant_setting');
 
   it('creates TenantSetting with a JSONB value in snake_case', () => {
     expect(sql).toContain('CREATE TABLE "TenantSetting"');
