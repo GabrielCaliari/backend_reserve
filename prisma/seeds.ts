@@ -9,6 +9,7 @@ import { seedAdmins } from './seeds/reserve-auth/admins.seed';
 // Shared seeds
 import { seedPlans } from './seeds/shared/plans.seed';
 import { seedTokenPacks } from './seeds/shared/token-packs.seed';
+import { seedPermissions } from './seeds/shared/permissions.seed';
 
 // CMS module seeds
 import { seedAuthors } from './seeds/reserve-cms/authors.seed';
@@ -57,6 +58,7 @@ import { seedCNAEs } from './seeds/reserve-cnpjs/cnaes.seed';
     
     await seedTenants();
     await seedAdmins();
+    await seedPermissions();
 
     // ========================================
     // 2. SHARED DATA
