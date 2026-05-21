@@ -61,7 +61,7 @@ export class LoginCustomerUseCase {
     const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 
     const token = await this.jwtProvider.generate(
-      { id: customer.id, email: customer.email, name: customer.name, tenant_id: tenantId },
+      { id: customer.id, email: customer.email, name: customer.name, tenant_id: tenantId, role: customer.role },
       SEVEN_DAYS_MS,
       customer.Credential.salt,
     );
@@ -81,6 +81,7 @@ export class LoginCustomerUseCase {
         name: customer.name,
         email: customer.email,
         tenant_id: tenantId,
+        role: customer.role,
       },
       access: access
         ? {

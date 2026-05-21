@@ -25,6 +25,7 @@ export class CustomerJwtGuard implements CanActivate {
 
     request.customer_id = result.customerId;
     request.tenant_id = result.tenantId;
+    request.customer_role = result.role;
     request.token = token;
     request['session-id'] = sessionId;
 

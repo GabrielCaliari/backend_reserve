@@ -1,5 +1,7 @@
 export const CUSTOMER_REPOSITORY = Symbol('CUSTOMER_REPOSITORY');
 
+export type CustomerRole = 'study' | 'admin';
+
 export interface ICreateCustomer {
   tenant_id: string;
   email: string;
@@ -15,6 +17,7 @@ export interface ICustomer {
   name: string;
   phone_number: string | null;
   stripe_customer_id: string | null;
+  role: CustomerRole;
   created_at: Date;
   updated_at: Date;
 }
@@ -24,4 +27,5 @@ export interface ICustomerRepository {
   findById(id: string): Promise<ICustomer | null>;
   create(data: ICreateCustomer): Promise<ICustomer>;
   updateStripeCustomerId(id: string, stripeCustomerId: string): Promise<void>;
+  updateRole(id: string, role: CustomerRole): Promise<void>;
 }

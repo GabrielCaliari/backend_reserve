@@ -240,6 +240,7 @@ model Customer {
   name               String                 @db.VarChar(100)
   phone_number       String?                @db.VarChar(13)
   stripe_customer_id String?                @db.VarChar(100)
+  role               ECustomerRole          @default(study)
   created_at         DateTime               @default(now())
   updated_at         DateTime               @updatedAt
   Tenant             Tenant                 @relation(fields: [tenant_id], references: [id])
@@ -1713,6 +1714,11 @@ enum EAdminRole {
   editor
   viewer
   company_admin
+}
+
+enum ECustomerRole {
+  study
+  admin
 }
 
 enum EArticleStatus {

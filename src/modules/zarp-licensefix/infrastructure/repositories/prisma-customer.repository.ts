@@ -5,6 +5,7 @@ import {
   ICustomerRepository,
   ICreateCustomer,
   ICustomer,
+  CustomerRole,
 } from '../../domain/interfaces/customer.repository.interface';
 
 @Injectable()
@@ -45,6 +46,17 @@ export class PrismaCustomerRepository implements ICustomerRepository {
       });
     } catch (error) {
       throw new RepositoryException('Erro ao atualizar stripe_customer_id do Customer.', error);
+    }
+  }
+
+  async updateRole(id: string, role: CustomerRole): Promise<void> {
+    try {
+      await this.prisma.customer.update({
+        where: { id },
+        data: { role },
+      });
+    } catch (error) {
+      throw new RepositoryException('Erro ao atualizar role do Customer.', error);
     }
   }
 }

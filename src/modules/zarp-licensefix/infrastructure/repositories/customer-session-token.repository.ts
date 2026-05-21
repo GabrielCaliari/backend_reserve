@@ -11,7 +11,7 @@ export class CustomerSessionTokenRepository {
     private readonly jwtProvider: JwtProvider,
   ) {}
 
-  async validateToken(sessionId: string, token: string): Promise<{ customer_id: string; tenant_id: string } | false> {
+  async validateToken(sessionId: string, token: string): Promise<{ customer_id: string; tenant_id: string; role: string } | false> {
     const session = await this.prisma.customerSessionToken.findUnique({
       where: { id: sessionId },
       include: {
@@ -35,6 +35,7 @@ export class CustomerSessionTokenRepository {
     return {
       customer_id: session.Customer.id,
       tenant_id: session.Customer.tenant_id,
+      role: session.Customer.role,
     };
   }
 }
