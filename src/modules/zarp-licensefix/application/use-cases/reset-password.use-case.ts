@@ -23,17 +23,17 @@ export class ResetPasswordUseCase {
 
     if (!record || record.type !== ETokenType.PASSWORD_RESET) {
       this.logger.warn(`Reset password attempt with invalid token`);
-      throw new BadRequestException('Token inválido.');
+      throw new BadRequestException('Invalid token.');
     }
 
     if (record.used_at) {
       this.logger.warn(`Reset password attempt with already-used token: ${record.id}`);
-      throw new BadRequestException('Token já utilizado.');
+      throw new BadRequestException('This link has already been used.');
     }
 
     if (new Date() > record.expires_at) {
       this.logger.warn(`Reset password attempt with expired token: ${record.id}`);
-      throw new BadRequestException('Token expirado.');
+      throw new BadRequestException('This link has expired. Please request a new one.');
     }
 
     const { hash, salt } = this.hashProvider.hash(password);

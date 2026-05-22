@@ -53,11 +53,16 @@ export class ForgotPasswordUseCase {
       expires_at: expiresAt,
     });
 
-    const resetUrl = `${process.env.LICENSEFIX_PORTAL_URL ?? 'https://app.licensefix.com.br'}/reset-password?token=${rawToken}`;
+    const tenant = await this.prisma.tenant.findUnique({
+      where: { id: tenantId },
+      select: { domain: true },
+    });
+    const portalUrl = tenant?.domain ? `https://${tenant.domain}` : 'http://localhost:3000';
+    const resetUrl = `${portalUrl}/reset-password?token=${rawToken}`;
 
     await this.emailProvider.send({
       to: email,
-      subject: 'Redefinição de senha — LicenseFix',
+      subject: 'Reset your password — LicenseFix',
       html: this.buildResetEmail(customer.name, resetUrl),
     });
 
@@ -66,7 +71,7 @@ export class ForgotPasswordUseCase {
 
   private buildResetEmail(name: string, url: string): string {
     return `<!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
 <body style="margin:0;padding:0;background:#f4f4f5;font-family:Arial,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:40px 0;">
@@ -76,22 +81,22 @@ export class ForgotPasswordUseCase {
           <h1 style="color:#ffffff;margin:0;font-size:24px;font-weight:700;">LicenseFix</h1>
         </td></tr>
         <tr><td style="padding:40px;">
-          <h2 style="color:#111827;margin:0 0 16px;font-size:20px;">Redefinição de senha</h2>
-          <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 16px;">Olá, <strong>${name}</strong>.</p>
+          <h2 style="color:#111827;margin:0 0 16px;font-size:20px;">Reset your password</h2>
+          <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 16px;">Hi, <strong>${name}</strong>.</p>
           <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 32px;">
-            Clique no botão abaixo para criar uma nova senha:
+            We received a request to reset your LicenseFix password. Click the button below to choose a new one:
           </p>
           <table cellpadding="0" cellspacing="0"><tr>
             <td style="border-radius:6px;background:#0070f3;">
               <a href="${url}" style="display:inline-block;padding:14px 28px;color:#ffffff;font-size:15px;font-weight:600;text-decoration:none;border-radius:6px;">
-                Redefinir senha
+                Reset my password
               </a>
             </td>
           </tr></table>
-          <p style="color:#6b7280;font-size:13px;margin:32px 0 0;">Este link expira em <strong>1 hora</strong>.</p>
+          <p style="color:#6b7280;font-size:13px;margin:32px 0 0;">This link expires in <strong>1 hour</strong>. If you did not request a password reset, you can safely ignore this email.</p>
           <hr style="border:none;border-top:1px solid #e5e7eb;margin:32px 0;">
           <p style="color:#9ca3af;font-size:12px;margin:0;">
-            Caso o botão não funcione, copie e cole o link abaixo:<br>
+            If the button does not work, copy and paste the link below into your browser:<br>
             <a href="${url}" style="color:#0070f3;word-break:break-all;">${url}</a>
           </p>
         </td></tr>

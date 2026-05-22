@@ -28,7 +28,7 @@ export class PrismaExamAttemptRepository implements IExamAttemptRepository {
     return this.prisma.examAttempt.findUnique({
       where: { id },
       include: {
-        PracticeExam: { include: { Questions: { where: { deleted_at: null }, orderBy: { order: 'asc' }, include: { Options: true } } } },
+        PracticeExam: { include: { Questions: { where: { deleted_at: null }, orderBy: { order: 'asc' }, include: { Options: { orderBy: { label: 'asc' } } } } } },
         Responses: true,
       },
     });
@@ -39,6 +39,21 @@ export class PrismaExamAttemptRepository implements IExamAttemptRepository {
       where: { customer_id: customerId },
       orderBy: { started_at: 'desc' },
       include: { PracticeExam: { select: { id: true, title: true, section: true } } },
+    });
+  }
+
+  findByExam(practiceExamId: string) {
+    return this.prisma.examAttempt.findMany({
+      where: { practice_exam_id: practiceExamId },
+      orderBy: { started_at: 'desc' },
+      include: {
+        Customer: { select: { id: true, name: true, email: true } },
+        Responses: {
+          include: {
+            Question: { select: { id: true, statement: true, correct_option: true, order: true } },
+          },
+        },
+      },
     });
   }
 
@@ -95,7 +110,15 @@ export class PrismaExamAttemptRepository implements IExamAttemptRepository {
             Question: { include: { Options: { orderBy: { label: 'asc' } } } },
           },
         },
-        PracticeExam: { select: { title: true, section: true, time_limit: true } },
+        PracticeExam: {
+          include: {
+            Questions: {
+              where: { deleted_at: null },
+              orderBy: { order: 'asc' },
+              include: { Options: { orderBy: { label: 'asc' } } },
+            },
+          },
+        },
       },
     });
   }

@@ -6,6 +6,7 @@ export interface IExamAttemptRepository {
   create(customerId: string, practiceExamId: string): Promise<any>;
   findById(id: string): Promise<any | null>;
   findByCustomer(customerId: string): Promise<any[]>;
+  findByExam(practiceExamId: string): Promise<any[]>;
   findAllWithDetails(): Promise<any[]>;
   upsertResponse(attemptId: string, questionId: string, selectedOption: string | null, isCorrect: boolean | null, flagged?: boolean): Promise<any>;
   setFlagged(attemptId: string, questionId: string, flagged: boolean): Promise<void>;

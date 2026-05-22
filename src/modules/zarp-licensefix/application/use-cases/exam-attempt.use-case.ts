@@ -16,6 +16,18 @@ export class ExamAttemptUseCase {
     @Inject(EXAM_ATTEMPT_REPOSITORY) private readonly attemptRepo: IExamAttemptRepository,
   ) {}
 
+  listAvailableExams(tenantId: string) {
+    return this.examRepo.findActiveByTenant(tenantId);
+  }
+
+  async getExamDetail(examId: string, tenantId: string) {
+    const exam = await this.examRepo.findByIdForPreview(examId);
+    if (!exam || exam.tenant_id !== tenantId || !exam.is_active) {
+      throw new NotFoundException('Practice exam not found.');
+    }
+    return exam;
+  }
+
   async startAttempt(customerId: string, practiceExamId: string) {
     const exam = await this.examRepo.findById(practiceExamId);
     if (!exam) throw new NotFoundException('Practice exam não encontrado.');
@@ -57,7 +69,8 @@ export class ExamAttemptUseCase {
     const correct = attempt.Responses.filter((r: any) => r.is_correct === true).length;
     const score = totalQuestions > 0 ? (correct / totalQuestions) * 100 : 0;
 
-    return this.attemptRepo.finish(attemptId, EAttemptStatus.COMPLETED, Math.round(score * 100) / 100);
+    const finished = await this.attemptRepo.finish(attemptId, EAttemptStatus.COMPLETED, Math.round(score * 100) / 100);
+    return this.formatResult(finished);
   }
 
   async timedOutAttempt(attemptId: string, customerId: string) {
@@ -69,7 +82,48 @@ export class ExamAttemptUseCase {
     const correct = attempt.Responses.filter((r: any) => r.is_correct === true).length;
     const score = totalQuestions > 0 ? (correct / totalQuestions) * 100 : 0;
 
-    return this.attemptRepo.finish(attemptId, EAttemptStatus.TIMED_OUT, Math.round(score * 100) / 100);
+    const finished = await this.attemptRepo.finish(attemptId, EAttemptStatus.TIMED_OUT, Math.round(score * 100) / 100);
+    return this.formatResult(finished);
+  }
+
+  async getAttemptResult(attemptId: string, customerId: string) {
+    const attempt = await this.attemptRepo.findById(attemptId);
+    if (!attempt || attempt.customer_id !== customerId) throw new NotFoundException('Tentativa não encontrada.');
+    if (attempt.status === EAttemptStatus.IN_PROGRESS) throw new BadRequestException('Este exam ainda está em andamento.');
+    return this.formatResult(attempt);
+  }
+
+  private formatResult(attempt: any) {
+    const responseMap = new Map(attempt.Responses.map((r: any) => [r.question_id, r]));
+
+    const questions = attempt.PracticeExam.Questions.map((q: any) => {
+      const response = responseMap.get(q.id) as any;
+      return {
+        id: q.id,
+        statement: q.statement,
+        order: q.order,
+        explanation: q.explanation,
+        correct_option: q.correct_option,
+        selected_option: response?.selected_option ?? null,
+        is_correct: response?.is_correct ?? false,
+        options: q.Options.map((o: any) => ({ label: o.label, text: o.text })),
+      };
+    });
+
+    return {
+      id: attempt.id,
+      practice_exam_id: attempt.practice_exam_id,
+      status: attempt.status,
+      started_at: attempt.started_at,
+      finished_at: attempt.finished_at,
+      score: attempt.score,
+      exam: {
+        title: attempt.PracticeExam.title,
+        section: attempt.PracticeExam.section,
+        time_limit: attempt.PracticeExam.time_limit,
+      },
+      questions,
+    };
   }
 
   getStudentHistory(customerId: string) {
@@ -78,6 +132,16 @@ export class ExamAttemptUseCase {
 
   getAllAttemptsForAdmin() {
     return this.attemptRepo.findAllWithDetails();
+  }
+
+  async getAttemptResultForAdmin(attemptId: string) {
+    const attempt = await this.attemptRepo.findById(attemptId);
+    if (!attempt) throw new NotFoundException('Tentativa não encontrada.');
+    return this.formatResult(attempt);
+  }
+
+  getAttemptsByExam(examId: string) {
+    return this.attemptRepo.findByExam(examId);
   }
 
   async exportHistoryCSV(): Promise<string> {

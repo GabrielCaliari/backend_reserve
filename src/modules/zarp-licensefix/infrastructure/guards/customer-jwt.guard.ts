@@ -14,13 +14,13 @@ export class CustomerJwtGuard implements CanActivate {
     const sessionId = request.headers['session-id'];
 
     if (!token || !sessionId) {
-      throw new UnauthorizedException('Missing session cookie or session-id');
+      throw new UnauthorizedException('Missing session credentials.');
     }
 
     const result = await this.tokenValidator.validate(token, sessionId);
 
     if (!result.valid) {
-      throw new UnauthorizedException('Invalid or expired token');
+      throw new UnauthorizedException('Invalid or expired session.');
     }
 
     request.customer_id = result.customerId;

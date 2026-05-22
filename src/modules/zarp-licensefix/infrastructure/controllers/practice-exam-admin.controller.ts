@@ -1,5 +1,5 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Res, UseGuards } from '@nestjs/common';
-import { Response } from 'express';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Req, Res, UseGuards } from '@nestjs/common';
+import { Request, Response } from 'express';
 import { PracticeExamAdminUseCase } from '../../application/use-cases/practice-exam-admin.use-case';
 import { ExamAttemptUseCase } from '../../application/use-cases/exam-attempt.use-case';
 import {
@@ -8,9 +8,10 @@ import {
   CreateQuestionDto,
   UpdateQuestionDto,
 } from '../../application/dtos/practice-exam.dto';
+import { CustomerAdminGuard } from '../guards/customer-admin.guard';
 
-// Admin routes — protected by existing admin auth (no customer guard needed)
 @Controller('licensefix/admin')
+@UseGuards(CustomerAdminGuard)
 export class PracticeExamAdminController {
   constructor(
     private readonly adminUseCase: PracticeExamAdminUseCase,
@@ -73,11 +74,28 @@ export class PracticeExamAdminController {
     return this.attemptUseCase.getAllAttemptsForAdmin();
   }
 
+  @Get('exam-attempts/:attemptId')
+  getAttemptDetail(@Param('attemptId') attemptId: string) {
+    return this.attemptUseCase.getAttemptResultForAdmin(attemptId);
+  }
+
+  @Get('practice-exams/:examId/attempts')
+  getAttemptsByExam(@Param('examId') examId: string) {
+    return this.attemptUseCase.getAttemptsByExam(examId);
+  }
+
   @Get('exam-attempts/export-csv')
   async exportCSV(@Res() res: Response) {
     const csv = await this.attemptUseCase.exportHistoryCSV();
     res.setHeader('Content-Type', 'text/csv');
     res.setHeader('Content-Disposition', 'attachment; filename="licensefix-history.csv"');
     return res.send(csv);
+  }
+
+  // ─── Tenant context ───────────────────────────────────────────────────────
+
+  @Get('me')
+  getMe(@Req() req: Request) {
+    return { customer_id: req['customer_id'], tenant_id: req['tenant_id'], role: req['customer_role'] };
   }
 }

@@ -22,13 +22,13 @@ export class LoginCustomerUseCase {
 
     if (!customer || !customer.Credential) {
       // Don't reveal whether customer exists or not
-      throw new UnauthorizedException('Credenciais inválidas.');
+      throw new UnauthorizedException('Invalid credentials.');
     }
 
     const valid = this.hashProvider.compare(password, customer.Credential.salt, customer.Credential.hash);
 
     if (!valid) {
-      throw new UnauthorizedException('Credenciais inválidas.');
+      throw new UnauthorizedException('Invalid credentials.');
     }
 
     // Validate active product access: check B2C UserProductAccess OR completed B2B digital purchase
@@ -52,9 +52,9 @@ export class LoginCustomerUseCase {
       }),
     ]);
 
-    if (!access && !b2bPurchase) {
+    if (!access && !b2bPurchase && customer.role !== 'admin') {
       this.logger.warn(`Login: customer ${customer.id} has no active access in tenant ${tenantId}`);
-      throw new UnauthorizedException('Sem acesso ativo para este portal.');
+      throw new UnauthorizedException('No active access found for this portal.');
     }
 
     // Generate JWT using same pattern as existing user auth (JwtProvider + salt)
@@ -90,12 +90,14 @@ export class LoginCustomerUseCase {
             status: access.status,
             access_expires_at: access.access_expires_at,
           }
-        : {
-            product_id: b2bPurchase!.product_id,
+        : b2bPurchase
+        ? {
+            product_id: b2bPurchase.product_id,
             access_type: 'lifetime',
             status: 'active',
             access_expires_at: null,
-          },
+          }
+        : null,
     };
   }
 }

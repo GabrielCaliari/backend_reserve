@@ -27,11 +27,42 @@ export class PrismaPracticeExamRepository implements IPracticeExamRepository {
     });
   }
 
+  findByIdForPreview(id: string) {
+    return this.prisma.practiceExam.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        tenant_id: true,
+        title: true,
+        section: true,
+        time_limit: true,
+        description: true,
+        is_active: true,
+        _count: { select: { Questions: { where: { deleted_at: null } } } },
+      },
+    });
+  }
+
   findAllByTenant(tenantId: string) {
     return this.prisma.practiceExam.findMany({
       where: { tenant_id: tenantId },
       orderBy: { created_at: 'desc' },
       include: { _count: { select: { Questions: { where: { deleted_at: null } } } } },
+    });
+  }
+
+  findActiveByTenant(tenantId: string) {
+    return this.prisma.practiceExam.findMany({
+      where: { tenant_id: tenantId, is_active: true },
+      orderBy: { created_at: 'asc' },
+      select: {
+        id: true,
+        title: true,
+        section: true,
+        time_limit: true,
+        description: true,
+        _count: { select: { Questions: { where: { deleted_at: null } } } },
+      },
     });
   }
 

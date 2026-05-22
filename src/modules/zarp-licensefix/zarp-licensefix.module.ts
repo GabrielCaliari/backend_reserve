@@ -17,6 +17,8 @@ import { PrismaExamAttemptRepository } from './infrastructure/repositories/prism
 import { CustomerSessionTokenRepository } from './infrastructure/repositories/customer-session-token.repository';
 
 // Providers
+import { HashProvider } from '../../shared/providers/hash.provider';
+import { JwtProvider } from '../../shared/providers/jwt.provider';
 import { SesEmailProvider } from './infrastructure/providers/ses-email.provider';
 import { CustomerTokenValidator, CUSTOMER_TOKEN_VALIDATOR } from './infrastructure/providers/customer-token-validator.provider';
 
@@ -29,6 +31,10 @@ import { ResetPasswordUseCase } from './application/use-cases/reset-password.use
 import { PracticeExamAdminUseCase } from './application/use-cases/practice-exam-admin.use-case';
 import { ExamAttemptUseCase } from './application/use-cases/exam-attempt.use-case';
 import { CustomerOverviewUseCase } from './application/use-cases/customer-overview.use-case';
+
+// Guards
+import { CustomerJwtGuard } from './infrastructure/guards/customer-jwt.guard';
+import { CustomerAdminGuard } from './infrastructure/guards/customer-admin.guard';
 
 // Controllers
 import { LicensefixAuthController } from './infrastructure/controllers/licensefix-auth.controller';
@@ -53,7 +59,13 @@ import { CustomerOverviewController } from './infrastructure/controllers/custome
     { provide: EXAM_ATTEMPT_REPOSITORY, useClass: PrismaExamAttemptRepository },
     CustomerSessionTokenRepository,
 
+    // Guards
+    CustomerJwtGuard,
+    CustomerAdminGuard,
+
     // Providers
+    HashProvider,
+    JwtProvider,
     SesEmailProvider,
     { provide: CUSTOMER_TOKEN_VALIDATOR, useClass: CustomerTokenValidator },
 

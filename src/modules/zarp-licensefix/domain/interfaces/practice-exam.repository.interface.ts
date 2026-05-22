@@ -22,7 +22,9 @@ export interface IUpdatePracticeExamData {
 export interface IPracticeExamRepository {
   create(data: ICreatePracticeExamData): Promise<any>;
   findById(id: string): Promise<any | null>;
+  findByIdForPreview(id: string): Promise<any | null>;
   findAllByTenant(tenantId: string): Promise<any[]>;
+  findActiveByTenant(tenantId: string): Promise<any[]>;
   update(id: string, data: IUpdatePracticeExamData): Promise<any>;
   delete(id: string): Promise<void>;
 }

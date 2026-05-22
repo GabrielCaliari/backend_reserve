@@ -95,6 +95,26 @@ export class CustomerOverviewUseCase {
     });
   }
 
+  async getCustomerPurchases(customerId: string) {
+    const customer = await this.prisma.customer.findUnique({
+      where: { id: customerId },
+      select: { email: true, tenant_id: true },
+    });
+    if (!customer) return [];
+    return this.prisma.b2BPurchase.findMany({
+      where: { customer_email: customer.email, tenant_id: customer.tenant_id },
+      orderBy: { created_at: 'desc' },
+      select: {
+        id: true,
+        status: true,
+        amount: true,
+        currency: true,
+        created_at: true,
+        product: { select: { id: true, name: true, slug: true, requires_shipping: true } },
+      },
+    });
+  }
+
   async exportCSV(filters: ICustomerOverviewFilters): Promise<string> {
     const customers = await this.list(filters);
     const rows: string[] = [

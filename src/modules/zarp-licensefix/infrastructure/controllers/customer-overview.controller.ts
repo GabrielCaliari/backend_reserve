@@ -1,8 +1,10 @@
-import { Controller, Get, Query, Res } from '@nestjs/common';
+import { Controller, Get, Param, Query, Res, UseGuards } from '@nestjs/common';
 import { Response } from 'express';
 import { CustomerOverviewUseCase } from '../../application/use-cases/customer-overview.use-case';
+import { CustomerAdminGuard } from '../guards/customer-admin.guard';
 
 @Controller('licensefix/admin/customers')
+@UseGuards(CustomerAdminGuard)
 export class CustomerOverviewController {
   constructor(private readonly useCase: CustomerOverviewUseCase) {}
 
@@ -17,6 +19,11 @@ export class CustomerOverviewController {
     @Query('dateTo') dateTo?: string,
   ) {
     return this.useCase.list({ tenantId, search, accessStatus, examStatus, section, dateFrom, dateTo });
+  }
+
+  @Get(':customerId/purchases')
+  getPurchases(@Param('customerId') customerId: string) {
+    return this.useCase.getCustomerPurchases(customerId);
   }
 
   @Get('export-csv')

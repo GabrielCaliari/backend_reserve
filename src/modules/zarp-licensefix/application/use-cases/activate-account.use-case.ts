@@ -23,17 +23,17 @@ export class ActivateAccountUseCase {
 
     if (!record || record.type !== ETokenType.ACTIVATION) {
       this.logger.warn(`Activation attempt with invalid token`);
-      throw new BadRequestException('Token inválido.');
+      throw new BadRequestException('Invalid token.');
     }
 
     if (record.used_at) {
       this.logger.warn(`Activation attempt with already-used token: ${record.id}`);
-      throw new BadRequestException('Token já utilizado.');
+      throw new BadRequestException('This link has already been used.');
     }
 
     if (new Date() > record.expires_at) {
       this.logger.warn(`Activation attempt with expired token: ${record.id}`);
-      throw new BadRequestException('Token expirado.');
+      throw new BadRequestException('This link has expired. Please contact support.');
     }
 
     const { hash, salt } = this.hashProvider.hash(password);

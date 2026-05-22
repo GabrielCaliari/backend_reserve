@@ -9,6 +9,16 @@ import { CustomerJwtGuard } from '../guards/customer-jwt.guard';
 export class ExamAttemptController {
   constructor(private readonly attemptUseCase: ExamAttemptUseCase) {}
 
+  @Get()
+  listExams(@Req() req: Request) {
+    return this.attemptUseCase.listAvailableExams(req['tenant_id']);
+  }
+
+  @Get(':examId')
+  getExam(@Param('examId') examId: string, @Req() req: Request) {
+    return this.attemptUseCase.getExamDetail(examId, req['tenant_id']);
+  }
+
   @Post(':examId/start')
   startAttempt(@Param('examId') examId: string, @Req() req: Request) {
     return this.attemptUseCase.startAttempt(req['customer_id'], examId);
@@ -37,6 +47,11 @@ export class ExamAttemptController {
     @Req() req: Request,
   ) {
     return this.attemptUseCase.flagQuestion(attemptId, questionId, body.flagged, req['customer_id']);
+  }
+
+  @Get('attempts/:attemptId/result')
+  getResult(@Param('attemptId') attemptId: string, @Req() req: Request) {
+    return this.attemptUseCase.getAttemptResult(attemptId, req['customer_id']);
   }
 
   @Post('attempts/:attemptId/submit')
