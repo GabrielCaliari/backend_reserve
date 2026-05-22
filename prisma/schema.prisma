@@ -196,7 +196,10 @@ model Tenant {
   id                        String                      @id @default(cuid()) @db.VarChar(25)
   name                      String                      @db.VarChar(100)
   slug                      String                      @unique @db.VarChar(50)
-  domain                    String                      @db.VarChar(255)
+  /// @deprecated Fonte de verdade é TenantDomain (is_primary = true). Mantida
+  /// por compatibilidade com o payload de tenant que o painel consome; será
+  /// removida quando a última leitura sair do frontend.
+  domain                    String?                     @db.VarChar(255)
   active                    Boolean                     @default(true)
   created_at                DateTime                    @default(now())
   updated_at                DateTime                    @updatedAt
@@ -208,6 +211,7 @@ model Tenant {
   stripe_customer_id        String?                     @db.VarChar(255)
   subscription_status       String                      @default("none") @db.VarChar(50)
   timezone                  String                      @default("America/Sao_Paulo") @db.VarChar(100)
+  tenant_type               ETenantType                 @default(COMMON)
   AdminTenant               AdminTenant[]
   Appointments              Appointment[]
   AppointmentBlockedPeriods AppointmentBlockedPeriod[]
@@ -235,9 +239,44 @@ model Tenant {
   HotelConfig               HotelClient?                @relation("HotelTenantConfig")
   HotelReservations         HotelReservation[]
   AdminPermissionOverride   AdminPermissionOverride[]
+  TenantDomains             TenantDomain[]
+  TenantSettings            TenantSetting[]
 
   @@index([stripe_customer_id])
   @@index([subscription_status])
+  @@index([tenant_type])
+}
+
+model TenantSetting {
+  id         String   @id @default(cuid()) @db.VarChar(25)
+  tenant_id  String   @db.VarChar(25)
+  module     String   @db.VarChar(50)
+  key        String   @db.VarChar(100)
+  value      Json
+  updated_by String?  @db.VarChar(25)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  Tenant Tenant @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+
+  @@unique([tenant_id, module, key])
+  @@index([tenant_id, module])
+}
+
+model TenantDomain {
+  id         String   @id @default(cuid()) @db.VarChar(25)
+  tenant_id  String   @db.VarChar(25)
+  /// "domain" = host + subdomínios, https only. "regex" = padrão casado literalmente contra o Origin.
+  type       String   @default("domain") @db.VarChar(10)
+  value      String   @unique @db.VarChar(500)
+  is_primary Boolean  @default(false)
+  active     Boolean  @default(true)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  Tenant Tenant @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+
+  @@index([tenant_id])
 }
 
 model LeadCollection {
@@ -1367,6 +1406,12 @@ enum EAdminRole {
   editor
   viewer
   company_admin
+}
+
+enum ETenantType {
+  MASTER
+  COMMON
+  EDUCATIONAL
 }
 
 enum EArticleStatus {
