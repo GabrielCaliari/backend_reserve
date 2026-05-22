@@ -28,4 +28,17 @@ export default class AdminCredentialRepository implements IAdminCredentialReposi
             throw new RepositoryException('Erro ao comparar os hashs.', error);
         }
     }
+
+    async updatePasswordByAdminId(adminId: string, password: string) {
+        try {
+            const { hash, salt } = this.hashProvider.hash(password);
+            await this.prisma.adminCredential.upsert({
+                where: { admin_id: adminId },
+                update: { hash, salt },
+                create: { admin_id: adminId, hash, salt },
+            });
+        } catch (error) {
+            throw new RepositoryException('Erro ao atualizar credenciais do admin.', error);
+        }
+    }
 }

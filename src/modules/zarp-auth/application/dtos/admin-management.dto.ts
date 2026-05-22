@@ -1,9 +1,8 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, IsOptional, IsEnum, IsEmail } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsEnum, IsEmail, MinLength, MaxLength } from 'class-validator';
 import { EAdminRole } from '../../domain/enums/admin-role.enum';
 
 const adminCuidExample = 'cma1admin0001ghijklmno23p';
-const tenantCuidExample = 'cma1tenant001uvwxyzab345';
 
 export class CreateAdminDTO {
   @ApiProperty({ description: 'Administrator name', example: 'John Doe' })
@@ -48,6 +47,12 @@ export class UpdateAdminDTO {
   @IsEmail()
   @IsOptional()
   email?: string;
+
+  @ApiPropertyOptional({ description: 'Administrator password (super_admin only)', example: 'Str0ng!Pass' })
+  @IsString()
+  @IsOptional()
+  @MinLength(6)
+  password?: string;
 }
 
 export class AdminResponseDTO {
@@ -102,6 +107,49 @@ export class AdminListItemDTO {
     slug: string;
   }>;
 
+  @ApiPropertyOptional({ example: true })
+  scheduled_for_deletion?: boolean;
+
+  @ApiPropertyOptional({ example: '2026-05-21T12:00:00.000Z', nullable: true })
+  deletion_scheduled_for_at?: Date | null;
+
   @ApiProperty({ example: '2024-01-01T00:00:00.000Z' })
   created_at: Date;
+}
+
+export class ScheduleAdminDeletionDTO {
+  @ApiPropertyOptional({
+    description: 'Optional reason for scheduling admin deletion',
+    example: 'Admin no longer with the company',
+  })
+  @IsString()
+  @IsOptional()
+  @MaxLength(255)
+  reason?: string;
+}
+
+export class AdminDeletionStatusDTO {
+  @ApiProperty({ example: adminCuidExample, description: 'Admin CUID (25-character identifier)' })
+  id: string;
+
+  @ApiProperty({ example: false })
+  active: boolean;
+
+  @ApiProperty({ example: true })
+  scheduled_for_deletion: boolean;
+
+  @ApiPropertyOptional({ example: '2026-05-14T12:00:00.000Z', nullable: true })
+  archived_at?: Date | null;
+
+  @ApiPropertyOptional({ example: '2026-05-14T12:00:00.000Z', nullable: true })
+  deletion_requested_at?: Date | null;
+
+  @ApiPropertyOptional({ example: '2026-05-21T12:00:00.000Z', nullable: true })
+  deletion_scheduled_for_at?: Date | null;
+
+  @ApiPropertyOptional({ example: adminCuidExample, nullable: true })
+  deletion_requested_by?: string | null;
+
+  @ApiPropertyOptional({ example: 'Admin no longer with the company', nullable: true })
+  deletion_reason?: string | null;
 }

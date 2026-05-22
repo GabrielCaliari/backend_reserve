@@ -10,6 +10,8 @@ import { DeleteCouponUseCase } from './application/use-cases/delete-coupon.use-c
 import { ListCouponsUseCase } from './application/use-cases/list-coupons.use-case';
 import { GetCouponUseCase } from './application/use-cases/get-coupon.use-case';
 import { ValidateCouponUseCase } from './application/use-cases/validate-coupon.use-case';
+import { GenerateCouponLinkUseCase } from './application/use-cases/generate-coupon-link.use-case';
+import { ResolveCouponUseCase } from './application/use-cases/resolve-coupon.use-case';
 
 import { PrismaDiscountCouponRepository } from './infrastructure/repositories/prisma-discount-coupon.repository';
 import { DISCOUNT_COUPON_REPOSITORY } from './domain/interfaces/discount-coupon.repository.interface';
@@ -27,6 +29,8 @@ import { DISCOUNT_COUPON_REPOSITORY } from './domain/interfaces/discount-coupon.
     ListCouponsUseCase,
     GetCouponUseCase,
     ValidateCouponUseCase,
+    GenerateCouponLinkUseCase,
+    ResolveCouponUseCase,
     { provide: DISCOUNT_COUPON_REPOSITORY, useClass: PrismaDiscountCouponRepository },
   ],
   exports: [
@@ -36,6 +40,8 @@ import { DISCOUNT_COUPON_REPOSITORY } from './domain/interfaces/discount-coupon.
     ListCouponsUseCase,
     GetCouponUseCase,
     ValidateCouponUseCase,
+    GenerateCouponLinkUseCase,
+    ResolveCouponUseCase,
     DISCOUNT_COUPON_REPOSITORY,
   ],
 })

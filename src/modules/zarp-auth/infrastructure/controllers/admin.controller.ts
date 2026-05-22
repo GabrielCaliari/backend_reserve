@@ -2,7 +2,7 @@ import { Body, Controller, Get, Headers, Param, Patch, Post, Res, UseGuards, Del
 import { AdminService } from '../../application/services/admin.service';
 import { Response } from 'express';
 import AuthAdminDTO from '../../application/dtos/auth-admin.dto';
-import { CreateAdminDTO, UpdateAdminRoleDTO, UpdateAdminDTO, AdminResponseDTO, AdminListItemDTO } from '../../application/dtos/admin-management.dto';
+import { CreateAdminDTO, UpdateAdminRoleDTO, UpdateAdminDTO, AdminResponseDTO, AdminListItemDTO, ScheduleAdminDeletionDTO, AdminDeletionStatusDTO } from '../../application/dtos/admin-management.dto';
 import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
 import { RolesGuard } from '../../../../shared/auth/guards/roles.guard';
 import { Roles } from '../../../../shared/auth/decorators/roles.decorator';
@@ -252,7 +252,7 @@ export class AdminController {
     @ApiBearerAuth()
     @ApiOperation({ 
         summary: 'Update admin data (super_admin or manager)',
-        description: 'Updates administrator name and/or email'
+        description: 'Updates administrator name and/or email. Only super_admin can update password.'
     })
     @ApiParam({ name: 'id', type: String, description: 'Admin CUID (25-character identifier)', example: 'cma1admin0001ghijklmno23p' })
     @ApiBody({ type: UpdateAdminDTO })
@@ -273,9 +273,10 @@ export class AdminController {
     async update(
         @Param('id', ParseCuidPipe) id: string,
         @Body() data: UpdateAdminDTO,
+        @CurrentAdmin() admin: CurrentAdminPayload,
         @Res() res: Response,
     ) {
-        const result = await this.adminService.update(id, data);
+        const result = await this.adminService.update(id, data, admin.admin_role as EAdminRole | undefined);
         return res.status(result.status).json(result.data)
     }
 
@@ -284,28 +285,73 @@ export class AdminController {
     @UseGuards(AdminJwtGuard, RolesGuard)
     @ApiBearerAuth()
     @ApiOperation({ 
-        summary: 'Delete admin permanently (super_admin only)',
-        description: 'Permanently deletes an administrator account. Cannot delete yourself.'
+        summary: 'Schedule admin deletion (super_admin only)',
+        description: 'Deactivates the admin immediately and schedules permanent deletion after 7 days'
     })
     @ApiParam({ name: 'id', type: String, description: 'Admin CUID (25-character identifier)', example: 'cma1admin0001ghijklmno23p' })
+    @ApiBody({ type: ScheduleAdminDeletionDTO, required: false })
     @ApiResponse({ 
         status: 200, 
-        description: 'Admin deleted',
+        description: 'Admin deletion scheduled',
         schema: {
             example: {
-                deleted: true
+                id: 'cma1admin0001ghijklmno23p',
+                active: false,
+                scheduled_for_deletion: true,
+                deletion_scheduled_for_at: '2026-05-21T12:00:00.000Z'
             }
         }
     })
     @ApiResponse({ status: 400, description: 'Cannot delete self' })
     @ApiResponse({ status: 403, description: 'Insufficient permissions' })
     @ApiResponse({ status: 404, description: 'Admin not found' })
-    async delete(
+    @ApiResponse({ status: 409, description: 'Admin deletion already scheduled' })
+    async scheduleDeletion(
         @Param('id', ParseCuidPipe) id: string,
         @CurrentAdmin() admin: CurrentAdminPayload,
+        @Body() dto: ScheduleAdminDeletionDTO,
         @Res() res: Response,
     ) {
-        const result = await this.adminService.delete(id, admin.admin_id);
+        const result = await this.adminService.scheduleDeletion(id, admin.admin_id, dto);
+        return res.status(result.status).json(result.data)
+    }
+
+    @Post('/:id/restore-deletion')
+    @Roles(EAdminRole.super_admin)
+    @UseGuards(AdminJwtGuard, RolesGuard)
+    @ApiBearerAuth()
+    @ApiOperation({
+        summary: 'Restore admin scheduled for deletion (super_admin only)',
+        description: 'Cancels the deletion window and restores admin access before the 7-day purge deadline'
+    })
+    @ApiParam({ name: 'id', type: String, description: 'Admin CUID (25-character identifier)', example: 'cma1admin0001ghijklmno23p' })
+    @ApiResponse({ status: 200, description: 'Admin restored', type: AdminResponseDTO })
+    @ApiResponse({ status: 404, description: 'Admin not found' })
+    @ApiResponse({ status: 409, description: 'Admin deletion is not scheduled' })
+    async restoreDeletion(
+        @Param('id', ParseCuidPipe) id: string,
+        @Res() res: Response,
+    ) {
+        const result = await this.adminService.restoreDeletion(id);
+        return res.status(result.status).json(result.data)
+    }
+
+    @Get('/:id/deletion-status')
+    @Roles(EAdminRole.super_admin)
+    @UseGuards(AdminJwtGuard, RolesGuard)
+    @ApiBearerAuth()
+    @ApiOperation({
+        summary: 'Get admin deletion status (super_admin only)',
+        description: 'Returns whether the admin is scheduled for deletion and related metadata'
+    })
+    @ApiParam({ name: 'id', type: String, description: 'Admin CUID (25-character identifier)', example: 'cma1admin0001ghijklmno23p' })
+    @ApiResponse({ status: 200, description: 'Deletion status', type: AdminDeletionStatusDTO })
+    @ApiResponse({ status: 404, description: 'Admin not found' })
+    async getDeletionStatus(
+        @Param('id', ParseCuidPipe) id: string,
+        @Res() res: Response,
+    ) {
+        const result = await this.adminService.getDeletionStatus(id);
         return res.status(result.status).json(result.data)
     }
 }

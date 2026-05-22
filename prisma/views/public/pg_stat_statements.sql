@@ -36,6 +36,7 @@ SELECT
   wal_records,
   wal_fpi,
   wal_bytes,
+  wal_buffers_full,
   jit_functions,
   jit_generation_time,
   jit_inlining_count,
@@ -46,6 +47,8 @@ SELECT
   jit_emission_time,
   jit_deform_count,
   jit_deform_time,
+  parallel_workers_to_launch,
+  parallel_workers_launched,
   stats_since,
   minmax_stats_since
 FROM
@@ -87,6 +90,7 @@ FROM
     wal_records,
     wal_fpi,
     wal_bytes,
+    wal_buffers_full,
     jit_functions,
     jit_generation_time,
     jit_inlining_count,
@@ -97,6 +101,8 @@ FROM
     jit_emission_time,
     jit_deform_count,
     jit_deform_time,
+    parallel_workers_to_launch,
+    parallel_workers_launched,
     stats_since,
     minmax_stats_since
   );

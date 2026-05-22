@@ -288,7 +288,7 @@ export class TenantController {
   @UseGuards(AdminJwtGuard, RolesGuard)
   @ApiOperation({ 
     summary: 'Schedule tenant deletion (super_admin only)',
-    description: 'Archives the tenant immediately and schedules permanent deletion after 15 days'
+    description: 'Archives the tenant immediately and schedules permanent deletion after 7 days'
   })
   @ApiParam({ name: 'id', type: String, description: 'Tenant CUID (25-character identifier)', example: 'cma1tenant001uvwxyzab345' })
   @ApiBody({ type: ScheduleTenantDeletionDTO, required: false })
@@ -322,7 +322,7 @@ export class TenantController {
   @UseGuards(AdminJwtGuard, RolesGuard)
   @ApiOperation({
     summary: 'Restore tenant scheduled for deletion (super_admin only)',
-    description: 'Cancels the deletion window and restores tenant access before the 15-day purge deadline'
+    description: 'Cancels the deletion window and restores tenant access before the 7-day purge deadline'
   })
   @ApiParam({ name: 'id', type: String, description: 'Tenant CUID (25-character identifier)', example: 'cma1tenant001uvwxyzab345' })
   @ApiResponse({ status: 200, description: 'Tenant restored', type: TenantResponseDTO })
