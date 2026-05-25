@@ -130,14 +130,57 @@ export class ExamAttemptUseCase {
     return this.attemptRepo.findByCustomer(customerId);
   }
 
-  getAllAttemptsForAdmin() {
-    return this.attemptRepo.findAllWithDetails();
+  getAttemptsByCustomerForAdmin(customerId: string) {
+    return this.attemptRepo.findByCustomerForAdmin(customerId);
+  }
+
+  async getAllAttemptsForAdmin() {
+    const attempts = await this.attemptRepo.findAllWithDetails();
+    return attempts.map((a: any) => ({
+      id: a.id,
+      status: a.status,
+      score: a.score,
+      started_at: a.started_at,
+      finished_at: a.finished_at,
+      customer: a.Customer
+        ? { id: a.Customer.id, name: a.Customer.name, email: a.Customer.email }
+        : null,
+      PracticeExam: a.PracticeExam
+        ? { id: a.PracticeExam.id, title: a.PracticeExam.title, section: a.PracticeExam.section }
+        : null,
+    }));
   }
 
   async getAttemptResultForAdmin(attemptId: string) {
-    const attempt = await this.attemptRepo.findById(attemptId);
+    const attempt = await this.attemptRepo.findByIdForAdmin(attemptId);
     if (!attempt) throw new NotFoundException('Tentativa não encontrada.');
-    return this.formatResult(attempt);
+
+    const answers = attempt.Responses.map((r: any) => ({
+      id: r.id,
+      selected_option: r.selected_option,
+      is_correct: r.is_correct,
+      question: {
+        statement: r.Question.statement,
+        correct_option: r.Question.correct_option,
+        explanation: r.Question.explanation,
+        options: r.Question.Options.map((o: any) => ({ label: o.label, text: o.text })),
+      },
+    }));
+
+    return {
+      id: attempt.id,
+      status: attempt.status,
+      score: attempt.score,
+      started_at: attempt.started_at,
+      finished_at: attempt.finished_at,
+      customer: attempt.Customer
+        ? { id: attempt.Customer.id, name: attempt.Customer.name, email: attempt.Customer.email }
+        : null,
+      PracticeExam: attempt.PracticeExam
+        ? { title: attempt.PracticeExam.title }
+        : null,
+      answers,
+    };
   }
 
   getAttemptsByExam(examId: string) {

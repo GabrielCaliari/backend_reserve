@@ -7,6 +7,7 @@ import { CUSTOMER_REPOSITORY } from './domain/interfaces/customer.repository.int
 import { PRACTICE_EXAM_REPOSITORY } from './domain/interfaces/practice-exam.repository.interface';
 import { QUESTION_REPOSITORY } from './domain/interfaces/question.repository.interface';
 import { EXAM_ATTEMPT_REPOSITORY } from './domain/interfaces/exam-attempt.repository.interface';
+import { PRACTICE_EXAM_BUNDLE_REPOSITORY } from './domain/interfaces/practice-exam-bundle.repository.interface';
 
 // Repositories
 import { PrismaActivationTokenRepository } from './infrastructure/repositories/prisma-activation-token.repository';
@@ -14,6 +15,7 @@ import { PrismaCustomerRepository } from './infrastructure/repositories/prisma-c
 import { PrismaPracticeExamRepository } from './infrastructure/repositories/prisma-practice-exam.repository';
 import { PrismaQuestionRepository } from './infrastructure/repositories/prisma-question.repository';
 import { PrismaExamAttemptRepository } from './infrastructure/repositories/prisma-exam-attempt.repository';
+import { PrismaPracticeExamBundleRepository } from './infrastructure/repositories/prisma-practice-exam-bundle.repository';
 import { CustomerSessionTokenRepository } from './infrastructure/repositories/customer-session-token.repository';
 
 // Providers
@@ -30,6 +32,7 @@ import { ForgotPasswordUseCase } from './application/use-cases/forgot-password.u
 import { ResetPasswordUseCase } from './application/use-cases/reset-password.use-case';
 import { PracticeExamAdminUseCase } from './application/use-cases/practice-exam-admin.use-case';
 import { ExamAttemptUseCase } from './application/use-cases/exam-attempt.use-case';
+import { PracticeExamBundleUseCase } from './application/use-cases/practice-exam-bundle.use-case';
 import { CustomerOverviewUseCase } from './application/use-cases/customer-overview.use-case';
 
 // Guards
@@ -57,6 +60,7 @@ import { CustomerOverviewController } from './infrastructure/controllers/custome
     { provide: PRACTICE_EXAM_REPOSITORY, useClass: PrismaPracticeExamRepository },
     { provide: QUESTION_REPOSITORY, useClass: PrismaQuestionRepository },
     { provide: EXAM_ATTEMPT_REPOSITORY, useClass: PrismaExamAttemptRepository },
+    { provide: PRACTICE_EXAM_BUNDLE_REPOSITORY, useClass: PrismaPracticeExamBundleRepository },
     CustomerSessionTokenRepository,
 
     // Guards
@@ -77,6 +81,7 @@ import { CustomerOverviewController } from './infrastructure/controllers/custome
     ResetPasswordUseCase,
     PracticeExamAdminUseCase,
     ExamAttemptUseCase,
+    PracticeExamBundleUseCase,
     CustomerOverviewUseCase,
   ],
   exports: [

@@ -2,11 +2,14 @@ import { Body, Controller, Delete, Get, Param, Patch, Post, Req, Res, UseGuards 
 import { Request, Response } from 'express';
 import { PracticeExamAdminUseCase } from '../../application/use-cases/practice-exam-admin.use-case';
 import { ExamAttemptUseCase } from '../../application/use-cases/exam-attempt.use-case';
+import { PracticeExamBundleUseCase } from '../../application/use-cases/practice-exam-bundle.use-case';
 import {
   CreatePracticeExamDto,
   UpdatePracticeExamDto,
   CreateQuestionDto,
   UpdateQuestionDto,
+  CreateExamBundleDto,
+  UpdateExamBundleDto,
 } from '../../application/dtos/practice-exam.dto';
 import { CustomerAdminGuard } from '../guards/customer-admin.guard';
 
@@ -16,6 +19,7 @@ export class PracticeExamAdminController {
   constructor(
     private readonly adminUseCase: PracticeExamAdminUseCase,
     private readonly attemptUseCase: ExamAttemptUseCase,
+    private readonly bundleUseCase: PracticeExamBundleUseCase,
   ) {}
 
   // ─── Practice Exams ───────────────────────────────────────────────────────
@@ -69,9 +73,23 @@ export class PracticeExamAdminController {
 
   // ─── History & CSV ────────────────────────────────────────────────────────
 
+  @Get('customers/:customerId/exam-attempts')
+  getAttemptsByCustomer(@Param('customerId') customerId: string) {
+    return this.attemptUseCase.getAttemptsByCustomerForAdmin(customerId);
+  }
+
   @Get('exam-attempts')
   getAllAttempts() {
     return this.attemptUseCase.getAllAttemptsForAdmin();
+  }
+
+  // static route MUST come before the parameterized one
+  @Get('exam-attempts/export-csv')
+  async exportCSV(@Res() res: Response) {
+    const csv = await this.attemptUseCase.exportHistoryCSV();
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename="licensefix-history.csv"');
+    return res.send(csv);
   }
 
   @Get('exam-attempts/:attemptId')
@@ -84,12 +102,26 @@ export class PracticeExamAdminController {
     return this.attemptUseCase.getAttemptsByExam(examId);
   }
 
-  @Get('exam-attempts/export-csv')
-  async exportCSV(@Res() res: Response) {
-    const csv = await this.attemptUseCase.exportHistoryCSV();
-    res.setHeader('Content-Type', 'text/csv');
-    res.setHeader('Content-Disposition', 'attachment; filename="licensefix-history.csv"');
-    return res.send(csv);
+  // ─── Bundles ──────────────────────────────────────────────────────────────
+
+  @Get('tenants/:tenantId/practice-exam-bundles')
+  listBundles(@Param('tenantId') tenantId: string) {
+    return this.bundleUseCase.listBundles(tenantId);
+  }
+
+  @Post('tenants/:tenantId/practice-exam-bundles')
+  createBundle(@Param('tenantId') tenantId: string, @Body() body: CreateExamBundleDto) {
+    return this.bundleUseCase.createBundle(tenantId, body);
+  }
+
+  @Patch('practice-exam-bundles/:bundleId')
+  updateBundle(@Param('bundleId') bundleId: string, @Body() body: UpdateExamBundleDto) {
+    return this.bundleUseCase.updateBundle(bundleId, body);
+  }
+
+  @Delete('practice-exam-bundles/:bundleId')
+  deleteBundle(@Param('bundleId') bundleId: string) {
+    return this.bundleUseCase.deleteBundle(bundleId);
   }
 
   // ─── Tenant context ───────────────────────────────────────────────────────

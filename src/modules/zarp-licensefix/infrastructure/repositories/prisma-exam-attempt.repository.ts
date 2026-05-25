@@ -72,6 +72,33 @@ export class PrismaExamAttemptRepository implements IExamAttemptRepository {
     });
   }
 
+  findByIdForAdmin(id: string) {
+    return this.prisma.examAttempt.findUnique({
+      where: { id },
+      include: {
+        Customer: { select: { id: true, name: true, email: true } },
+        PracticeExam: { select: { id: true, title: true } },
+        Responses: {
+          include: {
+            Question: {
+              include: { Options: { orderBy: { label: 'asc' } } },
+            },
+          },
+        },
+      },
+    });
+  }
+
+  findByCustomerForAdmin(customerId: string) {
+    return this.prisma.examAttempt.findMany({
+      where: { customer_id: customerId },
+      orderBy: { started_at: 'desc' },
+      include: {
+        PracticeExam: { select: { id: true, title: true } },
+      },
+    });
+  }
+
   upsertResponse(attemptId: string, questionId: string, selectedOption: string | null, isCorrect: boolean | null, flagged?: boolean) {
     return this.prisma.questionResponse.upsert({
       where: { attempt_id_question_id: { attempt_id: attemptId, question_id: questionId } },

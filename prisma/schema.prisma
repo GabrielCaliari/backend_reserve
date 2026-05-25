@@ -702,6 +702,7 @@ model Tenant {
   StripeSubscription        StripeSubscription?
   TenantBillingConfig       TenantBillingConfig?
   PracticeExams             PracticeExam[]
+  PracticeExamBundles       PracticeExamBundle[]
 
   @@index([stripe_customer_id])
   @@index([subscription_status])
@@ -1867,4 +1868,29 @@ model QuestionResponse {
   @@unique([attempt_id, question_id])
   @@index([attempt_id])
   @@map("question_responses")
+}
+
+model PracticeExamBundle {
+  id                String                      @id @default(cuid()) @db.VarChar(25)
+  tenant_id         String                      @db.VarChar(25)
+  title             String                      @db.VarChar(255)
+  description       String?                     @db.Text
+  is_active         Boolean                     @default(true)
+  stripe_product_id String?                     @db.VarChar(255)
+  created_at        DateTime                    @default(now())
+  updated_at        DateTime                    @updatedAt
+  Tenant            Tenant                      @relation(fields: [tenant_id], references: [id])
+  Exams             PracticeExamBundleExam[]
+
+  @@index([tenant_id, is_active])
+  @@map("practice_exam_bundles")
+}
+
+model PracticeExamBundleExam {
+  bundle_id String             @db.VarChar(25)
+  exam_id   String             @db.VarChar(25)
+  Bundle    PracticeExamBundle @relation(fields: [bundle_id], references: [id], onDelete: Cascade)
+
+  @@id([bundle_id, exam_id])
+  @@map("practice_exam_bundle_exams")
 }

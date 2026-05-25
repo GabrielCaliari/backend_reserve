@@ -82,6 +82,7 @@ export class CustomerOverviewUseCase {
         tenant: c.Tenant,
         created_at: c.created_at,
         access: latestAccess,
+        _count: { ExamAttempts: c._count.ExamAttempts },
         exam_summary: {
           total_attempts: c._count.ExamAttempts,
           completed_attempts: completedAttempts.length,
@@ -101,7 +102,7 @@ export class CustomerOverviewUseCase {
       select: { email: true, tenant_id: true },
     });
     if (!customer) return [];
-    return this.prisma.b2BPurchase.findMany({
+    const purchases = await this.prisma.b2BPurchase.findMany({
       where: { customer_email: customer.email, tenant_id: customer.tenant_id },
       orderBy: { created_at: 'desc' },
       select: {
@@ -110,9 +111,18 @@ export class CustomerOverviewUseCase {
         amount: true,
         currency: true,
         created_at: true,
-        product: { select: { id: true, name: true, slug: true, requires_shipping: true } },
+        product: { select: { id: true, name: true, slug: true } },
       },
     });
+
+    return purchases.map((p) => ({
+      id: p.id,
+      product_name: p.product?.name ?? null,
+      created_at: p.created_at,
+      status: p.status,
+      amount: p.amount,
+      currency: p.currency,
+    }));
   }
 
   async exportCSV(filters: ICustomerOverviewFilters): Promise<string> {

@@ -46,3 +46,18 @@ export class AnswerQuestionDto {
 export class FlagQuestionDto {
   @IsBoolean() flagged: boolean;
 }
+
+export class CreateExamBundleDto {
+  @IsString() @MinLength(1) title: string;
+  @IsOptional() @IsString() description?: string;
+  @IsOptional() @IsBoolean() is_active?: boolean;
+  @IsOptional() @IsString() stripe_product_id?: string;
+  @IsArray() @IsString({ each: true }) exam_ids: string[];
+}
+
+export class UpdateExamBundleDto {
+  @IsOptional() @IsString() @MinLength(1) title?: string;
+  @IsOptional() @IsBoolean() is_active?: boolean;
+  @IsOptional() @IsString() stripe_product_id?: string;
+  @IsOptional() @IsArray() @IsString({ each: true }) exam_ids?: string[];
+}
