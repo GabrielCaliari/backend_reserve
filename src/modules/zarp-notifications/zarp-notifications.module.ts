@@ -17,9 +17,10 @@ import {
 } from './domain/interfaces';
 import { AdminJwtGuard, RolesGuard } from '../../shared/auth/guards';
 import { ZarpAuthModule } from '../zarp-auth/zarp-auth.module';
+import { DatabaseModule } from '../../shared/database/database.module';
 
 @Module({
-  imports: [ZarpAuthModule],
+  imports: [ZarpAuthModule, DatabaseModule],
   controllers: [
     NotificationTenantController,
     NotificationSettingsController,

@@ -680,6 +680,7 @@ model Tenant {
   deletion_reason           String?                     @db.VarChar(255)
   stripe_customer_id        String?                     @db.VarChar(255)
   subscription_status       String                      @default("none") @db.VarChar(50)
+  timezone                  String                      @default("America/Sao_Paulo") @db.VarChar(100)
   AdminTenant               AdminTenant[]
   Appointments              Appointment[]
   AppointmentBlockedPeriods AppointmentBlockedPeriod[]

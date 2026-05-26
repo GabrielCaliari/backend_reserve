@@ -10,18 +10,33 @@ import {
   NotificationEventKey,
   CronKey,
 } from '../../domain/constants/notification-events';
+import { PrismaService } from '../../../../shared/database/prisma.service';
+
+const DEFAULT_TIMEZONE = 'America/Sao_Paulo';
 
 @Injectable()
 export class NotificationSettingsService {
   constructor(
     @Inject(NOTIFICATION_SETTINGS_REPOSITORY)
     private readonly repo: INotificationSettingsRepository,
+    private readonly prisma: PrismaService,
   ) {}
 
   async getSettings(tenantId: string) {
-    const existing = await this.repo.findByTenantId(tenantId);
-    if (existing) return existing;
-    return this.repo.upsert(tenantId, {});
+    const [existing, tenant] = await Promise.all([
+      this.repo.findByTenantId(tenantId),
+      this.prisma.tenant.findUnique({ where: { id: tenantId }, select: { timezone: true } }),
+    ]);
+    const settings = existing ?? await this.repo.upsert(tenantId, {});
+    return { ...settings, timezone: tenant?.timezone ?? DEFAULT_TIMEZONE };
+  }
+
+  async getTenantTimezone(tenantId: string): Promise<string> {
+    const tenant = await this.prisma.tenant.findUnique({
+      where: { id: tenantId },
+      select: { timezone: true },
+    });
+    return tenant?.timezone ?? DEFAULT_TIMEZONE;
   }
 
   async updateSettings(tenantId: string, data: IUpdateNotificationSettings) {

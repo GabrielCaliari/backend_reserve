@@ -8,12 +8,37 @@ import {
 import { NotificationSettingsService } from './notification-settings.service';
 import { ENotificationType, ENotificationScope } from '../../domain/enums';
 import { ALL_EVENT_KEYS, NotificationEventKey } from '../../domain/constants/notification-events';
+import { formatInTenantTimezone } from '../../../../shared/helpers/format-timezone';
 
 const EVENT_TITLES: Record<string, string> = {
   'lead.created':           'Novo lead cadastrado',
   'subscription.expiring':  'Assinatura vencendo em breve',
   'subscription.expired':   'Assinatura expirada',
 };
+
+function buildEventBody(
+  eventKey: NotificationEventKey,
+  metadata: Record<string, any> | undefined,
+  timezone: string,
+): string {
+  const now = new Date();
+  const formatted = formatInTenantTimezone(now, timezone);
+
+  switch (eventKey) {
+    case 'lead.created':
+      return `Um novo lead foi registrado em sua conta em ${formatted}.`;
+    case 'subscription.expiring': {
+      const expiresAt = metadata?.expires_at ? formatInTenantTimezone(new Date(metadata.expires_at), timezone) : formatted;
+      return `Sua assinatura vence em ${expiresAt}. Renove para manter o acesso.`;
+    }
+    case 'subscription.expired': {
+      const expiredAt = metadata?.expired_at ? formatInTenantTimezone(new Date(metadata.expired_at), timezone) : formatted;
+      return `Sua assinatura expirou em ${expiredAt}.`;
+    }
+    default:
+      return EVENT_TITLES[eventKey] ?? eventKey;
+  }
+}
 
 @Injectable()
 export class NotificationEventService {
@@ -34,10 +59,12 @@ export class NotificationEventService {
     const enabled = await this.settingsService.isEventEnabled(tenantId, eventKey);
     if (!enabled) return;
 
+    const timezone = await this.settingsService.getTenantTimezone(tenantId);
     const title = EVENT_TITLES[eventKey] ?? eventKey;
+    const body = buildEventBody(eventKey, metadata, timezone);
     const notification = await this.notifRepo.create({
       title,
-      body: title,
+      body,
       type: ENotificationType.event,
       scope: ENotificationScope.targeted,
       tenant_ids: [tenantId],

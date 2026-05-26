@@ -17,7 +17,8 @@ describe('NotificationEventService', () => {
     notifRepo = new InMemoryNotificationRepository();
     receiptRepo = new InMemoryNotificationReceiptRepository();
     settingsRepo = new InMemoryNotificationSettingsRepository();
-    settingsService = new NotificationSettingsService(settingsRepo as any);
+    const mockPrisma = { tenant: { findUnique: () => Promise.resolve({ timezone: 'America/Sao_Paulo' }) } } as any;
+    settingsService = new NotificationSettingsService(settingsRepo as any, mockPrisma);
     service = new NotificationEventService(notifRepo as any, receiptRepo as any, settingsService);
   });
 

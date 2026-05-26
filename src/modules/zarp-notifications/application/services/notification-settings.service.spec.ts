@@ -1,13 +1,19 @@
 import { NotificationSettingsService } from './notification-settings.service';
 import { InMemoryNotificationSettingsRepository } from '../../../../shared/testing/in-memory-repos/in-memory-notification-settings.repository';
 
+const mockPrisma = {
+  tenant: {
+    findUnique: () => Promise.resolve({ timezone: 'America/Sao_Paulo' }),
+  },
+} as any;
+
 describe('NotificationSettingsService', () => {
   let service: NotificationSettingsService;
   let repo: InMemoryNotificationSettingsRepository;
 
   beforeEach(() => {
     repo = new InMemoryNotificationSettingsRepository();
-    service = new NotificationSettingsService(repo as any);
+    service = new NotificationSettingsService(repo as any, mockPrisma);
   });
 
   afterEach(() => repo.clear());

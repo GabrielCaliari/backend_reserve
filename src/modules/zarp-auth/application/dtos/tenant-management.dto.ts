@@ -49,6 +49,12 @@ export class UpdateTenantDTO {
   @IsOptional()
   @MaxLength(255)
   domain?: string;
+
+  @ApiPropertyOptional({ description: 'IANA timezone string', example: 'America/Sao_Paulo' })
+  @IsString()
+  @IsOptional()
+  @MaxLength(100)
+  timezone?: string;
 }
 
 export class ScheduleTenantDeletionDTO {
@@ -111,6 +117,9 @@ export class TenantResponseDTO {
 
   @ApiPropertyOptional({ example: 'Customer requested account closure', nullable: true })
   deletion_reason?: string | null;
+
+  @ApiPropertyOptional({ example: 'America/Sao_Paulo', description: 'IANA timezone string' })
+  timezone?: string;
 
   @ApiProperty({ example: '2024-01-01T00:00:00.000Z' })
   created_at: Date;
