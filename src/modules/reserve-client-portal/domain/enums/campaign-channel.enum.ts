@@ -1,0 +1,6 @@
+export enum ECampaignChannel {
+  META_ADS = 'META_ADS',
+  GOOGLE_ADS = 'GOOGLE_ADS',
+  GOOGLE_HOTEL_ADS = 'GOOGLE_HOTEL_ADS',
+  REMARKETING = 'REMARKETING',
+}

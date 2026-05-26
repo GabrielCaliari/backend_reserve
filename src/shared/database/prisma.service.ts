@@ -18,20 +18,17 @@ export class PrismaService
       'global-bundle.pem',
     );
 
-    console.log('CERT PATH:', certPath);
+    const certExists = fs.existsSync(certPath);
+    const isProduction = process.env.NODE_ENV === 'production';
+    const useSsl = isProduction && certExists;
 
-    console.log('CERT EXISTS:', fs.existsSync(certPath));
-
-    const caCert = fs.readFileSync(certPath, 'utf8');
+    const sslConfig = useSsl
+      ? { rejectUnauthorized: true, ca: fs.readFileSync(certPath, 'utf8') }
+      : false;
 
     const pool = new Pool({
       connectionString: process.env.DATABASE_URL,
-
-      ssl: {
-        rejectUnauthorized: true,
-        ca: caCert,
-      },
-
+      ssl: sslConfig,
       max: 3,
       idleTimeoutMillis: 10000,
       connectionTimeoutMillis: 20000,

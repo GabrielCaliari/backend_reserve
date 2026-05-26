@@ -663,6 +663,7 @@ model Admin {
   ArticlesLastEdited        Article[]                   @relation("ArticleLastEditedBy")
   NotificationsCreated      Notification[]              @relation("NotificationsCreated")
   NotificationReceipts      TenantNotificationReceipt[] @relation("NotificationReceipts")
+  HotelClients              HotelClient[]
 }
 
 model Tenant {
@@ -1969,4 +1970,181 @@ model PracticeExamBundleExam {
 
   @@id([bundle_id, exam_id])
   @@map("practice_exam_bundle_exams")
+}
+
+// ============================================================
+// RESERVE CLIENT PORTAL — Hotel Marketing Dashboard
+// ============================================================
+
+enum EPlatform {
+  GA4
+  META_ADS
+  GOOGLE_ADS
+}
+
+enum EIntegrationStatus {
+  PENDING
+  ACTIVE
+  ERROR
+  DISCONNECTED
+}
+
+enum ECampaignChannel {
+  META_ADS
+  GOOGLE_ADS
+  GOOGLE_HOTEL_ADS
+  REMARKETING
+}
+
+enum EReportStatus {
+  DRAFT
+  REVIEW
+  PUBLISHED
+}
+
+model HotelClient {
+  id                  String              @id @default(cuid()) @db.VarChar(25)
+  admin_id            String              @db.VarChar(25)
+  hotel_name          String              @db.VarChar(255)
+  logo_url            String?             @db.VarChar(500)
+  country             String              @db.VarChar(100)
+  booking_engine      String?             @db.VarChar(100)
+  target_occupancy    Float               @default(0.7)
+  target_direct_pct   Float               @default(0.5)
+  contract_start      DateTime
+  is_active           Boolean             @default(true)
+  created_at          DateTime            @default(now())
+  updated_at          DateTime            @updatedAt
+  Admin               Admin               @relation(fields: [admin_id], references: [id])
+  ApiCredentials      HotelApiCredential[]
+  DashboardSnapshots  DashboardSnapshot[]
+  CampaignMetrics     CampaignMetric[]
+  SiteMetrics         SiteMetric[]
+  OtaMonthlyData      OtaMonthlyData[]
+  MonthlyReports      MonthlyReport[]
+
+  @@index([admin_id, is_active])
+  @@map("hotel_clients")
+}
+
+model HotelApiCredential {
+  id               String             @id @default(cuid()) @db.VarChar(25)
+  client_id        String             @db.VarChar(25)
+  platform         EPlatform
+  encrypted_token  String             @db.Text
+  refresh_token    String?            @db.Text
+  token_expires_at DateTime?
+  last_sync_at     DateTime?
+  sync_status      EIntegrationStatus @default(PENDING)
+  error_message    String?            @db.Text
+  created_at       DateTime           @default(now())
+  updated_at       DateTime           @updatedAt
+  HotelClient      HotelClient        @relation(fields: [client_id], references: [id])
+
+  @@unique([client_id, platform])
+  @@index([client_id, sync_status])
+  @@map("hotel_api_credentials")
+}
+
+model DashboardSnapshot {
+  id                   String      @id @default(cuid()) @db.VarChar(25)
+  client_id            String      @db.VarChar(25)
+  snapshot_date        DateTime
+  direct_bookings      Int         @default(0)
+  ota_bookings         Int         @default(0)
+  direct_revenue       Float       @default(0)
+  ota_revenue          Float       @default(0)
+  ota_commission_paid  Float       @default(0)
+  occupancy_rate       Float       @default(0)
+  site_visitors        Int         @default(0)
+  site_conversion_rate Float       @default(0)
+  created_at           DateTime    @default(now())
+  updated_at           DateTime    @updatedAt
+  HotelClient          HotelClient @relation(fields: [client_id], references: [id])
+
+  @@unique([client_id, snapshot_date])
+  @@index([client_id, snapshot_date])
+  @@map("dashboard_snapshots")
+}
+
+model CampaignMetric {
+  id                 String           @id @default(cuid()) @db.VarChar(25)
+  client_id          String           @db.VarChar(25)
+  channel            ECampaignChannel
+  campaign_name      String           @db.VarChar(255)
+  metric_date        DateTime
+  spend              Float            @default(0)
+  impressions        Int              @default(0)
+  clicks             Int              @default(0)
+  conversions        Int              @default(0)
+  revenue_attributed Float            @default(0)
+  cost_per_booking   Float?
+  roas               Float?
+  created_at         DateTime         @default(now())
+  updated_at         DateTime         @updatedAt
+  HotelClient        HotelClient      @relation(fields: [client_id], references: [id])
+
+  @@index([client_id, channel, metric_date])
+  @@map("campaign_metrics")
+}
+
+model SiteMetric {
+  id                    String      @id @default(cuid()) @db.VarChar(25)
+  client_id             String      @db.VarChar(25)
+  metric_date           DateTime
+  organic_visitors      Int         @default(0)
+  paid_visitors         Int         @default(0)
+  direct_visitors       Int         @default(0)
+  social_visitors       Int         @default(0)
+  package_page_views    Int         @default(0)
+  checkout_starts       Int         @default(0)
+  checkout_completes    Int         @default(0)
+  avg_time_on_package   Float       @default(0)
+  bounce_rate           Float       @default(0)
+  created_at            DateTime    @default(now())
+  updated_at            DateTime    @updatedAt
+  HotelClient           HotelClient @relation(fields: [client_id], references: [id])
+
+  @@unique([client_id, metric_date])
+  @@index([client_id, metric_date])
+  @@map("site_metrics")
+}
+
+model OtaMonthlyData {
+  id                 String      @id @default(cuid()) @db.VarChar(25)
+  client_id          String      @db.VarChar(25)
+  reference_month    DateTime
+  ota_bookings       Int         @default(0)
+  ota_revenue        Float       @default(0)
+  commission_rate    Float       @default(0.22)
+  commission_paid    Float       @default(0)
+  platform_breakdown Json?
+  inserted_by        String      @db.VarChar(25)
+  created_at         DateTime    @default(now())
+  updated_at         DateTime    @updatedAt
+  HotelClient        HotelClient @relation(fields: [client_id], references: [id])
+
+  @@unique([client_id, reference_month])
+  @@index([client_id, reference_month])
+  @@map("ota_monthly_data")
+}
+
+model MonthlyReport {
+  id                String        @id @default(cuid()) @db.VarChar(25)
+  client_id         String        @db.VarChar(25)
+  reference_month   DateTime
+  status            EReportStatus @default(DRAFT)
+  executive_summary String?       @db.Text
+  highlights        Json?
+  next_steps        Json?
+  admin_comment     String?       @db.Text
+  published_at      DateTime?
+  notification_sent Boolean       @default(false)
+  created_at        DateTime      @default(now())
+  updated_at        DateTime      @updatedAt
+  HotelClient       HotelClient   @relation(fields: [client_id], references: [id])
+
+  @@unique([client_id, reference_month])
+  @@index([client_id, status])
+  @@map("monthly_reports")
 }
