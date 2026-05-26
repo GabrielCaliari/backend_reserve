@@ -7,12 +7,15 @@ import { ELeadStatus, Lead } from '../../domain/entities/lead.entity';
 import PhoneNumber from '../../../../shared/domain/value-objects/phone-number.vo';
 import Email from '../../../../shared/domain/value-objects/email.vo';
 import { GeolocationProvider } from '../../../../shared/providers/geolocation.provider';
+import { NotificationEventService } from '../../../zarp-notifications/application/services/notification-event.service';
+import { NOTIFICATION_EVENTS } from '../../../zarp-notifications/domain/constants/notification-events';
 
 @Injectable()
 export class LeadService {
     constructor(
         private readonly leadRepository: LeadRepository,
         private readonly geolocationProvider: GeolocationProvider,
+        private readonly notificationEventService: NotificationEventService,
     ) { }
 
     async createLead(data: CreateLeadDto) {
@@ -56,6 +59,12 @@ export class LeadService {
             }
 
             const raw = await this.leadRepository.create(lead)
+
+            if (collection?.tenantId) {
+                this.notificationEventService
+                    .dispatch(NOTIFICATION_EVENTS.LEAD_CREATED, collection.tenantId, { lead_id: raw.id })
+                    .catch(() => {});
+            }
 
             return successResponse({
                 id: raw.id

@@ -26,6 +26,7 @@ import {
   APPOINTMENT_REPOSITORY,
 } from './domain/interfaces';
 import { ZarpAuthModule } from '../zarp-auth/zarp-auth.module';
+import { ZarpNotificationsModule } from '../zarp-notifications/zarp-notifications.module';
 import { CreateLeadWithAttachmentsUseCase } from './application/use-cases/create-lead-with-attachments.use-case';
 import { AttachFileToLeadUseCase } from './application/use-cases/attach-file-to-lead.use-case';
 import { RemoveLeadAttachmentUseCase } from './application/use-cases/remove-lead-attachment.use-case';
@@ -71,6 +72,7 @@ import { GeolocationProvider } from '../../shared/providers/geolocation.provider
 @Module({
   imports: [
     ZarpAuthModule,
+    ZarpNotificationsModule,
   ],
   controllers: [
     LeadCollectionController,  // must be before LeadController (`@Get(':id')` would swallow /collections)
