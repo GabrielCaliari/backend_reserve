@@ -10,6 +10,7 @@ import { MediaRelationController } from './infrastructure/controllers/media-rela
 import { BlogService } from './application/services/blog.service';
 import { ArticleService } from './application/services/article.service';
 import { ArticleImageService } from './application/services/article-image.service';
+import { ArticleSchedulerService } from './application/services/article-scheduler.service';
 import { MediaAssetService } from './application/services/media-asset.service';
 import { MediaCollectionService } from './application/services/media-collection.service';
 import { MediaRelationService } from './application/services/media-relation.service';
@@ -80,6 +81,7 @@ import { ZarpAuthModule } from '../zarp-auth/zarp-auth.module';
     BlogService,
     ArticleService,
     ArticleImageService,
+    ArticleSchedulerService,
     AuthorService,
     MediaAssetService,
     MediaCollectionService,
