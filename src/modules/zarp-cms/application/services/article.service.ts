@@ -95,6 +95,8 @@ const ERROR_COVER_IMAGE_REQUIRED = '400:Cover image is required for published ar
 const ERROR_INVALID_IMAGE_REFERENCE = '400:Article contains invalid image references';
 const ERROR_CREATE_ARTICLE = '500:Failed to create article';
 const ERROR_UPDATE_ARTICLE = '500:Failed to update article';
+const ERROR_ARTICLE_NOT_SCHEDULED_OR_PUBLISHED = '409:Article must be in published or scheduled status';
+const ERROR_SCHEDULED_AT_NOT_FUTURE = '400:scheduledAt must be a future date and time';
 
 /**
  * ArticleService
@@ -402,22 +404,21 @@ export class ArticleService {
   }
 
   /**
-   * Publishes an article with complete field validation
-   * 
+   * Publishes an article with complete field validation, or schedules it for future publication
+   *
    * **Validates: Requirements 3.2, 9.1, 9.2, 9.3, 9.4, 9.5, 9.7**
    */
   async publishArticle(
     id: string,
     currentAdminId: string,
+    dto: { scheduledAt?: string },
   ): Promise<ServiceResponse<Article>> {
     try {
-      // Find article
       const article = await this.articleRepository.findById(id);
       if (!article) {
         return errorResponse(ERROR_ARTICLE_NOT_FOUND, 404);
       }
 
-      // Get blog to obtain tenantId
       const blog = await this.blogRepository.findById(article.blogId);
       if (!blog) {
         return errorResponse(ERROR_BLOG_NOT_FOUND, 404);
@@ -427,25 +428,13 @@ export class ArticleService {
         return errorResponse(ERROR_BLOG_MEDIA_COLLECTION_NOT_CONFIGURED, 400);
       }
 
-      // Validate all required fields for publishing
       if (!article.canPublish()) {
         const missingFields: string[] = [];
-        if (!article.displayTitle || article.displayTitle.length === 0) {
-          missingFields.push('displayTitle');
-        }
-        if (!article.metaTitle || article.metaTitle.length === 0) {
-          missingFields.push('metaTitle');
-        }
-        if (article.coverImageId === null) {
-          missingFields.push('coverImageId');
-        }
-        if (!article.authorId || article.authorId.length === 0) {
-          missingFields.push('authorId');
-        }
-        if (!article.content || article.content.length === 0) {
-          missingFields.push('content');
-        }
-
+        if (!article.displayTitle || article.displayTitle.length === 0) missingFields.push('displayTitle');
+        if (!article.metaTitle || article.metaTitle.length === 0) missingFields.push('metaTitle');
+        if (article.coverImageId === null) missingFields.push('coverImageId');
+        if (!article.authorId || article.authorId.length === 0) missingFields.push('authorId');
+        if (!article.content || article.content.length === 0) missingFields.push('content');
         return {
           status: 400,
           data: {
@@ -455,7 +444,23 @@ export class ArticleService {
         };
       }
 
-      // Validate image references in markdown (Requirement 7.4)
+      // Scheduling path
+      if (dto.scheduledAt) {
+        const scheduledAt = new Date(dto.scheduledAt);
+        if (scheduledAt <= new Date()) {
+          return errorResponse(ERROR_SCHEDULED_AT_NOT_FUTURE, 400);
+        }
+        article.schedule(scheduledAt);
+        const updated = await this.articleRepository.update(id, {
+          status: article.status,
+          scheduledAt: article.scheduledAt,
+          publishedAt: null,
+          lastEditedBy: currentAdminId,
+        });
+        return successResponse(updated, 200);
+      }
+
+      // Immediate publish path
       const imageValidation = await this.validateImageReferences(
         article.content,
         blog.tenantId,
@@ -473,25 +478,76 @@ export class ArticleService {
           blog.tenantId,
           blog.mediaCollectionId,
         );
-
         if (!coverImageValidation.valid) {
           return errorResponse(ERROR_ASSET_NOT_IN_BLOG_COLLECTION, 400);
         }
       }
 
-      // Publish the article
       article.publish();
-
-      // Update in database with last_edited_by
       const publishedArticle = await this.articleRepository.update(id, {
         status: article.status,
         publishedAt: article.publishedAt,
+        scheduledAt: null,
         lastEditedBy: currentAdminId,
       });
 
       return successResponse(publishedArticle, 200);
     } catch (error) {
       return errorResponse(ERROR_UPDATE_ARTICLE, 500, error);
+    }
+  }
+
+  /**
+   * Updates the publication/scheduling date for a published or scheduled article
+   */
+  async updatePublishedAt(
+    id: string,
+    newDate: Date,
+    currentAdminId: string,
+  ): Promise<ServiceResponse<Article>> {
+    try {
+      const article = await this.articleRepository.findById(id);
+      if (!article) {
+        return errorResponse(ERROR_ARTICLE_NOT_FOUND, 404);
+      }
+
+      if (
+        article.status !== EArticleStatus.published &&
+        article.status !== EArticleStatus.scheduled
+      ) {
+        return errorResponse(ERROR_ARTICLE_NOT_SCHEDULED_OR_PUBLISHED, 409);
+      }
+
+      article.updatePublishedAt(newDate);
+
+      const updated = await this.articleRepository.update(id, {
+        status: article.status,
+        publishedAt: article.publishedAt,
+        scheduledAt: article.scheduledAt,
+      });
+
+      return successResponse(updated, 200);
+    } catch (error) {
+      return errorResponse(ERROR_UPDATE_ARTICLE, 500, error);
+    }
+  }
+
+  /**
+   * Publishes all scheduled articles whose scheduledAt time has passed
+   */
+  async publishScheduledArticles(): Promise<void> {
+    const due = await this.articleRepository.findScheduledDue();
+
+    for (const article of due) {
+      try {
+        await this.articleRepository.update(article.id!, {
+          status: EArticleStatus.published,
+          publishedAt: article.scheduledAt!,
+          scheduledAt: null,
+        });
+      } catch (error) {
+        console.error(`Failed to auto-publish article ${article.id}:`, error);
+      }
     }
   }
 

@@ -21,6 +21,7 @@ import {
   IMediaRelationRepository,
 } from '../../domain/interfaces/media-relation.repository.interface';
 import { EArticleStatus } from '../../domain/enums/article-status.enum';
+import { Article } from '../../domain/entities/article.entity';
 
 describe('ArticleService', () => {
   let service: ArticleService;
@@ -38,6 +39,9 @@ describe('ArticleService', () => {
       findByBlogId: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),
+      findScheduledDue: jest.fn(),
+      findByTenantId: jest.fn(),
+      countByAuthorId: jest.fn(),
     };
 
     const mockAuthorRepository: Partial<IAuthorRepository> = {
@@ -358,6 +362,203 @@ describe('ArticleService', () => {
           avatar: null,
         },
       });
+    });
+  });
+
+  describe('publishArticle with scheduledAt', () => {
+    const articleId = 'article12345678901234';
+    const adminId = 'admin1234567890123456';
+
+    const makeFullArticle = () =>
+      new Article({
+        id: articleId,
+        displayTitle: 'Title',
+        metaTitle: 'Meta',
+        content: 'Content body here',
+        slug: 'my-slug',
+        authorId: 'author123456789012345',
+        blogId: 'blog1234567890123456',
+        createdBy: adminId,
+        coverImageId: 'cover123456789012345',
+        status: EArticleStatus.draft,
+      });
+
+    const makeBlog = () => ({
+      id: 'blog1234567890123456',
+      tenantId: 'tenant12345678901234',
+      mediaCollectionId: 'coll1234567890123456',
+    });
+
+    it('publishes immediately when no scheduledAt is provided', async () => {
+      const article = makeFullArticle();
+      const blog = makeBlog();
+
+      articleRepository.findById.mockResolvedValue(article);
+      blogRepository.findById.mockResolvedValue(blog as any);
+      mediaRelationRepository.findByEntity.mockResolvedValue([]);
+      mediaAssetRepository.findById.mockResolvedValue({
+        id: 'cover123456789012345',
+        url: 'https://cdn.example.com/cover.jpg',
+        collection_id: 'coll1234567890123456',
+      } as any);
+      articleRepository.update.mockResolvedValue({
+        ...article,
+        status: EArticleStatus.published,
+        publishedAt: new Date(),
+        scheduledAt: null,
+      } as any);
+
+      const result = await service.publishArticle(articleId, adminId, {});
+
+      expect(result.status).toBe(200);
+      const updated = articleRepository.update.mock.calls[0][1];
+      expect(updated.status).toBe(EArticleStatus.published);
+    });
+
+    it('schedules when scheduledAt is in the future', async () => {
+      const article = makeFullArticle();
+      const blog = makeBlog();
+      const future = new Date(Date.now() + 3600_000).toISOString();
+
+      articleRepository.findById.mockResolvedValue(article);
+      blogRepository.findById.mockResolvedValue(blog as any);
+      articleRepository.update.mockResolvedValue({
+        ...article,
+        status: EArticleStatus.scheduled,
+        scheduledAt: new Date(future),
+        publishedAt: null,
+      } as any);
+
+      const result = await service.publishArticle(articleId, adminId, { scheduledAt: future });
+
+      expect(result.status).toBe(200);
+      const updated = articleRepository.update.mock.calls[0][1];
+      expect(updated.status).toBe(EArticleStatus.scheduled);
+      expect(updated.scheduledAt).toEqual(new Date(future));
+    });
+
+    it('returns 400 when scheduledAt is in the past', async () => {
+      const article = makeFullArticle();
+      const blog = makeBlog();
+      const past = new Date(Date.now() - 3600_000).toISOString();
+
+      articleRepository.findById.mockResolvedValue(article);
+      blogRepository.findById.mockResolvedValue(blog as any);
+
+      const result = await service.publishArticle(articleId, adminId, { scheduledAt: past });
+
+      expect(result.status).toBe(400);
+    });
+  });
+
+  describe('updatePublishedAt', () => {
+    const articleId = 'article12345678901234';
+    const adminId = 'admin1234567890123456';
+
+    const makePublishedArticle = () =>
+      new Article({
+        id: articleId,
+        displayTitle: 'Title',
+        metaTitle: 'Meta',
+        content: 'Content body here',
+        slug: 'my-slug',
+        authorId: 'author123456789012345',
+        blogId: 'blog1234567890123456',
+        createdBy: adminId,
+        coverImageId: 'cover123456789012345',
+        status: EArticleStatus.published,
+        publishedAt: new Date(),
+      });
+
+    it('returns 404 when article not found', async () => {
+      articleRepository.findById.mockResolvedValue(null);
+      const result = await service.updatePublishedAt(articleId, new Date(), adminId);
+      expect(result.status).toBe(404);
+    });
+
+    it('returns 409 when article is in draft status', async () => {
+      const article = new Article({
+        id: articleId,
+        displayTitle: 'Title',
+        metaTitle: 'Meta',
+        content: 'Content',
+        slug: 'slug',
+        authorId: 'author123456789012345',
+        blogId: 'blog1234567890123456',
+        createdBy: adminId,
+        status: EArticleStatus.draft,
+      });
+      articleRepository.findById.mockResolvedValue(article);
+      const result = await service.updatePublishedAt(articleId, new Date(), adminId);
+      expect(result.status).toBe(409);
+    });
+
+    it('updates publishedAt to a past date keeping published status', async () => {
+      const article = makePublishedArticle();
+      const past = new Date(Date.now() - 3600_000);
+      articleRepository.findById.mockResolvedValue(article);
+      articleRepository.update.mockResolvedValue({ ...article, publishedAt: past } as any);
+
+      const result = await service.updatePublishedAt(articleId, past, adminId);
+
+      expect(result.status).toBe(200);
+      const updated = articleRepository.update.mock.calls[0][1];
+      expect(updated.status).toBe(EArticleStatus.published);
+      expect(updated.publishedAt).toEqual(past);
+      expect(updated.scheduledAt).toBeNull();
+      expect(updated.lastEditedBy).toBeUndefined();
+    });
+
+    it('sets status to scheduled when new date is in the future', async () => {
+      const article = makePublishedArticle();
+      const future = new Date(Date.now() + 3600_000);
+      articleRepository.findById.mockResolvedValue(article);
+      articleRepository.update.mockResolvedValue({ ...article, status: EArticleStatus.scheduled, scheduledAt: future } as any);
+
+      const result = await service.updatePublishedAt(articleId, future, adminId);
+
+      expect(result.status).toBe(200);
+      const updated = articleRepository.update.mock.calls[0][1];
+      expect(updated.status).toBe(EArticleStatus.scheduled);
+      expect(updated.scheduledAt).toEqual(future);
+      expect(updated.publishedAt).toBeNull();
+    });
+  });
+
+  describe('publishScheduledArticles', () => {
+    it('publishes all due articles and does not set lastEditedBy', async () => {
+      const due = new Article({
+        id: 'article12345678901234',
+        displayTitle: 'Title',
+        metaTitle: 'Meta',
+        content: 'Content body here',
+        slug: 'my-slug',
+        authorId: 'author123456789012345',
+        blogId: 'blog1234567890123456',
+        createdBy: 'admin1234567890123456',
+        coverImageId: 'cover123456789012345',
+        status: EArticleStatus.scheduled,
+        scheduledAt: new Date(Date.now() - 1000),
+      });
+
+      articleRepository.findScheduledDue.mockResolvedValue([due]);
+      articleRepository.update.mockResolvedValue({ ...due, status: EArticleStatus.published } as any);
+
+      await service.publishScheduledArticles();
+
+      expect(articleRepository.update).toHaveBeenCalledWith(due.id, {
+        status: EArticleStatus.published,
+        publishedAt: due.scheduledAt,
+        scheduledAt: null,
+      });
+      const updateCall = articleRepository.update.mock.calls[0][1];
+      expect(updateCall.lastEditedBy).toBeUndefined();
+    });
+
+    it('does not call update when no articles are due', async () => {
+      articleRepository.findScheduledDue.mockResolvedValue([]);
+      await service.publishScheduledArticles();
+      expect(articleRepository.update).not.toHaveBeenCalled();
     });
   });
 });
