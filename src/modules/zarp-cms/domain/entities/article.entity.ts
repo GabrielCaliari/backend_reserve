@@ -20,6 +20,7 @@ export class Article {
   public slug: string;
   public status: EArticleStatus;
   public publishedAt: Date | null;
+  public scheduledAt: Date | null;
   public coverImageId: string | null; // UUID reference to MediaAsset
   public authorId: string; // UUID reference to Author
   public blogId: string; // UUID reference to Blog
@@ -39,6 +40,7 @@ export class Article {
     slug: string;
     status?: EArticleStatus;
     publishedAt?: Date | null;
+    scheduledAt?: Date | null;
     coverImageId?: string | null;
     authorId: string;
     blogId: string;
@@ -57,6 +59,7 @@ export class Article {
     this.slug = data.slug;
     this.status = data.status ?? EArticleStatus.draft;
     this.publishedAt = data.publishedAt ?? null;
+    this.scheduledAt = data.scheduledAt ?? null;
     this.coverImageId = data.coverImageId ?? null;
     this.authorId = data.authorId;
     this.blogId = data.blogId;
@@ -109,6 +112,56 @@ export class Article {
     }
     this.status = EArticleStatus.published;
     this.publishedAt = new Date();
+    this.scheduledAt = null;
+  }
+
+  /**
+   * Schedules the article for publication at a future date
+   * @param scheduledAt The date when the article should be published
+   * @throws if required fields are missing or scheduledAt is not in the future
+   */
+  schedule(scheduledAt: Date): void {
+    if (!this.canPublish()) {
+      const missingFields: string[] = [];
+      if (this.displayTitle.length === 0) missingFields.push('displayTitle');
+      if (this.metaTitle.length === 0) missingFields.push('metaTitle');
+      if (this.coverImageId === null) missingFields.push('coverImageId');
+      if (this.authorId.length === 0) missingFields.push('authorId');
+      if (this.content.length === 0) missingFields.push('content');
+
+      throw new Error(
+        `Article cannot be scheduled: missing required fields - ${missingFields.join(', ')}`
+      );
+    }
+    if (scheduledAt <= new Date()) {
+      throw new Error('scheduledAt must be in the future');
+    }
+    this.status = EArticleStatus.scheduled;
+    this.scheduledAt = scheduledAt;
+    this.publishedAt = null;
+  }
+
+  /**
+   * Updates the publication/scheduling date for a published or scheduled article
+   * @param newDate The new date for publication or scheduling
+   * @throws if article is in draft or archived status
+   */
+  updatePublishedAt(newDate: Date): void {
+    if (
+      this.status !== EArticleStatus.published &&
+      this.status !== EArticleStatus.scheduled
+    ) {
+      throw new Error('updatePublishedAt is only valid for published or scheduled articles');
+    }
+    if (newDate > new Date()) {
+      this.status = EArticleStatus.scheduled;
+      this.scheduledAt = newDate;
+      this.publishedAt = null;
+    } else {
+      this.status = EArticleStatus.published;
+      this.publishedAt = newDate;
+      this.scheduledAt = null;
+    }
   }
 
   /**
