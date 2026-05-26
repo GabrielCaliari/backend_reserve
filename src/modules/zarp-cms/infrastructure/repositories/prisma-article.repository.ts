@@ -177,6 +177,7 @@ export class PrismaArticleRepository implements IArticleRepository {
       if (data.slug !== undefined) updateData.slug = data.slug;
       if (data.status !== undefined) updateData.status = data.status;
       if (data.publishedAt !== undefined) updateData.published_at = data.publishedAt;
+      if (data.scheduledAt !== undefined) updateData.scheduled_at = data.scheduledAt;
       if (data.coverImageId !== undefined) updateData.cover_image_id = data.coverImageId;
       if (data.authorId !== undefined) updateData.author_id = data.authorId;
       if (data.lastEditedBy !== undefined) updateData.last_edited_by = data.lastEditedBy;
@@ -215,7 +216,7 @@ export class PrismaArticleRepository implements IArticleRepository {
       }
 
       const where: any = { author_id: authorId };
-      
+
       if (status) {
         where.status = status;
       }
@@ -223,6 +224,20 @@ export class PrismaArticleRepository implements IArticleRepository {
       return await this.prisma.article.count({ where });
     } catch (error) {
       throw new RepositoryException('Failed to count articles by author ID', error);
+    }
+  }
+
+  async findScheduledDue(): Promise<Article[]> {
+    try {
+      const records = await this.prisma.article.findMany({
+        where: {
+          status: 'scheduled' as any,
+          scheduled_at: { lte: new Date() },
+        },
+      });
+      return records.map((record) => this.toDomain(record));
+    } catch (error) {
+      throw new RepositoryException('Failed to find scheduled articles due for publication', error);
     }
   }
 
@@ -238,6 +253,7 @@ export class PrismaArticleRepository implements IArticleRepository {
       slug: raw.slug,
       status: raw.status as EArticleStatus,
       publishedAt: raw.published_at,
+      scheduledAt: (raw as any).scheduled_at ?? null,
       coverImageId: raw.cover_image_id,
       authorId: raw.author_id,
       blogId: raw.blog_id,

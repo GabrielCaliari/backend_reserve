@@ -41,6 +41,13 @@ export class InMemoryArticleRepository implements IArticleRepository {
     return this.articles.filter((a) => a.authorId === authorId).length;
   }
 
+  async findScheduledDue(): Promise<any[]> {
+    const now = new Date();
+    return this.articles.filter(
+      (a) => a.status === 'scheduled' && a.scheduledAt && new Date(a.scheduledAt) <= now,
+    );
+  }
+
   async existsBySlugAndBlogId(slug: string, blogId: string): Promise<boolean> {
     return this.articles.some((a) => a.slug === slug && a.blogId === blogId);
   }

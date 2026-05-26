@@ -33,4 +33,5 @@ export interface IArticleRepository {
   update(id: string, data: Partial<Article>): Promise<Article>;
   delete(id: string): Promise<void>;
   countByAuthorId(authorId: string, status?: EArticleStatus): Promise<number>;
+  findScheduledDue(): Promise<Article[]>;
 }
