@@ -1724,6 +1724,7 @@ enum ECustomerRole {
 
 enum EArticleStatus {
   draft
+  scheduled
   published
   archived
 }
