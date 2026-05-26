@@ -98,10 +98,11 @@ import { ToLowercaseQueryParamsPipe, ToLowercaseBodyRequestPipe } from './shared
         path: 'reports',
         module: ZarpReportsModule,
       },
-      {
-        path: 'notifications',
-        module: ZarpNotificationsModule,
-      },
+      // ZarpNotificationsModule uses full paths in controllers:
+      // - NotificationTenantController    → /api/notifications/tenant
+      // - NotificationSettingsController  → /api/notifications/settings
+      // - NotificationController          → /api/notifications/...
+      // No RouterModule prefix needed — controllers declare their own full paths.
       // ZarpSubscriptionsModule uses full paths in controllers:
       // - SubscriptionsController       → /api/subscriptions/...
       // - TenantBillingConfigController → /api/payments/billing-config
