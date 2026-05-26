@@ -3,6 +3,7 @@ import {
   Post,
   Get,
   Put,
+  Patch,
   Delete,
   Body,
   Param,
@@ -15,6 +16,8 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiHeader } from '@n
 import { ArticleService } from '../../application/services/article.service';
 import { CreateArticleDTO } from '../../application/dtos/create-article.dto';
 import { UpdateArticleDTO } from '../../application/dtos/update-article.dto';
+import { PublishArticleDTO } from '../../application/dtos/publish-article.dto';
+import { UpdatePublishedAtDTO } from '../../application/dtos/update-published-at.dto';
 import { ArticlePresenter } from '../presenters/article.presenter';
 import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
 import { TenantGuard } from '../../../../shared/auth/guards/tenant.guard';
@@ -166,18 +169,47 @@ export class ArticleController {
 
   @Post(':id/publish')
   @Roles(EAdminRole.editor)
-  @ApiOperation({ summary: 'Publish an article (validates all required fields)' })
-  @ApiResponse({ status: 200, description: 'Article published successfully' })
-  @ApiResponse({ status: 400, description: 'Missing required fields or invalid image references' })
+  @ApiOperation({ summary: 'Publish or schedule an article' })
+  @ApiResponse({ status: 200, description: 'Article published or scheduled successfully' })
+  @ApiResponse({ status: 400, description: 'Missing required fields or scheduledAt is in the past' })
   @ApiResponse({ status: 403, description: 'Insufficient role' })
   @ApiResponse({ status: 404, description: 'Article not found' })
   async publish(
     @CurrentAdmin() admin: CurrentAdminPayload,
     @Param('id') id: string,
+    @Body() dto: PublishArticleDTO,
     @Res() res: Response,
   ) {
-    const result = await this.articleService.publishArticle(id, admin.id);
-    
+    const result = await this.articleService.publishArticle(id, admin.id, dto);
+
+    if (result.status !== 200) {
+      return res.status(result.status).json(result.data);
+    }
+
+    const presented = ArticlePresenter.present(result.data as any);
+    return res.status(result.status).json(presented);
+  }
+
+  @Patch(':id/published-at')
+  @Roles(EAdminRole.editor)
+  @ApiOperation({ summary: 'Edit the published_at date of a published or scheduled article' })
+  @ApiResponse({ status: 200, description: 'Publication date updated successfully' })
+  @ApiResponse({ status: 400, description: 'Validation error' })
+  @ApiResponse({ status: 403, description: 'Insufficient role' })
+  @ApiResponse({ status: 404, description: 'Article not found' })
+  @ApiResponse({ status: 409, description: 'Article must be in published or scheduled status' })
+  async updatePublishedAt(
+    @CurrentAdmin() admin: CurrentAdminPayload,
+    @Param('id') id: string,
+    @Body() dto: UpdatePublishedAtDTO,
+    @Res() res: Response,
+  ) {
+    const result = await this.articleService.updatePublishedAt(
+      id,
+      new Date(dto.publishedAt),
+      admin.id,
+    );
+
     if (result.status !== 200) {
       return res.status(result.status).json(result.data);
     }
