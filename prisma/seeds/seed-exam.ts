@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { PrismaClient } from './src/generated/prisma/client';
+import { PrismaClient } from '../../src/generated/prisma/client';
 
 const prisma = new PrismaClient();
 const TENANT_ID = 'cmpe7e88o00016gkgbus0zc2d';
