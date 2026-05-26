@@ -26,6 +26,7 @@ import { ZarpB2bPaymentsModule } from './modules/zarp-b2b-payments/zarp-b2b-paym
 import { ZarpUnifiedWebhooksModule } from './modules/zarp-unified-webhooks/zarp-unified-webhooks.module';
 import { ZarpCouponsModule } from './modules/zarp-coupons/zarp-coupons.module';
 import { ZarpLicensefixModule } from './modules/zarp-licensefix/zarp-licensefix.module';
+import { ZarpNotificationsModule } from './modules/zarp-notifications/zarp-notifications.module';
 
 // Shared pipes
 import { ToLowercaseQueryParamsPipe, ToLowercaseBodyRequestPipe } from './shared/pipes';
@@ -56,6 +57,7 @@ import { ToLowercaseQueryParamsPipe, ToLowercaseBodyRequestPipe } from './shared
     ZarpUnifiedWebhooksModule,
     ZarpCouponsModule,
     ZarpLicensefixModule,
+    ZarpNotificationsModule,
 
     // Route prefixes per bounded context
     RouterModule.register([
@@ -95,6 +97,10 @@ import { ToLowercaseQueryParamsPipe, ToLowercaseBodyRequestPipe } from './shared
       {
         path: 'reports',
         module: ZarpReportsModule,
+      },
+      {
+        path: 'notifications',
+        module: ZarpNotificationsModule,
       },
       // ZarpSubscriptionsModule uses full paths in controllers:
       // - SubscriptionsController       → /api/subscriptions/...

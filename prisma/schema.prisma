@@ -644,40 +644,42 @@ model LeadQualificationMessage {
 }
 
 model Admin {
-  id                          String              @id @default(cuid()) @db.VarChar(25)
-  name                        String              @db.VarChar(100)
-  email                       String              @unique
-  role                        EAdminRole          @default(company_admin)
-  active                      Boolean             @default(true)
-  archived_at                 DateTime?
-  deletion_requested_at       DateTime?
-  deletion_scheduled_for_at   DateTime?
-  deletion_requested_by       String?             @db.VarChar(25)
-  deletion_reason             String?             @db.VarChar(255)
-  created_at                  DateTime            @default(now())
-  updated_at                  DateTime            @updatedAt
-  AdminCredential             AdminCredential?
-  AdminSessionToken           AdminSessionToken[]
-  AdminTenant                 AdminTenant[]
-  ArticlesCreated             Article[]           @relation("ArticleCreatedBy")
-  ArticlesLastEdited          Article[]           @relation("ArticleLastEditedBy")
-}
-
-model Tenant {
-  id                        String                     @id @default(cuid()) @db.VarChar(25)
-  name                      String                     @db.VarChar(100)
-  slug                      String                     @unique @db.VarChar(50)
-  domain                    String                     @db.VarChar(255)
-  active                    Boolean                    @default(true)
-  created_at                DateTime                   @default(now())
-  updated_at                DateTime                   @updatedAt
+  id                        String                      @id @default(cuid()) @db.VarChar(25)
+  name                      String                      @db.VarChar(100)
+  email                     String                      @unique
+  role                      EAdminRole                  @default(company_admin)
+  active                    Boolean                     @default(true)
   archived_at               DateTime?
   deletion_requested_at     DateTime?
   deletion_scheduled_for_at DateTime?
-  deletion_requested_by     String?                    @db.VarChar(25)
-  deletion_reason           String?                    @db.VarChar(255)
-  stripe_customer_id        String?                    @db.VarChar(255)
-  subscription_status       String                     @default("none") @db.VarChar(50)
+  deletion_requested_by     String?                     @db.VarChar(25)
+  deletion_reason           String?                     @db.VarChar(255)
+  created_at                DateTime                    @default(now())
+  updated_at                DateTime                    @updatedAt
+  AdminCredential           AdminCredential?
+  AdminSessionToken         AdminSessionToken[]
+  AdminTenant               AdminTenant[]
+  ArticlesCreated           Article[]                   @relation("ArticleCreatedBy")
+  ArticlesLastEdited        Article[]                   @relation("ArticleLastEditedBy")
+  NotificationsCreated      Notification[]              @relation("NotificationsCreated")
+  NotificationReceipts      TenantNotificationReceipt[] @relation("NotificationReceipts")
+}
+
+model Tenant {
+  id                        String                      @id @default(cuid()) @db.VarChar(25)
+  name                      String                      @db.VarChar(100)
+  slug                      String                      @unique @db.VarChar(50)
+  domain                    String                      @db.VarChar(255)
+  active                    Boolean                     @default(true)
+  created_at                DateTime                    @default(now())
+  updated_at                DateTime                    @updatedAt
+  archived_at               DateTime?
+  deletion_requested_at     DateTime?
+  deletion_scheduled_for_at DateTime?
+  deletion_requested_by     String?                     @db.VarChar(25)
+  deletion_reason           String?                     @db.VarChar(255)
+  stripe_customer_id        String?                     @db.VarChar(255)
+  subscription_status       String                      @default("none") @db.VarChar(50)
   AdminTenant               AdminTenant[]
   Appointments              Appointment[]
   AppointmentBlockedPeriods AppointmentBlockedPeriod[]
@@ -687,22 +689,24 @@ model Tenant {
   leads                     Lead[]
   LeadCollection            LeadCollection[]
   UserCollection            UserCollection[]
-  B2BFeeConfig              B2BFeeConfig?              @relation("B2BFeeConfig")
+  B2BFeeConfig              B2BFeeConfig?               @relation("B2BFeeConfig")
   B2BProducts               B2BProduct[]
   B2BPurchases              B2BPurchase[]
-  B2CCheckoutSessions       B2CCheckoutSession[]       @relation("B2CCheckoutSessions")
-  B2CFeeConfig              B2CFeeConfig?              @relation("B2CFeeConfig")
-  B2CProductCategories      ProductCategory[]          @relation("B2CProductCategories")
-  B2CProductPrices          ProductPrice[]             @relation("B2CProductPrices")
+  B2CCheckoutSessions       B2CCheckoutSession[]        @relation("B2CCheckoutSessions")
+  B2CFeeConfig              B2CFeeConfig?               @relation("B2CFeeConfig")
+  B2CProductCategories      ProductCategory[]           @relation("B2CProductCategories")
+  B2CProductPrices          ProductPrice[]              @relation("B2CProductPrices")
   B2CProducts               Product[]
-  B2CUserProductAccess      UserProductAccess[]        @relation("B2CUserProductAccess")
+  B2CUserProductAccess      UserProductAccess[]         @relation("B2CUserProductAccess")
   Customers                 Customer[]
-  discountCoupons           DiscountCoupon[]           @relation("DiscountCoupons")
+  discountCoupons           DiscountCoupon[]            @relation("DiscountCoupons")
   StatsIntegration          StatsIntegration[]
   StripeSubscription        StripeSubscription?
   TenantBillingConfig       TenantBillingConfig?
   PracticeExams             PracticeExam[]
   PracticeExamBundles       PracticeExamBundle[]
+  NotificationReceipts      TenantNotificationReceipt[]
+  NotificationSettings      TenantNotificationSettings?
 
   @@index([stripe_customer_id])
   @@index([subscription_status])
@@ -1710,6 +1714,74 @@ view pg_stat_statements {
   minmax_stats_since         DateTime? @db.Timestamptz(6)
 }
 
+enum ENotificationType {
+  manual
+  event
+  scheduled
+}
+
+enum ENotificationScope {
+  broadcast
+  targeted
+}
+
+model Notification {
+  id           String                      @id @default(cuid()) @db.VarChar(25)
+  title        String                      @db.VarChar(255)
+  body         String                      @db.Text
+  type         ENotificationType
+  scope        ENotificationScope
+  tenant_ids   String[]                    @default([])
+  event_key    String?                     @db.VarChar(100)
+  metadata     Json?
+  send_email   Boolean                     @default(false)
+  scheduled_at DateTime?
+  published_at DateTime?
+  created_by   String?                     @db.VarChar(25)
+  created_at   DateTime                    @default(now())
+  updated_at   DateTime                    @updatedAt
+  Admin        Admin?                      @relation("NotificationsCreated", fields: [created_by], references: [id])
+  Receipts     TenantNotificationReceipt[]
+
+  @@index([type, scope, published_at])
+  @@index([created_by])
+  @@map("notifications")
+}
+
+model TenantNotificationReceipt {
+  id              String       @id @default(cuid()) @db.VarChar(25)
+  notification_id String       @db.VarChar(25)
+  tenant_id       String       @db.VarChar(25)
+  admin_id        String?      @db.VarChar(25)
+  first_viewed_at DateTime?
+  last_viewed_at  DateTime?
+  viewed          Boolean      @default(false)
+  created_at      DateTime     @default(now())
+  updated_at      DateTime     @updatedAt
+  Notification    Notification @relation(fields: [notification_id], references: [id], onDelete: Cascade)
+  Tenant          Tenant       @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  Admin           Admin?       @relation("NotificationReceipts", fields: [admin_id], references: [id])
+
+  @@unique([notification_id, tenant_id, admin_id])
+  @@index([tenant_id, viewed])
+  @@index([admin_id, viewed])
+  @@map("tenant_notification_receipts")
+}
+
+model TenantNotificationSettings {
+  id             String   @id @default(cuid()) @db.VarChar(25)
+  tenant_id      String   @unique @db.VarChar(25)
+  email_enabled  Boolean  @default(true)
+  inapp_enabled  Boolean  @default(true)
+  event_settings Json     @default("{}")
+  cron_settings  Json     @default("{}")
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+  Tenant         Tenant   @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+
+  @@map("tenant_notification_settings")
+}
+
 enum EAdminRole {
   super_admin
   owner
@@ -1787,16 +1859,16 @@ enum EAttemptStatus {
 }
 
 model PracticeExam {
-  id          String       @id @default(cuid()) @db.VarChar(25)
-  tenant_id   String       @db.VarChar(25)
-  title       String       @db.VarChar(255)
+  id          String        @id @default(cuid()) @db.VarChar(25)
+  tenant_id   String        @db.VarChar(25)
+  title       String        @db.VarChar(255)
   section     EExamSection
   time_limit  Int
-  description String?      @db.Text
-  is_active   Boolean      @default(true)
-  created_at  DateTime     @default(now())
-  updated_at  DateTime     @updatedAt
-  Tenant      Tenant       @relation(fields: [tenant_id], references: [id])
+  description String?       @db.Text
+  is_active   Boolean       @default(true)
+  created_at  DateTime      @default(now())
+  updated_at  DateTime      @updatedAt
+  Tenant      Tenant        @relation(fields: [tenant_id], references: [id])
   Questions   Question[]
   Attempts    ExamAttempt[]
 
@@ -1805,16 +1877,16 @@ model PracticeExam {
 }
 
 model Question {
-  id               String           @id @default(cuid()) @db.VarChar(25)
-  practice_exam_id String           @db.VarChar(25)
-  statement        String           @db.Text
-  correct_option   String           @db.VarChar(1)
-  explanation      String?          @db.Text
+  id               String             @id @default(cuid()) @db.VarChar(25)
+  practice_exam_id String             @db.VarChar(25)
+  statement        String             @db.Text
+  correct_option   String             @db.VarChar(1)
+  explanation      String?            @db.Text
   order            Int
   deleted_at       DateTime?
-  created_at       DateTime         @default(now())
-  updated_at       DateTime         @updatedAt
-  PracticeExam     PracticeExam     @relation(fields: [practice_exam_id], references: [id])
+  created_at       DateTime           @default(now())
+  updated_at       DateTime           @updatedAt
+  PracticeExam     PracticeExam       @relation(fields: [practice_exam_id], references: [id])
   Options          OptionQuestion[]
   Responses        QuestionResponse[]
 
@@ -1837,17 +1909,17 @@ model OptionQuestion {
 }
 
 model ExamAttempt {
-  id               String            @id @default(cuid()) @db.VarChar(25)
-  customer_id      String            @db.VarChar(25)
-  practice_exam_id String            @db.VarChar(25)
-  started_at       DateTime          @default(now())
+  id               String             @id @default(cuid()) @db.VarChar(25)
+  customer_id      String             @db.VarChar(25)
+  practice_exam_id String             @db.VarChar(25)
+  started_at       DateTime           @default(now())
   finished_at      DateTime?
   score            Float?
-  status           EAttemptStatus    @default(IN_PROGRESS)
-  created_at       DateTime          @default(now())
-  updated_at       DateTime          @updatedAt
-  Customer         Customer          @relation(fields: [customer_id], references: [id])
-  PracticeExam     PracticeExam      @relation(fields: [practice_exam_id], references: [id])
+  status           EAttemptStatus     @default(IN_PROGRESS)
+  created_at       DateTime           @default(now())
+  updated_at       DateTime           @updatedAt
+  Customer         Customer           @relation(fields: [customer_id], references: [id])
+  PracticeExam     PracticeExam       @relation(fields: [practice_exam_id], references: [id])
   Responses        QuestionResponse[]
 
   @@index([customer_id, practice_exam_id])
@@ -1874,15 +1946,15 @@ model QuestionResponse {
 }
 
 model PracticeExamBundle {
-  id                String                      @id @default(cuid()) @db.VarChar(25)
-  tenant_id         String                      @db.VarChar(25)
-  title             String                      @db.VarChar(255)
-  description       String?                     @db.Text
-  is_active         Boolean                     @default(true)
-  stripe_product_id String?                     @db.VarChar(255)
-  created_at        DateTime                    @default(now())
-  updated_at        DateTime                    @updatedAt
-  Tenant            Tenant                      @relation(fields: [tenant_id], references: [id])
+  id                String                   @id @default(cuid()) @db.VarChar(25)
+  tenant_id         String                   @db.VarChar(25)
+  title             String                   @db.VarChar(255)
+  description       String?                  @db.Text
+  is_active         Boolean                  @default(true)
+  stripe_product_id String?                  @db.VarChar(255)
+  created_at        DateTime                 @default(now())
+  updated_at        DateTime                 @updatedAt
+  Tenant            Tenant                   @relation(fields: [tenant_id], references: [id])
   Exams             PracticeExamBundleExam[]
 
   @@index([tenant_id, is_active])
