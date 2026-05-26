@@ -4,6 +4,7 @@ import { ZarpAuthModule } from '../zarp-auth/zarp-auth.module';
 import { ZarpB2cProductsModule } from '../zarp-b2c-products/zarp-b2c-products.module';
 import { ZarpSubscriptionsModule } from '../zarp-subscriptions/zarp-subscriptions.module';
 import { ZarpCouponsModule } from '../zarp-coupons/zarp-coupons.module';
+import { ZarpLicensefixModule } from '../zarp-licensefix/zarp-licensefix.module';
 
 import { CreateCheckoutSessionUseCase } from './application/use-cases/create-checkout-session.use-case';
 import { ListMySubscriptionsUseCase } from './application/use-cases/list-my-subscriptions.use-case';
@@ -28,7 +29,7 @@ import { B2CSubscriptionsController } from './infrastructure/controllers/b2c-sub
 import { B2CStripeWebhookController } from './infrastructure/controllers/b2c-stripe-webhook.controller';
 
 @Module({
-  imports: [DatabaseModule, ZarpAuthModule, ZarpB2cProductsModule, ZarpSubscriptionsModule, ZarpCouponsModule],
+  imports: [DatabaseModule, ZarpAuthModule, ZarpB2cProductsModule, ZarpSubscriptionsModule, ZarpCouponsModule, ZarpLicensefixModule],
   controllers: [B2CSubscriptionsController, B2CStripeWebhookController],
   providers: [
     CreateCheckoutSessionUseCase,

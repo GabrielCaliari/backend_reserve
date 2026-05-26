@@ -25,6 +25,7 @@ import { ZarpB2cSubscriptionsModule } from './modules/zarp-b2c-subscriptions/zar
 import { ZarpB2bPaymentsModule } from './modules/zarp-b2b-payments/zarp-b2b-payments.module';
 import { ZarpUnifiedWebhooksModule } from './modules/zarp-unified-webhooks/zarp-unified-webhooks.module';
 import { ZarpCouponsModule } from './modules/zarp-coupons/zarp-coupons.module';
+import { ZarpLicensefixModule } from './modules/zarp-licensefix/zarp-licensefix.module';
 
 // Shared pipes
 import { ToLowercaseQueryParamsPipe, ToLowercaseBodyRequestPipe } from './shared/pipes';
@@ -54,6 +55,7 @@ import { ToLowercaseQueryParamsPipe, ToLowercaseBodyRequestPipe } from './shared
     ZarpB2bPaymentsModule,
     ZarpUnifiedWebhooksModule,
     ZarpCouponsModule,
+    ZarpLicensefixModule,
 
     // Route prefixes per bounded context
     RouterModule.register([

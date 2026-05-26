@@ -68,7 +68,8 @@ export class PrismaUserProductAccessRepository implements IUserProductAccessRepo
     const record = await this.prisma.userProductAccess.create({
       data: {
         tenant_id: data.tenant_id!,
-        user_id: data.user_id!,
+        user_id: data.user_id ?? undefined,
+        customer_id: data.customer_id ?? undefined,
         product_id: data.product_id!,
         product_price_id: data.product_price_id!,
         stripe_subscription_id: data.stripe_subscription_id,
@@ -115,6 +116,7 @@ export class PrismaUserProductAccessRepository implements IUserProductAccessRepo
       id: record.id,
       tenant_id: record.tenant_id,
       user_id: record.user_id,
+      customer_id: record.customer_id,
       product_id: record.product_id,
       product_price_id: record.product_price_id,
       stripe_subscription_id: record.stripe_subscription_id,

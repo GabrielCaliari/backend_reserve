@@ -24,7 +24,7 @@ import * as crypto from 'crypto';
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 
-const TENANT_ID = 'cmon7u18s0002fckgp42w2t0m';
+const TENANT_ID = 'cmpe7e88o00016gkgbus0zc2d';
 const CURRENCY = 'usd';
 
 // ─── Stripe key decryption ────────────────────────────────────────────────────
@@ -523,7 +523,7 @@ const PRODUCTS: B2BProduct[] = [
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
 (async function main() {
-  const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
+  const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL, ssl: process.env.DATABASE_URL?.includes('localhost') ? false : { rejectUnauthorized: false } });
   const prisma = new PrismaClient({ adapter });
 
   const billingConfig = await (prisma as any).tenantBillingConfig.findUnique({

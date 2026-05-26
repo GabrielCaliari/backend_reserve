@@ -7,6 +7,7 @@ import { MulterExceptionFilter } from './shared/exceptions/multer-exception.filt
 import { DomainExceptionFilter } from './shared/exceptions/domain-exception.filter';
 import { ConnectionErrorFilter } from './shared/exceptions/connection-error.filter';
 import { Request, Response, NextFunction } from 'express';
+import * as cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   // rawBody: true enables access to req.rawBody for Stripe webhook signature validation
@@ -15,10 +16,12 @@ async function bootstrap() {
     bodyParser: true,
   });
 
+  app.use(cookieParser());
   app.setGlobalPrefix('api');
 
   app.enableCors({
-    origin: '*',
+    origin: process.env.CORS_ORIGINS?.split(',') ?? ['http://localhost:3001'],
+    credentials: true,
   });
 
   // Increase timeouts for file upload routes

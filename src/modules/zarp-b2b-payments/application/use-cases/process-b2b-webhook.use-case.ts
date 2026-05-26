@@ -1,4 +1,4 @@
-import { Injectable, Inject, Logger } from '@nestjs/common';
+import { Injectable, Inject, Logger, Optional } from '@nestjs/common';
 import Stripe from 'stripe';
 import {
   IB2BPurchaseRepository,
@@ -14,6 +14,7 @@ import {
   ITenantBillingConfigRepository,
   TENANT_BILLING_CONFIG_REPOSITORY,
 } from '../../../zarp-subscriptions/domain/interfaces/tenant-billing-config.repository.interface';
+import { SendActivationEmailUseCase } from '../../../zarp-licensefix/application/use-cases/send-activation-email.use-case';
 
 @Injectable()
 export class ProcessB2BWebhookUseCase {
@@ -27,6 +28,7 @@ export class ProcessB2BWebhookUseCase {
     private readonly couponRepo: IDiscountCouponRepository,
     @Inject(TENANT_BILLING_CONFIG_REPOSITORY)
     private readonly billingConfigRepo: ITenantBillingConfigRepository,
+    @Optional() private readonly sendActivationEmail: SendActivationEmailUseCase,
   ) {}
 
   async execute(event: Stripe.Event): Promise<void> {
@@ -74,6 +76,35 @@ export class ProcessB2BWebhookUseCase {
         checkoutCompletedAt: new Date(),
       });
       this.logger.log(`B2B purchase completed: ${purchase.id} (tenant: ${tenantId}, email: ${customerEmail})`);
+    }
+
+    // Upsert Customer (tenant-scoped) and send activation email if not yet activated
+    if (customerEmail && tenantId) {
+      try {
+        let customer = await this.prisma.customer.findUnique({
+          where: { tenant_id_email: { tenant_id: tenantId, email: customerEmail } },
+        });
+
+        if (!customer) {
+          customer = await this.prisma.customer.create({
+            data: {
+              tenant_id: tenantId,
+              email: customerEmail,
+              name: customerName ?? 'Lead',
+              stripe_customer_id: (session.customer as string) ?? null,
+            },
+          });
+          this.logger.log(`Customer created from B2B purchase: ${customer.id} (${customerEmail})`);
+        }
+
+        if (this.sendActivationEmail) {
+          await this.sendActivationEmail.execute(customer.id, customerEmail, customer.name, tenantId);
+          this.logger.log(`Activation email sent to ${customerEmail} (customer: ${customer.id})`);
+        }
+
+      } catch (err) {
+        this.logger.error(`Failed to create customer or send activation email for ${customerEmail}: ${err}`);
+      }
     }
 
     // Grant B2C access for all unified carts (B2B+B2C or B2C-only)

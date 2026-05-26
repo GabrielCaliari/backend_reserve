@@ -4,6 +4,7 @@ import { ZarpAuthModule } from '../zarp-auth/zarp-auth.module';
 import { ZarpSubscriptionsModule } from '../zarp-subscriptions/zarp-subscriptions.module';
 import { ZarpB2cProductsModule } from '../zarp-b2c-products/zarp-b2c-products.module';
 import { ZarpCouponsModule } from '../zarp-coupons/zarp-coupons.module';
+import { ZarpLicensefixModule } from '../zarp-licensefix/zarp-licensefix.module';
 
 import { B2BPaymentsController } from './infrastructure/controllers/b2b-payments.controller';
 import { B2BWebhookController } from './infrastructure/controllers/b2b-webhook.controller';
@@ -34,7 +35,7 @@ import { STRIPE_PROVIDER } from '../zarp-subscriptions/domain/interfaces/stripe.
 import { OptionalUserGuard } from './infrastructure/guards/optional-user.guard';
 
 @Module({
-  imports: [DatabaseModule, ZarpAuthModule, ZarpSubscriptionsModule, ZarpB2cProductsModule, ZarpCouponsModule],
+  imports: [DatabaseModule, ZarpAuthModule, ZarpSubscriptionsModule, ZarpB2cProductsModule, ZarpCouponsModule, ZarpLicensefixModule],
   controllers: [
     B2BPaymentsController,
     B2BWebhookController,
