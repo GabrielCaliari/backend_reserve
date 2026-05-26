@@ -1,9 +1,9 @@
-import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
+﻿import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { TenantGuard } from './tenant.guard';
-import { ADMIN_REPOSITORY, TENANT_REPOSITORY } from '../../../modules/zarp-auth/domain/interfaces';
-import { ADMIN_TENANT_REPOSITORY } from '../../../modules/zarp-auth/domain/interfaces/admin-tenant.repository.interface';
-import { EAdminRole } from '../../../modules/zarp-auth/domain/enums/admin-role.enum';
+import { ADMIN_REPOSITORY, TENANT_REPOSITORY } from '../../../modules/reserve-auth/domain/interfaces';
+import { ADMIN_TENANT_REPOSITORY } from '../../../modules/reserve-auth/domain/interfaces/admin-tenant.repository.interface';
+import { EAdminRole } from '../../../modules/reserve-auth/domain/enums/admin-role.enum';
 import { InMemoryAdminTenantRepository } from '../../testing/in-memory-repos/in-memory-admin-tenant.repository';
 
 describe('TenantGuard', () => {

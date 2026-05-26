@@ -1,4 +1,4 @@
-#!/usr/bin/env ts-node
+﻿#!/usr/bin/env ts-node
 /**
  * Cria o primeiro super_admin no banco de dados.
  *
@@ -6,7 +6,7 @@
  *   pnpm exec ts-node scripts/create-super-admin.ts <email> <senha> <nome>
  *
  * Exemplo:
- *   pnpm exec ts-node scripts/create-super-admin.ts tech@zarpstudio.com MinhaSenh@123 "Gabriel"
+ *   pnpm exec ts-node scripts/create-super-admin.ts tech@GabrielCaliari.com MinhaSenh@123 "Gabriel"
  */
 
 import 'dotenv/config';

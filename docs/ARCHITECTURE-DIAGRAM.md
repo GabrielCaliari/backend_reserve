@@ -1,4 +1,4 @@
-# Diagrama de Arquitetura: Stripe Subscriptions
+﻿# Diagrama de Arquitetura: Stripe Subscriptions
 
 Visualização da arquitetura e fluxos do módulo de subscriptions.
 
@@ -299,7 +299,7 @@ Visualização da arquitetura e fluxos do módulo de subscriptions.
 
 ```
 ┌─────────────────────────────────────┐
-│ ZarpSubscriptionsModule             │
+│ ReserveSubscriptionsModule             │
 └────┬────────────────────────────────┘
      │
      ├─► Controllers

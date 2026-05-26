@@ -1,4 +1,4 @@
-# Upload System Quick Reference
+﻿# Upload System Quick Reference
 
 **Last Updated**: April 30, 2026  
 **Status**: ✅ Production Ready  
@@ -149,7 +149,7 @@ tail -f logs/app.log | grep "ERROR"
 
 ### How to Migrate
 1. Configure S3 environment variables in `.env`
-2. Change provider in `zarp-cms.module.ts`
+2. Change provider in `reserve-cms.module.ts`
 3. Restart server
 4. Test uploads
 5. See: `docs/STORAGE-MIGRATION-VERCEL-TO-S3.md`
@@ -159,13 +159,13 @@ tail -f logs/app.log | grep "ERROR"
 ## Key Files
 
 ### Configuration
-- `src/modules/zarp-cms/zarp-cms.module.ts` - Provider selection
+- `src/modules/reserve-cms/reserve-cms.module.ts` - Provider selection
 - `.env` - Environment variables
 - `src/main.ts` - Global configuration
 
 ### Storage Providers
-- `src/modules/zarp-cms/infrastructure/providers/vercel-blob-storage.provider.ts` - **ACTIVE**
-- `src/modules/zarp-cms/infrastructure/providers/s3-storage.provider.ts` - Ready
+- `src/modules/reserve-cms/infrastructure/providers/vercel-blob-storage.provider.ts` - **ACTIVE**
+- `src/modules/reserve-cms/infrastructure/providers/s3-storage.provider.ts` - Ready
 
 ### Error Handling
 - `src/shared/exceptions/connection-error.filter.ts`

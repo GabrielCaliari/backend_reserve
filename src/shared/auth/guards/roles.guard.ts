@@ -1,4 +1,4 @@
-import {
+﻿import {
   CanActivate,
   ExecutionContext,
   Injectable,
@@ -7,12 +7,12 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { ROLES_KEY } from '../decorators/roles.decorator';
-import { EAdminRole } from '../../../modules/zarp-auth/domain/enums/admin-role.enum';
-import { ADMIN_REPOSITORY, IAdminRepository } from '../../../modules/zarp-auth/domain/interfaces';
+import { EAdminRole } from '../../../modules/reserve-auth/domain/enums/admin-role.enum';
+import { ADMIN_REPOSITORY, IAdminRepository } from '../../../modules/reserve-auth/domain/interfaces';
 import {
   ADMIN_TENANT_REPOSITORY,
   IAdminTenantRepository,
-} from '../../../modules/zarp-auth/domain/interfaces/admin-tenant.repository.interface';
+} from '../../../modules/reserve-auth/domain/interfaces/admin-tenant.repository.interface';
 
 /**
  * Role hierarchy from highest to lowest privilege.

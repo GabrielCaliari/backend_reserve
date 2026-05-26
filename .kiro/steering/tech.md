@@ -1,4 +1,4 @@
----
+﻿---
 inclusion: always
 ---
 
@@ -89,7 +89,7 @@ pnpm test:cov              # Generate coverage report
 ## Architecture Patterns
 
 ### Modular Bounded Contexts
-- Each `zarp-*` module is a self-contained bounded context
+- Each `reserve-*` module is a self-contained bounded context
 - Modules communicate via exported services, not internal classes
 - Shared infrastructure in `shared/` with `@Global()` decorator
 

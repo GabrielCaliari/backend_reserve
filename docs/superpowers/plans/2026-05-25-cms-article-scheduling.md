@@ -1,4 +1,4 @@
-# CMS Article Scheduling Implementation Plan
+﻿# CMS Article Scheduling Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -14,20 +14,20 @@
 
 | File | Action | Responsibility |
 |------|--------|----------------|
-| `src/modules/zarp-cms/domain/enums/article-status.enum.ts` | Modify | Add `scheduled` value |
-| `src/modules/zarp-cms/domain/entities/article.entity.ts` | Modify | Add `scheduledAt` field, `schedule()`, `updatePublishedAt()` methods |
-| `src/modules/zarp-cms/domain/entities/article.entity.spec.ts` | Create | Unit tests for new entity methods |
-| `src/modules/zarp-cms/domain/interfaces/article.repository.interface.ts` | Modify | Add `findScheduledDue()` to interface |
-| `src/modules/zarp-cms/application/dtos/publish-article.dto.ts` | Modify | Add optional `scheduledAt: Date` field |
-| `src/modules/zarp-cms/application/dtos/update-published-at.dto.ts` | Create | `publishedAt: Date` required field |
-| `src/modules/zarp-cms/application/dtos/index.ts` | Modify | Export new DTO |
-| `src/modules/zarp-cms/application/services/article.service.ts` | Modify | Update `publishArticle()`, add `updatePublishedAt()`, add `publishScheduledArticles()` |
-| `src/modules/zarp-cms/application/services/article.service.spec.ts` | Modify | Tests for new service methods |
-| `src/modules/zarp-cms/application/services/article-scheduler.service.ts` | Create | `@Cron(EVERY_MINUTE)` cron service |
-| `src/modules/zarp-cms/infrastructure/repositories/prisma-article.repository.ts` | Modify | Add `findScheduledDue()`, map `scheduledAt` in `update()` and `toDomain()` |
-| `src/modules/zarp-cms/infrastructure/controllers/article.controller.ts` | Modify | Update `publish` endpoint body, add `PATCH /:id/published-at` |
-| `src/modules/zarp-cms/infrastructure/presenters/article.presenter.ts` | Modify | Expose `scheduled_at` in response |
-| `src/modules/zarp-cms/zarp-cms.module.ts` | Modify | Register `ArticleSchedulerService` |
+| `src/modules/reserve-cms/domain/enums/article-status.enum.ts` | Modify | Add `scheduled` value |
+| `src/modules/reserve-cms/domain/entities/article.entity.ts` | Modify | Add `scheduledAt` field, `schedule()`, `updatePublishedAt()` methods |
+| `src/modules/reserve-cms/domain/entities/article.entity.spec.ts` | Create | Unit tests for new entity methods |
+| `src/modules/reserve-cms/domain/interfaces/article.repository.interface.ts` | Modify | Add `findScheduledDue()` to interface |
+| `src/modules/reserve-cms/application/dtos/publish-article.dto.ts` | Modify | Add optional `scheduledAt: Date` field |
+| `src/modules/reserve-cms/application/dtos/update-published-at.dto.ts` | Create | `publishedAt: Date` required field |
+| `src/modules/reserve-cms/application/dtos/index.ts` | Modify | Export new DTO |
+| `src/modules/reserve-cms/application/services/article.service.ts` | Modify | Update `publishArticle()`, add `updatePublishedAt()`, add `publishScheduledArticles()` |
+| `src/modules/reserve-cms/application/services/article.service.spec.ts` | Modify | Tests for new service methods |
+| `src/modules/reserve-cms/application/services/article-scheduler.service.ts` | Create | `@Cron(EVERY_MINUTE)` cron service |
+| `src/modules/reserve-cms/infrastructure/repositories/prisma-article.repository.ts` | Modify | Add `findScheduledDue()`, map `scheduledAt` in `update()` and `toDomain()` |
+| `src/modules/reserve-cms/infrastructure/controllers/article.controller.ts` | Modify | Update `publish` endpoint body, add `PATCH /:id/published-at` |
+| `src/modules/reserve-cms/infrastructure/presenters/article.presenter.ts` | Modify | Expose `scheduled_at` in response |
+| `src/modules/reserve-cms/reserve-cms.module.ts` | Modify | Register `ArticleSchedulerService` |
 | `prisma/schema.prisma` | Modify | Add `scheduled_at DateTime?` and `scheduled` to enum |
 | `prisma/migrations/` | Create | Migration file via `npx prisma migrate dev` |
 
@@ -36,7 +36,7 @@
 ## Task 1: Add `scheduled` to EArticleStatus enum
 
 **Files:**
-- Modify: `src/modules/zarp-cms/domain/enums/article-status.enum.ts`
+- Modify: `src/modules/reserve-cms/domain/enums/article-status.enum.ts`
 
 - [ ] **Step 1: Update the enum**
 
@@ -62,7 +62,7 @@ Expected: no errors related to `EArticleStatus` (there may be other unrelated er
 - [ ] **Step 3: Commit**
 
 ```bash
-git add src/modules/zarp-cms/domain/enums/article-status.enum.ts
+git add src/modules/reserve-cms/domain/enums/article-status.enum.ts
 git commit -m "feat(cms): add scheduled status to EArticleStatus enum"
 ```
 
@@ -133,12 +133,12 @@ git commit -m "feat(cms): add scheduled_at column and scheduled enum value to Ar
 ## Task 3: Update Article entity — add `scheduledAt` field and new methods
 
 **Files:**
-- Modify: `src/modules/zarp-cms/domain/entities/article.entity.ts`
-- Create: `src/modules/zarp-cms/domain/entities/article.entity.spec.ts`
+- Modify: `src/modules/reserve-cms/domain/entities/article.entity.ts`
+- Create: `src/modules/reserve-cms/domain/entities/article.entity.spec.ts`
 
 - [ ] **Step 1: Write failing tests first**
 
-Create `src/modules/zarp-cms/domain/entities/article.entity.spec.ts`:
+Create `src/modules/reserve-cms/domain/entities/article.entity.spec.ts`:
 
 ```ts
 import { Article } from './article.entity';
@@ -222,14 +222,14 @@ describe('Article.updatePublishedAt()', () => {
 - [ ] **Step 2: Run tests to confirm they fail**
 
 ```bash
-npx jest src/modules/zarp-cms/domain/entities/article.entity.spec.ts --no-coverage
+npx jest src/modules/reserve-cms/domain/entities/article.entity.spec.ts --no-coverage
 ```
 
 Expected: FAIL — `schedule is not a function`, `updatePublishedAt is not a function`, `scheduledAt` does not exist.
 
 - [ ] **Step 3: Update Article entity**
 
-Replace the content of `src/modules/zarp-cms/domain/entities/article.entity.ts`:
+Replace the content of `src/modules/reserve-cms/domain/entities/article.entity.ts`:
 
 ```ts
 import { EArticleStatus } from '../enums/article-status.enum';
@@ -386,7 +386,7 @@ export class Article {
 - [ ] **Step 4: Run tests and confirm they pass**
 
 ```bash
-npx jest src/modules/zarp-cms/domain/entities/article.entity.spec.ts --no-coverage
+npx jest src/modules/reserve-cms/domain/entities/article.entity.spec.ts --no-coverage
 ```
 
 Expected: PASS — all 6 tests pass.
@@ -394,8 +394,8 @@ Expected: PASS — all 6 tests pass.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/modules/zarp-cms/domain/entities/article.entity.ts \
-        src/modules/zarp-cms/domain/entities/article.entity.spec.ts
+git add src/modules/reserve-cms/domain/entities/article.entity.ts \
+        src/modules/reserve-cms/domain/entities/article.entity.spec.ts
 git commit -m "feat(cms): add scheduledAt field and schedule/updatePublishedAt methods to Article entity"
 ```
 
@@ -404,12 +404,12 @@ git commit -m "feat(cms): add scheduledAt field and schedule/updatePublishedAt m
 ## Task 4: Add `findScheduledDue()` to repository interface and Prisma implementation
 
 **Files:**
-- Modify: `src/modules/zarp-cms/domain/interfaces/article.repository.interface.ts`
-- Modify: `src/modules/zarp-cms/infrastructure/repositories/prisma-article.repository.ts`
+- Modify: `src/modules/reserve-cms/domain/interfaces/article.repository.interface.ts`
+- Modify: `src/modules/reserve-cms/infrastructure/repositories/prisma-article.repository.ts`
 
 - [ ] **Step 1: Update repository interface**
 
-In `src/modules/zarp-cms/domain/interfaces/article.repository.interface.ts`, add `findScheduledDue` to the `IArticleRepository` interface:
+In `src/modules/reserve-cms/domain/interfaces/article.repository.interface.ts`, add `findScheduledDue` to the `IArticleRepository` interface:
 
 ```ts
 export interface IArticleRepository {
@@ -427,7 +427,7 @@ export interface IArticleRepository {
 
 - [ ] **Step 2: Update `toDomain()` in PrismaArticleRepository to map `scheduledAt`**
 
-In `src/modules/zarp-cms/infrastructure/repositories/prisma-article.repository.ts`, update the `toDomain` private method:
+In `src/modules/reserve-cms/infrastructure/repositories/prisma-article.repository.ts`, update the `toDomain` private method:
 
 ```ts
 private toDomain(raw: PrismaArticle): Article {
@@ -494,8 +494,8 @@ Expected: no new errors.
 - [ ] **Step 6: Commit**
 
 ```bash
-git add src/modules/zarp-cms/domain/interfaces/article.repository.interface.ts \
-        src/modules/zarp-cms/infrastructure/repositories/prisma-article.repository.ts
+git add src/modules/reserve-cms/domain/interfaces/article.repository.interface.ts \
+        src/modules/reserve-cms/infrastructure/repositories/prisma-article.repository.ts
 git commit -m "feat(cms): add findScheduledDue to article repository interface and Prisma implementation"
 ```
 
@@ -504,13 +504,13 @@ git commit -m "feat(cms): add findScheduledDue to article repository interface a
 ## Task 5: Create `UpdatePublishedAtDTO` and update `PublishArticleDTO`
 
 **Files:**
-- Modify: `src/modules/zarp-cms/application/dtos/publish-article.dto.ts`
-- Create: `src/modules/zarp-cms/application/dtos/update-published-at.dto.ts`
-- Modify: `src/modules/zarp-cms/application/dtos/index.ts`
+- Modify: `src/modules/reserve-cms/application/dtos/publish-article.dto.ts`
+- Create: `src/modules/reserve-cms/application/dtos/update-published-at.dto.ts`
+- Modify: `src/modules/reserve-cms/application/dtos/index.ts`
 
 - [ ] **Step 1: Update `PublishArticleDTO`**
 
-Replace the entire content of `src/modules/zarp-cms/application/dtos/publish-article.dto.ts`:
+Replace the entire content of `src/modules/reserve-cms/application/dtos/publish-article.dto.ts`:
 
 ```ts
 import { ApiPropertyOptional } from '@nestjs/swagger';
@@ -530,7 +530,7 @@ export class PublishArticleDTO {
 
 - [ ] **Step 2: Create `UpdatePublishedAtDTO`**
 
-Create `src/modules/zarp-cms/application/dtos/update-published-at.dto.ts`:
+Create `src/modules/reserve-cms/application/dtos/update-published-at.dto.ts`:
 
 ```ts
 import { ApiProperty } from '@nestjs/swagger';
@@ -549,7 +549,7 @@ export class UpdatePublishedAtDTO {
 
 - [ ] **Step 3: Export from index**
 
-In `src/modules/zarp-cms/application/dtos/index.ts`, add the export:
+In `src/modules/reserve-cms/application/dtos/index.ts`, add the export:
 
 ```ts
 export { UpdatePublishedAtDTO } from './update-published-at.dto';
@@ -566,9 +566,9 @@ Expected: no new errors.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/modules/zarp-cms/application/dtos/publish-article.dto.ts \
-        src/modules/zarp-cms/application/dtos/update-published-at.dto.ts \
-        src/modules/zarp-cms/application/dtos/index.ts
+git add src/modules/reserve-cms/application/dtos/publish-article.dto.ts \
+        src/modules/reserve-cms/application/dtos/update-published-at.dto.ts \
+        src/modules/reserve-cms/application/dtos/index.ts
 git commit -m "feat(cms): add scheduledAt to PublishArticleDTO and create UpdatePublishedAtDTO"
 ```
 
@@ -577,12 +577,12 @@ git commit -m "feat(cms): add scheduledAt to PublishArticleDTO and create Update
 ## Task 6: Update `ArticleService` — `publishArticle`, `updatePublishedAt`, `publishScheduledArticles`
 
 **Files:**
-- Modify: `src/modules/zarp-cms/application/services/article.service.ts`
-- Modify: `src/modules/zarp-cms/application/services/article.service.spec.ts`
+- Modify: `src/modules/reserve-cms/application/services/article.service.ts`
+- Modify: `src/modules/reserve-cms/application/services/article.service.spec.ts`
 
 - [ ] **Step 1: Write failing tests**
 
-Open `src/modules/zarp-cms/application/services/article.service.spec.ts` and append these test blocks after the existing `describe` blocks. First, check what mock repository methods exist and add `findScheduledDue` to the mock in `beforeEach`:
+Open `src/modules/reserve-cms/application/services/article.service.spec.ts` and append these test blocks after the existing `describe` blocks. First, check what mock repository methods exist and add `findScheduledDue` to the mock in `beforeEach`:
 
 In the `mockArticleRepository` object inside `beforeEach`, add:
 
@@ -791,7 +791,7 @@ describe('publishScheduledArticles', () => {
 - [ ] **Step 2: Run tests to confirm they fail**
 
 ```bash
-npx jest src/modules/zarp-cms/application/services/article.service.spec.ts --no-coverage
+npx jest src/modules/reserve-cms/application/services/article.service.spec.ts --no-coverage
 ```
 
 Expected: FAIL — `updatePublishedAt is not a function`, `publishScheduledArticles is not a function`, scheduling logic not implemented yet.
@@ -957,7 +957,7 @@ async publishScheduledArticles(): Promise<void> {
 - [ ] **Step 4: Run tests and confirm they pass**
 
 ```bash
-npx jest src/modules/zarp-cms/application/services/article.service.spec.ts --no-coverage
+npx jest src/modules/reserve-cms/application/services/article.service.spec.ts --no-coverage
 ```
 
 Expected: PASS — all existing and new tests pass.
@@ -965,8 +965,8 @@ Expected: PASS — all existing and new tests pass.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/modules/zarp-cms/application/services/article.service.ts \
-        src/modules/zarp-cms/application/services/article.service.spec.ts
+git add src/modules/reserve-cms/application/services/article.service.ts \
+        src/modules/reserve-cms/application/services/article.service.spec.ts
 git commit -m "feat(cms): update publishArticle for scheduling, add updatePublishedAt and publishScheduledArticles to ArticleService"
 ```
 
@@ -975,11 +975,11 @@ git commit -m "feat(cms): update publishArticle for scheduling, add updatePublis
 ## Task 7: Create `ArticleSchedulerService`
 
 **Files:**
-- Create: `src/modules/zarp-cms/application/services/article-scheduler.service.ts`
+- Create: `src/modules/reserve-cms/application/services/article-scheduler.service.ts`
 
 - [ ] **Step 1: Create the scheduler service**
 
-Create `src/modules/zarp-cms/application/services/article-scheduler.service.ts`:
+Create `src/modules/reserve-cms/application/services/article-scheduler.service.ts`:
 
 ```ts
 import { Injectable, Logger } from '@nestjs/common';
@@ -1000,9 +1000,9 @@ export class ArticleSchedulerService {
 }
 ```
 
-- [ ] **Step 2: Register in `ZarpCmsModule`**
+- [ ] **Step 2: Register in `ReserveCmsModule`**
 
-In `src/modules/zarp-cms/zarp-cms.module.ts`:
+In `src/modules/reserve-cms/reserve-cms.module.ts`:
 
 Add the import at the top:
 ```ts
@@ -1025,8 +1025,8 @@ Expected: no new errors.
 - [ ] **Step 4: Commit**
 
 ```bash
-git add src/modules/zarp-cms/application/services/article-scheduler.service.ts \
-        src/modules/zarp-cms/zarp-cms.module.ts
+git add src/modules/reserve-cms/application/services/article-scheduler.service.ts \
+        src/modules/reserve-cms/reserve-cms.module.ts
 git commit -m "feat(cms): add ArticleSchedulerService with @Cron(EVERY_MINUTE) for auto-publication"
 ```
 
@@ -1035,11 +1035,11 @@ git commit -m "feat(cms): add ArticleSchedulerService with @Cron(EVERY_MINUTE) f
 ## Task 8: Update controller — `publish` endpoint and new `PATCH /published-at`
 
 **Files:**
-- Modify: `src/modules/zarp-cms/infrastructure/controllers/article.controller.ts`
+- Modify: `src/modules/reserve-cms/infrastructure/controllers/article.controller.ts`
 
 - [ ] **Step 1: Update the controller**
 
-In `src/modules/zarp-cms/infrastructure/controllers/article.controller.ts`:
+In `src/modules/reserve-cms/infrastructure/controllers/article.controller.ts`:
 
 Add `Patch` to the NestJS imports:
 ```ts
@@ -1125,7 +1125,7 @@ Expected: no errors.
 - [ ] **Step 3: Commit**
 
 ```bash
-git add src/modules/zarp-cms/infrastructure/controllers/article.controller.ts
+git add src/modules/reserve-cms/infrastructure/controllers/article.controller.ts
 git commit -m "feat(cms): update publish endpoint and add PATCH /articles/:id/published-at endpoint"
 ```
 
@@ -1134,7 +1134,7 @@ git commit -m "feat(cms): update publish endpoint and add PATCH /articles/:id/pu
 ## Task 9: Expose `scheduled_at` in `ArticlePresenter`
 
 **Files:**
-- Modify: `src/modules/zarp-cms/infrastructure/presenters/article.presenter.ts`
+- Modify: `src/modules/reserve-cms/infrastructure/presenters/article.presenter.ts`
 
 - [ ] **Step 1: Add `scheduled_at` to the presenter output**
 
@@ -1164,7 +1164,7 @@ Expected: all tests pass.
 - [ ] **Step 4: Commit**
 
 ```bash
-git add src/modules/zarp-cms/infrastructure/presenters/article.presenter.ts
+git add src/modules/reserve-cms/infrastructure/presenters/article.presenter.ts
 git commit -m "feat(cms): expose scheduled_at in ArticlePresenter response"
 ```
 

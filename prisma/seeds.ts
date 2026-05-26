@@ -1,32 +1,32 @@
-import 'dotenv/config';
+﻿import 'dotenv/config';
 import { PrismaClient } from '../src/generated/prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 
 // Auth module seeds
-import { seedTenants } from './seeds/zarp-auth/tenants.seed';
-import { seedAdmins } from './seeds/zarp-auth/admins.seed';
+import { seedTenants } from './seeds/reserve-auth/tenants.seed';
+import { seedAdmins } from './seeds/reserve-auth/admins.seed';
 
 // Shared seeds
 import { seedPlans } from './seeds/shared/plans.seed';
 import { seedTokenPacks } from './seeds/shared/token-packs.seed';
 
 // CMS module seeds
-import { seedAuthors } from './seeds/zarp-cms/authors.seed';
-import { seedBlogs } from './seeds/zarp-cms/blogs.seed';
-import { seedAuthorAvatarsCollection } from './seeds/zarp-cms/storage/author-avatars-collection.seed';
-import { seedArticleImagesCollection } from './seeds/zarp-cms/storage/article-images-collection.seed';
-import { seedCvUploadsCollection } from './seeds/zarp-cms/storage/cv-uploads-collection.seed';
-import { seedArticles } from './seeds/zarp-cms/articles.seed';
+import { seedAuthors } from './seeds/reserve-cms/authors.seed';
+import { seedBlogs } from './seeds/reserve-cms/blogs.seed';
+import { seedAuthorAvatarsCollection } from './seeds/reserve-cms/storage/author-avatars-collection.seed';
+import { seedArticleImagesCollection } from './seeds/reserve-cms/storage/article-images-collection.seed';
+import { seedCvUploadsCollection } from './seeds/reserve-cms/storage/cv-uploads-collection.seed';
+import { seedArticles } from './seeds/reserve-cms/articles.seed';
 
 // Leads module seeds
-import { seedLeadCollections } from './seeds/zarp-leads/collections.seed';
-import { seedLeads } from './seeds/zarp-leads/leads.seed';
+import { seedLeadCollections } from './seeds/reserve-leads/collections.seed';
+import { seedLeads } from './seeds/reserve-leads/leads.seed';
 
 // Mailer module seeds
-import { seedSMTPServers } from './seeds/zarp-mailer/smtp-servers.seed';
+import { seedSMTPServers } from './seeds/reserve-mailer/smtp-servers.seed';
 
 // CNPJs module seeds
-import { seedCNAEs } from './seeds/zarp-cnpjs/cnaes.seed';
+import { seedCNAEs } from './seeds/reserve-cnpjs/cnaes.seed';
 
 /**
  * Main seed orchestrator
@@ -44,7 +44,7 @@ import { seedCNAEs } from './seeds/zarp-cnpjs/cnaes.seed';
   const prisma = new PrismaClient({ adapter });
 
   console.log('\n╔════════════════════════════════════════════════════════════╗');
-  console.log('║          DATABASE SEEDING - ZARP STUDIO API               ║');
+  console.log('║          DATABASE SEEDING - Gabriel Caliari API               ║');
   console.log('╚════════════════════════════════════════════════════════════╝');
 
   try {
@@ -52,7 +52,7 @@ import { seedCNAEs } from './seeds/zarp-cnpjs/cnaes.seed';
     // 1. AUTH MODULE (Foundation)
     // ========================================
     console.log('\n┌─────────────────────────────────────┐');
-    console.log('│  MÓDULO: ZARP-AUTH                  │');
+    console.log('│  MÓDULO: reserve-AUTH                  │');
     console.log('└─────────────────────────────────────┘');
     
     await seedTenants();
@@ -72,7 +72,7 @@ import { seedCNAEs } from './seeds/zarp-cnpjs/cnaes.seed';
     // 3. CNPJS MODULE (lookup data)
     // ========================================
     console.log('\n┌─────────────────────────────────────┐');
-    console.log('│  MÓDULO: ZARP-CNPJS                 │');
+    console.log('│  MÓDULO: reserve-CNPJS                 │');
     console.log('└─────────────────────────────────────┘');
 
     await seedCNAEs();
@@ -81,7 +81,7 @@ import { seedCNAEs } from './seeds/zarp-cnpjs/cnaes.seed';
     // 4. CMS MODULE
     // ========================================
     console.log('\n┌─────────────────────────────────────┐');
-    console.log('│  MÓDULO: ZARP-CMS                   │');
+    console.log('│  MÓDULO: reserve-CMS                   │');
     console.log('└─────────────────────────────────────┘');
 
     await seedAuthors();
@@ -95,7 +95,7 @@ import { seedCNAEs } from './seeds/zarp-cnpjs/cnaes.seed';
     // 5. LEADS MODULE
     // ========================================
     console.log('\n┌─────────────────────────────────────┐');
-    console.log('│  MÓDULO: ZARP-LEADS                 │');
+    console.log('│  MÓDULO: reserve-LEADS                 │');
     console.log('└─────────────────────────────────────┘');
 
     await seedLeadCollections();
@@ -105,7 +105,7 @@ import { seedCNAEs } from './seeds/zarp-cnpjs/cnaes.seed';
     // 6. MAILER MODULE
     // ========================================
     console.log('\n┌─────────────────────────────────────┐');
-    console.log('│  MÓDULO: ZARP-MAILER                │');
+    console.log('│  MÓDULO: reserve-MAILER                │');
     console.log('└─────────────────────────────────────┘');
 
     await seedSMTPServers();

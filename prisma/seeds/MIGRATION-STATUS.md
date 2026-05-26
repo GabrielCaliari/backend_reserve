@@ -1,4 +1,4 @@
-# Seeds Migration Status
+﻿# Seeds Migration Status
 
 ## ✅ Completed Work
 
@@ -7,22 +7,22 @@ All seeds have been migrated from `prisma/seed/` to `prisma/seeds/` with proper 
 
 ```
 prisma/seeds/
-├── zarp-auth/
+├── reserve-auth/
 │   ├── admins.seed.ts ✅
 │   └── tenants.seed.ts ✅
-├── zarp-cms/
+├── reserve-cms/
 │   ├── authors.seed.ts ✅
 │   ├── blogs.seed.ts ✅
 │   ├── articles.seed.ts ✅
 │   └── storage/
 │       ├── author-avatars-collection.seed.ts ✅
 │       └── article-images-collection.seed.ts ✅
-├── zarp-leads/
+├── reserve-leads/
 │   ├── collections.seed.ts ✅
 │   └── leads.seed.ts ✅
-├── zarp-mailer/
+├── reserve-mailer/
 │   └── smtp-servers.seed.ts ✅
-├── zarp-cnpjs/
+├── reserve-cnpjs/
 │   ├── cnaes.seed.ts ✅
 │   └── companies.seed.ts ✅
 └── shared/
@@ -110,22 +110,22 @@ pnpm exec prisma db seed
 Expected output:
 ```
 ╔════════════════════════════════════════════════════════════╗
-║          DATABASE SEEDING - ZARP STUDIO API               ║
+║          DATABASE SEEDING - Gabriel Caliari API               ║
 ╚════════════════════════════════════════════════════════════╝
 
 ┌─────────────────────────────────────────┐
-│  MÓDULO: ZARP-AUTH                      │
+│  MÓDULO: reserve-AUTH                      │
 └─────────────────────────────────────────┘
 
 [TENANTS SEED]
-  ✓ Tenant created: zarp-studio
+  ✓ Tenant created: reserve-studio
   ✓ Tenant created: empresa-teste
   ✓ Tenant created: tech-innovations
   ✓ Tenant created: tenant-inativo
 
 [ADMINS SEED]
   ✓ Admin created: kelme.dev@pm.me (super_admin)
-  ✓ Admin created: ana.silva@zarpstudio.com (company_admin)
+  ✓ Admin created: ana.silva@GabrielCaliari.com (company_admin)
   ...
 
 [And so on for all modules]

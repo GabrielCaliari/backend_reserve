@@ -1,4 +1,4 @@
-# Notification Dispatch & Email — Design Spec
+﻿# Notification Dispatch & Email — Design Spec
 
 **Date:** 2026-05-26  
 **Status:** Approved
@@ -29,9 +29,9 @@ contact_email_events Json    @default("[]")
 
 ## Shared Provider
 
-Move `SesEmailProvider` from `zarp-licensefix/infrastructure/providers/ses-email.provider.ts` to `shared/providers/ses-email.provider.ts`.
+Move `SesEmailProvider` from `reserve-licensefix/infrastructure/providers/ses-email.provider.ts` to `shared/providers/ses-email.provider.ts`.
 
-Update the import in `ZarpLicensefixModule` and its consumers accordingly.
+Update the import in `ReserveLicensefixModule` and its consumers accordingly.
 
 The provider interface stays unchanged:
 
@@ -48,7 +48,7 @@ Uses env vars: `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FRO
 ## Dispatch Interface
 
 ```ts
-// New type — lives in zarp-notifications/domain/interfaces or constants
+// New type — lives in reserve-notifications/domain/interfaces or constants
 interface INotificationTarget {
   roles: EAdminRole[];
   includeContactEmail: boolean;
@@ -94,17 +94,17 @@ dispatch(eventKey, tenantId, target, metadata?)
 
 | Caller | File | Change |
 |--------|------|--------|
-| `lead.created` | `zarp-leads` dispatch call | Add `target: { roles: [company_admin, owner], includeContactEmail: true }` |
+| `lead.created` | `reserve-leads` dispatch call | Add `target: { roles: [company_admin, owner], includeContactEmail: true }` |
 | `subscription.expiring` | `NotificationSchedulerService.checkExpiringSubscriptions` | Add `target: { roles: [company_admin, owner], includeContactEmail: true }` |
 | `subscription.expired` | `NotificationSchedulerService.checkExpiredSubscriptions` | Add `target: { roles: [company_admin, owner], includeContactEmail: true }` |
 
 ## Module Changes
 
-`ZarpNotificationsModule`:
+`ReserveNotificationsModule`:
 - Add `SesEmailProvider` to `providers`
 - Inject `SesEmailProvider` in `NotificationEventService`
 
-`ZarpLicensefixModule`:
+`ReserveLicensefixModule`:
 - Update `SesEmailProvider` import path to `shared/providers/ses-email.provider`
 
 ## Out of Scope

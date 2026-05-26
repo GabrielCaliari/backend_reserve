@@ -1,8 +1,8 @@
-# Requirements Document
+﻿# Requirements Document
 
 ## Introduction
 
-This document defines the requirements for the B2C Student Subscriptions feature. The feature introduces a direct-to-consumer subscription system where individual students purchase access to educational products (courses/content) via Stripe Hosted Checkout. Access is granted while a subscription is active and automatically revoked when it expires or is canceled. The system is implemented as two new bounded-context modules — `zarp-b2c-products` and `zarp-b2c-subscriptions` — following the project's DDD/`zarp-*` pattern, leaving the existing B2B `zarp-subscriptions` module untouched.
+This document defines the requirements for the B2C Student Subscriptions feature. The feature introduces a direct-to-consumer subscription system where individual students purchase access to educational products (courses/content) via Stripe Hosted Checkout. Access is granted while a subscription is active and automatically revoked when it expires or is canceled. The system is implemented as two new bounded-context modules — `reserve-b2c-products` and `reserve-b2c-subscriptions` — following the project's DDD/`reserve-*` pattern, leaving the existing B2B `reserve-subscriptions` module untouched.
 
 ## Glossary
 

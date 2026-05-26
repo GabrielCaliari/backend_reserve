@@ -1,8 +1,8 @@
 {
-  "name": "api_zarp-admin",
-  "version": "26.3.13",
-  "description": "The most advanced admin panel for website management",
-  "author": "Zarp Studio",
+  "name": "backend_reserve",
+  "version": "1.0.0",
+  "description": "Reserve backend API",
+  "author": "Gabriel Caliari",
   "private": true,
   "license": "MIT",
   "prisma": {

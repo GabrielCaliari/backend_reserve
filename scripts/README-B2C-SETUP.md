@@ -1,4 +1,4 @@
-# Setup Completo de Produtos B2C
+﻿# Setup Completo de Produtos B2C
 
 Guia passo a passo para configurar produtos B2C no sistema.
 
@@ -183,7 +183,7 @@ DATABASE_URL=postgresql://...
 
 **Solução:** Execute o seed de tenants primeiro:
 ```bash
-pnpm exec ts-node prisma/seeds/zarp-auth/tenants.seed.ts
+pnpm exec ts-node prisma/seeds/reserve-auth/tenants.seed.ts
 ```
 
 ### Erro: "STRIPE_SECRET_KEY not found"

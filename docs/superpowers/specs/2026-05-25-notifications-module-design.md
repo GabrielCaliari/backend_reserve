@@ -1,18 +1,18 @@
-# Notifications Module — Design Spec
+﻿# Notifications Module — Design Spec
 **Date:** 2026-05-25  
 **Status:** Approved  
-**Repos:** `backend_api_zarp-admin`, `frontend_dashboard_zarp-admin`
+**Repos:** `backend_api_reserve-admin`, `frontend_dashboard_reserve-admin`
 
 ---
 
 ## Overview
 
-The Notifications module is the communication layer between the Zarp platform and its tenants. It supports two origins:
+The Notifications module is the communication layer between the Reserve platform and its tenants. It supports two origins:
 
 1. **Manual notifications** — created by `super_admin` via the dashboard, targeting one or all tenants
 2. **System notifications** — generated automatically by internal events (e.g. lead created) or cron jobs (e.g. subscription expiring)
 
-Both origins share the same delivery mechanism: in-app inbox and optional email via `zarp-mailer`.
+Both origins share the same delivery mechanism: in-app inbox and optional email via `reserve-mailer`.
 
 ---
 
@@ -173,12 +173,12 @@ NotificationReceipts      TenantNotificationReceipt[]
 
 ---
 
-## Backend — Module: `zarp-notifications`
+## Backend — Module: `reserve-notifications`
 
 ### Directory Structure
 
 ```
-src/modules/zarp-notifications/
+src/modules/reserve-notifications/
   domain/
     entities/
       notification.entity.ts
@@ -212,7 +212,7 @@ src/modules/zarp-notifications/
       notification.repository.ts
       notification-settings.repository.ts
       notification-receipt.repository.ts
-  zarp-notifications.module.ts
+  reserve-notifications.module.ts
 ```
 
 ---
@@ -237,7 +237,7 @@ export type NotificationEventKey = typeof NOTIFICATION_EVENTS[keyof typeof NOTIF
 
 #### `NotificationService` — super_admin operations
 - `create(dto, adminId)` — creates notification (draft); resolves target tenants from scope; does not deliver yet
-- `publish(id)` — sets `published_at`; creates tenant receipts for all target tenants; triggers email delivery (via `zarp-mailer`) only if `send_email: true` **and** `TenantNotificationSettings.email_enabled` is `true` for each target tenant at publish time
+- `publish(id)` — sets `published_at`; creates tenant receipts for all target tenants; triggers email delivery (via `reserve-mailer`) only if `send_email: true` **and** `TenantNotificationSettings.email_enabled` is `true` for each target tenant at publish time
 - `update(id, dto)` — edit drafts only
 - `delete(id)` — remove drafts only
 - `list(filters, pagination)` — paginated list with type/scope/status filters
@@ -311,7 +311,7 @@ The caller does not need to check settings — `NotificationEventService.dispatc
 
 ---
 
-## Frontend — `frontend_dashboard_zarp-admin`
+## Frontend — `frontend_dashboard_reserve-admin`
 
 ### Routes
 
@@ -375,4 +375,4 @@ In `components/ui/aside.tsx`, add a Notifications nav item:
 - Push notifications (mobile / web push)
 - Notification templates with variable substitution (body is plain text/HTML authored by super_admin)
 - Tenant-to-customer notifications (tenants notifying their end users)
-- Read receipts per email delivery (email open tracking uses existing `zarp-mailer` delivery model)
+- Read receipts per email delivery (email open tracking uses existing `reserve-mailer` delivery model)

@@ -1,4 +1,4 @@
-# Fix: Vercel Blob 503 "Deployment Unavailable" Error
+﻿# Fix: Vercel Blob 503 "Deployment Unavailable" Error
 
 ## Problem Description
 
@@ -38,7 +38,7 @@ This is a **confirmed Vercel infrastructure issue**, extensively documented in t
 
 ### 2. Exponential Backoff with Jitter
 
-**File**: `src/modules/zarp-cms/infrastructure/providers/vercel-blob-storage.provider.ts`
+**File**: `src/modules/reserve-cms/infrastructure/providers/vercel-blob-storage.provider.ts`
 
 **Strategy**:
 ```typescript
@@ -186,7 +186,7 @@ If you see **persistent 503 errors** (all 3 retries failing consistently):
 If Vercel Blob 503 errors persist, consider migrating to S3:
 
 ```typescript
-// In src/modules/zarp-cms/zarp-cms.module.ts
+// In src/modules/reserve-cms/reserve-cms.module.ts
 {
   provide: STORAGE_PROVIDER,
   useClass: S3StorageProvider, // Instead of VercelBlobStorageProvider

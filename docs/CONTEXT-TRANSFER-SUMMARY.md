@@ -1,4 +1,4 @@
-# Context Transfer Summary - Upload System Improvements
+﻿# Context Transfer Summary - Upload System Improvements
 
 **Date**: April 30, 2026  
 **Status**: ✅ All tasks completed and verified  
@@ -36,9 +36,9 @@ This document summarizes all work completed on the upload system, including fixe
 - `src/shared/exceptions/multer-exception.filter.ts`
 - `src/shared/exceptions/index.ts`
 - `src/main.ts`
-- `src/modules/zarp-cms/infrastructure/controllers/article-image.controller.ts`
-- `src/modules/zarp-cms/infrastructure/controllers/media-asset.controller.ts`
-- `src/modules/zarp-cms/infrastructure/controllers/blog.controller.ts`
+- `src/modules/reserve-cms/infrastructure/controllers/article-image.controller.ts`
+- `src/modules/reserve-cms/infrastructure/controllers/media-asset.controller.ts`
+- `src/modules/reserve-cms/infrastructure/controllers/blog.controller.ts`
 
 ---
 
@@ -60,10 +60,10 @@ This document summarizes all work completed on the upload system, including fixe
 - `docs/STORAGE-S3-SETUP.md` (quick start)
 
 **Files Modified**:
-- `src/modules/zarp-cms/infrastructure/providers/s3-storage.provider.ts` (enhanced, ready but not active)
+- `src/modules/reserve-cms/infrastructure/providers/s3-storage.provider.ts` (enhanced, ready but not active)
 - `.env.example` (added S3 variables)
 
-**Note**: S3 implementation is production-ready and can be activated by changing the provider in `zarp-cms.module.ts`.
+**Note**: S3 implementation is production-ready and can be activated by changing the provider in `reserve-cms.module.ts`.
 
 ---
 
@@ -114,8 +114,8 @@ Attempt 4: 4000ms + random(0-500ms) = ~4.0-4.5s
 - 1% failure after all retries
 
 **Files Modified**:
-- `src/modules/zarp-cms/infrastructure/providers/vercel-blob-storage.provider.ts`
-- `src/modules/zarp-cms/zarp-cms.module.ts` (using VercelBlobStorageProvider)
+- `src/modules/reserve-cms/infrastructure/providers/vercel-blob-storage.provider.ts`
+- `src/modules/reserve-cms/reserve-cms.module.ts` (using VercelBlobStorageProvider)
 
 **Files Created**:
 - `docs/fixes/VERCEL-BLOB-503-FIX.md`
@@ -347,7 +347,7 @@ CMS_BUCKET_CDN_URL=https://cdn.example.com  # Optional
 
 ### Step 2: Change Provider
 ```typescript
-// In src/modules/zarp-cms/zarp-cms.module.ts
+// In src/modules/reserve-cms/reserve-cms.module.ts
 {
   provide: STORAGE_PROVIDER,
   useClass: S3StorageProvider, // Change from VercelBlobStorageProvider
@@ -371,7 +371,7 @@ See: `docs/STORAGE-MIGRATION-VERCEL-TO-S3.md`
 
 If issues occur after any changes:
 
-1. **Revert provider change** in `zarp-cms.module.ts`
+1. **Revert provider change** in `reserve-cms.module.ts`
 2. **Restart server**: `pnpm start:dev`
 3. **Monitor logs** for errors
 4. **Report issues** with detailed logs
@@ -418,14 +418,14 @@ If issues occur after any changes:
 - `src/main.ts` - Global filters and timeout configuration
 
 ### Storage Providers
-- `src/modules/zarp-cms/infrastructure/providers/vercel-blob-storage.provider.ts` - **ACTIVE** (with retry)
-- `src/modules/zarp-cms/infrastructure/providers/s3-storage.provider.ts` - Ready but not active
-- `src/modules/zarp-cms/zarp-cms.module.ts` - Provider configuration
+- `src/modules/reserve-cms/infrastructure/providers/vercel-blob-storage.provider.ts` - **ACTIVE** (with retry)
+- `src/modules/reserve-cms/infrastructure/providers/s3-storage.provider.ts` - Ready but not active
+- `src/modules/reserve-cms/reserve-cms.module.ts` - Provider configuration
 
 ### Controllers (with UploadErrorInterceptor)
-- `src/modules/zarp-cms/infrastructure/controllers/article-image.controller.ts`
-- `src/modules/zarp-cms/infrastructure/controllers/media-asset.controller.ts`
-- `src/modules/zarp-cms/infrastructure/controllers/blog.controller.ts`
+- `src/modules/reserve-cms/infrastructure/controllers/article-image.controller.ts`
+- `src/modules/reserve-cms/infrastructure/controllers/media-asset.controller.ts`
+- `src/modules/reserve-cms/infrastructure/controllers/blog.controller.ts`
 
 ---
 

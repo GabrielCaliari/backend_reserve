@@ -1,5 +1,5 @@
-import { IBlogRepository } from '../../../modules/zarp-cms/domain/interfaces/blog.repository.interface';
-import { Blog } from '../../../modules/zarp-cms/domain/entities/blog.entity';
+﻿import { IBlogRepository } from '../../../modules/reserve-cms/domain/interfaces/blog.repository.interface';
+import { Blog } from '../../../modules/reserve-cms/domain/entities/blog.entity';
 
 export class InMemoryBlogRepository implements IBlogRepository {
   public blogs: Blog[] = [];

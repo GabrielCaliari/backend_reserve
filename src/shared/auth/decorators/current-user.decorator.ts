@@ -1,5 +1,5 @@
-import { createParamDecorator, ExecutionContext } from '@nestjs/common';
-import { EUserCollectionRole } from '../../../modules/zarp-auth/domain/enums/user-collection-role.enum';
+﻿import { createParamDecorator, ExecutionContext } from '@nestjs/common';
+import { EUserCollectionRole } from '../../../modules/reserve-auth/domain/enums/user-collection-role.enum';
 
 export interface CurrentUserPayload {
   user_id: string;

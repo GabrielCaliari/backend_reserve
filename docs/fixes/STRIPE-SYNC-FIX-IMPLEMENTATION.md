@@ -1,4 +1,4 @@
-# Implementação da Correção: Sincronização com Stripe (Multi-Tenant)
+﻿# Implementação da Correção: Sincronização com Stripe (Multi-Tenant)
 
 ## ✅ Problema Resolvido
 
@@ -10,7 +10,7 @@ O backend estava retornando apenas dados salvos no banco de dados local, ignoran
 
 ### 1. Novo Repositório: `StripeApiPlanRepository`
 
-**Arquivo:** `src/modules/zarp-subscriptions/infrastructure/repositories/stripe-api-plan.repository.ts`
+**Arquivo:** `src/modules/reserve-subscriptions/infrastructure/repositories/stripe-api-plan.repository.ts`
 
 Este repositório substitui o `PrismaStripePlanRepository` e busca dados **diretamente da API do Stripe** ao invés do banco local.
 
@@ -41,7 +41,7 @@ As chaves do Stripe são armazenadas criptografadas na tabela `TenantBillingConf
 
 ### 2. Novo Use Case: `GetTenantSubscriptionFromStripeUseCase`
 
-**Arquivo:** `src/modules/zarp-subscriptions/application/use-cases/get-tenant-subscription-from-stripe.use-case.ts`
+**Arquivo:** `src/modules/reserve-subscriptions/application/use-cases/get-tenant-subscription-from-stripe.use-case.ts`
 
 Este use case busca subscriptions **diretamente da API do Stripe** ao invés do banco local.
 
@@ -62,7 +62,7 @@ Este use case busca subscriptions **diretamente da API do Stripe** ao invés do 
 
 ### 3. Métodos Adicionados ao `StripeProvider`
 
-**Arquivo:** `src/modules/zarp-subscriptions/infrastructure/providers/stripe.provider.ts`
+**Arquivo:** `src/modules/reserve-subscriptions/infrastructure/providers/stripe.provider.ts`
 
 Novos métodos para suportar as operações:
 
@@ -79,7 +79,7 @@ listCustomerSubscriptions(customerId: string): Promise<Stripe.Subscription[]>
 
 ### 4. Atualização do Módulo
 
-**Arquivo:** `src/modules/zarp-subscriptions/zarp-subscriptions.module.ts`
+**Arquivo:** `src/modules/reserve-subscriptions/reserve-subscriptions.module.ts`
 
 **Mudança crítica:**
 ```typescript
@@ -93,7 +93,7 @@ Agora o repositório de plans usa a API do Stripe como fonte da verdade.
 
 ### 5. Atualização do Controller
 
-**Arquivo:** `src/modules/zarp-subscriptions/infrastructure/controllers/subscriptions.controller.ts`
+**Arquivo:** `src/modules/reserve-subscriptions/infrastructure/controllers/subscriptions.controller.ts`
 
 O endpoint `GET /api/subscriptions/tenant/:tenantId` agora usa o novo use case:
 

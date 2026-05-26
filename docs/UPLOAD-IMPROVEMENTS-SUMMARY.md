@@ -1,4 +1,4 @@
-# Upload System Improvements Summary
+﻿# Upload System Improvements Summary
 
 ## Overview
 
@@ -93,11 +93,11 @@ Comprehensive improvements to the file upload system addressing silent 503 error
 - `src/main.ts` - Timeout configuration, error filters
 - `src/shared/exceptions/multer-exception.filter.ts` - Enhanced error handling
 - `src/shared/exceptions/index.ts` - Export new filters
-- `src/modules/zarp-cms/infrastructure/providers/vercel-blob-storage.provider.ts` - Retry logic
-- `src/modules/zarp-cms/infrastructure/providers/s3-storage.provider.ts` - Multipart upload
-- `src/modules/zarp-cms/infrastructure/controllers/article-image.controller.ts` - Upload interceptor
-- `src/modules/zarp-cms/infrastructure/controllers/media-asset.controller.ts` - Upload interceptor
-- `src/modules/zarp-cms/infrastructure/controllers/blog.controller.ts` - Upload interceptor
+- `src/modules/reserve-cms/infrastructure/providers/vercel-blob-storage.provider.ts` - Retry logic
+- `src/modules/reserve-cms/infrastructure/providers/s3-storage.provider.ts` - Multipart upload
+- `src/modules/reserve-cms/infrastructure/controllers/article-image.controller.ts` - Upload interceptor
+- `src/modules/reserve-cms/infrastructure/controllers/media-asset.controller.ts` - Upload interceptor
+- `src/modules/reserve-cms/infrastructure/controllers/blog.controller.ts` - Upload interceptor
 - `.env.example` - S3 configuration variables
 
 ## Features
@@ -227,7 +227,7 @@ curl -X POST http://localhost:3000/api/cms/assets \
 If Vercel Blob 503 errors persist:
 
 1. Configure S3 environment variables
-2. Change provider in `zarp-cms.module.ts`
+2. Change provider in `reserve-cms.module.ts`
 3. Restart server
 4. Test uploads
 5. Migrate existing files (optional)
@@ -238,7 +238,7 @@ See: `docs/STORAGE-MIGRATION-VERCEL-TO-S3.md`
 
 If issues occur:
 
-1. Revert provider change in `zarp-cms.module.ts`
+1. Revert provider change in `reserve-cms.module.ts`
 2. Restart server
 3. Monitor logs
 4. Report issues

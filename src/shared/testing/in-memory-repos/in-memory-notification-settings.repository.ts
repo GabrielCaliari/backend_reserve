@@ -1,4 +1,4 @@
-import { INotificationSettingsRepository, IUpdateNotificationSettings } from '../../../modules/zarp-notifications/domain/interfaces';
+﻿import { INotificationSettingsRepository, IUpdateNotificationSettings } from '../../../modules/reserve-notifications/domain/interfaces';
 
 export class InMemoryNotificationSettingsRepository implements INotificationSettingsRepository {
   private records: any[] = [];

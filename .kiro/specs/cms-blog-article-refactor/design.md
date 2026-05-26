@@ -1,4 +1,4 @@
-# Design Document: CMS Blog Article Refactoring
+﻿# Design Document: CMS Blog Article Refactoring
 
 ## Overview
 
@@ -19,7 +19,7 @@ This design document outlines the technical approach for refactoring the CMS blo
 Following the project's DDD structure:
 
 ```
-src/modules/zarp-cms/
+src/modules/reserve-cms/
 ├── domain/
 │   ├── entities/
 │   │   ├── blog.entity.ts
@@ -797,7 +797,7 @@ Property tests should verify universal behaviors across randomized inputs:
 ### Test Organization
 
 ```
-src/modules/zarp-cms/
+src/modules/reserve-cms/
 ├── domain/
 │   ├── entities/
 │   │   ├── article.entity.spec.ts          # Unit tests for domain logic

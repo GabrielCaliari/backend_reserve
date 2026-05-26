@@ -1,7 +1,7 @@
-import {
+﻿import {
   IArticleImageRepository,
   ICreateArticleImage,
-} from '../../../modules/zarp-cms/domain/interfaces/article-image.repository.interface';
+} from '../../../modules/reserve-cms/domain/interfaces/article-image.repository.interface';
 
 export class InMemoryArticleImageRepository implements IArticleImageRepository {
   private images: any[] = [];

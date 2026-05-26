@@ -1,4 +1,4 @@
-# Implementation Plan: CMS Generic Storage
+﻿# Implementation Plan: CMS Generic Storage
 
 ## Overview
 
@@ -78,7 +78,7 @@ The implementation follows Domain-Driven Design principles with pure domain laye
   - [ ] 2.3 Implement MediaAssetService
     - Create `application/services/media-asset.service.ts` with @Injectable decorator
     - Inject repositories via interface tokens using @Inject()
-    - Inject existing StorageProvider and ImageProcessor (reuse from zarp-cms)
+    - Inject existing StorageProvider and ImageProcessor (reuse from reserve-cms)
     - Implement uploadAsset() with collection validation, file validation, image processing, storage upload
     - Implement findAll(), findById(), updateAsset(), deleteAsset(), countByCollection()
     - Return ServiceResponse objects, convert domain errors to error constants
@@ -202,8 +202,8 @@ The implementation follows Domain-Driven Design principles with pure domain laye
     - _Requirements: 7.12, 7.13, 7.14, 7.15, 12.1, 12.2, 12.3, 12.4, 12.5, 12.6, 12.7, 12.8, 15.1_
 
 - [ ] 4. Phase 1: Wire Up Module and Test
-  - [ ] 4.1 Create ZarpCmsModule with dependency injection
-    - Create `zarp-cms.module.ts` with @Module decorator
+  - [ ] 4.1 Create ReserveCmsModule with dependency injection
+    - Create `reserve-cms.module.ts` with @Module decorator
     - Register repository implementations using provide/useClass pattern:
       - { provide: MEDIA_ASSET_REPOSITORY, useClass: PrismaMediaAssetRepository }
       - { provide: MEDIA_COLLECTION_REPOSITORY, useClass: PrismaMediaCollectionRepository }
@@ -216,8 +216,8 @@ The implementation follows Domain-Driven Design principles with pure domain laye
     - Mark as @Global() to make services available everywhere
     - _Requirements: 9.7, 9.8, 16.10_
 
-  - [ ] 4.2 Register ZarpCmsModule in app.module.ts
-    - Import ZarpCmsModule in app.module.ts
+  - [ ] 4.2 Register ReserveCmsModule in app.module.ts
+    - Import ReserveCmsModule in app.module.ts
     - Configure RouterModule with prefix '/api/cms'
     - Verify module loads without errors
     - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 7.7, 7.8, 7.9, 7.10, 7.11, 7.12, 7.13, 7.14, 7.15_

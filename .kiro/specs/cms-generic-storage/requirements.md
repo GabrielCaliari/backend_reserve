@@ -1,4 +1,4 @@
-# Requirements Document
+﻿# Requirements Document
 
 ## Introduction
 
@@ -266,4 +266,4 @@ The CMS Generic Storage system transforms the current article-specific storage i
 7. WHEN a module needs custom collections, THE Developer SHALL be able to create them via API without code changes
 8. THE System SHALL support querying all assets for an entity with a single method call (MediaRelationService.getEntityAssets())
 9. THE System SHALL provide helper methods for common patterns (getEntityFeaturedImage(), getEntityGallery())
-10. THE ZarpCmsModule SHALL be importable as a global module, making services available everywhere without repeated imports
+10. THE ReserveCmsModule SHALL be importable as a global module, making services available everywhere without repeated imports

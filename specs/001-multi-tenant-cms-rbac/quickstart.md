@@ -1,15 +1,15 @@
-# Quickstart: Multi-Tenant CMS with Blog and RBAC
+﻿# Quickstart: Multi-Tenant CMS with Blog and RBAC
 
 **Phase 1 Output** | **Date**: 2026-02-16
 
-This guide helps developers get started with the `zarp-cms` bounded context.
+This guide helps developers get started with the `reserve-cms` bounded context.
 
 ## Prerequisites
 
 - Node.js 20+ and pnpm installed
 - PostgreSQL running locally or accessible
 - Vercel Blob Storage token (or S3-compatible storage credentials)
-- Existing `api_zarp-admin` codebase cloned and set up
+- Existing `api_reserve-admin` codebase cloned and set up
 
 ## Step 1: Switch to the feature branch
 
@@ -37,7 +37,7 @@ CMS_IMAGE_MAX_SIZE_BYTES=10485760
 CMS_MAX_IMAGES_PER_ARTICLE=20
 ```
 
-**Note**: The module uses Vercel Blob Storage by default. To switch to S3, see the README in `src/modules/zarp-cms/infrastructure/providers/`.
+**Note**: The module uses Vercel Blob Storage by default. To switch to S3, see the README in `src/modules/reserve-cms/infrastructure/providers/`.
 
 ## Step 4: Run Prisma migration
 
@@ -74,11 +74,11 @@ Access Swagger docs at `http://localhost:3000/api` to see the new CMS endpoints.
 ### Layer Structure
 
 ```
-src/modules/zarp-cms/
+src/modules/reserve-cms/
 ├── domain/           # Pure TypeScript: entities, enums, errors, interfaces
 ├── application/      # Services (use cases) and DTOs
 ├── infrastructure/   # Controllers, Prisma repositories, guards, providers
-└── zarp-cms.module.ts
+└── reserve-cms.module.ts
 ```
 
 ### Key Interfaces (Ports)
@@ -136,10 +136,10 @@ class InMemoryBlogRepository implements IBlogRepository {
 pnpm run test
 
 # CMS module only
-pnpm run test -- --testPathPattern="zarp-cms"
+pnpm run test -- --testPathPattern="reserve-cms"
 
 # Watch mode
-pnpm run test:watch -- --testPathPattern="zarp-cms"
+pnpm run test:watch -- --testPathPattern="reserve-cms"
 ```
 
 ---

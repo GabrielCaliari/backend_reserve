@@ -1,4 +1,4 @@
-# Timeout Configuration - Upload System
+﻿# Timeout Configuration - Upload System
 
 **Last Updated**: April 30, 2026  
 **Current Configuration**: 10 minutes (600 seconds)
@@ -35,7 +35,7 @@ res.setTimeout(10 * 60 * 1000); // 10 minutos
 **Propósito**: Define timeout específico para requisições e respostas de upload.
 
 ### 3. Vercel Blob Storage Retry
-**Arquivo**: `src/modules/zarp-cms/infrastructure/providers/vercel-blob-storage.provider.ts`  
+**Arquivo**: `src/modules/reserve-cms/infrastructure/providers/vercel-blob-storage.provider.ts`  
 **Configuração**:
 ```typescript
 MAX_RETRIES = 3

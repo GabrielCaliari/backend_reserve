@@ -1,11 +1,11 @@
-import { Test, TestingModule } from '@nestjs/testing';
+﻿import { Test, TestingModule } from '@nestjs/testing';
 import { Reflector } from '@nestjs/core';
 import { ForbiddenException, ExecutionContext } from '@nestjs/common';
 import { RolesGuard } from './roles.guard';
 import { ROLES_KEY } from '../decorators/roles.decorator';
-import { EAdminRole } from '../../../modules/zarp-auth/domain/enums/admin-role.enum';
-import { ADMIN_REPOSITORY } from '../../../modules/zarp-auth/domain/interfaces';
-import { ADMIN_TENANT_REPOSITORY } from '../../../modules/zarp-auth/domain/interfaces/admin-tenant.repository.interface';
+import { EAdminRole } from '../../../modules/reserve-auth/domain/enums/admin-role.enum';
+import { ADMIN_REPOSITORY } from '../../../modules/reserve-auth/domain/interfaces';
+import { ADMIN_TENANT_REPOSITORY } from '../../../modules/reserve-auth/domain/interfaces/admin-tenant.repository.interface';
 import { InMemoryAdminTenantRepository } from '../../testing/in-memory-repos/in-memory-admin-tenant.repository';
 
 describe('RolesGuard', () => {

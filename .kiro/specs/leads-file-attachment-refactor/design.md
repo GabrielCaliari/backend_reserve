@@ -1,4 +1,4 @@
-# Leads Module File Attachment & SRP Refactor - Design
+﻿# Leads Module File Attachment & SRP Refactor - Design
 
 ## 1. Architecture Overview
 
@@ -54,7 +54,7 @@ model Lead {
 ### 3.1 Entities
 
 **Lead Entity** (`domain/entities/lead.entity.ts`)
-- Consolidate into single entity (remove from zarp-auth)
+- Consolidate into single entity (remove from reserve-auth)
 - Add attachment tracking
 - Keep domain logic pure (no NestJS decorators)
 
@@ -207,10 +207,10 @@ export class UpdateCollectionDto {
 
 ### 5.3 Module Wiring
 
-Update `zarp-leads.module.ts`:
+Update `reserve-leads.module.ts`:
 ```typescript
 @Module({
-  imports: [ZarpCmsModule], // For file access
+  imports: [ReserveCmsModule], // For file access
   providers: [
     // Repositories
     {
@@ -244,7 +244,7 @@ Update `zarp-leads.module.ts`:
     LeadService, // For backward compatibility
   ],
 })
-export class ZarpLeadsModule {}
+export class ReserveLeadsModule {}
 ```
 
 ## 6. Migration Strategy
@@ -255,7 +255,7 @@ export class ZarpLeadsModule {}
 3. Run migration without data loss
 
 ### 6.2 Phase 2: Code Refactoring
-1. Remove duplicate Lead entity from zarp-auth
+1. Remove duplicate Lead entity from reserve-auth
 2. Update imports across codebase
 3. Create new use cases
 4. Update repositories

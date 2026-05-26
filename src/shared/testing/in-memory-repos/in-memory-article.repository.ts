@@ -1,6 +1,6 @@
-import {
+﻿import {
   IArticleRepository,
-} from '../../../modules/zarp-cms/domain/interfaces/article.repository.interface';
+} from '../../../modules/reserve-cms/domain/interfaces/article.repository.interface';
 
 export class InMemoryArticleRepository implements IArticleRepository {
   private articles: any[] = [];

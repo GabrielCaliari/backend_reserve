@@ -1,4 +1,4 @@
----
+﻿---
 inclusion: always
 ---
 
@@ -53,8 +53,8 @@ src/
 │       ├── encrypt.provider.ts
 │       └── jwt.provider.ts
 │
-└── modules/                   # Bounded Contexts (zarp-* modules)
-    └── [zarp-context]/        # e.g., zarp-mailer, zarp-brands
+└── modules/                   # Bounded Contexts (reserve-* modules)
+    └── [reserve-context]/        # e.g., reserve-mailer, reserve-brands
         ├── [context].module.ts
         │
         ├── domain/            # Pure TypeScript - NO NestJS decorators
@@ -79,19 +79,19 @@ src/
             └── providers/     # External service adapters
 ```
 
-## Bounded Context Modules (zarp-*)
+## Bounded Context Modules (reserve-*)
 
-Each `zarp-*` module is a self-contained bounded context following DDD principles:
+Each `reserve-*` module is a self-contained bounded context following DDD principles:
 
 | Module | Route Prefix | Domain |
 |--------|-------------|--------|
-| `zarp-auth` | `/api/auth` | Authentication, sessions, JWT |
-| `zarp-brands` | `/api/brands` | Brand management, INPI monitoring |
-| `zarp-cnpjs` | `/api/cnpjs` | CNPJ lookup, company data |
-| `zarp-journals` | `/api/journals` | Journal processing, alerts |
-| `zarp-users` | `/api/users` | User management |
-| `zarp-mailer` | `/api/mailer` | Email campaigns, leads, SMS |
-| `zarp-pi-bot` | `/api/pi-bot` | AI-powered features |
+| `reserve-auth` | `/api/auth` | Authentication, sessions, JWT |
+| `reserve-brands` | `/api/brands` | Brand management, INPI monitoring |
+| `reserve-cnpjs` | `/api/cnpjs` | CNPJ lookup, company data |
+| `reserve-journals` | `/api/journals` | Journal processing, alerts |
+| `reserve-users` | `/api/users` | User management |
+| `reserve-mailer` | `/api/mailer` | Email campaigns, leads, SMS |
+| `reserve-pi-bot` | `/api/pi-bot` | AI-powered features |
 
 ## Layer Dependency Rules
 
@@ -128,7 +128,7 @@ Domain (pure TS) <-- Application (pure TS*) <-- Infrastructure (NestJS) <-- Inte
 
 | Element | Pattern | Example |
 |---------|---------|---------|
-| Module folders | `kebab-case` | `zarp-mailer/`, `zarp-brands/` |
+| Module folders | `kebab-case` | `reserve-mailer/`, `reserve-brands/` |
 | Files | `kebab-case` | `email-campaign.service.ts` |
 | Classes | `PascalCase` | `EmailCampaignService` |
 | Interfaces | `I` prefix | `IEmailCampaignRepository` |
@@ -153,8 +153,8 @@ prisma/
 │       └── migration.sql
 ├── seeds/                     # Organized seed data
 │   ├── shared/                # Cross-module seeds (plans, tokens)
-│   ├── zarp-auth/             # Auth-specific seeds
-│   └── zarp-cms/              # CMS-specific seeds
+│   ├── reserve-auth/             # Auth-specific seeds
+│   └── reserve-cms/              # CMS-specific seeds
 ├── scripts/                   # Verification and utility scripts
 └── archived/                  # Legacy migrations and seeds
 ```
@@ -166,7 +166,7 @@ prisma/
 | Version | Status | Architecture | Location |
 |---------|--------|--------------|----------|
 | **v1** | Legacy (being phased out) | Direct controller/service | `src/modules/v1/` |
-| **v2** | Current | DDD modular with bounded contexts | `src/modules/[zarp-*]/` |
+| **v2** | Current | DDD modular with bounded contexts | `src/modules/[reserve-*]/` |
 
 **Migration Path**: New features go to v2 only. v1 endpoints maintained for backward compatibility but not extended.
 
@@ -181,12 +181,12 @@ Each bounded context module MUST:
 
 **Cross-Context Communication**:
 ```typescript
-// zarp-mailer needs user data from zarp-users
+// reserve-mailer needs user data from reserve-users
 @Module({
-  imports: [ZarpUsersModule],  // Import MODULE, not service directly
+  imports: [ReserveUsersModule],  // Import MODULE, not service directly
   providers: [EmailCampaignService],
 })
-export class ZarpMailerModule {}
+export class ReserveMailerModule {}
 ```
 
 ## Shared Module Pattern

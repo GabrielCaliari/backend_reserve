@@ -1,4 +1,4 @@
-import {
+﻿import {
   BadRequestException,
   CanActivate,
   ExecutionContext,
@@ -7,11 +7,11 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { EUserCollectionRole } from '../../../modules/zarp-auth/domain/enums/user-collection-role.enum';
+import { EUserCollectionRole } from '../../../modules/reserve-auth/domain/enums/user-collection-role.enum';
 import {
   IUserCollectionMembershipRepository,
   USER_COLLECTION_MEMBERSHIP_REPOSITORY,
-} from '../../../modules/zarp-auth/domain/interfaces/user-collection-membership.repository.interface';
+} from '../../../modules/reserve-auth/domain/interfaces/user-collection-membership.repository.interface';
 import { USER_ROLES_KEY } from '../decorators/user-roles.decorator';
 
 const USER_ROLE_HIERARCHY: EUserCollectionRole[] = [

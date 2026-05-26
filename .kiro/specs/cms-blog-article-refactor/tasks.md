@@ -1,4 +1,4 @@
-# Implementation Plan: CMS Blog Article Refactoring
+﻿# Implementation Plan: CMS Blog Article Refactoring
 
 ## Overview
 
@@ -401,7 +401,7 @@ The plan is divided into two phases:
     - _Requirements: 12.6_
 
 - [x] 16. Update module configuration
-  - [x] 16.1 Register new providers in ZarpCmsModule
+  - [x] 16.1 Register new providers in ReserveCmsModule
     - Register ArticleRepository with PrismaArticleRepository
     - Register AuthorRepository with PrismaAuthorRepository
     - Register BlogRepository with PrismaBlogRepository

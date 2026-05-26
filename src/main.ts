@@ -1,4 +1,4 @@
-import 'dotenv/config';
+﻿import 'dotenv/config';
 import { NestFactory, HttpAdapterHost } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
@@ -62,9 +62,9 @@ async function bootstrap() {
 
   // Configuração do Swagger
   const config = new DocumentBuilder()
-    .setTitle('Zarp Admin API')
+    .setTitle('Reserve Admin API')
     .setDescription(`
-      API de gerenciamento e administração do sistema Zarp
+      API de gerenciamento e administração do sistema Reserve
       
       ## Módulos API
       - **Subscriptions**: Gerenciamento de assinaturas recorrentes com Stripe

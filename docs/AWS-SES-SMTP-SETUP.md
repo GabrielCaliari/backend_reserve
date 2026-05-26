@@ -1,4 +1,4 @@
-# AWS SES SMTP Setup Guide
+﻿# AWS SES SMTP Setup Guide
 
 ## Overview
 
@@ -143,7 +143,7 @@ Implementamos:
 1. No console SES, vá em **"Account dashboard"**
 2. No menu lateral, clique em **"SMTP settings"**
 3. Clique em **"Create SMTP credentials"**
-4. Digite um nome (ex: `zarp-smtp-credentials`)
+4. Digite um nome (ex: `reserve-smtp-credentials`)
 5. Clique em **"Create user"**
 6. **IMPORTANTE**: Baixe ou copie as credenciais:
    - **SMTP Username**: `AKIAIOSFODNN7EXAMPLE`
@@ -284,7 +284,7 @@ aws ses send-email \
 ### Implementar Webhook (Recomendado)
 
 ```typescript
-// src/modules/zarp-mailer/infrastructure/controllers/ses-webhook.controller.ts
+// src/modules/reserve-mailer/infrastructure/controllers/ses-webhook.controller.ts
 @Controller('webhooks/ses')
 export class SesWebhookController {
   @Post('notifications')
@@ -458,7 +458,7 @@ Value: v=DMARC1; p=quarantine; rua=mailto:dmarc@seudominio.com
 
 1. Configure AWS SES seguindo este guia
 2. Teste envio de emails
-3. Integre com o módulo `zarp-mailer`
+3. Integre com o módulo `reserve-mailer`
 4. Configure bounce/complaint handling
 5. Monitore métricas de deliverability
 6. Otimize templates de email

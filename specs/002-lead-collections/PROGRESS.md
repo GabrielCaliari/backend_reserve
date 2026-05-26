@@ -1,4 +1,4 @@
-# Lead Collections Implementation Progress
+﻿# Lead Collections Implementation Progress
 
 **Last Updated**: 2026-02-16  
 **Status**: ✅ COMPLETE - Ready for Manual Testing & Deployment
@@ -36,7 +36,7 @@ All core implementation tasks (Phases 1-6) are complete. The feature is fully fu
 - [x] T015: Created `LeadCollectionRepository` implementing `ILeadCollectionRepository`
 - [x] T016: Created `LeadCollectionService` with CRUD methods
 - [x] T017: Created `LeadCollectionController` with admin endpoints
-- [x] T018: Registered providers and controllers in `ZarpLeadsModule`
+- [x] T018: Registered providers and controllers in `ReserveLeadsModule`
 
 ### ✅ Phase 4: User Story 2 - Public Lead Capture Endpoint
 - [x] T019: Created unit tests for `CollectionSecretKeyGuard` (5 tests passing)

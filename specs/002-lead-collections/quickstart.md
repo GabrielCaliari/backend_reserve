@@ -1,10 +1,10 @@
-# Quickstart: Lead Collections per Tenant
+﻿# Quickstart: Lead Collections per Tenant
 
 **Branch**: `002-lead-collections` | **Date**: 2026-02-16
 
 ## Overview
 
-This feature extends the `zarp-leads` bounded context with **LeadCollections** -- tenant-scoped containers for organizing lead capture. Each collection has a configurable access mode (public, private/CORS, restricted/auth) and exposes a dynamic capture endpoint.
+This feature extends the `reserve-leads` bounded context with **LeadCollections** -- tenant-scoped containers for organizing lead capture. Each collection has a configurable access mode (public, private/CORS, restricted/auth) and exposes a dynamic capture endpoint.
 
 ## Prerequisites
 
@@ -28,7 +28,7 @@ This feature extends the `zarp-leads` bounded context with **LeadCollections** -
    pnpm prisma migrate dev --name add-lead-collections
    ```
 
-3. **Create domain layer** (`src/modules/zarp-leads/domain/`)
+3. **Create domain layer** (`src/modules/reserve-leads/domain/`)
    - `entities/lead-collection.entity.ts` -- Pure TS entity
    - `enums/access-mode.enum.ts` -- EAccessMode enum
    - `errors/collection-not-found.error.ts`
@@ -62,7 +62,7 @@ This feature extends the `zarp-leads` bounded context with **LeadCollections** -
    - `PUT /collections/:id` (manager+)
    - `POST /collections/:id/regenerate-key` (manager+)
 
-5. **Update module** (`zarp-leads.module.ts`)
+5. **Update module** (`reserve-leads.module.ts`)
    - Register new providers, controllers, DI tokens
 
 ### Phase 3: Lead Capture Endpoint
@@ -102,7 +102,7 @@ This feature extends the `zarp-leads` bounded context with **LeadCollections** -
 // domain/interfaces/lead-collection.repository.interface.ts
 export const LEAD_COLLECTION_REPOSITORY = Symbol('LEAD_COLLECTION_REPOSITORY');
 
-// zarp-leads.module.ts
+// reserve-leads.module.ts
 {
   provide: LEAD_COLLECTION_REPOSITORY,
   useClass: LeadCollectionRepository,
@@ -120,7 +120,7 @@ const hash = crypto.createHash('sha256').update(plainKey).digest('hex');
 
 ### Slug Generation (follows CMS pattern)
 ```typescript
-// Reuse or adapt slug.util.ts from zarp-cms
+// Reuse or adapt slug.util.ts from reserve-cms
 const slug = generateSlug(name);
 // Check uniqueness within tenant: @@unique([slug, tenant_id])
 ```

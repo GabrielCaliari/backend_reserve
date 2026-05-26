@@ -1,4 +1,4 @@
-# Leads Module File Attachment & SRP Refactor - Requirements
+﻿# Leads Module File Attachment & SRP Refactor - Requirements
 
 ## 1. Overview
 
@@ -40,7 +40,7 @@ The current leads module lacks file attachment capabilities and proper SRP separ
 - Lead entity contains only domain logic
 - Repository handles only data access
 - Services orchestrate use cases without mixing concerns
-- Duplicate Lead entity in zarp-auth is removed
+- Duplicate Lead entity in reserve-auth is removed
 
 ## 3. Functional Requirements
 
@@ -77,8 +77,8 @@ model LeadCollection {
 ### 3.2 Domain Layer
 
 #### 3.2.1 Lead Entity Refactoring
-- Remove duplicate Lead entity from `zarp-auth`
-- Keep single Lead entity in `zarp-leads/domain/entities/`
+- Remove duplicate Lead entity from `reserve-auth`
+- Keep single Lead entity in `reserve-leads/domain/entities/`
 - Add attachment relationship tracking
 - Add domain methods for validation
 
@@ -190,7 +190,7 @@ interface ILeadAttachmentRepository {
 
 - Lead deduplication logic
 - Advanced lead scoring
-- Email campaign integration (handled by zarp-mailer)
+- Email campaign integration (handled by reserve-mailer)
 - Lead qualification AI (handled by separate module)
 
 ## 7. Success Metrics

@@ -1,4 +1,4 @@
-import {
+﻿import {
   ExceptionFilter,
   Catch,
   ArgumentsHost,
@@ -6,8 +6,8 @@ import {
   Logger,
 } from '@nestjs/common';
 import { Response } from 'express';
-import { ArticleNotFoundError } from '../../modules/zarp-cms/domain/errors/article-not-found.error';
-import { ImageLimitExceededError } from '../../modules/zarp-cms/domain/errors/image-limit-exceeded.error';
+import { ArticleNotFoundError } from '../../modules/reserve-cms/domain/errors/article-not-found.error';
+import { ImageLimitExceededError } from '../../modules/reserve-cms/domain/errors/image-limit-exceeded.error';
 import { RepositoryException } from './repository.exception';
 
 /**

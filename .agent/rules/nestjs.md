@@ -1,4 +1,4 @@
----
+﻿---
 trigger: model_decision
 description: This file describes the NestJS backend API architecture guidelines with SOLID principles and DDD patterns applied to APIs projects.
 ---
@@ -63,19 +63,19 @@ Senior NestJS developer with TypeScript strict mode, SOLID principles, and Domai
 
 ## 4. Bounded Contexts (Domain Modules)
 
-The project is organized into **bounded contexts** named with the `zarp-` prefix. Each context is a self-contained NestJS module with its own domain, application, and infrastructure layers.
+The project is organized into **bounded contexts** named with the `reserve-` prefix. Each context is a self-contained NestJS module with its own domain, application, and infrastructure layers.
 
 ### Module Registry
 
 | Bounded Context   | Route Prefix           | Domain Scope                                    |
 | ----------------- | ---------------------- | ----------------------------------------------- |
-| `zarp-auth`       | `/api/auth`            | Admin & user authentication, sessions, JWT      |
-| `zarp-brands`     | `/api/brands`          | Brand management and brand analysis             |
-| `zarp-cnpjs`      | `/api/cnpjs`           | CNPJ lookup, company data, CNAE codes           |
-| `zarp-journals`   | `/api/journals`        | Journal/publications, alerts, posts             |
-| `zarp-users`      | `/api/users`           | User CRUD, profiles, permissions                |
-| `zarp-mailer`     | `/api/mailer`          | Email campaigns, SMTP config, leads, SMS events |
-| `zarp-pi-bot`     | `/api/pi-bot`          | AI-powered bot features                         |
+| `reserve-auth`       | `/api/auth`            | Admin & user authentication, sessions, JWT      |
+| `reserve-brands`     | `/api/brands`          | Brand management and brand analysis             |
+| `reserve-cnpjs`      | `/api/cnpjs`           | CNPJ lookup, company data, CNAE codes           |
+| `reserve-journals`   | `/api/journals`        | Journal/publications, alerts, posts             |
+| `reserve-users`      | `/api/users`           | User CRUD, profiles, permissions                |
+| `reserve-mailer`     | `/api/mailer`          | Email campaigns, SMTP config, leads, SMS events |
+| `reserve-pi-bot`     | `/api/pi-bot`          | AI-powered bot features                         |
 
 ---
 
@@ -103,7 +103,7 @@ src/
 │   └── providers/                # External service wrappers
 │
 ├── modules/                      # Bounded Contexts
-│   └── [zarp-context]/           # e.g.: zarp-mailer, zarp-brands
+│   └── [reserve-context]/           # e.g.: reserve-mailer, reserve-brands
 │       ├── [context].module.ts   # NestJS Module definition
 │       │
 │       ├── domain/               # Enterprise Business Rules (PURE TypeScript)

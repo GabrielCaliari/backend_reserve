@@ -1,7 +1,7 @@
-# CMS Article Scheduling — Design Spec
+﻿# CMS Article Scheduling — Design Spec
 
 **Date:** 2026-05-25  
-**Module:** `zarp-cms`  
+**Module:** `reserve-cms`  
 **Status:** Approved
 
 ---
@@ -164,7 +164,7 @@ await this.prisma.article.findMany({
 
 ### ArticleSchedulerService
 
-New service in the `zarp-cms` module:
+New service in the `reserve-cms` module:
 
 ```ts
 @Injectable()
@@ -180,7 +180,7 @@ export class ArticleSchedulerService {
 
 ### Module registration
 
-`ZarpCmsModule` imports `ScheduleModule.forRoot()` (already available via `@nestjs/schedule` in `package.json`).  
+`ReserveCmsModule` imports `ScheduleModule.forRoot()` (already available via `@nestjs/schedule` in `package.json`).  
 `ArticleSchedulerService` is added to the module's `providers` array.
 
 `AppModule` or the root module must also have `ScheduleModule.forRoot()` — verify it is not already registered globally to avoid double registration.

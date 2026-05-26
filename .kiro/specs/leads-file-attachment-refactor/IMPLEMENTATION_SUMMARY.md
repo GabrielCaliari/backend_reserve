@@ -1,4 +1,4 @@
-# Leads Module File Attachment & SRP Refactor - Implementation Summary
+﻿# Leads Module File Attachment & SRP Refactor - Implementation Summary
 
 ## What Was Implemented
 
@@ -10,7 +10,7 @@
 ### 2. Domain Layer ✅
 - Created `CollectionSource` value object for structured source tracking
 - Updated `LeadCollection` entity with source metadata methods
-- Removed duplicate `Lead` entity from `zarp-auth` module
+- Removed duplicate `Lead` entity from `reserve-auth` module
 - Created `ILeadAttachmentRepository` interface
 - Created domain errors: `AttachmentNotFoundError`, `InvalidSourceError`
 
@@ -65,7 +65,7 @@
 
 ### Code Organization
 - **Before**: Duplicate Lead entity in two modules
-- **After**: Single source of truth in `zarp-leads`
+- **After**: Single source of truth in `reserve-leads`
   - Cleaner imports
   - Easier maintenance
   - No confusion about which entity to use

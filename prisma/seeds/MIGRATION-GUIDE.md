@@ -1,4 +1,4 @@
-# Seeds Migration Guide
+﻿# Seeds Migration Guide
 
 ## O que mudou?
 
@@ -19,20 +19,20 @@ prisma/seed/
 ### Nova Estrutura
 ```
 prisma/seeds/
-├── zarp-auth/          # Autenticação e autorização
+├── reserve-auth/          # Autenticação e autorização
 │   ├── admins.seed.ts
 │   └── tenants.seed.ts
-├── zarp-cms/           # Sistema de conteúdo
+├── reserve-cms/           # Sistema de conteúdo
 │   ├── authors.seed.ts
 │   ├── blogs.seed.ts
 │   ├── articles.seed.ts
 │   └── storage/
 │       ├── author-avatars-collection.seed.ts
 │       └── article-images-collection.seed.ts
-├── zarp-leads/         # Gestão de leads
+├── reserve-leads/         # Gestão de leads
 │   ├── collections.seed.ts
 │   └── leads.seed.ts
-├── zarp-mailer/        # Email e campanhas
+├── reserve-mailer/        # Email e campanhas
 │   └── smtp-servers.seed.ts
 └── shared/             # Dados compartilhados
     ├── plans.seed.ts
@@ -75,15 +75,15 @@ pnpm exec prisma db seed
 ### Ordem de Execução
 Os seeds são executados automaticamente na ordem correta:
 
-1. **zarp-auth**: Tenants → Admins
+1. **reserve-auth**: Tenants → Admins
 2. **shared**: Plans → Token Packs
-3. **zarp-cms**: Authors → Blogs → Storage → Articles
-4. **zarp-leads**: Collections → Leads
-5. **zarp-mailer**: SMTP Servers
+3. **reserve-cms**: Authors → Blogs → Storage → Articles
+4. **reserve-leads**: Collections → Leads
+5. **reserve-mailer**: SMTP Servers
 
 ### Executar seed específico (desenvolvimento)
 ```bash
-pnpm exec ts-node --compiler-options '{"module":"CommonJS"}' prisma/seeds/zarp-cms/articles.seed.ts
+pnpm exec ts-node --compiler-options '{"module":"CommonJS"}' prisma/seeds/reserve-cms/articles.seed.ts
 ```
 
 ## Dados de Teste
@@ -92,24 +92,24 @@ pnpm exec ts-node --compiler-options '{"module":"CommonJS"}' prisma/seeds/zarp-c
 | Email | Password | Role | Tenant |
 |-------|----------|------|--------|
 | kelme.dev@pm.me | Vamos@Inovar@26 | super_admin | Todos |
-| ana.silva@zarpstudio.com | Zarp@2024!Ana | owner | zarp-studio |
+| ana.silva@GabrielCaliari.com | Reserve@2024!Ana | owner | reserve-studio |
 | carlos.mendes@empresateste.com | Teste@2024!Carlos | owner | empresa-teste |
 | beatriz.costa@empresateste.com | Teste@2024!Bia | editor | empresa-teste |
 
 ### Tenants
-- **zarp-studio**: Tenant principal da Zarp Studio
+- **reserve-studio**: Tenant principal da Gabriel Caliari
 - **empresa-teste**: Tenant de demonstração
 - **tech-innovations**: Tenant adicional para testes
 
 ### Blogs
-- **Blog Zarp Studio**: 4 artigos técnicos publicados + 1 rascunho
+- **Blog Gabriel Caliari**: 4 artigos técnicos publicados + 1 rascunho
 - **Tech Insights**: Artigos sobre DevOps
 - **Innovation Hub**: Conteúdo sobre inovação
 
 ### Lead Collections
-- **website-zarp-studio**: Público, formulário principal
+- **website-reserve-studio**: Público, formulário principal
 - **lp-black-friday-2024**: Restrito, campanha específica
-- **api-parceiros-zarp**: Privado, integração API
+- **api-parceiros-Reserve**: Privado, integração API
 - **contato-empresa-teste**: Público, formulário de contato
 - **webinar-tech-innovations**: Restrito, evento
 
@@ -128,7 +128,7 @@ await prisma.mediaAsset.create({
   data: {
     filename: 'diego-kelme-avatar.jpg',
     storage_key: 'avatars/diego-kelme.jpg',
-    url: 'https://storage.zarpstudio.com/avatars/diego-kelme.jpg',
+    url: 'https://storage.GabrielCaliari.com/avatars/diego-kelme.jpg',
     mime_type: 'image/jpeg',
     file_size: 245678,
     collection_id: avatarCollection.id,
@@ -140,7 +140,7 @@ await prisma.mediaAsset.create({
 ### Adicionar Mais Módulos
 Quando novos módulos forem criados, adicione seeds em:
 ```
-prisma/seeds/zarp-[novo-modulo]/
+prisma/seeds/reserve-[novo-modulo]/
 ```
 
 E importe no `seeds.ts` principal.

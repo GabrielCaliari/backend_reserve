@@ -1,4 +1,4 @@
-# Design Document: CMS Generic Storage
+﻿# Design Document: CMS Generic Storage
 
 ## Overview
 
@@ -932,7 +932,7 @@ A property is a characteristic or behavior that should hold true across all vali
 ### Error Constants
 
 ```typescript
-// Error constants for zarp-cms (media management)
+// Error constants for reserve-cms (media management)
 export const ERROR_ASSET_NOT_FOUND = '404:Media asset not found';
 export const ERROR_COLLECTION_NOT_FOUND = '404:Media collection not found';
 export const ERROR_COLLECTION_SLUG_EXISTS = '409:Collection slug already exists for this tenant';
@@ -1145,7 +1145,7 @@ export class InMemoryMediaAssetRepo implements IMediaAssetRepository {
 1. Create domain layer (entities, enums, interfaces, errors)
 2. Create application layer (services, DTOs, presenters)
 3. Create infrastructure layer (controllers, repositories)
-4. Wire up ZarpCmsModule with new providers
+4. Wire up ReserveCmsModule with new providers
 5. Write unit tests and property tests
 6. Document API endpoints in Swagger
 
@@ -1250,7 +1250,7 @@ async function migrateArticleImages() {
 **Example Integration**:
 
 ```typescript
-// modules/zarp-cms/application/services/article.service.ts
+// modules/reserve-cms/application/services/article.service.ts
 @Injectable()
 export class ArticleService {
   constructor(

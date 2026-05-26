@@ -1,4 +1,4 @@
-import {
+﻿import {
   BadRequestException,
   CanActivate,
   ExecutionContext,
@@ -9,7 +9,7 @@ import {
 import {
   IUserCollectionMembershipRepository,
   USER_COLLECTION_MEMBERSHIP_REPOSITORY,
-} from '../../../modules/zarp-auth/domain/interfaces/user-collection-membership.repository.interface';
+} from '../../../modules/reserve-auth/domain/interfaces/user-collection-membership.repository.interface';
 
 @Injectable()
 export class UserTenantGuard implements CanActivate {

@@ -1,11 +1,11 @@
-# Zarp Mailer - Bounded Context
+﻿# Reserve Mailer - Bounded Context
 
 Módulo de gerenciamento de campanhas de email marketing seguindo princípios **SOLID** e **Domain-Driven Design (DDD)**.
 
 ## 📁 Estrutura DDD
 
 ```
-zarp-mailer/
+reserve-mailer/
 ├── domain/                      # Enterprise Business Rules
 │   ├── entities/                # Domain entities com regras de negócio
 │   │   └── email-campaign.entity.ts
@@ -39,7 +39,7 @@ zarp-mailer/
 │   └── providers/               # Implementações de serviços externos
 │       └── nodemailer-smtp.provider.ts
 │
-└── zarp-mailer.module.ts        # NestJS Module configuration
+└── reserve-mailer.module.ts        # NestJS Module configuration
 ```
 
 ## 🎯 Princípios SOLID Aplicados

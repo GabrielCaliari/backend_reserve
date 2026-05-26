@@ -1,4 +1,4 @@
-import { INotificationReceiptRepository } from '../../../modules/zarp-notifications/domain/interfaces';
+﻿import { INotificationReceiptRepository } from '../../../modules/reserve-notifications/domain/interfaces';
 
 export class InMemoryNotificationReceiptRepository implements INotificationReceiptRepository {
   public records: any[] = [];

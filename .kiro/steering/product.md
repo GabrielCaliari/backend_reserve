@@ -1,10 +1,10 @@
----
+﻿---
 inclusion: always
 ---
 
-# Product Domain: ZARP Business Intelligence Platform
+# Product Domain: Reserve Business Intelligence Platform
 
-ZARP is a B2B SaaS platform providing business intelligence for the Brazilian market through CNPJ data, trademark monitoring, and automated journal processing.
+Reserve is a B2B SaaS platform providing business intelligence for the Brazilian market through CNPJ data, trademark monitoring, and automated journal processing.
 
 ## Business Context
 
@@ -36,28 +36,28 @@ Real-time monitoring and analysis of Brazilian company data, trademarks (INPI), 
 
 ## Feature Domains
 
-### 1. Company Data (zarp-cnpjs)
+### 1. Company Data (reserve-cnpjs)
 - CNPJ validation and lookup
 - Company profile enrichment
 - CNAE classification
 - Bulk export with filtering
 - Historical data tracking
 
-### 2. Brand Monitoring (zarp-brands)
+### 2. Brand Monitoring (reserve-brands)
 - INPI trademark search
 - AI-powered brand analysis (OpenAI/Azure)
 - Automated alert system
 - Similarity detection
 - Registration status tracking
 
-### 3. Journal Processing (zarp-journals)
+### 3. Journal Processing (reserve-journals)
 - Automated DOU scraping
 - Publication parsing and indexing
 - Alert configuration by keywords
 - Post categorization
 - Notification delivery
 
-### 4. Lead Management (zarp-mailer)
+### 4. Lead Management (reserve-mailer)
 - Lead collection and qualification
 - Email campaign management
 - SMTP configuration
@@ -65,7 +65,7 @@ Real-time monitoring and analysis of Brazilian company data, trademarks (INPI), 
 - Geolocation tracking
 - File attachment handling
 
-### 5. User & Authentication (zarp-auth)
+### 5. User & Authentication (reserve-auth)
 - Multi-tenant architecture
 - Admin and user roles
 - JWT-based authentication
@@ -138,7 +138,7 @@ Real-time monitoring and analysis of Brazilian company data, trademarks (INPI), 
 ## Product Conventions
 
 ### Naming
-- Modules prefixed with `zarp-` (e.g., `zarp-brands`, `zarp-mailer`)
+- Modules prefixed with `reserve-` (e.g., `reserve-brands`, `reserve-mailer`)
 - API routes follow `/api/{module}` pattern
 - Database tables use `snake_case`
 - Entities use `PascalCase`

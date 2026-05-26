@@ -1,8 +1,8 @@
-# Seed Coverage Report
+﻿# Seed Coverage Report
 
 ## ✅ Entidades com Seeds Completos
 
-### zarp-auth
+### reserve-auth
 - [x] **Admin** - 5 admins (1 super_admin, 3 ativos, 1 inativo)
 - [x] **Tenant** - 4 tenants (3 ativos, 1 inativo)
 - [x] **AdminTenant** - Vínculos admin-tenant com roles específicos
@@ -12,46 +12,46 @@
 - [x] **Plan** - 5 planos (Free, Starter, Professional, Enterprise, Legacy)
 - [x] **TokenPack** - 5 pacotes de tokens com diferentes descontos
 
-### zarp-cms
+### reserve-cms
 - [x] **Author** - 5 autores distribuídos entre tenants
 - [x] **Blog** - 3 blogs (1 por tenant ativo)
 - [x] **Article** - 6 artigos (5 publicados, 1 rascunho) com conteúdo técnico real
 - [x] **StorageCollection** - 2 collections (author-avatars, article-images)
 
-### zarp-leads
+### reserve-leads
 - [x] **LeadCollection** - 6 collections com diferentes access modes
 - [x] **Lead** - 7 leads distribuídos entre collections
 
-### zarp-mailer
+### reserve-mailer
 - [x] **SMTPServer** - 4 servidores SMTP (Gmail, SendGrid, AWS SES, Test)
 
 ## ⚠️ Entidades Sem Seeds (Dados Gerados em Runtime)
 
-### zarp-auth
+### reserve-auth
 - [ ] **AdminSessionToken** - Gerado no login
 - [ ] **AdminCredential** - Criado junto com Admin
 
-### zarp-cms
+### reserve-cms
 - [ ] **MediaAsset** - Requer upload real de arquivos
 - [ ] **ArticleImage** (deprecated) - Tabela legacy
 
-### zarp-leads
+### reserve-leads
 - [ ] **Lead** - Alguns leads já seedados, mais serão criados via API
 
-### zarp-mailer
+### reserve-mailer
 - [ ] **EmailCampaign** - Criado via interface administrativa
 - [ ] **EmailCampaignLead** - Relacionamento criado ao associar leads
 
-### zarp-cnpjs (Opcional - Datasets Grandes)
+### reserve-cnpjs (Opcional - Datasets Grandes)
 - [ ] **Company** - Dataset muito grande (milhões de registros)
 - [ ] **AuxiliaryCompanyInformation** - Dataset complementar
 - [ ] **CNAE** - Tabela de códigos CNAE (pode ser seedada se necessário)
 
-### zarp-brands
+### reserve-brands
 - [ ] **Brand** - Dados de marcas INPI (criados via importação)
 - [ ] **BrandAlert** - Alertas criados por usuários
 
-### zarp-journals
+### reserve-journals
 - [ ] **Journal** - Diários oficiais (importados via processamento)
 - [ ] **JournalAlert** - Alertas configurados por usuários
 
@@ -65,11 +65,11 @@
 ### Distribuição por Módulo
 | Módulo | Seeds | Registros |
 |--------|-------|-----------|
-| zarp-auth | 2 | ~15 |
+| reserve-auth | 2 | ~15 |
 | shared | 2 | ~10 |
-| zarp-cms | 5 | ~20 |
-| zarp-leads | 2 | ~13 |
-| zarp-mailer | 1 | ~4 |
+| reserve-cms | 5 | ~20 |
+| reserve-leads | 2 | ~13 |
+| reserve-mailer | 1 | ~4 |
 
 ## 🎯 Próximas Expansões Recomendadas
 
@@ -81,7 +81,7 @@ Adicionar imagens reais para:
 
 **Implementação sugerida:**
 ```typescript
-// prisma/seeds/zarp-cms/storage/media-assets.seed.ts
+// prisma/seeds/reserve-cms/storage/media-assets.seed.ts
 // Usar imagens de placeholder services ou assets locais
 ```
 
@@ -94,7 +94,7 @@ Criar campanhas de exemplo:
 ### 3. CNAE Codes (Baixa Prioridade)
 Se necessário para testes:
 ```typescript
-// prisma/seeds/zarp-cnpjs/cnaes.seed.ts
+// prisma/seeds/reserve-cnpjs/cnaes.seed.ts
 // Importar lista oficial de CNAEs
 ```
 
@@ -103,7 +103,7 @@ Se necessário para testes:
 ### Quando Adicionar Novos Seeds
 
 1. **Nova entidade criada**: Adicione seed se for dado mestre ou de teste
-2. **Novo módulo**: Crie pasta `prisma/seeds/zarp-[modulo]/`
+2. **Novo módulo**: Crie pasta `prisma/seeds/reserve-[modulo]/`
 3. **Novos relacionamentos**: Atualize seeds existentes
 
 ### Checklist para Novo Seed

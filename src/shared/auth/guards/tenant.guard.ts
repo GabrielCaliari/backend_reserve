@@ -1,4 +1,4 @@
-import {
+﻿import {
   CanActivate,
   ExecutionContext,
   Injectable,
@@ -7,12 +7,12 @@ import {
   BadRequestException,
   NotFoundException,
 } from '@nestjs/common';
-import { ADMIN_REPOSITORY, IAdminRepository, ITenantRepository, TENANT_REPOSITORY } from '../../../modules/zarp-auth/domain/interfaces';
+import { ADMIN_REPOSITORY, IAdminRepository, ITenantRepository, TENANT_REPOSITORY } from '../../../modules/reserve-auth/domain/interfaces';
 import {
   ADMIN_TENANT_REPOSITORY,
   IAdminTenantRepository,
-} from '../../../modules/zarp-auth/domain/interfaces/admin-tenant.repository.interface';
-import { EAdminRole } from '../../../modules/zarp-auth/domain/enums/admin-role.enum';
+} from '../../../modules/reserve-auth/domain/interfaces/admin-tenant.repository.interface';
+import { EAdminRole } from '../../../modules/reserve-auth/domain/enums/admin-role.enum';
 
 function normalizeRole(role: EAdminRole): EAdminRole {
   return role === EAdminRole.company_admin ? EAdminRole.manager : role;

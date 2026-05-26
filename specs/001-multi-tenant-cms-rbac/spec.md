@@ -1,4 +1,4 @@
-# Feature Specification: Multi-Tenant CMS with Blog and RBAC
+﻿# Feature Specification: Multi-Tenant CMS with Blog and RBAC
 
 **Feature Branch**: `001-multi-tenant-cms-rbac`
 **Created**: 2026-02-16
@@ -22,7 +22,7 @@
   maximum of 20 images per article.
 - Caching for public endpoints is deferred (no Redis/CDN integration now). TODO markers will be
   placed in code to ensure future implementation.
-- The CMS will be a new bounded context: `zarp-cms` under `src/modules/zarp-cms/`.
+- The CMS will be a new bounded context: `reserve-cms` under `src/modules/reserve-cms/`.
 - Public blog content is accessed via a secret key (`x-blog-secret-key` header), not JWT, enabling
   headless CMS consumption by frontend clients.
 

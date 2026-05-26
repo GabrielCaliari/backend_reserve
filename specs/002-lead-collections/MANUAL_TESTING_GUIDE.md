@@ -1,4 +1,4 @@
-# Manual Testing Guide - Lead Collections
+﻿# Manual Testing Guide - Lead Collections
 
 **Feature**: Lead Collections per Tenant  
 **Purpose**: Step-by-step guide for manual testing of all functionality  
@@ -20,7 +20,7 @@ POST /auth/admin/authenticate
 Content-Type: application/json
 
 {
-  "email": "admin@zarp.com.br",
+  "email": "admin@Reserve.com.br",
   "password": "your_password"
 }
 ```

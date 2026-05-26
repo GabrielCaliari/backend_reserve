@@ -1,14 +1,14 @@
-require('dotenv/config');
+﻿require('dotenv/config');
 
 const { execSync } = require('child_process');
 const { Signer } = require('@aws-sdk/rds-signer');
 
 async function main() {
   const host =
-    'zarp-admin-io-instance.ce9eq8ymw8sv.us-east-1.rds.amazonaws.com';
+    'reserve-admin-io-instance.ce9eq8ymw8sv.us-east-1.rds.amazonaws.com';
 
   const port = 5432;
-  const user = 'backend_zarp-api_user';
+  const user = 'backend_reserve-api_user';
   const database = 'postgres';
   const region = 'us-east-1';
 

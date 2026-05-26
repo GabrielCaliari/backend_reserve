@@ -1,4 +1,4 @@
-# Fix: Silent 503 Error on Large File Uploads
+﻿# Fix: Silent 503 Error on Large File Uploads
 
 ## Problem Description
 
@@ -136,9 +136,9 @@ All upload errors are now logged with context:
 - `src/shared/exceptions/connection-error.filter.ts` - Connection error handling
 - `src/shared/exceptions/multer-exception.filter.ts` - Enhanced Multer errors
 - `src/shared/interceptors/upload-error.interceptor.ts` - Upload-specific interceptor
-- `src/modules/zarp-cms/infrastructure/controllers/article-image.controller.ts`
-- `src/modules/zarp-cms/infrastructure/controllers/media-asset.controller.ts`
-- `src/modules/zarp-cms/infrastructure/controllers/blog.controller.ts`
+- `src/modules/reserve-cms/infrastructure/controllers/article-image.controller.ts`
+- `src/modules/reserve-cms/infrastructure/controllers/media-asset.controller.ts`
+- `src/modules/reserve-cms/infrastructure/controllers/blog.controller.ts`
 
 ## Notes
 

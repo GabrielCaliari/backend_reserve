@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+﻿import { Module } from '@nestjs/common';
 import { RouterModule } from '@nestjs/core';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ConfigModule } from '@nestjs/config';
@@ -9,24 +9,24 @@ import { DatabaseModule } from './shared/database/database.module';
 import { AuthModule } from './shared/auth/auth.module';
 
 // Bounded Context modules
-import { ZarpAuthModule } from './modules/zarp-auth/zarp-auth.module';
-import { ZarpBrandsModule } from './modules/zarp-brands/zarp-brands.module';
-import { ZarpCnpjsModule } from './modules/zarp-cnpjs/zarp-cnpjs.module';
-import { ZarpJournalsModule } from './modules/zarp-journals/zarp-journals.module';
-import { ZarpMailerModule } from './modules/zarp-mailer/zarp-mailer.module';
-import { ZarpPiBotModule } from './modules/zarp-pi-bot/zarp-pi-bot.module';
-import { ZarpCmsModule } from './modules/zarp-cms/zarp-cms.module';
-import { ZarpLeadsModule } from './modules/zarp-leads/zarp-leads.module';
-import { ZarpStatsModule } from './modules/zarp-stats/zarp-stats.module';
-import { ZarpReportsModule } from './modules/zarp-reports/zarp-reports.module';
-import { ZarpSubscriptionsModule } from './modules/zarp-subscriptions/zarp-subscriptions.module';
-import { ZarpB2cProductsModule } from './modules/zarp-b2c-products/zarp-b2c-products.module';
-import { ZarpB2cSubscriptionsModule } from './modules/zarp-b2c-subscriptions/zarp-b2c-subscriptions.module';
-import { ZarpB2bPaymentsModule } from './modules/zarp-b2b-payments/zarp-b2b-payments.module';
-import { ZarpUnifiedWebhooksModule } from './modules/zarp-unified-webhooks/zarp-unified-webhooks.module';
-import { ZarpCouponsModule } from './modules/zarp-coupons/zarp-coupons.module';
-import { ZarpLicensefixModule } from './modules/zarp-licensefix/zarp-licensefix.module';
-import { ZarpNotificationsModule } from './modules/zarp-notifications/zarp-notifications.module';
+import { ReserveAuthModule } from './modules/reserve-auth/reserve-auth.module';
+import { ReserveBrandsModule } from './modules/reserve-brands/reserve-brands.module';
+import { ReserveCnpjsModule } from './modules/reserve-cnpjs/reserve-cnpjs.module';
+import { ReserveJournalsModule } from './modules/reserve-journals/reserve-journals.module';
+import { ReserveMailerModule } from './modules/reserve-mailer/reserve-mailer.module';
+import { ReservePiBotModule } from './modules/reserve-pi-bot/reserve-pi-bot.module';
+import { ReserveCmsModule } from './modules/reserve-cms/reserve-cms.module';
+import { ReserveLeadsModule } from './modules/reserve-leads/reserve-leads.module';
+import { ReserveStatsModule } from './modules/reserve-stats/reserve-stats.module';
+import { ReserveReportsModule } from './modules/reserve-reports/reserve-reports.module';
+import { ReserveSubscriptionsModule } from './modules/reserve-subscriptions/reserve-subscriptions.module';
+import { ReserveB2cProductsModule } from './modules/reserve-b2c-products/reserve-b2c-products.module';
+import { ReserveB2cSubscriptionsModule } from './modules/reserve-b2c-subscriptions/reserve-b2c-subscriptions.module';
+import { ReserveB2bPaymentsModule } from './modules/reserve-b2b-payments/reserve-b2b-payments.module';
+import { ReserveUnifiedWebhooksModule } from './modules/reserve-unified-webhooks/reserve-unified-webhooks.module';
+import { ReserveCouponsModule } from './modules/reserve-coupons/reserve-coupons.module';
+import { ReserveLicensefixModule } from './modules/reserve-licensefix/reserve-licensefix.module';
+import { ReserveNotificationsModule } from './modules/reserve-notifications/reserve-notifications.module';
 
 // Shared pipes
 import { ToLowercaseQueryParamsPipe, ToLowercaseBodyRequestPipe } from './shared/pipes';
@@ -40,70 +40,70 @@ import { ToLowercaseQueryParamsPipe, ToLowercaseBodyRequestPipe } from './shared
     ScheduleModule.forRoot(),
 
     // Bounded Contexts
-    ZarpAuthModule,
-    ZarpBrandsModule,
-    ZarpCnpjsModule,
-    ZarpJournalsModule,
-    ZarpMailerModule,
-    ZarpPiBotModule,
-    ZarpCmsModule,
-    ZarpLeadsModule,
-    ZarpStatsModule,
-    ZarpReportsModule,
-    ZarpSubscriptionsModule,
-    ZarpB2cProductsModule,
-    ZarpB2cSubscriptionsModule,
-    ZarpB2bPaymentsModule,
-    ZarpUnifiedWebhooksModule,
-    ZarpCouponsModule,
-    ZarpLicensefixModule,
-    ZarpNotificationsModule,
+    ReserveAuthModule,
+    ReserveBrandsModule,
+    ReserveCnpjsModule,
+    ReserveJournalsModule,
+    ReserveMailerModule,
+    ReservePiBotModule,
+    ReserveCmsModule,
+    ReserveLeadsModule,
+    ReserveStatsModule,
+    ReserveReportsModule,
+    ReserveSubscriptionsModule,
+    ReserveB2cProductsModule,
+    ReserveB2cSubscriptionsModule,
+    ReserveB2bPaymentsModule,
+    ReserveUnifiedWebhooksModule,
+    ReserveCouponsModule,
+    ReserveLicensefixModule,
+    ReserveNotificationsModule,
 
     // Route prefixes per bounded context
     RouterModule.register([
 
       {
         path: 'brands',
-        module: ZarpBrandsModule,
+        module: ReserveBrandsModule,
       },
       {
         path: 'cnpjs',
-        module: ZarpCnpjsModule,
+        module: ReserveCnpjsModule,
       },
       {
         path: 'journals',
-        module: ZarpJournalsModule,
+        module: ReserveJournalsModule,
       },
       {
         path: 'mailer',
-        module: ZarpMailerModule,
+        module: ReserveMailerModule,
       },
       {
         path: 'pi-bot',
-        module: ZarpPiBotModule,
+        module: ReservePiBotModule,
       },
       {
         path: 'cms',
-        module: ZarpCmsModule,
+        module: ReserveCmsModule,
       },
       {
         path: 'leads',
-        module: ZarpLeadsModule,
+        module: ReserveLeadsModule,
       },
       {
         path: 'stats',
-        module: ZarpStatsModule,
+        module: ReserveStatsModule,
       },
       {
         path: 'reports',
-        module: ZarpReportsModule,
+        module: ReserveReportsModule,
       },
-      // ZarpNotificationsModule uses full paths in controllers:
+      // ReserveNotificationsModule uses full paths in controllers:
       // - NotificationTenantController    → /api/notifications/tenant
       // - NotificationSettingsController  → /api/notifications/settings
       // - NotificationController          → /api/notifications/...
       // No RouterModule prefix needed — controllers declare their own full paths.
-      // ZarpSubscriptionsModule uses full paths in controllers:
+      // ReserveSubscriptionsModule uses full paths in controllers:
       // - SubscriptionsController       → /api/subscriptions/...
       // - TenantBillingConfigController → /api/payments/billing-config
       // - StripeWebhookController       → /api/webhooks/stripe

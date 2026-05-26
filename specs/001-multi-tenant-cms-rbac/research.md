@@ -1,4 +1,4 @@
-# Research: Multi-Tenant CMS with Blog and RBAC
+﻿# Research: Multi-Tenant CMS with Blog and RBAC
 
 **Phase 0 Output** | **Date**: 2026-02-16 | **Status**: Complete
 
@@ -92,7 +92,7 @@ a single pass: `sharp(buffer).webp({ quality: 80 }).toBuffer()`.
 ## 4. Object Storage Pattern
 
 ### Decision
-Reuse the existing `@aws-sdk/client-s3` pattern from `zarp-journals` (DigitalOcean Spaces /
+Reuse the existing `@aws-sdk/client-s3` pattern from `reserve-journals` (DigitalOcean Spaces /
 S3-compatible storage). Abstract behind `IStorageProvider` interface in the CMS domain layer.
 
 ### Rationale
@@ -162,7 +162,7 @@ are irrelevant. The incremental suffix approach is simple, predictable, and hand
    enough for an inline utility function.
 
 ### Implementation Notes
-- Utility: `generateSlug(title: string): string` in `src/modules/zarp-cms/domain/`
+- Utility: `generateSlug(title: string): string` in `src/modules/reserve-cms/domain/`
 - Collision detection: `articleRepository.existsBySlugAndBlogId(slug, blogId)`
 - Loop: try base slug, then `${slug}-2`, `${slug}-3`, etc. up to 10 attempts before error.
 

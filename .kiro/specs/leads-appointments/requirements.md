@@ -1,20 +1,20 @@
-# Requirements Document
+﻿# Requirements Document
 
 ## Introduction
 
-This feature adds an Appointments management system to the ZARP admin panel as a new section within the Leads module. It enables tenant admins to configure their own scheduling rules (working hours, slot intervals, lunch breaks, capacity per slot, blocked dates) and allows the public-facing site to query available slots and book appointments atomically — preventing overbooking. The system is fully multi-tenant: each tenant owns its own schedule configuration independently.
+This feature adds an Appointments management system to the Reserve admin panel as a new section within the Leads module. It enables tenant admins to configure their own scheduling rules (working hours, slot intervals, lunch breaks, capacity per slot, blocked dates) and allows the public-facing site to query available slots and book appointments atomically — preventing overbooking. The system is fully multi-tenant: each tenant owns its own schedule configuration independently.
 
 Currently, appointment data arrives as unstructured JSON inside the `data` field of a lead submission. This feature introduces first-class appointment entities with slot availability enforcement, replacing the current overbooking-prone approach.
 
 ## Glossary
 
-- **Appointment_System**: The NestJS bounded context responsible for all appointment scheduling logic within the `zarp-leads` module.
+- **Appointment_System**: The NestJS bounded context responsible for all appointment scheduling logic within the `reserve-leads` module.
 - **Schedule_Config**: A tenant-scoped configuration record defining working hours, slot interval, lunch break, and capacity per slot.
 - **Slot**: A discrete time window derived from a Schedule_Config (e.g., 09:00–09:30) on a specific date.
 - **Slot_Capacity**: The maximum number of concurrent bookings allowed within a single Slot.
 - **Appointment**: A confirmed booking linking a Lead to a specific Slot on a specific date.
 - **Blocked_Period**: A tenant-defined date or time range during which no Slots are available.
-- **Tenant**: An organization account in the multi-tenant ZARP platform, identified by `tenant_id`.
+- **Tenant**: An organization account in the multi-tenant Reserve platform, identified by `tenant_id`.
 - **Admin**: An authenticated admin user operating within a Tenant context, using `AdminJwtGuard` + `RolesGuard`.
 - **Public_Client**: An external site or application authenticating via `X-Tenant-Key` header.
 - **Slot_Availability_Response**: The list of available Slots returned to the Public_Client for a given date.

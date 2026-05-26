@@ -1,11 +1,11 @@
-# Implementation Plan: Multi-Tenant CMS with Blog and RBAC
+﻿# Implementation Plan: Multi-Tenant CMS with Blog and RBAC
 
 **Branch**: `001-multi-tenant-cms-rbac` | **Date**: 2026-02-16 | **Spec**: [spec.md](./spec.md)
 **Input**: Feature specification from `/specs/001-multi-tenant-cms-rbac/spec.md`
 
 ## Summary
 
-Implement a multi-tenant CMS module (`zarp-cms`) enabling tenant-scoped blog management with
+Implement a multi-tenant CMS module (`reserve-cms`) enabling tenant-scoped blog management with
 a granular RBAC role hierarchy. The feature expands the existing `EAdminRole` enum from 2 to 5
 roles, moves role assignment to the per-tenant level (AdminTenant), introduces Blog, Article,
 and ArticleImage entities with full lifecycle management, integrates S3 storage with `sharp`
@@ -30,7 +30,7 @@ authenticated via secret keys.
 
 | Principle | Pre-Phase 0 | Post-Phase 1 | Notes |
 |---|---|---|---|
-| I. Bounded Contexts | PASS | PASS | New `zarp-cms` context under `src/modules/zarp-cms/` |
+| I. Bounded Contexts | PASS | PASS | New `reserve-cms` context under `src/modules/reserve-cms/` |
 | II. SOLID/DIP | PASS | PASS | All repos behind Symbol tokens; IStorageProvider abstraction for S3 |
 | III. TDD | PASS | PASS | In-memory fakes for all CMS repos; test-first mandate |
 | IV. Domain Purity | PASS | PASS | Domain entities are pure TS; domain errors do not extend HttpException |
@@ -59,7 +59,7 @@ specs/001-multi-tenant-cms-rbac/
 ### Source Code (repository root)
 
 ```text
-src/modules/zarp-cms/
+src/modules/reserve-cms/
 ├── domain/
 │   ├── entities/
 │   │   ├── blog.entity.ts
@@ -111,10 +111,10 @@ src/modules/zarp-cms/
 │   └── providers/
 │       ├── s3-storage.provider.ts
 │       └── sharp-image-processor.provider.ts
-└── zarp-cms.module.ts
+└── reserve-cms.module.ts
 
-# Changes to existing code (zarp-auth):
-src/modules/zarp-auth/
+# Changes to existing code (reserve-auth):
+src/modules/reserve-auth/
 ├── domain/enums/admin-role.enum.ts           # Expand EAdminRole enum
 ├── domain/interfaces/admin-tenant.repository.interface.ts  # Add findRoleInTenant()
 src/shared/auth/
@@ -125,8 +125,8 @@ src/shared/auth/
 prisma/schema.prisma                          # New models + AdminTenant.role column
 ```
 
-**Structure Decision**: Single NestJS modular monolith. The `zarp-cms` bounded context follows
-the same layer structure as `zarp-auth` (domain/application/infrastructure). Image processing
+**Structure Decision**: Single NestJS modular monolith. The `reserve-cms` bounded context follows
+the same layer structure as `reserve-auth` (domain/application/infrastructure). Image processing
 is abstracted behind `IImageProcessor` interface (infrastructure: `sharp`). Object storage is
 abstracted behind `IStorageProvider` interface (infrastructure: `@aws-sdk/client-s3`).
 

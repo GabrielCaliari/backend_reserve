@@ -1,4 +1,4 @@
-# Coupon/Discount System — Design Spec
+﻿# Coupon/Discount System — Design Spec
 **Date:** 2026-05-10  
 **Status:** Approved  
 **Scope:** B2B + B2C, tenant-scoped
@@ -15,10 +15,10 @@ Discounts are calculated entirely on the backend. A single Stripe Coupon object 
 
 ## 2. Module Structure
 
-New module: `src/modules/zarp-coupons/` following the existing Clean Architecture pattern.
+New module: `src/modules/reserve-coupons/` following the existing Clean Architecture pattern.
 
 ```
-src/modules/zarp-coupons/
+src/modules/reserve-coupons/
 ├── application/
 │   ├── dtos/
 │   │   ├── create-coupon.dto.ts
@@ -48,7 +48,7 @@ src/modules/zarp-coupons/
 │   │   └── public-coupons.controller.ts
 │   └── repositories/
 │       └── prisma-discount-coupon.repository.ts
-└── zarp-coupons.module.ts
+└── reserve-coupons.module.ts
 ```
 
 ---
@@ -294,9 +294,9 @@ All repository queries filter by `tenantId`. A coupon code from Tenant A cannot 
 
 ## 9. Module Dependencies
 
-`ZarpCouponsModule` exports `ValidateCouponUseCase`.
+`ReserveCouponsModule` exports `ValidateCouponUseCase`.
 
-`ZarpB2BPaymentsModule` imports `ZarpCouponsModule` to inject `ValidateCouponUseCase` into the modified checkout use cases.
+`ReserveB2BPaymentsModule` imports `ReserveCouponsModule` to inject `ValidateCouponUseCase` into the modified checkout use cases.
 
 B2C checkout modules (if applicable) follow the same pattern.
 

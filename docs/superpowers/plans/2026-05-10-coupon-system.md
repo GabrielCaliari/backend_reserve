@@ -1,10 +1,10 @@
-# Coupon System Implementation Plan
+﻿# Coupon System Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Implement a tenant-scoped coupon/discount system (B2B + B2C) with CRUD admin management, public validation endpoint, and Stripe checkout integration that creates a dynamic `amount_off` coupon per session and archives it after use.
 
-**Architecture:** New `zarp-coupons` module (Clean Architecture: domain/application/infrastructure) exports `ValidateCouponUseCase`. The B2B checkout use cases (`CreateCartCheckoutUseCase`, `CreatePaymentLinkUseCase`) import this module and inject the use case. Discounts are always re-calculated server-side at checkout time — the public validate endpoint is UX-only. Atomic redemption is enforced with a conditional Prisma `updateMany` inside a transaction; the Stripe coupon is archived via webhook after payment or session expiry.
+**Architecture:** New `reserve-coupons` module (Clean Architecture: domain/application/infrastructure) exports `ValidateCouponUseCase`. The B2B checkout use cases (`CreateCartCheckoutUseCase`, `CreatePaymentLinkUseCase`) import this module and inject the use case. Discounts are always re-calculated server-side at checkout time — the public validate endpoint is UX-only. Atomic redemption is enforced with a conditional Prisma `updateMany` inside a transaction; the Stripe coupon is archived via webhook after payment or session expiry.
 
 **Tech Stack:** NestJS 11, Prisma (PostgreSQL), Stripe Node SDK (`2025-02-24.acacia`), class-validator, Jest, `@nestjs/throttler` (new dependency for rate limiting).
 
@@ -15,38 +15,38 @@
 ### New files
 | File | Responsibility |
 |---|---|
-| `src/modules/zarp-coupons/domain/enums/discount-type.enum.ts` | `percentage \| fixed_amount` |
-| `src/modules/zarp-coupons/domain/enums/coupon-scope.enum.ts` | `order \| product \| category` |
-| `src/modules/zarp-coupons/domain/enums/coupon-applies-to.enum.ts` | `b2b \| b2c \| both` |
-| `src/modules/zarp-coupons/domain/entities/discount-coupon.entity.ts` | Pure domain object |
-| `src/modules/zarp-coupons/domain/interfaces/discount-coupon.repository.interface.ts` | Contract + DI token |
-| `src/modules/zarp-coupons/application/dtos/create-coupon.dto.ts` | Admin create DTO |
-| `src/modules/zarp-coupons/application/dtos/update-coupon.dto.ts` | Admin update DTO |
-| `src/modules/zarp-coupons/application/dtos/validate-coupon.dto.ts` | Public validate DTO |
-| `src/modules/zarp-coupons/application/use-cases/validate-coupon.use-case.ts` | Core discount calculation |
-| `src/modules/zarp-coupons/application/use-cases/validate-coupon.use-case.spec.ts` | Unit tests |
-| `src/modules/zarp-coupons/application/use-cases/create-coupon.use-case.ts` | Admin CRUD |
-| `src/modules/zarp-coupons/application/use-cases/update-coupon.use-case.ts` | Admin CRUD |
-| `src/modules/zarp-coupons/application/use-cases/delete-coupon.use-case.ts` | Soft-delete |
-| `src/modules/zarp-coupons/application/use-cases/list-coupons.use-case.ts` | Paginated list |
-| `src/modules/zarp-coupons/application/use-cases/get-coupon.use-case.ts` | Get by ID |
-| `src/modules/zarp-coupons/infrastructure/repositories/prisma-discount-coupon.repository.ts` | Prisma implementation |
-| `src/modules/zarp-coupons/infrastructure/controllers/admin-coupons.controller.ts` | CRUD endpoints |
-| `src/modules/zarp-coupons/infrastructure/controllers/public-coupons.controller.ts` | Public validate endpoint |
-| `src/modules/zarp-coupons/zarp-coupons.module.ts` | NestJS module wiring |
+| `src/modules/reserve-coupons/domain/enums/discount-type.enum.ts` | `percentage \| fixed_amount` |
+| `src/modules/reserve-coupons/domain/enums/coupon-scope.enum.ts` | `order \| product \| category` |
+| `src/modules/reserve-coupons/domain/enums/coupon-applies-to.enum.ts` | `b2b \| b2c \| both` |
+| `src/modules/reserve-coupons/domain/entities/discount-coupon.entity.ts` | Pure domain object |
+| `src/modules/reserve-coupons/domain/interfaces/discount-coupon.repository.interface.ts` | Contract + DI token |
+| `src/modules/reserve-coupons/application/dtos/create-coupon.dto.ts` | Admin create DTO |
+| `src/modules/reserve-coupons/application/dtos/update-coupon.dto.ts` | Admin update DTO |
+| `src/modules/reserve-coupons/application/dtos/validate-coupon.dto.ts` | Public validate DTO |
+| `src/modules/reserve-coupons/application/use-cases/validate-coupon.use-case.ts` | Core discount calculation |
+| `src/modules/reserve-coupons/application/use-cases/validate-coupon.use-case.spec.ts` | Unit tests |
+| `src/modules/reserve-coupons/application/use-cases/create-coupon.use-case.ts` | Admin CRUD |
+| `src/modules/reserve-coupons/application/use-cases/update-coupon.use-case.ts` | Admin CRUD |
+| `src/modules/reserve-coupons/application/use-cases/delete-coupon.use-case.ts` | Soft-delete |
+| `src/modules/reserve-coupons/application/use-cases/list-coupons.use-case.ts` | Paginated list |
+| `src/modules/reserve-coupons/application/use-cases/get-coupon.use-case.ts` | Get by ID |
+| `src/modules/reserve-coupons/infrastructure/repositories/prisma-discount-coupon.repository.ts` | Prisma implementation |
+| `src/modules/reserve-coupons/infrastructure/controllers/admin-coupons.controller.ts` | CRUD endpoints |
+| `src/modules/reserve-coupons/infrastructure/controllers/public-coupons.controller.ts` | Public validate endpoint |
+| `src/modules/reserve-coupons/reserve-coupons.module.ts` | NestJS module wiring |
 
 ### Modified files
 | File | Change |
 |---|---|
 | `prisma/schema.prisma` | Add `DiscountCoupon` model + `Tenant` relation |
-| `src/modules/zarp-b2b-payments/application/dtos/create-cart-checkout.dto.ts` | Add `couponCodes?` |
-| `src/modules/zarp-b2b-payments/application/dtos/create-payment-link.dto.ts` | Add `couponCodes?` |
-| `src/modules/zarp-b2b-payments/application/use-cases/create-cart-checkout.use-case.ts` | Coupon discount + Stripe coupon creation |
-| `src/modules/zarp-b2b-payments/application/use-cases/create-payment-link.use-case.ts` | Coupon discount + Stripe coupon creation |
-| `src/modules/zarp-b2b-payments/application/use-cases/process-b2b-webhook.use-case.ts` | Archive Stripe coupon + decrement on expiry |
-| `src/modules/zarp-b2b-payments/infrastructure/controllers/b2b-webhook.controller.ts` | Pass `stripe` instance to use case |
-| `src/modules/zarp-b2b-payments/zarp-b2b-payments.module.ts` | Import `ZarpCouponsModule` |
-| `src/app.module.ts` | Register `ZarpCouponsModule` |
+| `src/modules/reserve-b2b-payments/application/dtos/create-cart-checkout.dto.ts` | Add `couponCodes?` |
+| `src/modules/reserve-b2b-payments/application/dtos/create-payment-link.dto.ts` | Add `couponCodes?` |
+| `src/modules/reserve-b2b-payments/application/use-cases/create-cart-checkout.use-case.ts` | Coupon discount + Stripe coupon creation |
+| `src/modules/reserve-b2b-payments/application/use-cases/create-payment-link.use-case.ts` | Coupon discount + Stripe coupon creation |
+| `src/modules/reserve-b2b-payments/application/use-cases/process-b2b-webhook.use-case.ts` | Archive Stripe coupon + decrement on expiry |
+| `src/modules/reserve-b2b-payments/infrastructure/controllers/b2b-webhook.controller.ts` | Pass `stripe` instance to use case |
+| `src/modules/reserve-b2b-payments/reserve-b2b-payments.module.ts` | Import `ReserveCouponsModule` |
+| `src/app.module.ts` | Register `ReserveCouponsModule` |
 
 ---
 
@@ -136,15 +136,15 @@ git commit -m "feat(coupons): add discount_coupons table migration"
 ## Task 2: Domain Layer — Enums, Entity, Repository Interface
 
 **Files:**
-- Create: `src/modules/zarp-coupons/domain/enums/discount-type.enum.ts`
-- Create: `src/modules/zarp-coupons/domain/enums/coupon-scope.enum.ts`
-- Create: `src/modules/zarp-coupons/domain/enums/coupon-applies-to.enum.ts`
-- Create: `src/modules/zarp-coupons/domain/entities/discount-coupon.entity.ts`
-- Create: `src/modules/zarp-coupons/domain/interfaces/discount-coupon.repository.interface.ts`
+- Create: `src/modules/reserve-coupons/domain/enums/discount-type.enum.ts`
+- Create: `src/modules/reserve-coupons/domain/enums/coupon-scope.enum.ts`
+- Create: `src/modules/reserve-coupons/domain/enums/coupon-applies-to.enum.ts`
+- Create: `src/modules/reserve-coupons/domain/entities/discount-coupon.entity.ts`
+- Create: `src/modules/reserve-coupons/domain/interfaces/discount-coupon.repository.interface.ts`
 
 - [ ] **Step 2.1: Create enums**
 
-`src/modules/zarp-coupons/domain/enums/discount-type.enum.ts`:
+`src/modules/reserve-coupons/domain/enums/discount-type.enum.ts`:
 ```typescript
 export enum EDiscountType {
   PERCENTAGE = 'percentage',
@@ -152,7 +152,7 @@ export enum EDiscountType {
 }
 ```
 
-`src/modules/zarp-coupons/domain/enums/coupon-scope.enum.ts`:
+`src/modules/reserve-coupons/domain/enums/coupon-scope.enum.ts`:
 ```typescript
 export enum ECouponScope {
   ORDER = 'order',
@@ -161,7 +161,7 @@ export enum ECouponScope {
 }
 ```
 
-`src/modules/zarp-coupons/domain/enums/coupon-applies-to.enum.ts`:
+`src/modules/reserve-coupons/domain/enums/coupon-applies-to.enum.ts`:
 ```typescript
 export enum ECouponAppliesTo {
   B2B = 'b2b',
@@ -172,7 +172,7 @@ export enum ECouponAppliesTo {
 
 - [ ] **Step 2.2: Create entity**
 
-`src/modules/zarp-coupons/domain/entities/discount-coupon.entity.ts`:
+`src/modules/reserve-coupons/domain/entities/discount-coupon.entity.ts`:
 ```typescript
 import { EDiscountType } from '../enums/discount-type.enum';
 import { ECouponScope } from '../enums/coupon-scope.enum';
@@ -217,7 +217,7 @@ export class DiscountCouponEntity {
 
 - [ ] **Step 2.3: Create repository interface**
 
-`src/modules/zarp-coupons/domain/interfaces/discount-coupon.repository.interface.ts`:
+`src/modules/reserve-coupons/domain/interfaces/discount-coupon.repository.interface.ts`:
 ```typescript
 import { DiscountCouponEntity } from '../entities/discount-coupon.entity';
 
@@ -276,7 +276,7 @@ export interface IDiscountCouponRepository {
 - [ ] **Step 2.4: Commit**
 
 ```bash
-git add src/modules/zarp-coupons/domain/
+git add src/modules/reserve-coupons/domain/
 git commit -m "feat(coupons): add domain layer - enums, entity, repository interface"
 ```
 
@@ -285,13 +285,13 @@ git commit -m "feat(coupons): add domain layer - enums, entity, repository inter
 ## Task 3: DTOs
 
 **Files:**
-- Create: `src/modules/zarp-coupons/application/dtos/create-coupon.dto.ts`
-- Create: `src/modules/zarp-coupons/application/dtos/update-coupon.dto.ts`
-- Create: `src/modules/zarp-coupons/application/dtos/validate-coupon.dto.ts`
+- Create: `src/modules/reserve-coupons/application/dtos/create-coupon.dto.ts`
+- Create: `src/modules/reserve-coupons/application/dtos/update-coupon.dto.ts`
+- Create: `src/modules/reserve-coupons/application/dtos/validate-coupon.dto.ts`
 
 - [ ] **Step 3.1: Create `create-coupon.dto.ts`**
 
-`src/modules/zarp-coupons/application/dtos/create-coupon.dto.ts`:
+`src/modules/reserve-coupons/application/dtos/create-coupon.dto.ts`:
 ```typescript
 import {
   IsString, IsNotEmpty, IsEnum, IsNumber, Min, Max,
@@ -381,7 +381,7 @@ export class CreateCouponDTO {
 
 - [ ] **Step 3.2: Create `update-coupon.dto.ts`**
 
-`src/modules/zarp-coupons/application/dtos/update-coupon.dto.ts`:
+`src/modules/reserve-coupons/application/dtos/update-coupon.dto.ts`:
 ```typescript
 import {
   IsString, IsNumber, Min, IsOptional, IsArray,
@@ -461,7 +461,7 @@ export class UpdateCouponDTO {
 
 - [ ] **Step 3.3: Create `validate-coupon.dto.ts`**
 
-`src/modules/zarp-coupons/application/dtos/validate-coupon.dto.ts`:
+`src/modules/reserve-coupons/application/dtos/validate-coupon.dto.ts`:
 ```typescript
 import {
   IsArray, IsString, IsNotEmpty, IsInt, Min, IsOptional,
@@ -514,7 +514,7 @@ export class ValidateCouponDTO {
 - [ ] **Step 3.4: Commit**
 
 ```bash
-git add src/modules/zarp-coupons/application/dtos/
+git add src/modules/reserve-coupons/application/dtos/
 git commit -m "feat(coupons): add application DTOs"
 ```
 
@@ -523,12 +523,12 @@ git commit -m "feat(coupons): add application DTOs"
 ## Task 4: ValidateCouponUseCase + Tests
 
 **Files:**
-- Create: `src/modules/zarp-coupons/application/use-cases/validate-coupon.use-case.ts`
-- Create: `src/modules/zarp-coupons/application/use-cases/validate-coupon.use-case.spec.ts`
+- Create: `src/modules/reserve-coupons/application/use-cases/validate-coupon.use-case.ts`
+- Create: `src/modules/reserve-coupons/application/use-cases/validate-coupon.use-case.spec.ts`
 
 - [ ] **Step 4.1: Write failing tests**
 
-`src/modules/zarp-coupons/application/use-cases/validate-coupon.use-case.spec.ts`:
+`src/modules/reserve-coupons/application/use-cases/validate-coupon.use-case.spec.ts`:
 ```typescript
 import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException, UnprocessableEntityException } from '@nestjs/common';
@@ -724,7 +724,7 @@ Expected: `FAIL` — `ValidateCouponUseCase` not found.
 
 - [ ] **Step 4.3: Implement `ValidateCouponUseCase`**
 
-`src/modules/zarp-coupons/application/use-cases/validate-coupon.use-case.ts`:
+`src/modules/reserve-coupons/application/use-cases/validate-coupon.use-case.ts`:
 ```typescript
 import { Injectable, Inject, UnprocessableEntityException } from '@nestjs/common';
 import {
@@ -867,8 +867,8 @@ Expected: `PASS` with all 12 tests passing.
 - [ ] **Step 4.5: Commit**
 
 ```bash
-git add src/modules/zarp-coupons/application/use-cases/validate-coupon.use-case.ts \
-        src/modules/zarp-coupons/application/use-cases/validate-coupon.use-case.spec.ts
+git add src/modules/reserve-coupons/application/use-cases/validate-coupon.use-case.ts \
+        src/modules/reserve-coupons/application/use-cases/validate-coupon.use-case.spec.ts
 git commit -m "feat(coupons): implement ValidateCouponUseCase with full test suite"
 ```
 
@@ -877,11 +877,11 @@ git commit -m "feat(coupons): implement ValidateCouponUseCase with full test sui
 ## Task 5: Admin CRUD Use Cases
 
 **Files:**
-- Create: `src/modules/zarp-coupons/application/use-cases/create-coupon.use-case.ts`
-- Create: `src/modules/zarp-coupons/application/use-cases/update-coupon.use-case.ts`
-- Create: `src/modules/zarp-coupons/application/use-cases/delete-coupon.use-case.ts`
-- Create: `src/modules/zarp-coupons/application/use-cases/list-coupons.use-case.ts`
-- Create: `src/modules/zarp-coupons/application/use-cases/get-coupon.use-case.ts`
+- Create: `src/modules/reserve-coupons/application/use-cases/create-coupon.use-case.ts`
+- Create: `src/modules/reserve-coupons/application/use-cases/update-coupon.use-case.ts`
+- Create: `src/modules/reserve-coupons/application/use-cases/delete-coupon.use-case.ts`
+- Create: `src/modules/reserve-coupons/application/use-cases/list-coupons.use-case.ts`
+- Create: `src/modules/reserve-coupons/application/use-cases/get-coupon.use-case.ts`
 
 - [ ] **Step 5.1: Create `create-coupon.use-case.ts`**
 
@@ -1043,7 +1043,7 @@ export class GetCouponUseCase {
 - [ ] **Step 5.6: Commit**
 
 ```bash
-git add src/modules/zarp-coupons/application/use-cases/
+git add src/modules/reserve-coupons/application/use-cases/
 git commit -m "feat(coupons): add admin CRUD use cases"
 ```
 
@@ -1052,11 +1052,11 @@ git commit -m "feat(coupons): add admin CRUD use cases"
 ## Task 6: Prisma Repository
 
 **Files:**
-- Create: `src/modules/zarp-coupons/infrastructure/repositories/prisma-discount-coupon.repository.ts`
+- Create: `src/modules/reserve-coupons/infrastructure/repositories/prisma-discount-coupon.repository.ts`
 
 - [ ] **Step 6.1: Implement the repository**
 
-`src/modules/zarp-coupons/infrastructure/repositories/prisma-discount-coupon.repository.ts`:
+`src/modules/reserve-coupons/infrastructure/repositories/prisma-discount-coupon.repository.ts`:
 ```typescript
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../../shared/database/prisma.service';
@@ -1216,18 +1216,18 @@ export class PrismaDiscountCouponRepository implements IDiscountCouponRepository
 - [ ] **Step 6.2: Commit**
 
 ```bash
-git add src/modules/zarp-coupons/infrastructure/repositories/
+git add src/modules/reserve-coupons/infrastructure/repositories/
 git commit -m "feat(coupons): implement PrismaDiscountCouponRepository"
 ```
 
 ---
 
-## Task 7: Controllers + ZarpCouponsModule + Throttler
+## Task 7: Controllers + ReserveCouponsModule + Throttler
 
 **Files:**
-- Create: `src/modules/zarp-coupons/infrastructure/controllers/admin-coupons.controller.ts`
-- Create: `src/modules/zarp-coupons/infrastructure/controllers/public-coupons.controller.ts`
-- Create: `src/modules/zarp-coupons/zarp-coupons.module.ts`
+- Create: `src/modules/reserve-coupons/infrastructure/controllers/admin-coupons.controller.ts`
+- Create: `src/modules/reserve-coupons/infrastructure/controllers/public-coupons.controller.ts`
+- Create: `src/modules/reserve-coupons/reserve-coupons.module.ts`
 
 - [ ] **Step 7.1: Install `@nestjs/throttler`**
 
@@ -1239,7 +1239,7 @@ Expected: package added to `node_modules` and `package.json`.
 
 - [ ] **Step 7.2: Create admin controller**
 
-`src/modules/zarp-coupons/infrastructure/controllers/admin-coupons.controller.ts`:
+`src/modules/reserve-coupons/infrastructure/controllers/admin-coupons.controller.ts`:
 ```typescript
 import {
   Controller, Get, Post, Put, Delete, Body, Param,
@@ -1341,7 +1341,7 @@ export class AdminCouponsController {
 
 - [ ] **Step 7.3: Create public controller**
 
-`src/modules/zarp-coupons/infrastructure/controllers/public-coupons.controller.ts`:
+`src/modules/reserve-coupons/infrastructure/controllers/public-coupons.controller.ts`:
 ```typescript
 import { Controller, Post, Body, Headers, BadRequestException } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiHeader } from '@nestjs/swagger';
@@ -1370,14 +1370,14 @@ export class PublicCouponsController {
 }
 ```
 
-- [ ] **Step 7.4: Create `zarp-coupons.module.ts`**
+- [ ] **Step 7.4: Create `reserve-coupons.module.ts`**
 
-`src/modules/zarp-coupons/zarp-coupons.module.ts`:
+`src/modules/reserve-coupons/reserve-coupons.module.ts`:
 ```typescript
 import { Module } from '@nestjs/common';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { DatabaseModule } from '../../shared/database/database.module';
-import { ZarpAuthModule } from '../zarp-auth/zarp-auth.module';
+import { ReserveAuthModule } from '../reserve-auth/reserve-auth.module';
 
 import { CreateCouponUseCase } from './application/use-cases/create-coupon.use-case';
 import { UpdateCouponUseCase } from './application/use-cases/update-coupon.use-case';
@@ -1395,7 +1395,7 @@ import { PublicCouponsController } from './infrastructure/controllers/public-cou
 @Module({
   imports: [
     DatabaseModule,
-    ZarpAuthModule,
+    ReserveAuthModule,
     ThrottlerModule.forRoot([{ ttl: 60000, limit: 10 }]),
   ],
   controllers: [AdminCouponsController, PublicCouponsController],
@@ -1410,13 +1410,13 @@ import { PublicCouponsController } from './infrastructure/controllers/public-cou
   ],
   exports: [ValidateCouponUseCase, DISCOUNT_COUPON_REPOSITORY],
 })
-export class ZarpCouponsModule {}
+export class ReserveCouponsModule {}
 ```
 
 - [ ] **Step 7.5: Commit**
 
 ```bash
-git add src/modules/zarp-coupons/infrastructure/ src/modules/zarp-coupons/zarp-coupons.module.ts package.json package-lock.json
+git add src/modules/reserve-coupons/infrastructure/ src/modules/reserve-coupons/reserve-coupons.module.ts package.json package-lock.json
 git commit -m "feat(coupons): add controllers, module, and throttler setup"
 ```
 
@@ -1425,12 +1425,12 @@ git commit -m "feat(coupons): add controllers, module, and throttler setup"
 ## Task 8: Modify CreateCartCheckoutUseCase
 
 **Files:**
-- Modify: `src/modules/zarp-b2b-payments/application/dtos/create-cart-checkout.dto.ts`
-- Modify: `src/modules/zarp-b2b-payments/application/use-cases/create-cart-checkout.use-case.ts`
+- Modify: `src/modules/reserve-b2b-payments/application/dtos/create-cart-checkout.dto.ts`
+- Modify: `src/modules/reserve-b2b-payments/application/use-cases/create-cart-checkout.use-case.ts`
 
 - [ ] **Step 8.1: Add `couponCodes` to CreateCartCheckoutDTO**
 
-In `src/modules/zarp-b2b-payments/application/dtos/create-cart-checkout.dto.ts`, add at the end of `CreateCartCheckoutDTO`:
+In `src/modules/reserve-b2b-payments/application/dtos/create-cart-checkout.dto.ts`, add at the end of `CreateCartCheckoutDTO`:
 
 ```typescript
   @ApiPropertyOptional({
@@ -1448,7 +1448,7 @@ Also add the missing imports at the top: `IsArray, IsOptional` (they may not be 
 
 - [ ] **Step 8.2: Rewrite `CreateCartCheckoutUseCase`**
 
-Replace the full contents of `src/modules/zarp-b2b-payments/application/use-cases/create-cart-checkout.use-case.ts`:
+Replace the full contents of `src/modules/reserve-b2b-payments/application/use-cases/create-cart-checkout.use-case.ts`:
 
 ```typescript
 import {
@@ -1466,16 +1466,16 @@ import {
 import {
   ITenantBillingConfigRepository,
   TENANT_BILLING_CONFIG_REPOSITORY,
-} from '../../../zarp-subscriptions/domain/interfaces/tenant-billing-config.repository.interface';
+} from '../../../reserve-subscriptions/domain/interfaces/tenant-billing-config.repository.interface';
 import {
   IDiscountCouponRepository,
   DISCOUNT_COUPON_REPOSITORY,
-} from '../../../zarp-coupons/domain/interfaces/discount-coupon.repository.interface';
+} from '../../../reserve-coupons/domain/interfaces/discount-coupon.repository.interface';
 import { B2BProductEntity } from '../../domain/entities/b2b-product.entity';
 import { CreateCartCheckoutDTO } from '../dtos/create-cart-checkout.dto';
 import { CalculateB2BOrderCostUseCase } from './calculate-b2b-order-cost.use-case';
-import { ValidateCouponUseCase, CartItemForValidation, CouponValidationResult } from '../../../zarp-coupons/application/use-cases/validate-coupon.use-case';
-import { OrderCostBreakdown } from '../../../zarp-b2c-products/application/use-cases/resolve-product-fees.use-case';
+import { ValidateCouponUseCase, CartItemForValidation, CouponValidationResult } from '../../../reserve-coupons/application/use-cases/validate-coupon.use-case';
+import { OrderCostBreakdown } from '../../../reserve-b2c-products/application/use-cases/resolve-product-fees.use-case';
 
 const STRIPE_API_VERSION = '2025-02-24.acacia' as const;
 
@@ -1733,8 +1733,8 @@ export class CreateCartCheckoutUseCase {
 - [ ] **Step 8.3: Commit**
 
 ```bash
-git add src/modules/zarp-b2b-payments/application/dtos/create-cart-checkout.dto.ts \
-        src/modules/zarp-b2b-payments/application/use-cases/create-cart-checkout.use-case.ts
+git add src/modules/reserve-b2b-payments/application/dtos/create-cart-checkout.dto.ts \
+        src/modules/reserve-b2b-payments/application/use-cases/create-cart-checkout.use-case.ts
 git commit -m "feat(coupons): integrate coupon discount into CreateCartCheckoutUseCase"
 ```
 
@@ -1743,12 +1743,12 @@ git commit -m "feat(coupons): integrate coupon discount into CreateCartCheckoutU
 ## Task 9: Modify CreatePaymentLinkUseCase
 
 **Files:**
-- Modify: `src/modules/zarp-b2b-payments/application/dtos/create-payment-link.dto.ts`
-- Modify: `src/modules/zarp-b2b-payments/application/use-cases/create-payment-link.use-case.ts`
+- Modify: `src/modules/reserve-b2b-payments/application/dtos/create-payment-link.dto.ts`
+- Modify: `src/modules/reserve-b2b-payments/application/use-cases/create-payment-link.use-case.ts`
 
 - [ ] **Step 9.1: Add `couponCodes` to CreatePaymentLinkDTO**
 
-In `src/modules/zarp-b2b-payments/application/dtos/create-payment-link.dto.ts`, add at the end of the class:
+In `src/modules/reserve-b2b-payments/application/dtos/create-payment-link.dto.ts`, add at the end of the class:
 
 ```typescript
   @ApiPropertyOptional({
@@ -1766,7 +1766,7 @@ Add missing imports at top: `IsArray, IsOptional` alongside the existing imports
 
 - [ ] **Step 9.2: Rewrite `CreatePaymentLinkUseCase`**
 
-Replace the full contents of `src/modules/zarp-b2b-payments/application/use-cases/create-payment-link.use-case.ts`:
+Replace the full contents of `src/modules/reserve-b2b-payments/application/use-cases/create-payment-link.use-case.ts`:
 
 ```typescript
 import {
@@ -1784,18 +1784,18 @@ import {
 import {
   IStripeProvider,
   STRIPE_PROVIDER,
-} from '../../../zarp-subscriptions/domain/interfaces/stripe.provider.interface';
+} from '../../../reserve-subscriptions/domain/interfaces/stripe.provider.interface';
 import {
   ITenantBillingConfigRepository,
   TENANT_BILLING_CONFIG_REPOSITORY,
-} from '../../../zarp-subscriptions/domain/interfaces/tenant-billing-config.repository.interface';
+} from '../../../reserve-subscriptions/domain/interfaces/tenant-billing-config.repository.interface';
 import {
   IDiscountCouponRepository,
   DISCOUNT_COUPON_REPOSITORY,
-} from '../../../zarp-coupons/domain/interfaces/discount-coupon.repository.interface';
+} from '../../../reserve-coupons/domain/interfaces/discount-coupon.repository.interface';
 import { CreatePaymentLinkDTO } from '../dtos/create-payment-link.dto';
 import { CalculateB2BOrderCostUseCase } from './calculate-b2b-order-cost.use-case';
-import { ValidateCouponUseCase, CartItemForValidation } from '../../../zarp-coupons/application/use-cases/validate-coupon.use-case';
+import { ValidateCouponUseCase, CartItemForValidation } from '../../../reserve-coupons/application/use-cases/validate-coupon.use-case';
 
 const STRIPE_API_VERSION = '2025-02-24.acacia' as const;
 
@@ -1959,8 +1959,8 @@ export class CreatePaymentLinkUseCase {
 - [ ] **Step 9.3: Commit**
 
 ```bash
-git add src/modules/zarp-b2b-payments/application/dtos/create-payment-link.dto.ts \
-        src/modules/zarp-b2b-payments/application/use-cases/create-payment-link.use-case.ts
+git add src/modules/reserve-b2b-payments/application/dtos/create-payment-link.dto.ts \
+        src/modules/reserve-b2b-payments/application/use-cases/create-payment-link.use-case.ts
 git commit -m "feat(coupons): integrate coupon discount into CreatePaymentLinkUseCase"
 ```
 
@@ -1969,12 +1969,12 @@ git commit -m "feat(coupons): integrate coupon discount into CreatePaymentLinkUs
 ## Task 10: Modify ProcessB2BWebhookUseCase — Stripe Coupon Cleanup
 
 **Files:**
-- Modify: `src/modules/zarp-b2b-payments/application/use-cases/process-b2b-webhook.use-case.ts`
-- Modify: `src/modules/zarp-b2b-payments/infrastructure/controllers/b2b-webhook.controller.ts`
+- Modify: `src/modules/reserve-b2b-payments/application/use-cases/process-b2b-webhook.use-case.ts`
+- Modify: `src/modules/reserve-b2b-payments/infrastructure/controllers/b2b-webhook.controller.ts`
 
 - [ ] **Step 10.1: Update the webhook controller to pass the Stripe instance**
 
-In `src/modules/zarp-b2b-payments/infrastructure/controllers/b2b-webhook.controller.ts`, change the final block (around line 104):
+In `src/modules/reserve-b2b-payments/infrastructure/controllers/b2b-webhook.controller.ts`, change the final block (around line 104):
 
 ```typescript
     try {
@@ -1992,7 +1992,7 @@ In `src/modules/zarp-b2b-payments/infrastructure/controllers/b2b-webhook.control
 
 - [ ] **Step 10.2: Update `ProcessB2BWebhookUseCase` to accept Stripe and clean up coupons**
 
-Replace the full contents of `src/modules/zarp-b2b-payments/application/use-cases/process-b2b-webhook.use-case.ts`:
+Replace the full contents of `src/modules/reserve-b2b-payments/application/use-cases/process-b2b-webhook.use-case.ts`:
 
 ```typescript
 import { Injectable, Inject, Logger } from '@nestjs/common';
@@ -2004,7 +2004,7 @@ import {
 import {
   IDiscountCouponRepository,
   DISCOUNT_COUPON_REPOSITORY,
-} from '../../../zarp-coupons/domain/interfaces/discount-coupon.repository.interface';
+} from '../../../reserve-coupons/domain/interfaces/discount-coupon.repository.interface';
 import { EPurchaseStatus } from '../../domain/enums/purchase-status.enum';
 import { PrismaService } from '../../../../shared/database/prisma.service';
 
@@ -2254,8 +2254,8 @@ export class ProcessB2BWebhookUseCase {
 - [ ] **Step 10.3: Commit**
 
 ```bash
-git add src/modules/zarp-b2b-payments/application/use-cases/process-b2b-webhook.use-case.ts \
-        src/modules/zarp-b2b-payments/infrastructure/controllers/b2b-webhook.controller.ts
+git add src/modules/reserve-b2b-payments/application/use-cases/process-b2b-webhook.use-case.ts \
+        src/modules/reserve-b2b-payments/infrastructure/controllers/b2b-webhook.controller.ts
 git commit -m "feat(coupons): archive Stripe coupon and reverse redemptions on webhook events"
 ```
 
@@ -2264,20 +2264,20 @@ git commit -m "feat(coupons): archive Stripe coupon and reverse redemptions on w
 ## Task 11: Wire Up Modules
 
 **Files:**
-- Modify: `src/modules/zarp-b2b-payments/zarp-b2b-payments.module.ts`
+- Modify: `src/modules/reserve-b2b-payments/reserve-b2b-payments.module.ts`
 - Modify: `src/app.module.ts`
 
-- [ ] **Step 11.1: Update `ZarpB2bPaymentsModule`**
+- [ ] **Step 11.1: Update `ReserveB2bPaymentsModule`**
 
-Replace the full contents of `src/modules/zarp-b2b-payments/zarp-b2b-payments.module.ts`:
+Replace the full contents of `src/modules/reserve-b2b-payments/reserve-b2b-payments.module.ts`:
 
 ```typescript
 import { Module } from '@nestjs/common';
 import { DatabaseModule } from '../../shared/database/database.module';
-import { ZarpAuthModule } from '../zarp-auth/zarp-auth.module';
-import { ZarpSubscriptionsModule } from '../zarp-subscriptions/zarp-subscriptions.module';
-import { ZarpB2cProductsModule } from '../zarp-b2c-products/zarp-b2c-products.module';
-import { ZarpCouponsModule } from '../zarp-coupons/zarp-coupons.module';
+import { ReserveAuthModule } from '../reserve-auth/reserve-auth.module';
+import { ReserveSubscriptionsModule } from '../reserve-subscriptions/reserve-subscriptions.module';
+import { ReserveB2cProductsModule } from '../reserve-b2c-products/reserve-b2c-products.module';
+import { ReserveCouponsModule } from '../reserve-coupons/reserve-coupons.module';
 
 import { B2BPaymentsController } from './infrastructure/controllers/b2b-payments.controller';
 import { B2BWebhookController } from './infrastructure/controllers/b2b-webhook.controller';
@@ -2302,13 +2302,13 @@ import { B2B_PRODUCT_REPOSITORY } from './domain/interfaces/b2b-product.reposito
 import { B2B_PURCHASE_REPOSITORY } from './domain/interfaces/b2b-purchase.repository.interface';
 import { B2B_FEE_CONFIG_REPOSITORY } from './domain/interfaces/b2b-fee-config.repository.interface';
 
-import { StripeProvider } from '../zarp-subscriptions/infrastructure/providers/stripe.provider';
-import { STRIPE_PROVIDER } from '../zarp-subscriptions/domain/interfaces/stripe.provider.interface';
+import { StripeProvider } from '../reserve-subscriptions/infrastructure/providers/stripe.provider';
+import { STRIPE_PROVIDER } from '../reserve-subscriptions/domain/interfaces/stripe.provider.interface';
 
 import { OptionalUserGuard } from './infrastructure/guards/optional-user.guard';
 
 @Module({
-  imports: [DatabaseModule, ZarpAuthModule, ZarpSubscriptionsModule, ZarpB2cProductsModule, ZarpCouponsModule],
+  imports: [DatabaseModule, ReserveAuthModule, ReserveSubscriptionsModule, ReserveB2cProductsModule, ReserveCouponsModule],
   controllers: [
     B2BPaymentsController,
     B2BWebhookController,
@@ -2335,21 +2335,21 @@ import { OptionalUserGuard } from './infrastructure/guards/optional-user.guard';
   ],
   exports: [ProcessB2BWebhookUseCase],
 })
-export class ZarpB2bPaymentsModule {}
+export class ReserveB2bPaymentsModule {}
 ```
 
-- [ ] **Step 11.2: Register `ZarpCouponsModule` in `AppModule`**
+- [ ] **Step 11.2: Register `ReserveCouponsModule` in `AppModule`**
 
 In `src/app.module.ts`, add the import:
 
 ```typescript
-import { ZarpCouponsModule } from './modules/zarp-coupons/zarp-coupons.module';
+import { ReserveCouponsModule } from './modules/reserve-coupons/reserve-coupons.module';
 ```
 
-And add `ZarpCouponsModule` to the `imports` array (after `ZarpB2bPaymentsModule`):
+And add `ReserveCouponsModule` to the `imports` array (after `ReserveB2bPaymentsModule`):
 
 ```typescript
-    ZarpCouponsModule,
+    ReserveCouponsModule,
 ```
 
 - [ ] **Step 11.3: Build to verify no TypeScript errors**
@@ -2371,9 +2371,9 @@ Expected: all existing tests pass + the 12 new coupon tests pass.
 - [ ] **Step 11.5: Commit**
 
 ```bash
-git add src/modules/zarp-b2b-payments/zarp-b2b-payments.module.ts \
+git add src/modules/reserve-b2b-payments/reserve-b2b-payments.module.ts \
         src/app.module.ts
-git commit -m "feat(coupons): wire ZarpCouponsModule into AppModule and ZarpB2bPaymentsModule"
+git commit -m "feat(coupons): wire ReserveCouponsModule into AppModule and ReserveB2bPaymentsModule"
 ```
 
 ---

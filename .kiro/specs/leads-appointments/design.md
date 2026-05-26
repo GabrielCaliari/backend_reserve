@@ -1,10 +1,10 @@
-# Design Document: Leads Appointments
+﻿# Design Document: Leads Appointments
 
 ## Overview
 
-This document describes the technical design for the Appointments sub-domain within the `zarp-leads` bounded context. The feature introduces first-class appointment scheduling: tenants configure their working hours and slot rules, public clients query available slots and book atomically alongside lead submission, and admins manage the full appointment lifecycle.
+This document describes the technical design for the Appointments sub-domain within the `reserve-leads` bounded context. The feature introduces first-class appointment scheduling: tenants configure their working hours and slot rules, public clients query available slots and book atomically alongside lead submission, and admins manage the full appointment lifecycle.
 
-The implementation follows the existing DDD patterns in `zarp-leads` exactly — pure domain layer, application use cases, Prisma infrastructure repositories, and NestJS controllers with the same guard/decorator conventions already in use.
+The implementation follows the existing DDD patterns in `reserve-leads` exactly — pure domain layer, application use cases, Prisma infrastructure repositories, and NestJS controllers with the same guard/decorator conventions already in use.
 
 ### Key Design Decisions
 
@@ -18,10 +18,10 @@ The implementation follows the existing DDD patterns in `zarp-leads` exactly —
 
 ## Architecture
 
-The appointments sub-domain lives entirely inside `src/modules/zarp-leads/` as a new set of domain entities, use cases, repositories, and controllers. No new NestJS module is created — everything is registered in the existing `ZarpLeadsModule`.
+The appointments sub-domain lives entirely inside `src/modules/reserve-leads/` as a new set of domain entities, use cases, repositories, and controllers. No new NestJS module is created — everything is registered in the existing `ReserveLeadsModule`.
 
 ```
-zarp-leads/
+reserve-leads/
 ├── domain/
 │   ├── entities/
 │   │   ├── appointment-schedule-config.entity.ts   (new)

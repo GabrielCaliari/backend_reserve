@@ -1,4 +1,4 @@
-# AWS SES - Quick Start (5 minutos)
+﻿# AWS SES - Quick Start (5 minutos)
 
 ## TL;DR
 
@@ -26,7 +26,7 @@ Configuração rápida do AWS SES para começar a enviar emails.
 
 1. Menu: **"SMTP settings"**
 2. **"Create SMTP credentials"**
-3. Nome: `zarp-smtp`
+3. Nome: `reserve-smtp`
 4. **"Create user"**
 5. **COPIE AS CREDENCIAIS** (só aparecem uma vez!)
 

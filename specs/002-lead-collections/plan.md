@@ -1,11 +1,11 @@
-# Implementation Plan: Lead Collections per Tenant
+﻿# Implementation Plan: Lead Collections per Tenant
 
 **Branch**: `002-lead-collections` | **Date**: 2026-02-16 | **Spec**: [spec.md](./spec.md)
 **Input**: Feature specification from `/specs/002-lead-collections/spec.md`
 
 ## Summary
 
-Extend the `zarp-leads` bounded context to support **LeadCollections** -- tenant-scoped containers that organize leads by source with configurable access modes (public, private/CORS, restricted/auth). Each collection exposes a dynamic capture endpoint (`/leads/collect/:slug`) whose security posture is driven by its access mode. Admin operations enforce tenant isolation via existing guards and RBAC hierarchy.
+Extend the `reserve-leads` bounded context to support **LeadCollections** -- tenant-scoped containers that organize leads by source with configurable access modes (public, private/CORS, restricted/auth). Each collection exposes a dynamic capture endpoint (`/leads/collect/:slug`) whose security posture is driven by its access mode. Admin operations enforce tenant isolation via existing guards and RBAC hierarchy.
 
 ## Technical Context
 
@@ -17,7 +17,7 @@ Extend the `zarp-leads` bounded context to support **LeadCollections** -- tenant
 **Project Type**: web (backend API monolith)
 **Performance Goals**: Public capture endpoints respond in under 500ms; admin list endpoints respond in under 2s
 **Constraints**: Multi-tenant isolation; RBAC hierarchy enforcement; backward compatibility with existing Lead records (optional collection FK)
-**Scale/Scope**: Extension of existing `zarp-leads` bounded context; 1 new Prisma model, 1 extended model, 3-4 new controllers, 2 new services, 2 new repositories
+**Scale/Scope**: Extension of existing `reserve-leads` bounded context; 1 new Prisma model, 1 extended model, 3-4 new controllers, 2 new services, 2 new repositories
 
 **Complexity Tier**: DDD-lite (moderate logic with orchestration -- access mode enforcement, dynamic guards, secret key management, tenant scoping)
 
@@ -27,7 +27,7 @@ Extend the `zarp-leads` bounded context to support **LeadCollections** -- tenant
 
 | Principle | Status | Notes |
 |-----------|--------|-------|
-| I. DDD (Bounded Contexts) | PASS | Extends existing `zarp-leads` context under `src/modules/zarp-leads/`. No new bounded context needed -- collections are a natural extension of lead management. |
+| I. DDD (Bounded Contexts) | PASS | Extends existing `reserve-leads` context under `src/modules/reserve-leads/`. No new bounded context needed -- collections are a natural extension of lead management. |
 | II. SOLID / DIP | PASS | New interfaces in `domain/interfaces/` for `ILeadCollectionRepository`. Symbol token injection. Controllers depend on abstractions. |
 | III. TDD | PASS | Tests must be written before implementation. In-memory fakes for LeadCollectionRepository. |
 | IV. Domain Purity | PASS | `LeadCollection` entity, `EAccessMode` enum, domain errors -- all pure TypeScript. No NestJS/Prisma in domain layer. |
@@ -57,7 +57,7 @@ specs/002-lead-collections/
 ### Source Code (repository root)
 
 ```text
-src/modules/zarp-leads/
+src/modules/reserve-leads/
 ├── domain/
 │   ├── entities/
 │   │   ├── lead.entity.ts                   # MODIFIED: add optional collection_id
@@ -99,13 +99,13 @@ src/modules/zarp-leads/
 │   └── repositories/
 │       ├── lead.repository.ts               # MODIFIED: collection_id support
 │       └── lead-collection.repository.ts    # NEW: Prisma implementation
-└── zarp-leads.module.ts                     # MODIFIED: register new providers
+└── reserve-leads.module.ts                     # MODIFIED: register new providers
 
 prisma/
 └── schema.prisma                            # MODIFIED: add LeadCollection model, extend Lead
 ```
 
-**Structure Decision**: Extends the existing `zarp-leads` bounded context. No new module needed. Collections are a natural part of the lead management domain. The structure follows the established DDD-lite pattern used by `zarp-cms` (entities, services with interface-based repos, guards for access control).
+**Structure Decision**: Extends the existing `reserve-leads` bounded context. No new module needed. Collections are a natural part of the lead management domain. The structure follows the established DDD-lite pattern used by `reserve-cms` (entities, services with interface-based repos, guards for access control).
 
 ## Complexity Tracking
 

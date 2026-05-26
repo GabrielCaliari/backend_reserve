@@ -1,17 +1,17 @@
-# Research: Lead Collections per Tenant
+﻿# Research: Lead Collections per Tenant
 
 **Branch**: `002-lead-collections` | **Date**: 2026-02-16
 
 ## Decision Log
 
-### R-001: Extend `zarp-leads` vs New Bounded Context
+### R-001: Extend `reserve-leads` vs New Bounded Context
 
-**Decision**: Extend the existing `zarp-leads` bounded context.
+**Decision**: Extend the existing `reserve-leads` bounded context.
 
-**Rationale**: LeadCollections are a natural sub-domain of lead management. They organize leads, define capture endpoints, and are always queried alongside leads. Creating a separate `zarp-lead-collections` module would introduce unnecessary cross-context imports (leads must reference collections and vice-versa), violating the constitution's rule against importing another context's internal classes.
+**Rationale**: LeadCollections are a natural sub-domain of lead management. They organize leads, define capture endpoints, and are always queried alongside leads. Creating a separate `reserve-lead-collections` module would introduce unnecessary cross-context imports (leads must reference collections and vice-versa), violating the constitution's rule against importing another context's internal classes.
 
 **Alternatives considered**:
-- New bounded context `zarp-lead-collections`: Rejected because collections and leads are tightly coupled (a lead belongs to a collection, a collection contains leads). This would require constant cross-context communication and defeat the purpose of bounded contexts.
+- New bounded context `reserve-lead-collections`: Rejected because collections and leads are tightly coupled (a lead belongs to a collection, a collection contains leads). This would require constant cross-context communication and defeat the purpose of bounded contexts.
 
 ---
 
@@ -49,7 +49,7 @@ The capture controller itself handles mode resolution:
 
 ### R-004: Collection Slug Generation
 
-**Decision**: Auto-generate slugs from the collection name using the same `slug.util.ts` utility already present in `zarp-cms`. Slugs are unique within a tenant (enforced by a composite unique constraint on `[slug, tenant_id]`).
+**Decision**: Auto-generate slugs from the collection name using the same `slug.util.ts` utility already present in `reserve-cms`. Slugs are unique within a tenant (enforced by a composite unique constraint on `[slug, tenant_id]`).
 
 **Rationale**: The CMS context already has a slug generation utility with collision detection. Reusing this pattern (or a shared copy) ensures consistent slug behavior across the platform.
 
@@ -107,7 +107,7 @@ The DDD-lite approach uses: entities, services with interface-based repos, and s
 
 **Decision**: Use `/leads/collect/:slug` as the capture endpoint path, where `:slug` is the collection's unique slug within the system.
 
-**Rationale**: The `/leads` prefix is already registered in `app.module.ts` for the `ZarpLeadsModule`. Adding `collect/:slug` under it is natural and avoids route collision with existing lead CRUD routes (`/`, `/:id`, `/:id/status`). The `collect` path segment clearly differentiates capture endpoints from admin lead management endpoints.
+**Rationale**: The `/leads` prefix is already registered in `app.module.ts` for the `ReserveLeadsModule`. Adding `collect/:slug` under it is natural and avoids route collision with existing lead CRUD routes (`/`, `/:id`, `/:id/status`). The `collect` path segment clearly differentiates capture endpoints from admin lead management endpoints.
 
 **Alternatives considered**:
 - `/leads/:slug` (no `collect` segment): Rejected. Collides with `/:id` route (`:slug` and `:id` are both dynamic params at the same path segment).

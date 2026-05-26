@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+﻿import { Injectable, Logger } from '@nestjs/common';
 
 export interface GeolocationData {
   country?: string;
@@ -32,7 +32,7 @@ export class GeolocationProvider {
       const response = await fetch(`${this.baseUrl}/${ipAddress}/json/`, {
         signal: controller.signal,
         headers: {
-          'User-Agent': 'ZARP-API/1.0',
+          'User-Agent': 'reserve-API/1.0',
         },
       });
 

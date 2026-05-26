@@ -1,5 +1,5 @@
-import { SetMetadata } from '@nestjs/common';
-import { EAdminRole } from '../../../modules/zarp-auth/domain/enums/admin-role.enum';
+﻿import { SetMetadata } from '@nestjs/common';
+import { EAdminRole } from '../../../modules/reserve-auth/domain/enums/admin-role.enum';
 
 export const ROLES_KEY = 'roles';
 

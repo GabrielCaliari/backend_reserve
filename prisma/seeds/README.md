@@ -1,4 +1,4 @@
-# Database Seeds Organization
+﻿# Database Seeds Organization
 
 Seeds are organized by module following the application's bounded context structure.
 
@@ -6,23 +6,23 @@ Seeds are organized by module following the application's bounded context struct
 
 ```
 seeds/
-├── zarp-auth/          # Authentication & Authorization
+├── reserve-auth/          # Authentication & Authorization
 │   ├── admins.seed.ts
 │   └── tenants.seed.ts
-├── zarp-cms/           # Content Management System
+├── reserve-cms/           # Content Management System
 │   ├── blogs.seed.ts
 │   ├── articles.seed.ts
 │   ├── authors.seed.ts
 │   └── storage/
 │       ├── author-avatars.seed.ts
 │       └── article-images.seed.ts
-├── zarp-leads/         # Lead Management
+├── reserve-leads/         # Lead Management
 │   ├── collections.seed.ts
 │   └── leads.seed.ts
-├── zarp-mailer/        # Email Campaigns
+├── reserve-mailer/        # Email Campaigns
 │   ├── smtp-servers.seed.ts
 │   └── campaigns.seed.ts
-├── zarp-cnpjs/         # Company Data
+├── reserve-cnpjs/         # Company Data
 │   ├── cnaes.seed.ts
 │   └── companies.seed.ts
 └── shared/             # Cross-module data
@@ -33,12 +33,12 @@ seeds/
 ## Execution Order
 
 Seeds are executed in dependency order:
-1. **zarp-auth**: Admins and Tenants (foundation)
+1. **reserve-auth**: Admins and Tenants (foundation)
 2. **shared**: Plans and Token Packs
-3. **zarp-cms**: Authors → Blogs → Storage Collections → Articles
-4. **zarp-leads**: Collections → Leads
-5. **zarp-mailer**: SMTP Servers → Campaigns
-6. **zarp-cnpjs**: CNAEs → Companies (optional, large dataset)
+3. **reserve-cms**: Authors → Blogs → Storage Collections → Articles
+4. **reserve-leads**: Collections → Leads
+5. **reserve-mailer**: SMTP Servers → Campaigns
+6. **reserve-cnpjs**: CNAEs → Companies (optional, large dataset)
 
 ## Running Seeds
 
@@ -47,7 +47,7 @@ Seeds are executed in dependency order:
 pnpm exec prisma db seed
 
 # Run specific module (future enhancement)
-# pnpm exec ts-node prisma/seeds/zarp-cms/blogs.seed.ts
+# pnpm exec ts-node prisma/seeds/reserve-cms/blogs.seed.ts
 ```
 
 ## Seed Data Philosophy

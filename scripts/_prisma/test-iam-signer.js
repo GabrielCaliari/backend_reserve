@@ -1,4 +1,4 @@
-require('dotenv/config');
+﻿require('dotenv/config');
 
 const fs = require('fs');
 const { Signer } = require('@aws-sdk/rds-signer');
@@ -63,9 +63,9 @@ async function test() {
   await debugAwsCredentials();
 
   const host =
-    'zarp-admin-io-instance.ce9eq8ymw8sv.us-east-1.rds.amazonaws.com';
+    'reserve-admin-io-instance.ce9eq8ymw8sv.us-east-1.rds.amazonaws.com';
 
-  const user = 'backend_zarp-api_user';
+  const user = 'backend_reserve-api_user';
 
   console.log(
     `Tentando conectar em: ${host} com o usuário: ${user}`

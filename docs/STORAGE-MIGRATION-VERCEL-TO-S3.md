@@ -1,4 +1,4 @@
-# Storage Migration: Vercel Blob → AWS S3
+﻿# Storage Migration: Vercel Blob → AWS S3
 
 ## Overview
 
@@ -16,7 +16,7 @@ This document describes the migration from Vercel Blob Storage to AWS S3 (or S3-
 
 ### 1. Enhanced S3StorageProvider
 
-**File**: `src/modules/zarp-cms/infrastructure/providers/s3-storage.provider.ts`
+**File**: `src/modules/reserve-cms/infrastructure/providers/s3-storage.provider.ts`
 
 **New Features**:
 - ✅ Multipart upload for files > 5MB (prevents 503 errors)
@@ -34,7 +34,7 @@ This document describes the migration from Vercel Blob Storage to AWS S3 (or S3-
 
 ### 2. Module Configuration
 
-**File**: `src/modules/zarp-cms/zarp-cms.module.ts`
+**File**: `src/modules/reserve-cms/reserve-cms.module.ts`
 
 Changed from:
 ```typescript
@@ -385,5 +385,5 @@ logger.log('S3 Upload', {
 
 For issues or questions:
 - Check logs: `pnpm start:dev` (look for S3-related messages)
-- Review S3 provider: `src/modules/zarp-cms/infrastructure/providers/s3-storage.provider.ts`
+- Review S3 provider: `src/modules/reserve-cms/infrastructure/providers/s3-storage.provider.ts`
 - Test connection: Use AWS CLI or S3 browser to verify bucket access

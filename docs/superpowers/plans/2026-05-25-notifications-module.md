@@ -1,12 +1,12 @@
-# Notifications Module Implementation Plan
+﻿# Notifications Module Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Implement the `zarp-notifications` module — a communication layer between the Zarp platform and its tenants, supporting manual (super_admin), event-driven, and cron-scheduled notifications with in-app and email delivery, per-tenant settings, and read-tracking per admin and per tenant.
+**Goal:** Implement the `reserve-notifications` module — a communication layer between the Reserve platform and its tenants, supporting manual (super_admin), event-driven, and cron-scheduled notifications with in-app and email delivery, per-tenant settings, and read-tracking per admin and per tenant.
 
 **Architecture:** Three Prisma models (`Notification`, `TenantNotificationReceipt`, `TenantNotificationSettings`) are the source of truth. Five NestJS services split responsibility cleanly: CRUD, tenant inbox, settings, event dispatch, and cron scheduling. The frontend adds two route trees (super_admin global + tenant admin inbox) and a sidebar badge.
 
-**Tech Stack:** NestJS 10, Prisma (PostgreSQL), `@nestjs/schedule` (already installed), `zarp-mailer` (existing email module), Next.js 14 App Router, HeroUI, SWR/fetch, Zustand (existing stores).
+**Tech Stack:** NestJS 10, Prisma (PostgreSQL), `@nestjs/schedule` (already installed), `reserve-mailer` (existing email module), Next.js 14 App Router, HeroUI, SWR/fetch, Zustand (existing stores).
 
 **Spec:** `docs/superpowers/specs/2026-05-25-notifications-module-design.md`
 
@@ -14,45 +14,45 @@
 
 ## File Map
 
-### Backend — `backend_api_zarp-admin`
+### Backend — `backend_api_reserve-admin`
 
 **New files:**
-- `src/modules/zarp-notifications/domain/enums/notification-type.enum.ts`
-- `src/modules/zarp-notifications/domain/enums/notification-scope.enum.ts`
-- `src/modules/zarp-notifications/domain/constants/notification-events.ts`
-- `src/modules/zarp-notifications/domain/interfaces/notification.repository.interface.ts`
-- `src/modules/zarp-notifications/domain/interfaces/notification-receipt.repository.interface.ts`
-- `src/modules/zarp-notifications/domain/interfaces/notification-settings.repository.interface.ts`
-- `src/modules/zarp-notifications/domain/interfaces/index.ts`
-- `src/modules/zarp-notifications/application/dtos/create-notification.dto.ts`
-- `src/modules/zarp-notifications/application/dtos/update-notification.dto.ts`
-- `src/modules/zarp-notifications/application/dtos/update-notification-settings.dto.ts`
-- `src/modules/zarp-notifications/application/dtos/list-notifications-query.dto.ts`
-- `src/modules/zarp-notifications/application/dtos/index.ts`
-- `src/modules/zarp-notifications/application/services/notification.service.ts`
-- `src/modules/zarp-notifications/application/services/notification-tenant.service.ts`
-- `src/modules/zarp-notifications/application/services/notification-settings.service.ts`
-- `src/modules/zarp-notifications/application/services/notification-event.service.ts`
-- `src/modules/zarp-notifications/application/services/notification-scheduler.service.ts`
-- `src/modules/zarp-notifications/infrastructure/repositories/notification.repository.ts`
-- `src/modules/zarp-notifications/infrastructure/repositories/notification-receipt.repository.ts`
-- `src/modules/zarp-notifications/infrastructure/repositories/notification-settings.repository.ts`
-- `src/modules/zarp-notifications/infrastructure/controllers/notification.controller.ts`
-- `src/modules/zarp-notifications/infrastructure/controllers/notification-tenant.controller.ts`
-- `src/modules/zarp-notifications/infrastructure/controllers/notification-settings.controller.ts`
-- `src/modules/zarp-notifications/zarp-notifications.module.ts`
+- `src/modules/reserve-notifications/domain/enums/notification-type.enum.ts`
+- `src/modules/reserve-notifications/domain/enums/notification-scope.enum.ts`
+- `src/modules/reserve-notifications/domain/constants/notification-events.ts`
+- `src/modules/reserve-notifications/domain/interfaces/notification.repository.interface.ts`
+- `src/modules/reserve-notifications/domain/interfaces/notification-receipt.repository.interface.ts`
+- `src/modules/reserve-notifications/domain/interfaces/notification-settings.repository.interface.ts`
+- `src/modules/reserve-notifications/domain/interfaces/index.ts`
+- `src/modules/reserve-notifications/application/dtos/create-notification.dto.ts`
+- `src/modules/reserve-notifications/application/dtos/update-notification.dto.ts`
+- `src/modules/reserve-notifications/application/dtos/update-notification-settings.dto.ts`
+- `src/modules/reserve-notifications/application/dtos/list-notifications-query.dto.ts`
+- `src/modules/reserve-notifications/application/dtos/index.ts`
+- `src/modules/reserve-notifications/application/services/notification.service.ts`
+- `src/modules/reserve-notifications/application/services/notification-tenant.service.ts`
+- `src/modules/reserve-notifications/application/services/notification-settings.service.ts`
+- `src/modules/reserve-notifications/application/services/notification-event.service.ts`
+- `src/modules/reserve-notifications/application/services/notification-scheduler.service.ts`
+- `src/modules/reserve-notifications/infrastructure/repositories/notification.repository.ts`
+- `src/modules/reserve-notifications/infrastructure/repositories/notification-receipt.repository.ts`
+- `src/modules/reserve-notifications/infrastructure/repositories/notification-settings.repository.ts`
+- `src/modules/reserve-notifications/infrastructure/controllers/notification.controller.ts`
+- `src/modules/reserve-notifications/infrastructure/controllers/notification-tenant.controller.ts`
+- `src/modules/reserve-notifications/infrastructure/controllers/notification-settings.controller.ts`
+- `src/modules/reserve-notifications/reserve-notifications.module.ts`
 - `src/shared/testing/in-memory-repos/in-memory-notification.repository.ts`
 - `src/shared/testing/in-memory-repos/in-memory-notification-receipt.repository.ts`
 - `src/shared/testing/in-memory-repos/in-memory-notification-settings.repository.ts`
-- `src/modules/zarp-notifications/application/services/notification-event.service.spec.ts`
-- `src/modules/zarp-notifications/application/services/notification-settings.service.spec.ts`
-- `src/modules/zarp-notifications/application/services/notification-tenant.service.spec.ts`
+- `src/modules/reserve-notifications/application/services/notification-event.service.spec.ts`
+- `src/modules/reserve-notifications/application/services/notification-settings.service.spec.ts`
+- `src/modules/reserve-notifications/application/services/notification-tenant.service.spec.ts`
 
 **Modified files:**
 - `prisma/schema.prisma` — add 3 new models + 2 enums + relations on Admin and Tenant
-- `src/app.module.ts` — import and register `ZarpNotificationsModule`
+- `src/app.module.ts` — import and register `ReserveNotificationsModule`
 
-### Frontend — `frontend_dashboard_zarp-admin`
+### Frontend — `frontend_dashboard_reserve-admin`
 
 **New files:**
 - `src/app/dashboard/global/notifications/page.tsx`
@@ -178,7 +178,7 @@ In `prisma/schema.prisma`, find the `Tenant` model (around line 666) and add ins
 - [ ] **Step 4: Generate Prisma client and create migration**
 
 ```bash
-cd backend_api_zarp-admin
+cd backend_api_reserve-admin
 npx prisma migrate dev --name add_notifications_module
 ```
 
@@ -206,18 +206,18 @@ git commit -m "feat: add notifications module prisma schema"
 ### Task 2: Enums, constants, and interfaces
 
 **Files:**
-- Create: `src/modules/zarp-notifications/domain/enums/notification-type.enum.ts`
-- Create: `src/modules/zarp-notifications/domain/enums/notification-scope.enum.ts`
-- Create: `src/modules/zarp-notifications/domain/constants/notification-events.ts`
-- Create: `src/modules/zarp-notifications/domain/interfaces/notification.repository.interface.ts`
-- Create: `src/modules/zarp-notifications/domain/interfaces/notification-receipt.repository.interface.ts`
-- Create: `src/modules/zarp-notifications/domain/interfaces/notification-settings.repository.interface.ts`
-- Create: `src/modules/zarp-notifications/domain/interfaces/index.ts`
+- Create: `src/modules/reserve-notifications/domain/enums/notification-type.enum.ts`
+- Create: `src/modules/reserve-notifications/domain/enums/notification-scope.enum.ts`
+- Create: `src/modules/reserve-notifications/domain/constants/notification-events.ts`
+- Create: `src/modules/reserve-notifications/domain/interfaces/notification.repository.interface.ts`
+- Create: `src/modules/reserve-notifications/domain/interfaces/notification-receipt.repository.interface.ts`
+- Create: `src/modules/reserve-notifications/domain/interfaces/notification-settings.repository.interface.ts`
+- Create: `src/modules/reserve-notifications/domain/interfaces/index.ts`
 
 - [ ] **Step 1: Create notification-type.enum.ts**
 
 ```typescript
-// src/modules/zarp-notifications/domain/enums/notification-type.enum.ts
+// src/modules/reserve-notifications/domain/enums/notification-type.enum.ts
 export enum ENotificationType {
   manual = 'manual',
   event = 'event',
@@ -228,7 +228,7 @@ export enum ENotificationType {
 - [ ] **Step 2: Create notification-scope.enum.ts**
 
 ```typescript
-// src/modules/zarp-notifications/domain/enums/notification-scope.enum.ts
+// src/modules/reserve-notifications/domain/enums/notification-scope.enum.ts
 export enum ENotificationScope {
   broadcast = 'broadcast',
   targeted = 'targeted',
@@ -238,7 +238,7 @@ export enum ENotificationScope {
 - [ ] **Step 3: Create notification-events.ts**
 
 ```typescript
-// src/modules/zarp-notifications/domain/constants/notification-events.ts
+// src/modules/reserve-notifications/domain/constants/notification-events.ts
 export const NOTIFICATION_EVENTS = {
   LEAD_CREATED:          'lead.created',
   SUBSCRIPTION_EXPIRING: 'subscription.expiring',
@@ -262,7 +262,7 @@ export const ALL_CRON_KEYS: CronKey[] = Object.values(CRON_KEYS);
 - [ ] **Step 4: Create notification.repository.interface.ts**
 
 ```typescript
-// src/modules/zarp-notifications/domain/interfaces/notification.repository.interface.ts
+// src/modules/reserve-notifications/domain/interfaces/notification.repository.interface.ts
 import { ENotificationType, ENotificationScope } from '../enums';
 
 export interface ICreateNotification {
@@ -312,7 +312,7 @@ export interface INotificationRepository {
 - [ ] **Step 5: Create notification-receipt.repository.interface.ts**
 
 ```typescript
-// src/modules/zarp-notifications/domain/interfaces/notification-receipt.repository.interface.ts
+// src/modules/reserve-notifications/domain/interfaces/notification-receipt.repository.interface.ts
 export const NOTIFICATION_RECEIPT_REPOSITORY = 'NOTIFICATION_RECEIPT_REPOSITORY';
 
 export interface INotificationReceiptRepository {
@@ -327,7 +327,7 @@ export interface INotificationReceiptRepository {
 - [ ] **Step 6: Create notification-settings.repository.interface.ts**
 
 ```typescript
-// src/modules/zarp-notifications/domain/interfaces/notification-settings.repository.interface.ts
+// src/modules/reserve-notifications/domain/interfaces/notification-settings.repository.interface.ts
 export const NOTIFICATION_SETTINGS_REPOSITORY = 'NOTIFICATION_SETTINGS_REPOSITORY';
 
 export interface IUpdateNotificationSettings {
@@ -346,7 +346,7 @@ export interface INotificationSettingsRepository {
 - [ ] **Step 7: Create domain/enums/index.ts**
 
 ```typescript
-// src/modules/zarp-notifications/domain/enums/index.ts
+// src/modules/reserve-notifications/domain/enums/index.ts
 export * from './notification-type.enum';
 export * from './notification-scope.enum';
 ```
@@ -354,7 +354,7 @@ export * from './notification-scope.enum';
 - [ ] **Step 8: Create interfaces/index.ts**
 
 ```typescript
-// src/modules/zarp-notifications/domain/interfaces/index.ts
+// src/modules/reserve-notifications/domain/interfaces/index.ts
 export * from './notification.repository.interface';
 export * from './notification-receipt.repository.interface';
 export * from './notification-settings.repository.interface';
@@ -363,7 +363,7 @@ export * from './notification-settings.repository.interface';
 - [ ] **Step 9: Commit**
 
 ```bash
-git add src/modules/zarp-notifications/
+git add src/modules/reserve-notifications/
 git commit -m "feat: add notifications domain layer (enums, constants, interfaces)"
 ```
 
@@ -382,7 +382,7 @@ git commit -m "feat: add notifications domain layer (enums, constants, interface
 
 ```typescript
 // src/shared/testing/in-memory-repos/in-memory-notification.repository.ts
-import { INotificationRepository, ICreateNotification, IUpdateNotification, IListNotificationsFilter } from '../../../modules/zarp-notifications/domain/interfaces';
+import { INotificationRepository, ICreateNotification, IUpdateNotification, IListNotificationsFilter } from '../../../modules/reserve-notifications/domain/interfaces';
 
 export class InMemoryNotificationRepository implements INotificationRepository {
   private records: any[] = [];
@@ -447,7 +447,7 @@ export class InMemoryNotificationRepository implements INotificationRepository {
 
 ```typescript
 // src/shared/testing/in-memory-repos/in-memory-notification-receipt.repository.ts
-import { INotificationReceiptRepository } from '../../../modules/zarp-notifications/domain/interfaces';
+import { INotificationReceiptRepository } from '../../../modules/reserve-notifications/domain/interfaces';
 
 export class InMemoryNotificationReceiptRepository implements INotificationReceiptRepository {
   private records: any[] = [];
@@ -500,7 +500,7 @@ export class InMemoryNotificationReceiptRepository implements INotificationRecei
 
 ```typescript
 // src/shared/testing/in-memory-repos/in-memory-notification-settings.repository.ts
-import { INotificationSettingsRepository, IUpdateNotificationSettings } from '../../../modules/zarp-notifications/domain/interfaces';
+import { INotificationSettingsRepository, IUpdateNotificationSettings } from '../../../modules/reserve-notifications/domain/interfaces';
 
 export class InMemoryNotificationSettingsRepository implements INotificationSettingsRepository {
   private records: any[] = [];
@@ -539,13 +539,13 @@ git commit -m "feat: add in-memory repos for notifications testing"
 ### Task 4: NotificationSettingsService + tests
 
 **Files:**
-- Create: `src/modules/zarp-notifications/application/services/notification-settings.service.ts`
-- Create: `src/modules/zarp-notifications/application/services/notification-settings.service.spec.ts`
+- Create: `src/modules/reserve-notifications/application/services/notification-settings.service.ts`
+- Create: `src/modules/reserve-notifications/application/services/notification-settings.service.spec.ts`
 
 - [ ] **Step 1: Write the failing tests**
 
 ```typescript
-// src/modules/zarp-notifications/application/services/notification-settings.service.spec.ts
+// src/modules/reserve-notifications/application/services/notification-settings.service.spec.ts
 import { NotificationSettingsService } from './notification-settings.service';
 import { InMemoryNotificationSettingsRepository } from '../../../../shared/testing/in-memory-repos/in-memory-notification-settings.repository';
 import { ALL_EVENT_KEYS, ALL_CRON_KEYS } from '../../domain/constants/notification-events';
@@ -614,7 +614,7 @@ Expected: FAIL — `Cannot find module './notification-settings.service'`
 - [ ] **Step 3: Implement NotificationSettingsService**
 
 ```typescript
-// src/modules/zarp-notifications/application/services/notification-settings.service.ts
+// src/modules/reserve-notifications/application/services/notification-settings.service.ts
 import { Injectable, BadRequestException, Inject } from '@nestjs/common';
 import { NOTIFICATION_SETTINGS_REPOSITORY, INotificationSettingsRepository, IUpdateNotificationSettings } from '../../domain/interfaces';
 import { ALL_EVENT_KEYS, ALL_CRON_KEYS, NotificationEventKey, CronKey } from '../../domain/constants/notification-events';
@@ -680,7 +680,7 @@ Expected: All 7 tests PASS.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/modules/zarp-notifications/
+git add src/modules/reserve-notifications/
 git commit -m "feat: add NotificationSettingsService with validation"
 ```
 
@@ -689,13 +689,13 @@ git commit -m "feat: add NotificationSettingsService with validation"
 ### Task 5: NotificationEventService + tests
 
 **Files:**
-- Create: `src/modules/zarp-notifications/application/services/notification-event.service.ts`
-- Create: `src/modules/zarp-notifications/application/services/notification-event.service.spec.ts`
+- Create: `src/modules/reserve-notifications/application/services/notification-event.service.ts`
+- Create: `src/modules/reserve-notifications/application/services/notification-event.service.spec.ts`
 
 - [ ] **Step 1: Write the failing tests**
 
 ```typescript
-// src/modules/zarp-notifications/application/services/notification-event.service.spec.ts
+// src/modules/reserve-notifications/application/services/notification-event.service.spec.ts
 import { NotificationEventService } from './notification-event.service';
 import { NotificationSettingsService } from './notification-settings.service';
 import { InMemoryNotificationRepository } from '../../../../shared/testing/in-memory-repos/in-memory-notification.repository';
@@ -765,7 +765,7 @@ Expected: FAIL — `Cannot find module './notification-event.service'`
 - [ ] **Step 3: Implement NotificationEventService**
 
 ```typescript
-// src/modules/zarp-notifications/application/services/notification-event.service.ts
+// src/modules/reserve-notifications/application/services/notification-event.service.ts
 import { Injectable, Inject } from '@nestjs/common';
 import { NOTIFICATION_REPOSITORY, INotificationRepository } from '../../domain/interfaces';
 import { NOTIFICATION_RECEIPT_REPOSITORY, INotificationReceiptRepository } from '../../domain/interfaces';
@@ -826,7 +826,7 @@ Expected: All 4 tests PASS.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/modules/zarp-notifications/
+git add src/modules/reserve-notifications/
 git commit -m "feat: add NotificationEventService with settings-aware dispatch"
 ```
 
@@ -835,13 +835,13 @@ git commit -m "feat: add NotificationEventService with settings-aware dispatch"
 ### Task 6: NotificationTenantService + tests
 
 **Files:**
-- Create: `src/modules/zarp-notifications/application/services/notification-tenant.service.ts`
-- Create: `src/modules/zarp-notifications/application/services/notification-tenant.service.spec.ts`
+- Create: `src/modules/reserve-notifications/application/services/notification-tenant.service.ts`
+- Create: `src/modules/reserve-notifications/application/services/notification-tenant.service.spec.ts`
 
 - [ ] **Step 1: Write the failing tests**
 
 ```typescript
-// src/modules/zarp-notifications/application/services/notification-tenant.service.spec.ts
+// src/modules/reserve-notifications/application/services/notification-tenant.service.spec.ts
 import { NotificationTenantService } from './notification-tenant.service';
 import { InMemoryNotificationRepository } from '../../../../shared/testing/in-memory-repos/in-memory-notification.repository';
 import { InMemoryNotificationReceiptRepository } from '../../../../shared/testing/in-memory-repos/in-memory-notification-receipt.repository';
@@ -893,7 +893,7 @@ Expected: FAIL — `Cannot find module './notification-tenant.service'`
 - [ ] **Step 3: Implement NotificationTenantService**
 
 ```typescript
-// src/modules/zarp-notifications/application/services/notification-tenant.service.ts
+// src/modules/reserve-notifications/application/services/notification-tenant.service.ts
 import { Injectable, Inject } from '@nestjs/common';
 import { NOTIFICATION_REPOSITORY, INotificationRepository } from '../../domain/interfaces';
 import { NOTIFICATION_RECEIPT_REPOSITORY, INotificationReceiptRepository } from '../../domain/interfaces';
@@ -933,7 +933,7 @@ Expected: All 3 tests PASS.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/modules/zarp-notifications/
+git add src/modules/reserve-notifications/
 git commit -m "feat: add NotificationTenantService"
 ```
 
@@ -942,17 +942,17 @@ git commit -m "feat: add NotificationTenantService"
 ### Task 7: NotificationService (super_admin CRUD)
 
 **Files:**
-- Create: `src/modules/zarp-notifications/application/services/notification.service.ts`
-- Create: `src/modules/zarp-notifications/application/dtos/create-notification.dto.ts`
-- Create: `src/modules/zarp-notifications/application/dtos/update-notification.dto.ts`
-- Create: `src/modules/zarp-notifications/application/dtos/list-notifications-query.dto.ts`
-- Create: `src/modules/zarp-notifications/application/dtos/update-notification-settings.dto.ts`
-- Create: `src/modules/zarp-notifications/application/dtos/index.ts`
+- Create: `src/modules/reserve-notifications/application/services/notification.service.ts`
+- Create: `src/modules/reserve-notifications/application/dtos/create-notification.dto.ts`
+- Create: `src/modules/reserve-notifications/application/dtos/update-notification.dto.ts`
+- Create: `src/modules/reserve-notifications/application/dtos/list-notifications-query.dto.ts`
+- Create: `src/modules/reserve-notifications/application/dtos/update-notification-settings.dto.ts`
+- Create: `src/modules/reserve-notifications/application/dtos/index.ts`
 
 - [ ] **Step 1: Create DTOs**
 
 ```typescript
-// src/modules/zarp-notifications/application/dtos/create-notification.dto.ts
+// src/modules/reserve-notifications/application/dtos/create-notification.dto.ts
 import { IsString, IsEnum, IsOptional, IsBoolean, IsArray, IsDateString, MaxLength } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { ENotificationType, ENotificationScope } from '../../domain/enums';
@@ -969,7 +969,7 @@ export class CreateNotificationDTO {
 ```
 
 ```typescript
-// src/modules/zarp-notifications/application/dtos/update-notification.dto.ts
+// src/modules/reserve-notifications/application/dtos/update-notification.dto.ts
 import { IsString, IsEnum, IsOptional, IsBoolean, IsArray, IsDateString, MaxLength } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { ENotificationScope } from '../../domain/enums';
@@ -985,7 +985,7 @@ export class UpdateNotificationDTO {
 ```
 
 ```typescript
-// src/modules/zarp-notifications/application/dtos/list-notifications-query.dto.ts
+// src/modules/reserve-notifications/application/dtos/list-notifications-query.dto.ts
 import { IsOptional, IsEnum, IsBoolean, IsInt, Min } from 'class-validator';
 import { Type, Transform } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
@@ -1001,7 +1001,7 @@ export class ListNotificationsQueryDTO {
 ```
 
 ```typescript
-// src/modules/zarp-notifications/application/dtos/update-notification-settings.dto.ts
+// src/modules/reserve-notifications/application/dtos/update-notification-settings.dto.ts
 import { IsOptional, IsBoolean, IsObject } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
@@ -1014,7 +1014,7 @@ export class UpdateNotificationSettingsDTO {
 ```
 
 ```typescript
-// src/modules/zarp-notifications/application/dtos/index.ts
+// src/modules/reserve-notifications/application/dtos/index.ts
 export * from './create-notification.dto';
 export * from './update-notification.dto';
 export * from './list-notifications-query.dto';
@@ -1024,7 +1024,7 @@ export * from './update-notification-settings.dto';
 - [ ] **Step 2: Implement NotificationService**
 
 ```typescript
-// src/modules/zarp-notifications/application/services/notification.service.ts
+// src/modules/reserve-notifications/application/services/notification.service.ts
 import { Injectable, Inject, NotFoundException, ConflictException, ForbiddenException } from '@nestjs/common';
 import { NOTIFICATION_REPOSITORY, INotificationRepository } from '../../domain/interfaces';
 import { NOTIFICATION_RECEIPT_REPOSITORY, INotificationReceiptRepository } from '../../domain/interfaces';
@@ -1111,7 +1111,7 @@ export class NotificationService {
 - [ ] **Step 3: Run all notification service tests**
 
 ```bash
-npx jest zarp-notifications --no-coverage
+npx jest reserve-notifications --no-coverage
 ```
 
 Expected: All tests PASS.
@@ -1119,7 +1119,7 @@ Expected: All tests PASS.
 - [ ] **Step 4: Commit**
 
 ```bash
-git add src/modules/zarp-notifications/
+git add src/modules/reserve-notifications/
 git commit -m "feat: add NotificationService CRUD and DTOs"
 ```
 
@@ -1128,12 +1128,12 @@ git commit -m "feat: add NotificationService CRUD and DTOs"
 ### Task 8: NotificationSchedulerService
 
 **Files:**
-- Create: `src/modules/zarp-notifications/application/services/notification-scheduler.service.ts`
+- Create: `src/modules/reserve-notifications/application/services/notification-scheduler.service.ts`
 
 - [ ] **Step 1: Implement scheduler**
 
 ```typescript
-// src/modules/zarp-notifications/application/services/notification-scheduler.service.ts
+// src/modules/reserve-notifications/application/services/notification-scheduler.service.ts
 import { Injectable } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { NotificationEventService } from './notification-event.service';
@@ -1178,7 +1178,7 @@ export class NotificationSchedulerService {
 - [ ] **Step 2: Commit**
 
 ```bash
-git add src/modules/zarp-notifications/
+git add src/modules/reserve-notifications/
 git commit -m "feat: add NotificationSchedulerService with cron jobs"
 ```
 
@@ -1189,14 +1189,14 @@ git commit -m "feat: add NotificationSchedulerService with cron jobs"
 ### Task 9: Prisma repositories
 
 **Files:**
-- Create: `src/modules/zarp-notifications/infrastructure/repositories/notification.repository.ts`
-- Create: `src/modules/zarp-notifications/infrastructure/repositories/notification-receipt.repository.ts`
-- Create: `src/modules/zarp-notifications/infrastructure/repositories/notification-settings.repository.ts`
+- Create: `src/modules/reserve-notifications/infrastructure/repositories/notification.repository.ts`
+- Create: `src/modules/reserve-notifications/infrastructure/repositories/notification-receipt.repository.ts`
+- Create: `src/modules/reserve-notifications/infrastructure/repositories/notification-settings.repository.ts`
 
 - [ ] **Step 1: Create notification.repository.ts**
 
 ```typescript
-// src/modules/zarp-notifications/infrastructure/repositories/notification.repository.ts
+// src/modules/reserve-notifications/infrastructure/repositories/notification.repository.ts
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../../shared/database/prisma.service';
 import { RepositoryException } from '../../../../shared/exceptions';
@@ -1270,7 +1270,7 @@ export class NotificationRepository implements INotificationRepository {
 - [ ] **Step 2: Create notification-receipt.repository.ts**
 
 ```typescript
-// src/modules/zarp-notifications/infrastructure/repositories/notification-receipt.repository.ts
+// src/modules/reserve-notifications/infrastructure/repositories/notification-receipt.repository.ts
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../../shared/database/prisma.service';
 import { RepositoryException } from '../../../../shared/exceptions';
@@ -1333,7 +1333,7 @@ export class NotificationReceiptRepository implements INotificationReceiptReposi
 - [ ] **Step 3: Create notification-settings.repository.ts**
 
 ```typescript
-// src/modules/zarp-notifications/infrastructure/repositories/notification-settings.repository.ts
+// src/modules/reserve-notifications/infrastructure/repositories/notification-settings.repository.ts
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../../shared/database/prisma.service';
 import { RepositoryException } from '../../../../shared/exceptions';
@@ -1362,7 +1362,7 @@ export class NotificationSettingsRepository implements INotificationSettingsRepo
 - [ ] **Step 4: Commit**
 
 ```bash
-git add src/modules/zarp-notifications/
+git add src/modules/reserve-notifications/
 git commit -m "feat: add notifications Prisma repositories"
 ```
 
@@ -1371,14 +1371,14 @@ git commit -m "feat: add notifications Prisma repositories"
 ### Task 10: Controllers
 
 **Files:**
-- Create: `src/modules/zarp-notifications/infrastructure/controllers/notification.controller.ts`
-- Create: `src/modules/zarp-notifications/infrastructure/controllers/notification-tenant.controller.ts`
-- Create: `src/modules/zarp-notifications/infrastructure/controllers/notification-settings.controller.ts`
+- Create: `src/modules/reserve-notifications/infrastructure/controllers/notification.controller.ts`
+- Create: `src/modules/reserve-notifications/infrastructure/controllers/notification-tenant.controller.ts`
+- Create: `src/modules/reserve-notifications/infrastructure/controllers/notification-settings.controller.ts`
 
 - [ ] **Step 1: Create notification.controller.ts (super_admin)**
 
 ```typescript
-// src/modules/zarp-notifications/infrastructure/controllers/notification.controller.ts
+// src/modules/reserve-notifications/infrastructure/controllers/notification.controller.ts
 import { Body, Controller, Delete, Get, Param, Patch, Post, Query, Res, UseGuards } from '@nestjs/common';
 import { Response } from 'express';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
@@ -1386,7 +1386,7 @@ import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
 import { RolesGuard } from '../../../../shared/auth/guards/roles.guard';
 import { Roles } from '../../../../shared/auth/decorators/roles.decorator';
 import { CurrentAdmin, CurrentAdminPayload } from '../../../../shared/auth/decorators/current-admin.decorator';
-import { EAdminRole } from '../../../zarp-auth/domain/enums/admin-role.enum';
+import { EAdminRole } from '../../../reserve-auth/domain/enums/admin-role.enum';
 import { ParseCuidPipe } from '../../../../shared/pipes';
 import { NotificationService } from '../../application/services/notification.service';
 import { CreateNotificationDTO, UpdateNotificationDTO, ListNotificationsQueryDTO } from '../../application/dtos';
@@ -1446,7 +1446,7 @@ export class NotificationController {
 - [ ] **Step 2: Create notification-tenant.controller.ts**
 
 ```typescript
-// src/modules/zarp-notifications/infrastructure/controllers/notification-tenant.controller.ts
+// src/modules/reserve-notifications/infrastructure/controllers/notification-tenant.controller.ts
 import { Controller, Get, Param, Post, Query, Res, UseGuards, Headers } from '@nestjs/common';
 import { Response } from 'express';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
@@ -1488,7 +1488,7 @@ export class NotificationTenantController {
 - [ ] **Step 3: Create notification-settings.controller.ts**
 
 ```typescript
-// src/modules/zarp-notifications/infrastructure/controllers/notification-settings.controller.ts
+// src/modules/reserve-notifications/infrastructure/controllers/notification-settings.controller.ts
 import { Body, Controller, Get, Param, Patch, Res, UseGuards, Headers } from '@nestjs/common';
 import { Response } from 'express';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
@@ -1496,7 +1496,7 @@ import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
 import { RolesGuard } from '../../../../shared/auth/guards/roles.guard';
 import { Roles } from '../../../../shared/auth/decorators/roles.decorator';
 import { CurrentAdmin, CurrentAdminPayload } from '../../../../shared/auth/decorators/current-admin.decorator';
-import { EAdminRole } from '../../../zarp-auth/domain/enums/admin-role.enum';
+import { EAdminRole } from '../../../reserve-auth/domain/enums/admin-role.enum';
 import { ParseCuidPipe } from '../../../../shared/pipes';
 import { NotificationSettingsService } from '../../application/services/notification-settings.service';
 import { UpdateNotificationSettingsDTO } from '../../application/dtos';
@@ -1545,7 +1545,7 @@ export class NotificationSettingsController {
 - [ ] **Step 4: Commit**
 
 ```bash
-git add src/modules/zarp-notifications/
+git add src/modules/reserve-notifications/
 git commit -m "feat: add notifications controllers"
 ```
 
@@ -1554,13 +1554,13 @@ git commit -m "feat: add notifications controllers"
 ### Task 11: NestJS Module + App registration
 
 **Files:**
-- Create: `src/modules/zarp-notifications/zarp-notifications.module.ts`
+- Create: `src/modules/reserve-notifications/reserve-notifications.module.ts`
 - Modify: `src/app.module.ts`
 
-- [ ] **Step 1: Create zarp-notifications.module.ts**
+- [ ] **Step 1: Create reserve-notifications.module.ts**
 
 ```typescript
-// src/modules/zarp-notifications/zarp-notifications.module.ts
+// src/modules/reserve-notifications/reserve-notifications.module.ts
 import { Module } from '@nestjs/common';
 import { NotificationService } from './application/services/notification.service';
 import { NotificationTenantService } from './application/services/notification-tenant.service';
@@ -1575,10 +1575,10 @@ import { NotificationReceiptRepository } from './infrastructure/repositories/not
 import { NotificationSettingsRepository } from './infrastructure/repositories/notification-settings.repository';
 import { NOTIFICATION_REPOSITORY, NOTIFICATION_RECEIPT_REPOSITORY, NOTIFICATION_SETTINGS_REPOSITORY } from './domain/interfaces';
 import { AdminJwtGuard, RolesGuard } from '../../shared/auth/guards';
-import { ZarpAuthModule } from '../zarp-auth/zarp-auth.module';
+import { ReserveAuthModule } from '../reserve-auth/reserve-auth.module';
 
 @Module({
-  imports: [ZarpAuthModule],
+  imports: [ReserveAuthModule],
   controllers: [
     NotificationTenantController, // must be before NotificationController (avoids /tenant route conflict)
     NotificationSettingsController,
@@ -1601,7 +1601,7 @@ import { ZarpAuthModule } from '../zarp-auth/zarp-auth.module';
   ],
   exports: [NotificationEventService, NotificationSettingsService],
 })
-export class ZarpNotificationsModule {}
+export class ReserveNotificationsModule {}
 ```
 
 - [ ] **Step 2: Register module in app.module.ts**
@@ -1610,13 +1610,13 @@ In `src/app.module.ts`, add the import and registration:
 
 ```typescript
 // Add to imports at top:
-import { ZarpNotificationsModule } from './modules/zarp-notifications/zarp-notifications.module';
+import { ReserveNotificationsModule } from './modules/reserve-notifications/reserve-notifications.module';
 
 // Add to @Module imports array:
-ZarpNotificationsModule,
+ReserveNotificationsModule,
 
 // Add to RouterModule.register array:
-{ path: 'notifications', module: ZarpNotificationsModule },
+{ path: 'notifications', module: ReserveNotificationsModule },
 ```
 
 - [ ] **Step 3: Run the app to verify it boots**
@@ -1638,8 +1638,8 @@ Expected: All existing tests + new notification tests PASS.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/modules/zarp-notifications/zarp-notifications.module.ts src/app.module.ts
-git commit -m "feat: register ZarpNotificationsModule in app"
+git add src/modules/reserve-notifications/reserve-notifications.module.ts src/app.module.ts
+git commit -m "feat: register ReserveNotificationsModule in app"
 ```
 
 ---
@@ -1648,7 +1648,7 @@ git commit -m "feat: register ZarpNotificationsModule in app"
 
 ### Task 12: Hooks
 
-**Files (in `frontend_dashboard_zarp-admin`):**
+**Files (in `frontend_dashboard_reserve-admin`):**
 - Create: `src/common/hooks/use-notification-inbox.ts`
 - Create: `src/common/hooks/use-unread-count.ts`
 - Create: `src/common/hooks/use-notifications.ts`
@@ -2050,7 +2050,7 @@ export function NotificationForm({ initial, id }: Props) {
 // src/components/notifications/tenant-notification-settings-form.tsx
 'use client';
 import { useNotificationSettings } from '@/src/common/hooks/use-notification-settings';
-import { ALL_EVENT_KEYS, ALL_CRON_KEYS } from '@/src/../../backend_api_zarp-admin/src/modules/zarp-notifications/domain/constants/notification-events';
+import { ALL_EVENT_KEYS, ALL_CRON_KEYS } from '@/src/../../backend_api_reserve-admin/src/modules/reserve-notifications/domain/constants/notification-events';
 
 // Since event/cron keys are constants, replicate them here to avoid cross-repo imports:
 const EVENT_KEYS = ['lead.created', 'subscription.expiring', 'subscription.expired'];
@@ -2274,32 +2274,32 @@ git commit -m "feat: add notifications to sidebar with unread badge"
 
 ## Phase 7 — Integration Wiring
 
-### Task 16: Wire NotificationEventService into ZarpLeadsModule
+### Task 16: Wire NotificationEventService into ReserveLeadsModule
 
 **Files:**
-- Modify: `src/modules/zarp-leads/zarp-leads.module.ts`
-- Modify: the lead creation service (find with `grep -r "lead.*create\|create.*lead" src/modules/zarp-leads --include="*.ts" -l`)
+- Modify: `src/modules/reserve-leads/reserve-leads.module.ts`
+- Modify: the lead creation service (find with `grep -r "lead.*create\|create.*lead" src/modules/reserve-leads --include="*.ts" -l`)
 
-- [ ] **Step 1: Import ZarpNotificationsModule in ZarpLeadsModule**
+- [ ] **Step 1: Import ReserveNotificationsModule in ReserveLeadsModule**
 
-Open `src/modules/zarp-leads/zarp-leads.module.ts` and add to its imports array:
+Open `src/modules/reserve-leads/reserve-leads.module.ts` and add to its imports array:
 
 ```typescript
-import { ZarpNotificationsModule } from '../zarp-notifications/zarp-notifications.module';
+import { ReserveNotificationsModule } from '../reserve-notifications/reserve-notifications.module';
 // ...
 @Module({
-  imports: [ZarpNotificationsModule, /* existing imports */],
+  imports: [ReserveNotificationsModule, /* existing imports */],
   // ...
 })
 ```
 
 - [ ] **Step 2: Inject NotificationEventService in the lead creation service**
 
-Find the service responsible for creating leads (run `npx grep -r "async create" src/modules/zarp-leads --include="*.ts"`). In that service's constructor, add:
+Find the service responsible for creating leads (run `npx grep -r "async create" src/modules/reserve-leads --include="*.ts"`). In that service's constructor, add:
 
 ```typescript
-import { NotificationEventService } from '../zarp-notifications/application/services/notification-event.service';
-import { NOTIFICATION_EVENTS } from '../zarp-notifications/domain/constants/notification-events';
+import { NotificationEventService } from '../reserve-notifications/application/services/notification-event.service';
+import { NOTIFICATION_EVENTS } from '../reserve-notifications/domain/constants/notification-events';
 
 constructor(
   // ... existing deps ...
@@ -2330,7 +2330,7 @@ Expected: No errors. Lead creation events now dispatch notifications.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/modules/zarp-leads/
+git add src/modules/reserve-leads/
 git commit -m "feat: dispatch lead.created notification on lead creation"
 ```
 
@@ -2347,7 +2347,7 @@ git commit -m "feat: dispatch lead.created notification on lead creation"
 - [x] `unread-count` route is `me/unread-count` to avoid `:id` collision (Task 10)
 - [x] Controller registration order: `NotificationTenantController` before `NotificationController` (Task 11)
 - [x] Cron scheduler checks settings before dispatching (Task 8)
-- [x] `ZarpNotificationsModule` exports `NotificationEventService` for cross-module use (Task 11)
+- [x] `ReserveNotificationsModule` exports `NotificationEventService` for cross-module use (Task 11)
 - [x] Frontend badge polls every 60s + revalidates on window focus (Task 12)
 - [x] i18n key added to sidebar (Task 15)
 - [x] Lead integration uses fire-and-forget to avoid breaking lead creation (Task 16)

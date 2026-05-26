@@ -1,13 +1,13 @@
-# Design: B2B One-Time Payments
+﻿# Design: B2B One-Time Payments
 
 ## Architecture Overview
 
-Sistema de pagamentos únicos seguindo arquitetura DDD com bounded context `zarp-b2b-payments`.
+Sistema de pagamentos únicos seguindo arquitetura DDD com bounded context `reserve-b2b-payments`.
 
 ## Module Structure
 
 ```
-src/modules/zarp-b2b-payments/
+src/modules/reserve-b2b-payments/
 ├── domain/
 │   ├── entities/
 │   │   ├── b2b-product.entity.ts
@@ -40,7 +40,7 @@ src/modules/zarp-b2b-payments/
     │   ├── prisma-b2b-product.repository.ts
     │   ├── prisma-b2b-purchase.repository.ts
     │   └── prisma-b2b-stripe-webhook-event.repository.ts
-    └── zarp-b2b-payments.module.ts
+    └── reserve-b2b-payments.module.ts
 ```
 
 ## Database Schema

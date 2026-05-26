@@ -1,5 +1,5 @@
-import { createParamDecorator, ExecutionContext } from '@nestjs/common';
-import { EAdminRole } from '../../../modules/zarp-auth/domain/enums/admin-role.enum';
+﻿import { createParamDecorator, ExecutionContext } from '@nestjs/common';
+import { EAdminRole } from '../../../modules/reserve-auth/domain/enums/admin-role.enum';
 
 export interface CurrentAdminPayload {
   id: string; // UUID (12-character cuid)

@@ -1,10 +1,10 @@
-# Design Document: B2C Student Subscriptions
+﻿# Design Document: B2C Student Subscriptions
 
 ## Overview
 
 This feature introduces a B2C subscription system for students (end-users) in an educational institution platform. Unlike the existing B2B system where tenants/organizations subscribe, here each student purchases access to individual products (courses/content) directly via Stripe Hosted Checkout. Access is granted while the subscription is active and automatically revoked when it expires or is canceled.
 
-The system is implemented as two new bounded context modules — `zarp-b2c-products` and `zarp-b2c-subscriptions` — following the project's DDD/`zarp-*` pattern. The existing `zarp-subscriptions` (B2B) module is left untouched.
+The system is implemented as two new bounded context modules — `reserve-b2c-products` and `reserve-b2c-subscriptions` — following the project's DDD/`reserve-*` pattern. The existing `reserve-subscriptions` (B2B) module is left untouched.
 
 ## Architecture
 
@@ -15,13 +15,13 @@ graph TD
     Stripe["Stripe"]
     DB["PostgreSQL (Prisma)"]
 
-    subgraph "zarp-b2c-products"
+    subgraph "reserve-b2c-products"
         PC["ProductsController\n(GET /products, /products/:slug)"]
         PCC["ProductContentController\n(GET /products/:slug/content)"]
         PUC["ListProductsUseCase\nGetProductUseCase"]
     end
 
-    subgraph "zarp-b2c-subscriptions"
+    subgraph "reserve-b2c-subscriptions"
         SC["SubscriptionsController\n(POST /subscriptions/checkout\nGET /subscriptions/my\nPOST /subscriptions/:id/cancel)"]
         WC["B2CStripeWebhookController\n(POST /webhooks/b2c/stripe)"]
         SUC["CreateCheckoutUseCase\nListMySubscriptionsUseCase\nCancelSubscriptionUseCase\nProcessWebhookUseCase"]
@@ -129,7 +129,7 @@ sequenceDiagram
 
 ## Components and Interfaces
 
-### Module: `zarp-b2c-products`
+### Module: `reserve-b2c-products`
 
 **Purpose**: Product catalog — lists active products and their prices. Read-only from the student's perspective; products are managed in Stripe Dashboard and synced via the Prisma schema.
 
@@ -153,7 +153,7 @@ interface IProductPriceRepository {
 
 ---
 
-### Module: `zarp-b2c-subscriptions`
+### Module: `reserve-b2c-subscriptions`
 
 **Purpose**: Checkout initiation, subscription lifecycle management, webhook processing, and access guard.
 
@@ -525,8 +525,8 @@ app.use(
 
 ```
 src/modules/
-├── zarp-b2c-products/
-│   ├── zarp-b2c-products.module.ts
+├── reserve-b2c-products/
+│   ├── reserve-b2c-products.module.ts
 │   ├── domain/
 │   │   ├── entities/
 │   │   │   ├── product.entity.ts
@@ -547,8 +547,8 @@ src/modules/
 │           ├── prisma-product.repository.ts
 │           └── prisma-product-price.repository.ts
 │
-└── zarp-b2c-subscriptions/
-    ├── zarp-b2c-subscriptions.module.ts
+└── reserve-b2c-subscriptions/
+    ├── reserve-b2c-subscriptions.module.ts
     ├── domain/
     │   ├── entities/
     │   │   └── user-subscription.entity.ts
@@ -656,7 +656,7 @@ FRONTEND_URL=https://www.seusite.com   # for success/cancel redirect URLs
 
 ### Reused Infrastructure
 
-- `StripeProvider` from `zarp-subscriptions` — injected via `STRIPE_PROVIDER` token; no modifications needed
+- `StripeProvider` from `reserve-subscriptions` — injected via `STRIPE_PROVIDER` token; no modifications needed
 - `StripeWebhookEvent` Prisma model — reused as-is for idempotency
 - `UserJwtGuard` from `shared/auth/guards/user-jwt.guard.ts`
 - `PrismaService` from `shared/database/`
