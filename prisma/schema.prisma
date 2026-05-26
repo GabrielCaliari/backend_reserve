@@ -808,6 +808,7 @@ model Article {
   slug              String         @db.VarChar(255)
   status            EArticleStatus @default(draft)
   published_at      DateTime?
+  scheduled_at      DateTime?
   cover_image_id    String?        @db.VarChar(25)
   author_id         String?        @db.VarChar(25)
   blog_id           String         @db.VarChar(25)
@@ -825,6 +826,7 @@ model Article {
 
   @@unique([slug, blog_id])
   @@index([blog_id, status, published_at])
+  @@index([status, scheduled_at])
   @@index([author_id])
   @@index([created_by])
   @@index([last_edited_by])
