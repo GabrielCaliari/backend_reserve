@@ -46,6 +46,7 @@ export class ArticlePresenter {
       slug: article.slug,
       status: article.status,
       published_at: article.publishedAt,
+      scheduled_at: article.scheduledAt,
       cover_image_id: article.coverImageId, // string (UUID) | null
       author_id: article.authorId, // string (UUID)
       blog_id: article.blogId, // string (UUID)
