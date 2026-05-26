@@ -7,7 +7,7 @@ import { MulterExceptionFilter } from './shared/exceptions/multer-exception.filt
 import { DomainExceptionFilter } from './shared/exceptions/domain-exception.filter';
 import { ConnectionErrorFilter } from './shared/exceptions/connection-error.filter';
 import { Request, Response, NextFunction } from 'express';
-import * as cookieParser from 'cookie-parser';
+import cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   // rawBody: true enables access to req.rawBody for Stripe webhook signature validation
