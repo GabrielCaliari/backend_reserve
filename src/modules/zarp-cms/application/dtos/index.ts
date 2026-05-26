@@ -17,6 +17,7 @@ export { FindCollectionsParamsDTO } from './find-collections-params.dto';
 export { CreateArticleDTO } from './create-article.dto';
 export { UpdateArticleDTO } from './update-article.dto';
 export { PublishArticleDTO } from './publish-article.dto';
+export { UpdatePublishedAtDTO } from './update-published-at.dto';
 export { ArticleResponseDTO } from './article-response.dto';
 
 // Author DTOs
