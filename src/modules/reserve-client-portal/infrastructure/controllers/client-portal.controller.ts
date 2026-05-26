@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { Response } from 'express';
 import { DashboardService } from '../../application/services/dashboard.service';
+import { OverviewService } from '../../application/services/overview.service';
 import { HotelClientService } from '../../application/services/hotel-client.service';
 import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
 import { CurrentAdmin, CurrentAdminPayload } from '../../../../shared/auth/decorators/current-admin.decorator';
@@ -22,8 +23,22 @@ import { CurrentAdmin, CurrentAdminPayload } from '../../../../shared/auth/decor
 export class ClientPortalController {
   constructor(
     private readonly dashboardService: DashboardService,
+    private readonly overviewService: OverviewService,
     private readonly hotelClientService: HotelClientService,
   ) {}
+
+  @Get(':clientId/overview')
+  async getOverview(
+    @Param('clientId') clientId: string,
+    @Query('from') from: string,
+    @Query('to') to: string,
+    @Res() res: Response,
+  ) {
+    const fromDate = from ? new Date(from) : this.defaultFrom();
+    const toDate = to ? new Date(to) : new Date();
+    const result = await this.overviewService.getOverview(clientId, fromDate, toDate);
+    return res.status(result.status).json(result.data);
+  }
 
   @Get('my-clients')
   async getMyClients(

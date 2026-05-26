@@ -16,6 +16,8 @@ import { AdminReservationsController } from './infrastructure/controllers/admin-
 import { HotelClientService } from './application/services/hotel-client.service';
 import { ReservationService } from './application/services/reservation.service';
 import { DashboardService } from './application/services/dashboard.service';
+import { OverviewService } from './application/services/overview.service';
+import { PeriodComparisonService } from '../../shared/analytics/period-comparison.service';
 import { CampaignService } from './application/services/campaign.service';
 import { SiteAnalyticsService } from './application/services/site-analytics.service';
 import { OtaDirectService } from './application/services/ota-direct.service';
@@ -40,11 +42,13 @@ import { PublishMonthlyReportUseCase } from './application/use-cases/publish-mon
 // Infrastructure repositories
 import { PrismaHotelClientRepository } from './infrastructure/repositories/prisma-hotel-client.repository';
 import { PrismaReportRepository } from './infrastructure/repositories/prisma-report.repository';
+import { PrismaOverviewRepository } from './infrastructure/repositories/prisma-overview.repository';
 
 // DIP tokens
 import { HOTEL_CLIENT_REPOSITORY } from './domain/interfaces/hotel-client.repository.interface';
 import { DASHBOARD_REPOSITORY } from './domain/interfaces/dashboard.repository.interface';
 import { REPORT_REPOSITORY } from './domain/interfaces/report.repository.interface';
+import { OVERVIEW_REPOSITORY } from './domain/interfaces/overview.repository.interface';
 
 // Booking engine providers
 import { BookingEngineFactory } from './infrastructure/providers/booking-engine-factory.provider';
@@ -93,6 +97,8 @@ import { ReserveAuthModule } from '../reserve-auth/reserve-auth.module';
     HotelClientService,
     ReservationService,
     DashboardService,
+    OverviewService,
+    PeriodComparisonService,
     CampaignService,
     SiteAnalyticsService,
     OtaDirectService,
@@ -134,11 +140,13 @@ import { ReserveAuthModule } from '../reserve-auth/reserve-auth.module';
     // Concrete repositories
     PrismaHotelClientRepository,
     PrismaReportRepository,
+    PrismaOverviewRepository,
 
     // DIP tokens — point to concrete implementations
     { provide: HOTEL_CLIENT_REPOSITORY, useExisting: PrismaHotelClientRepository },
     { provide: DASHBOARD_REPOSITORY, useExisting: PrismaHotelClientRepository },
     { provide: REPORT_REPOSITORY, useExisting: PrismaReportRepository },
+    { provide: OVERVIEW_REPOSITORY, useExisting: PrismaOverviewRepository },
 
     // Guards (needed because AdminJwtGuard requires ADMIN_TOKEN_VALIDATOR injected from ReserveAuthModule)
     AdminJwtGuard,
