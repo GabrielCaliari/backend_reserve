@@ -1,5 +1,4 @@
-﻿#!/usr/bin/env ts-node
-/**
+﻿/**
  * Cria o primeiro super_admin no banco de dados.
  *
  * Uso:
