@@ -25,6 +25,7 @@ export class WhatsAppTrackingService {
       let shortCode: string;
 
       if (dto.custom_code) {
+        // Explicit custom slug: must be unique (409 if taken).
         const slug = this.normalizeSlug(dto.custom_code);
         const taken = await this.prisma.whatsAppTrackingLink.findUnique({
           where: { short_code: slug },
@@ -32,7 +33,11 @@ export class WhatsAppTrackingService {
         if (taken) return errorResponse('409:WHATSAPP_LINK_CODE_TAKEN', 409);
         shortCode = slug;
       } else {
-        shortCode = this.generateShortCode();
+        // No custom_code: derive the slug from the link name so the URL reads
+        // like the campaign (e.g. "Atendimento" -> /wa/atendimento). Falls back
+        // to a random code only when the name has no usable characters.
+        const base = this.slugify(dto.name);
+        shortCode = base ? await this.makeUniqueSlug(base) : this.generateShortCode();
       }
 
       const link = await this.prisma.whatsAppTrackingLink.create({
@@ -359,6 +364,44 @@ export class WhatsAppTrackingService {
       .trim()
       .toLowerCase()
       .replace(/[^a-z0-9_-]/g, '');
+  }
+
+  /**
+   * Turn a free-text name into a URL-friendly slug:
+   * removes accents, lowercases, spaces/symbols become hyphens.
+   * e.g. "Atendimento Caliári!" -> "atendimento-caliari"
+   */
+  private slugify(value: string): string {
+    return value
+      .normalize('NFD')
+      .replace(/[̀-ͯ]/g, '') // strip accents
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, '-') // non-alphanumeric -> hyphen
+      .replace(/^-+|-+$/g, '') // trim leading/trailing hyphens
+      .substring(0, 50);
+  }
+
+  /** Ensure a derived slug is unique; append a short suffix on collision. */
+  private async makeUniqueSlug(base: string): Promise<string> {
+    let candidate = base;
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const taken = await this.prisma.whatsAppTrackingLink.findUnique({
+        where: { short_code: candidate },
+      });
+      if (!taken) return candidate;
+      candidate = `${base}-${this.randomSuffix(4)}`;
+    }
+    return `${base}-${this.randomSuffix(6)}`;
+  }
+
+  private randomSuffix(length: number): string {
+    const chars = 'abcdefghjkmnpqrstuvwxyz23456789';
+    let out = '';
+    for (let i = 0; i < length; i++) {
+      out += chars[Math.floor(Math.random() * chars.length)];
+    }
+    return out;
   }
 
   private generateShortCode(): string {
