@@ -17,6 +17,7 @@ import { HotelClientService } from './application/services/hotel-client.service'
 import { ReservationService } from './application/services/reservation.service';
 import { DashboardService } from './application/services/dashboard.service';
 import { OverviewService } from './application/services/overview.service';
+import { LeadsOverviewService } from './application/services/leads-overview.service';
 import { PeriodComparisonService } from '../../shared/analytics/period-comparison.service';
 import { CampaignService } from './application/services/campaign.service';
 import { SiteAnalyticsService } from './application/services/site-analytics.service';
@@ -98,6 +99,7 @@ import { ReserveAuthModule } from '../reserve-auth/reserve-auth.module';
     ReservationService,
     DashboardService,
     OverviewService,
+    LeadsOverviewService,
     PeriodComparisonService,
     CampaignService,
     SiteAnalyticsService,

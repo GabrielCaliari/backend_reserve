@@ -9,6 +9,7 @@ import {
 import { Response } from 'express';
 import { DashboardService } from '../../application/services/dashboard.service';
 import { OverviewService } from '../../application/services/overview.service';
+import { LeadsOverviewService } from '../../application/services/leads-overview.service';
 import { HotelClientService } from '../../application/services/hotel-client.service';
 import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
 import { CurrentAdmin, CurrentAdminPayload } from '../../../../shared/auth/decorators/current-admin.decorator';
@@ -24,6 +25,7 @@ export class ClientPortalController {
   constructor(
     private readonly dashboardService: DashboardService,
     private readonly overviewService: OverviewService,
+    private readonly leadsOverviewService: LeadsOverviewService,
     private readonly hotelClientService: HotelClientService,
   ) {}
 
@@ -38,6 +40,17 @@ export class ClientPortalController {
     const toDate = to ? new Date(to) : new Date();
     const result = await this.overviewService.getOverview(clientId, fromDate, toDate);
     return res.status(result.status).json(result.data);
+  }
+
+  @Get(':clientId/leads-overview')
+  async getLeadsOverview(
+    @Param('clientId') clientId: string,
+    @Query('from') from: string,
+    @Query('to') to: string,
+  ) {
+    const fromDate = from ? new Date(from) : this.defaultFrom();
+    const toDate = to ? new Date(to) : new Date();
+    return this.leadsOverviewService.getOverview(clientId, fromDate, toDate);
   }
 
   @Get('my-clients')
