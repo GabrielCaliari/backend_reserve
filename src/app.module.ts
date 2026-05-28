@@ -10,6 +10,7 @@ import { AppController } from './app.controller';
 import { DatabaseModule } from './shared/database/database.module';
 import { AuthModule } from './shared/auth/auth.module';
 import { RbacModule } from './shared/auth/rbac/rbac.module';
+import { CorsModule } from './shared/cors/cors.module';
 
 // Bounded Context modules
 import { ReserveAuthModule } from './modules/reserve-auth/reserve-auth.module';
@@ -36,6 +37,7 @@ import { ToLowercaseQueryParamsPipe, ToLowercaseBodyRequestPipe } from './shared
     ConfigModule.forRoot({ isGlobal: true }),
     ThrottlerModule.forRoot([{ ttl: 60000, limit: 100 }]),
     DatabaseModule,
+    CorsModule,
     AuthModule,
     RbacModule,
     ScheduleModule.forRoot(),

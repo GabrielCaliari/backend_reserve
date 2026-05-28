@@ -10,6 +10,8 @@ import { PrismaExceptionFilter } from './shared/exceptions/prisma-exception.filt
 import { Request, Response, NextFunction, json, urlencoded } from 'express';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
+import { CorsOriginService } from './shared/cors/cors-origin.service';
+import { createCorsOriginResolver } from './shared/cors/cors-origin.callback';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
@@ -80,9 +82,12 @@ async function bootstrap() {
   // o throttler da Task 4 limitaria o IP do proxy para todos os clientes.
   app.getHttpAdapter().getInstance().set('trust proxy', 1);
 
+  const corsOriginService = app.get(CorsOriginService);
   app.enableCors({
-    origin: process.env.CORS_ORIGINS?.split(',') ?? ['http://localhost:3001'],
+    origin: createCorsOriginResolver(corsOriginService),
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'session-id', 'x-tenant-id'],
   });
 
   // Timeout de 5 minutos SOMENTE em requisição mutante nos prefixos de rota
