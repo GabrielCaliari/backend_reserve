@@ -22,7 +22,6 @@ import {
   B2C_CHECKOUT_SESSION_REPOSITORY,
 } from '../../domain/interfaces/b2c-checkout-session.repository.interface';
 import { EBillingMode, EAccessType } from '../../domain/enums/product-type.enum';
-import { SendActivationEmailUseCase } from '../../../reserve-licensefix/application/use-cases/send-activation-email.use-case';
 
 @Injectable()
 export class ProcessB2CWebhookUseCase {
@@ -40,7 +39,6 @@ export class ProcessB2CWebhookUseCase {
     @Inject(B2C_CHECKOUT_SESSION_REPOSITORY)
     private readonly checkoutSessionRepo: IB2CCheckoutSessionRepository,
     private readonly prisma: PrismaService,
-    @Optional() private readonly sendActivationEmail: SendActivationEmailUseCase,
   ) {}
 
   async execute(event: Stripe.Event): Promise<void> {
@@ -99,64 +97,20 @@ export class ProcessB2CWebhookUseCase {
     const stripeSecretKey = await this.billingConfigRepo.getStripeSecretKey(tenantId) ?? undefined;
     const customerId = session.customer as string;
 
-    // ─── Resolve Customer (tenant-scoped) ─────────────────────────────────────
-    // All purchases resolve through tenant-scoped Customer.
-    // Legacy User-based flow (userId in metadata, no email) is preserved only
-    // for pre-migration records — customer_id will be null in those cases.
+    // ─── Resolve User ─────────────────────────────────────────────────────────
     let legacyUserId: string | undefined;
-    let resolvedCustomerId: string | undefined;
 
     const leadEmail = session.metadata?.lead_email ?? session.customer_details?.email;
-    const leadName = session.metadata?.lead_name ?? session.customer_details?.name ?? 'Lead';
 
-    if (!isLeadPurchase && session.metadata?.userId && !leadEmail) {
-      // Legacy: authenticated User without email in metadata (pre-Customer era)
+    if (session.metadata?.userId) {
       legacyUserId = session.metadata.userId;
       await this.prisma.user.update({
         where: { id: legacyUserId },
         data: { stripe_customer_id: customerId },
       });
-      this.logger.log(`Legacy user flow: user=${legacyUserId} (no customer email in metadata)`);
-    } else {
-      if (!leadEmail) {
-        throw new BadRequestException('Missing lead_email in checkout metadata');
-      }
-
-      // Upsert Customer scoped to this tenant — email unique per tenant
-      let customer = await this.prisma.customer.findUnique({
-        where: { tenant_id_email: { tenant_id: tenantId, email: leadEmail } },
-      });
-
-      if (customer) {
-        if (!customer.stripe_customer_id) {
-          await this.prisma.customer.update({
-            where: { id: customer.id },
-            data: { stripe_customer_id: customerId },
-          });
-        }
-        this.logger.log(`Existing customer resolved: ${customer.id} (${leadEmail}) tenant=${tenantId}`);
-      } else {
-        customer = await this.prisma.customer.create({
-          data: {
-            tenant_id: tenantId,
-            email: leadEmail,
-            name: leadName,
-            phone_number: session.metadata?.lead_phone ?? undefined,
-            stripe_customer_id: customerId,
-          },
-        });
-        this.logger.log(`New customer created: ${customer.id} (${leadEmail}) tenant=${tenantId}`);
-      }
-
-      resolvedCustomerId = customer.id;
-
-      if (this.sendActivationEmail) {
-        try {
-          await this.sendActivationEmail.execute(customer.id, leadEmail, leadName, tenantId);
-        } catch (emailError) {
-          this.logger.warn(`Failed to send activation email to ${leadEmail}`, emailError);
-        }
-      }
+    } else if (leadEmail) {
+      const existing = await this.prisma.user.findFirst({ where: { email: leadEmail }, select: { id: true } });
+      if (existing) legacyUserId = existing.id;
     }
 
     // ─── Create UserProductAccess ──────────────────────────────────────────────
@@ -174,7 +128,6 @@ export class ProcessB2CWebhookUseCase {
       await this.accessRepo.create({
         tenant_id: tenantId,
         user_id: legacyUserId,
-        customer_id: resolvedCustomerId,
         product_id: productId,
         product_price_id: priceId,
         stripe_subscription_id: stripeSubscriptionId,
@@ -194,7 +147,7 @@ export class ProcessB2CWebhookUseCase {
         cancel_at_period_end: false,
       });
 
-      this.logger.log(`UserProductAccess (subscription) created for customer=${resolvedCustomerId ?? legacyUserId}, product ${productId}, mode ${billingMode}`);
+      this.logger.log(`UserProductAccess (subscription) created for customer=${legacyUserId}, product ${productId}, mode ${billingMode}`);
     } else {
       // One-time payment modes (one_time/one_time_exp)
       const accessType = billingMode === EBillingMode.ONE_TIME ? EAccessType.LIFETIME : EAccessType.TEMPORARY;
@@ -205,7 +158,6 @@ export class ProcessB2CWebhookUseCase {
       await this.accessRepo.create({
         tenant_id: tenantId,
         user_id: legacyUserId,
-        customer_id: resolvedCustomerId,
         product_id: productId,
         product_price_id: priceId,
         stripe_customer_id: customerId,
@@ -221,7 +173,7 @@ export class ProcessB2CWebhookUseCase {
         cancel_at_period_end: false,
       });
 
-      this.logger.log(`UserProductAccess (${accessType}) created for customer=${resolvedCustomerId ?? legacyUserId}, product ${productId}, mode ${billingMode}`);
+      this.logger.log(`UserProductAccess (${accessType}) created for customer=${legacyUserId}, product ${productId}, mode ${billingMode}`);
     }
 
     // Mark checkout session as completed

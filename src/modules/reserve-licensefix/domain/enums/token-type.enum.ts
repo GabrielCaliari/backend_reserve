@@ -1,4 +1,0 @@
-export enum ETokenType {
-  ACTIVATION = 'ACTIVATION',
-  PASSWORD_RESET = 'PASSWORD_RESET',
-}

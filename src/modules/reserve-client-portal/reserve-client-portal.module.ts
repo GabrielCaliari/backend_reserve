@@ -4,16 +4,33 @@ import { Module } from '@nestjs/common';
 import { AdminHotelClientController } from './infrastructure/controllers/admin-hotel-client.controller';
 import { ClientPortalController } from './infrastructure/controllers/client-portal.controller';
 import { ReportController } from './infrastructure/controllers/report.controller';
+import { AdminHotelMetricsController } from './infrastructure/controllers/admin-hotel-metrics.controller';
+import { GuestCrmController } from './infrastructure/controllers/guest-crm.controller';
+import { WhatsAppController } from './infrastructure/controllers/whatsapp.controller';
+import { WhatsAppTrackingController } from './infrastructure/controllers/whatsapp-tracking.controller';
+import { WhatsAppRedirectController } from './infrastructure/controllers/whatsapp-redirect.controller';
+import { BookingWebhookController } from './infrastructure/controllers/booking-webhook.controller';
+import { AdminReservationsController } from './infrastructure/controllers/admin-reservations.controller';
 
 // Application services
 import { HotelClientService } from './application/services/hotel-client.service';
+import { ReservationService } from './application/services/reservation.service';
 import { DashboardService } from './application/services/dashboard.service';
 import { CampaignService } from './application/services/campaign.service';
 import { SiteAnalyticsService } from './application/services/site-analytics.service';
 import { OtaDirectService } from './application/services/ota-direct.service';
 import { ReportService } from './application/services/report.service';
+import { ReputationService } from './application/services/reputation.service';
+import { HotelKpiService } from './application/services/hotel-kpi.service';
+import { BookingWindowService } from './application/services/booking-window.service';
+import { RateParityService } from './application/services/rate-parity.service';
+import { MarketingBudgetService } from './application/services/marketing-budget.service';
+import { GuestCrmService } from './application/services/guest-crm.service';
+import { WhatsAppService } from './application/services/whatsapp.service';
+import { WhatsAppTrackingService } from './application/services/whatsapp-tracking.service';
 
 // Use cases
+import { ProcessReservationUseCase } from './application/use-cases/process-reservation.use-case';
 import { SyncGa4DataUseCase } from './application/use-cases/sync-ga4-data.use-case';
 import { SyncMetaAdsDataUseCase } from './application/use-cases/sync-meta-ads-data.use-case';
 import { SyncGoogleAdsDataUseCase } from './application/use-cases/sync-google-ads-data.use-case';
@@ -29,12 +46,21 @@ import { HOTEL_CLIENT_REPOSITORY } from './domain/interfaces/hotel-client.reposi
 import { DASHBOARD_REPOSITORY } from './domain/interfaces/dashboard.repository.interface';
 import { REPORT_REPOSITORY } from './domain/interfaces/report.repository.interface';
 
+// Booking engine providers
+import { BookingEngineFactory } from './infrastructure/providers/booking-engine-factory.provider';
+import { GenericAdapter } from './infrastructure/providers/adapters/generic.adapter';
+import { OmnibeesAdapter } from './infrastructure/providers/adapters/omnibees.adapter';
+import { StaysAdapter } from './infrastructure/providers/adapters/stays.adapter';
+import { FocoAdapter } from './infrastructure/providers/adapters/foco.adapter';
+
 // Infrastructure providers
 import { Ga4Provider } from './infrastructure/providers/ga4.provider';
 import { MetaAdsProvider } from './infrastructure/providers/meta-ads.provider';
 import { GoogleAdsProvider } from './infrastructure/providers/google-ads.provider';
 import { CronSyncProvider } from './infrastructure/providers/cron-sync.provider';
 import { AesEncryptionProvider } from './infrastructure/providers/aes-encryption.provider';
+import { WhatsAppProvider } from './infrastructure/providers/whatsapp.provider';
+import { GeolocationProvider } from '../../shared/providers/geolocation.provider';
 
 // Auth guards (re-exported from ReserveAuthModule via shared/auth)
 import { AdminJwtGuard } from '../../shared/auth/guards/admin-jwt.guard';
@@ -53,22 +79,46 @@ import { ReserveAuthModule } from '../reserve-auth/reserve-auth.module';
     AdminHotelClientController,
     ClientPortalController,
     ReportController,
+    AdminHotelMetricsController,
+    GuestCrmController,
+    WhatsAppController,
+    WhatsAppTrackingController,
+    WhatsAppRedirectController,
+    BookingWebhookController,
+    AdminReservationsController,
   ],
   providers: [
     // Application services
     HotelClientService,
+    ReservationService,
     DashboardService,
     CampaignService,
     SiteAnalyticsService,
     OtaDirectService,
     ReportService,
+    ReputationService,
+    HotelKpiService,
+    BookingWindowService,
+    RateParityService,
+    MarketingBudgetService,
+    GuestCrmService,
+    WhatsAppService,
+    WhatsAppTrackingService,
 
     // Use cases
+    ProcessReservationUseCase,
     SyncGa4DataUseCase,
     SyncMetaAdsDataUseCase,
     SyncGoogleAdsDataUseCase,
     InsertOtaDataUseCase,
     PublishMonthlyReportUseCase,
+
+    // Booking engine providers
+    BookingEngineFactory,
+    GenericAdapter,
+    OmnibeesAdapter,
+    StaysAdapter,
+    FocoAdapter,
 
     // Infrastructure providers
     Ga4Provider,
@@ -76,6 +126,8 @@ import { ReserveAuthModule } from '../reserve-auth/reserve-auth.module';
     GoogleAdsProvider,
     AesEncryptionProvider,
     CronSyncProvider,
+    WhatsAppProvider,
+    GeolocationProvider,
 
     // Concrete repositories
     PrismaHotelClientRepository,

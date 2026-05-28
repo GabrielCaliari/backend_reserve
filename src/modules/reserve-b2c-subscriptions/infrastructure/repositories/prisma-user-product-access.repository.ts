@@ -69,7 +69,6 @@ export class PrismaUserProductAccessRepository implements IUserProductAccessRepo
       data: {
         tenant_id: data.tenant_id!,
         user_id: data.user_id ?? undefined,
-        customer_id: data.customer_id ?? undefined,
         product_id: data.product_id!,
         product_price_id: data.product_price_id!,
         stripe_subscription_id: data.stripe_subscription_id,

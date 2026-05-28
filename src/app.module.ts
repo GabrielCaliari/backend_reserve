@@ -10,11 +10,7 @@ import { AuthModule } from './shared/auth/auth.module';
 
 // Bounded Context modules
 import { ReserveAuthModule } from './modules/reserve-auth/reserve-auth.module';
-import { ReserveBrandsModule } from './modules/reserve-brands/reserve-brands.module';
-import { ReserveCnpjsModule } from './modules/reserve-cnpjs/reserve-cnpjs.module';
-import { ReserveJournalsModule } from './modules/reserve-journals/reserve-journals.module';
 import { ReserveMailerModule } from './modules/reserve-mailer/reserve-mailer.module';
-import { ReservePiBotModule } from './modules/reserve-pi-bot/reserve-pi-bot.module';
 import { ReserveCmsModule } from './modules/reserve-cms/reserve-cms.module';
 import { ReserveLeadsModule } from './modules/reserve-leads/reserve-leads.module';
 import { ReserveStatsModule } from './modules/reserve-stats/reserve-stats.module';
@@ -25,7 +21,6 @@ import { ReserveB2cSubscriptionsModule } from './modules/reserve-b2c-subscriptio
 import { ReserveB2bPaymentsModule } from './modules/reserve-b2b-payments/reserve-b2b-payments.module';
 import { ReserveUnifiedWebhooksModule } from './modules/reserve-unified-webhooks/reserve-unified-webhooks.module';
 import { ReserveCouponsModule } from './modules/reserve-coupons/reserve-coupons.module';
-import { ReserveLicensefixModule } from './modules/reserve-licensefix/reserve-licensefix.module';
 import { ReserveNotificationsModule } from './modules/reserve-notifications/reserve-notifications.module';
 import { ReserveClientPortalModule } from './modules/reserve-client-portal/reserve-client-portal.module';
 
@@ -42,11 +37,7 @@ import { ToLowercaseQueryParamsPipe, ToLowercaseBodyRequestPipe } from './shared
 
     // Bounded Contexts
     ReserveAuthModule,
-    ReserveBrandsModule,
-    ReserveCnpjsModule,
-    ReserveJournalsModule,
     ReserveMailerModule,
-    ReservePiBotModule,
     ReserveCmsModule,
     ReserveLeadsModule,
     ReserveStatsModule,
@@ -57,7 +48,6 @@ import { ToLowercaseQueryParamsPipe, ToLowercaseBodyRequestPipe } from './shared
     ReserveB2bPaymentsModule,
     ReserveUnifiedWebhooksModule,
     ReserveCouponsModule,
-    ReserveLicensefixModule,
     ReserveNotificationsModule,
     ReserveClientPortalModule,
 
@@ -65,24 +55,8 @@ import { ToLowercaseQueryParamsPipe, ToLowercaseBodyRequestPipe } from './shared
     RouterModule.register([
 
       {
-        path: 'brands',
-        module: ReserveBrandsModule,
-      },
-      {
-        path: 'cnpjs',
-        module: ReserveCnpjsModule,
-      },
-      {
-        path: 'journals',
-        module: ReserveJournalsModule,
-      },
-      {
         path: 'mailer',
         module: ReserveMailerModule,
-      },
-      {
-        path: 'pi-bot',
-        module: ReservePiBotModule,
       },
       {
         path: 'cms',

@@ -1,0 +1,6 @@
+export enum EWhatsAppTemplateType {
+  PRE_ARRIVAL = 'PRE_ARRIVAL',
+  POST_STAY = 'POST_STAY',
+  REACTIVATION = 'REACTIVATION',
+  UPSELL = 'UPSELL',
+}

@@ -1,4 +1,4 @@
-﻿import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { errorTypes } from '../../../../shared/constants/error-types';
 import { errorResponse, gerarSenha } from '../../../../shared/helpers';
 import { IAuthenticateUser, IValidateUserToken } from '../../domain/interfaces/authenticate-user.interface';
@@ -15,14 +15,6 @@ import {
     PLAN_REPOSITORY,
     USER_COLLECTION_MEMBERSHIP_REPOSITORY,
 } from '../../domain/interfaces';
-// Cross-context repositories (temporary, to be replaced by module imports)
-import SearchRepository from '../../../reserve-cnpjs/infrastructure/repositories/search.repository';
-import BrandRepository from '../../../reserve-brands/infrastructure/repositories/brand.repository';
-import BrandAlertRepository from '../../../reserve-brands/infrastructure/repositories/brand-alert.repository';
-import { EStatus } from '../../domain/enums/plan-status.enum';
-import BrandAnalysisRepository from '../../../reserve-brands/infrastructure/repositories/brand-analysis.repository';
-import { EBrandAnalysisTokenStatus } from '../../../reserve-brands/domain/enums/brand-analysis-token-status.enum';
-import AdditionalTokenPackRepository from '../../../reserve-pi-bot/infrastructure/repositories/additional-token-pack.repository';
 const Stripe = require('stripe');
 
 @Injectable()
@@ -31,13 +23,8 @@ export class UserService {
         @Inject(USER_REPOSITORY) private readonly userRepository: IUserRepository,
         @Inject(USER_CREDENTIAL_REPOSITORY) private readonly userCredentialRepository: IUserCredentialRepository,
         @Inject(USER_SESSION_TOKEN_REPOSITORY) private readonly userSessionTokenRepository: IUserSessionTokenRepository,
-        private readonly searchRepository: SearchRepository,
         @Inject(PLAN_REPOSITORY) private readonly planRepository: IPlanRepository,
         @Inject(USER_COLLECTION_MEMBERSHIP_REPOSITORY) private readonly userCollectionMembershipRepository: IUserCollectionMembershipRepository,
-        private readonly brandAlertRepository: BrandAlertRepository,
-        private readonly brandRepository: BrandRepository,
-        private readonly brandAnalysisRepository: BrandAnalysisRepository,
-        private readonly additionalTokenPackRepository: AdditionalTokenPackRepository
     ) { }
 
     async create({ email, name, password, cpf, phone_number }: ICreateUser) {
@@ -60,8 +47,6 @@ export class UserService {
                 password,
                 cpf,
                 phone_number
-                // date_of_birth,
-                // sex,
             });
 
             return {
@@ -91,8 +76,6 @@ export class UserService {
                 password,
                 cpf: '0000000000',
                 phone_number
-                // date_of_birth,
-                // sex,
             });
 
             return {
@@ -134,74 +117,7 @@ export class UserService {
                 }
             }
         } catch (error) {
-            console.log(error)
             return errorResponse(errorTypes._500.generate_subscription_management_link_error, 500);
-        }
-    }
-
-    async feed(userId: string) {
-        try {
-            const user = await this.userRepository.selectById(userId, {
-                Plan: true
-            });
-
-            const searcheds = await this.searchRepository.count(userId);
-            const countBrands = await this.planRepository.countMonitoringPlans(userId);
-            const countBrandsAnalTotal = await this.brandAnalysisRepository.countBrandAnalysisTokens(userId);
-            const countBrandsAnalUsed = await this.brandAnalysisRepository.countBrandAnalysisTokens(userId, true);
-            const countBrandsAnalNotUsed = await this.brandAnalysisRepository.countBrandAnalysisTokens(userId, false);
-
-            const brands = await this.brandRepository.find({
-                user_id: user.id,
-                MonitoringPlan: {
-                    some: {
-                        status: EStatus.active
-                    }
-                }
-            }, {
-                pag: {
-                    limit: 5,
-                    page: 1
-                }
-            });
-
-            const brandDetails = await Promise.all(brands.map(async brand => {
-                const lastMove = await this.brandAlertRepository.findByBrand(brand.id, 1);
-
-                return {
-                    id: brand.id,
-                    name: brand.name,
-                    email: brand.email,
-                    phone_number: brand.phone_number,
-                    inpi_number: brand.inpi_number,
-                    latest_brand_moves: lastMove
-                }
-            }));
-
-
-
-            return {
-                status: 200,
-                data: {
-                    search_done: searcheds,
-                    max_search: user.Plan.maximum_queries,
-                    brand_analysis: {
-                        tokens: countBrandsAnalTotal,
-                        used: countBrandsAnalUsed,
-                        not_used: countBrandsAnalNotUsed
-                    },
-                    brand: brandDetails,
-                    brand_monitoring: {
-                        used: countBrands.used,
-                        not_used: countBrands.not_used
-                    },
-                    plan: {
-
-                    }
-                },
-            }
-        } catch (error) {
-            return errorResponse(errorTypes._500.user_feed, 500, error);
         }
     }
 
@@ -288,13 +204,6 @@ export class UserService {
                 return errorResponse(errorTypes._404.user_nf, 404);
             }
 
-            const countSearches = await this.searchRepository.countUserMonth(user.id);
-            const countMonitoringPlans = await this.planRepository.countMonitoringPlans(user.id);
-
-            const countBrandsAnalTotal = await this.brandAnalysisRepository.countBrandAnalysisTokens(userId);
-            const countBrandsAnalUsed = await this.brandAnalysisRepository.countBrandAnalysisTokens(userId, true);
-            const countBrandsAnalNotUsed = await this.brandAnalysisRepository.countBrandAnalysisTokens(userId, false);
-
             const subscription = user.Subscription.find(subs => subs.status == 'active' || subs.status == 'trialing');
 
             return {
@@ -304,24 +213,12 @@ export class UserService {
                     email: user.email,
                     phone_number: user.phone_number,
                     cpf: user.cpf,
-                    max_search: user.Plan.maximum_queries,
-                    used_search: countSearches,
                     plan_slug: user.Plan.slug,
                     plan_expires_in: user.date_expires_in,
-                    maximum_queries_to_export: user.Plan.maximum_queries_to_export,
                     plan: {
                         slug: user.Plan.slug,
                         interval: subscription ? subscription.interval : null
                     },
-                    brand_analysis: {
-                        tokens: countBrandsAnalTotal,
-                        used: countBrandsAnalUsed,
-                        not_used: countBrandsAnalNotUsed
-                    },
-                    monitoring: {
-                        used: countMonitoringPlans.used,
-                        not_used: countMonitoringPlans.not_used
-                    }
                 }
             }
         } catch (error) {
@@ -383,11 +280,7 @@ export class UserService {
         }
     }
 
-    async checkout(
-        slug: string,
-        userId: string,
-        period: string,
-    ) {
+    async checkout(slug: string, userId: string, period: string) {
         try {
             const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
             const plan = await this.planRepository.selectBySlug(slug);
@@ -402,100 +295,19 @@ export class UserService {
 
             const session = await stripe.checkout.sessions.create({
                 payment_method_types: ['card'],
-                line_items: [
-                    {
-                        price: plan[`${period}_price_id`],
-                        quantity: 1,
-                    },
-                ],
+                line_items: [{ price: plan[`${period}_price_id`], quantity: 1 }],
                 mode: 'subscription',
                 success_url: `${process.env.STRIPE_SUCCESS_URL}?session_id={CHECKOUT_SESSION_ID}`,
                 cancel_url: process.env.STRIPE_CANCEL_URL,
-                metadata: {
-                    userId: userId
-                },
+                metadata: { userId },
             });
 
             return {
                 status: 200,
-                data: {
-                    url: session.url
-                }
+                data: { url: session.url }
             }
         } catch (error) {
             return errorResponse(errorTypes._500.checkout_error, 500, error);
-        }
-    }
-
-    async generateTokens(key: string, tokens: number, userId: string) {
-        try {
-            if (!(key === process.env.WEBHOOK_AT_KEY)) {
-                return errorResponse(errorTypes._401.wh_token_in, 401);
-            }
-
-            const tokensRaws = Array.from({ length: tokens }, (_, i) => i + 1).map(token => {
-                return {
-                    user_id: userId,
-                    status: EBrandAnalysisTokenStatus.active
-                }
-            });
-
-            const raws = await this.brandAnalysisRepository.createBrandAnalysisTokens(tokensRaws);
-
-            return {
-                status: 200,
-                data: raws.map(raw => raw.id)
-            }
-        } catch (error) {
-            return errorResponse(errorTypes._500.generate_tokens_error, 500, error);
-        }
-    }
-
-    async checkoutOrderBrandAnalysis(slug, userId) {
-        try {
-            const user = await this.userRepository.selectById(userId, {
-                Plan: true,
-            });
-
-            if (!user) {
-                return errorResponse(errorTypes._404.user_nf, 404);
-            }
-
-            if (user.Plan.slug === process.env.FREE_PLAN_SLUG) {
-                return errorResponse(errorTypes._400.user_mh_plan, 400);
-            }
-
-            const raw = await this.additionalTokenPackRepository.selectPackBySlug(slug);
-
-            if (!raw) {
-                return errorResponse(errorTypes._404.additional_token_pack_nf, 400);
-            }
-
-            const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-            const session = await stripe.checkout.sessions.create({
-                payment_method_types: ['card'],
-                line_items: [
-                    {
-                        price: raw.external_id,
-                        quantity: 1,
-                    },
-                ],
-                mode: 'payment',
-                success_url: `${process.env.STRIPE_SUCCESS_URL}?session_id={CHECKOUT_SESSION_ID}`,
-                cancel_url: process.env.STRIPE_CANCEL_URL,
-                metadata: {
-                    userId: userId
-                },
-            });
-
-            return {
-                status: 200,
-                data: {
-                    url: session.url
-                }
-            }
-        } catch (error) {
-            return errorResponse(errorTypes._500.checkout_order_brand_analysis, 500);
         }
     }
 }

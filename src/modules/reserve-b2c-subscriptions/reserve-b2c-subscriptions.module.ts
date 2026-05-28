@@ -4,7 +4,6 @@ import { ReserveAuthModule } from '../reserve-auth/reserve-auth.module';
 import { ReserveB2cProductsModule } from '../reserve-b2c-products/reserve-b2c-products.module';
 import { ReserveSubscriptionsModule } from '../reserve-subscriptions/reserve-subscriptions.module';
 import { ReserveCouponsModule } from '../reserve-coupons/reserve-coupons.module';
-import { ReserveLicensefixModule } from '../reserve-licensefix/reserve-licensefix.module';
 
 import { CreateCheckoutSessionUseCase } from './application/use-cases/create-checkout-session.use-case';
 import { ListMySubscriptionsUseCase } from './application/use-cases/list-my-subscriptions.use-case';
@@ -29,7 +28,7 @@ import { B2CSubscriptionsController } from './infrastructure/controllers/b2c-sub
 import { B2CStripeWebhookController } from './infrastructure/controllers/b2c-stripe-webhook.controller';
 
 @Module({
-  imports: [DatabaseModule, ReserveAuthModule, ReserveB2cProductsModule, ReserveSubscriptionsModule, ReserveCouponsModule, ReserveLicensefixModule],
+  imports: [DatabaseModule, ReserveAuthModule, ReserveB2cProductsModule, ReserveSubscriptionsModule, ReserveCouponsModule],
   controllers: [B2CSubscriptionsController, B2CStripeWebhookController],
   providers: [
     CreateCheckoutSessionUseCase,

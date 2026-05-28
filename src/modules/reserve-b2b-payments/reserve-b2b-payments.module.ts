@@ -4,7 +4,6 @@ import { ReserveAuthModule } from '../reserve-auth/reserve-auth.module';
 import { ReserveSubscriptionsModule } from '../reserve-subscriptions/reserve-subscriptions.module';
 import { ReserveB2cProductsModule } from '../reserve-b2c-products/reserve-b2c-products.module';
 import { ReserveCouponsModule } from '../reserve-coupons/reserve-coupons.module';
-import { ReserveLicensefixModule } from '../reserve-licensefix/reserve-licensefix.module';
 
 import { B2BPaymentsController } from './infrastructure/controllers/b2b-payments.controller';
 import { B2BWebhookController } from './infrastructure/controllers/b2b-webhook.controller';
@@ -35,7 +34,7 @@ import { STRIPE_PROVIDER } from '../reserve-subscriptions/domain/interfaces/stri
 import { OptionalUserGuard } from './infrastructure/guards/optional-user.guard';
 
 @Module({
-  imports: [DatabaseModule, ReserveAuthModule, ReserveSubscriptionsModule, ReserveB2cProductsModule, ReserveCouponsModule, ReserveLicensefixModule],
+  imports: [DatabaseModule, ReserveAuthModule, ReserveSubscriptionsModule, ReserveB2cProductsModule, ReserveCouponsModule],
   controllers: [
     B2BPaymentsController,
     B2BWebhookController,

@@ -1,8 +1,9 @@
-﻿{
+{
   "permissions": {
     "allow": [
       "Bash(grep -r \"payload\\\\\\\\.tenant\\\\|tenantId.*payload\\\\|payload.*tenantId\" \"/c/Users/gabri/Git/backend_api_reserve-admin/src/modules/reserve-auth\" --include=\"*.ts\")",
-      "Bash(grep -E \"\\\\.\\(ts|js\\)$\")"
+      "Bash(grep -E \"\\\\.\\(ts|js\\)$\")",
+      "Bash(npx prisma *)"
     ]
   }
 }

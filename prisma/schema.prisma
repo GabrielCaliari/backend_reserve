@@ -21,18 +21,6 @@ model User {
   created_at                DateTime                    @default(now())
   updated_at                DateTime                    @updatedAt
   stripe_customer_id        String?                     @unique @db.VarChar(100)
-  Brand                     Brand[]
-  BrandAlert                BrandAlert[]
-  BrandAnalysis             BrandAnalysis[]
-  BrandAnalysisRequest      BrandAnalysisRequest[]
-  BrandAnalysisToken        BrandAnalysisToken[]
-  BrandMonitoring           BrandMonitoring[]
-  BrandNotification         BrandNotification[]
-  CompanyExport             CompanyExport[]
-  MonitoringPlan            MonitoringPlan[]
-  Order                     Order[]
-  PibotMessages             PibotMessages[]
-  Search                    Search[]
   Subscription              Subscription[]
   Plan                      Plan                        @relation(fields: [plan_id], references: [id])
   UserCollectionMembership  UserCollectionMembership[]
@@ -55,23 +43,8 @@ model Plan {
   annual_price_id           String?
   created_at                DateTime         @default(now())
   updated_at                DateTime         @default(now()) @updatedAt
-  MonitoringPlan            MonitoringPlan[]
   Subscription              Subscription[]
   User                      User[]
-}
-
-model PibotMessages {
-  id                String   @id @default(cuid()) @db.VarChar(25)
-  chat_id           String   @db.VarChar(100)
-  choices           Json
-  completion_tokens Int
-  prompt_tokens     Int
-  total_tokens      Int
-  usage             Json
-  user_id           String   @db.VarChar(25)
-  created_at        DateTime @default(now())
-  updated_at        DateTime @updatedAt
-  User              User     @relation(fields: [user_id], references: [id])
 }
 
 model Subscription {
@@ -114,59 +87,6 @@ model Subscription {
 
   @@index([subscription_id])
   @@index([customer_id])
-}
-
-model AdditionalTokenPack {
-  id          String   @id @default(cuid()) @db.VarChar(25)
-  slug        String
-  external_id String
-  created_at  DateTime @default(now())
-  updated_at  DateTime @updatedAt
-}
-
-model Order {
-  id                   String   @id @default(cuid()) @db.VarChar(25)
-  amount               Int
-  currency             String
-  product_name         String
-  status               String
-  quantity             Int
-  created_from_webhook Boolean
-  metadata             Json?
-  customer_id          String
-  created_at           DateTime @default(now())
-  updated_at           DateTime @updatedAt
-  user_id              String   @db.VarChar(25)
-  User                 User     @relation(fields: [user_id], references: [id])
-
-  @@index([customer_id])
-}
-
-model MonitoringPlan {
-  id                   String    @id @default(cuid()) @db.VarChar(25)
-  plan_amount          Decimal   @db.Money
-  status               Int       @db.SmallInt
-  checkout_status      String
-  plan_nickname        String?
-  plan_currency        String
-  interval             String
-  start_date           DateTime
-  current_period_start DateTime
-  current_period_end   DateTime
-  trial_end            DateTime?
-  cancel_at            DateTime?
-  canceled_at          DateTime?
-  ended_at             DateTime?
-  billing_cycle_anchor DateTime
-  plan_id              String?   @db.VarChar(25)
-  brand_id             String?   @db.VarChar(25)
-  subscription_id      String    @unique
-  user_id              String    @db.VarChar(25)
-  created_at           DateTime  @default(now())
-  updated_at           DateTime  @updatedAt
-  Brand                Brand?    @relation(fields: [brand_id], references: [id])
-  Plan                 Plan?     @relation(fields: [plan_id], references: [id])
-  User                 User      @relation(fields: [user_id], references: [id])
 }
 
 model UserSessionToken {
@@ -215,385 +135,6 @@ model UserPasswordChangeSession {
   User       User      @relation(fields: [user_id], references: [id])
 }
 
-model ActivationToken {
-  id          String    @id @default(cuid()) @db.VarChar(25)
-  customer_id String    @db.VarChar(25)
-  tenant_id   String    @db.VarChar(25)
-  token       String    @unique @db.VarChar(64)
-  type        String    @db.VarChar(20)
-  expires_at  DateTime
-  used_at     DateTime?
-  created_at  DateTime  @default(now())
-  updated_at  DateTime  @updatedAt
-  Customer    Customer  @relation(fields: [customer_id], references: [id])
-
-  @@index([token])
-  @@index([customer_id, type])
-  @@index([tenant_id])
-  @@index([customer_id, tenant_id, type])
-}
-
-model Customer {
-  id                 String                 @id @default(cuid()) @db.VarChar(25)
-  tenant_id          String                 @db.VarChar(25)
-  email              String                 @db.VarChar(255)
-  name               String                 @db.VarChar(100)
-  phone_number       String?                @db.VarChar(13)
-  stripe_customer_id String?                @db.VarChar(100)
-  role               ECustomerRole          @default(study)
-  created_at         DateTime               @default(now())
-  updated_at         DateTime               @updatedAt
-  Tenant             Tenant                 @relation(fields: [tenant_id], references: [id])
-  Credential         CustomerCredential?
-  SessionTokens      CustomerSessionToken[]
-  ActivationTokens   ActivationToken[]
-  ProductAccess      UserProductAccess[]
-  ExamAttempts       ExamAttempt[]
-
-  @@unique([tenant_id, email])
-  @@index([tenant_id])
-  @@index([email])
-  @@map("customers")
-}
-
-model CustomerCredential {
-  id          String   @id @default(cuid()) @db.VarChar(25)
-  customer_id String   @unique @db.VarChar(25)
-  hash        String
-  salt        String
-  created_at  DateTime @default(now())
-  updated_at  DateTime @updatedAt
-  Customer    Customer @relation(fields: [customer_id], references: [id])
-
-  @@map("customer_credentials")
-}
-
-model CustomerSessionToken {
-  id          String   @id @default(cuid()) @db.VarChar(25)
-  customer_id String   @db.VarChar(25)
-  hash_token  String
-  salt        String
-  created_at  DateTime @default(now())
-  updated_at  DateTime @updatedAt
-  Customer    Customer @relation(fields: [customer_id], references: [id])
-
-  @@index([customer_id])
-  @@map("customer_session_tokens")
-}
-
-model Company {
-  id                    String    @id @default(cuid()) @db.VarChar(25)
-  cnpj                  String    @unique @db.VarChar(14)
-  branch_type           Int       @db.SmallInt
-  business_name         String?   @db.VarChar(255)
-  status                String    @db.VarChar(2)
-  date_status           DateTime? @db.Date
-  code_detail_status    String    @db.VarChar(2)
-  outer_city            String?   @db.VarChar(70)
-  coutry_code           String?   @db.VarChar(20)
-  start_date            DateTime? @db.Date
-  main_cnae             String?   @db.VarChar(16)
-  secondary_cnae        String?
-  type_of_place         String?   @db.VarChar(20)
-  place                 String?   @db.VarChar(120)
-  house_number          String?   @db.VarChar(25)
-  address_complement    String?   @db.VarChar(156)
-  district              String?   @db.VarChar(120)
-  cep                   String?   @db.VarChar(10)
-  uf                    String?   @db.VarChar(5)
-  city_code             String?   @db.VarChar(5)
-  ddd_1                 String?   @db.VarChar(5)
-  phone_1               String?   @db.VarChar(8)
-  ddd_2                 String?   @db.VarChar(5)
-  phone_2               String?   @db.VarChar(8)
-  ddd_fax               String?   @db.VarChar(5)
-  fax                   String?   @db.VarChar(8)
-  email                 String?   @db.VarChar(115)
-  special_citation      String?   @db.VarChar(150)
-  special_citation_date DateTime? @db.Date
-  load_update_date      DateTime  @db.Date
-  created_at            DateTime  @default(now())
-  updated_at            DateTime  @default(now()) @updatedAt
-
-  @@index([uf, city_code, branch_type, business_name, status, date_status, code_detail_status, coutry_code, start_date, main_cnae, secondary_cnae, created_at(sort: Desc)])
-}
-
-model AuxiliaryCompanyInformation {
-  id                                       String   @id @default(cuid()) @db.VarChar(25)
-  cnpj                                     String   @unique @db.VarChar(14)
-  fantasy_name                             String?  @db.VarChar(150)
-  legal_nature                             String?  @db.VarChar(4)
-  qualification_representative_before_cnpj String?  @db.VarChar(2)
-  social_capital                           Decimal? @db.Decimal(22, 2)
-  size                                     String?  @db.VarChar(2)
-  federative_entity                        String?  @db.VarChar(100)
-  created_at                               DateTime @default(now())
-  updated_at                               DateTime @default(now()) @updatedAt
-}
-
-model Search {
-  id         String   @id @default(cuid()) @db.VarChar(25)
-  amount     Int
-  limit      Int      @db.SmallInt
-  hash       String   @unique @db.VarChar(100)
-  filters    Json
-  user_id    String   @db.VarChar(25)
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-  User       User     @relation(fields: [user_id], references: [id])
-}
-
-model TaxRegime {
-  id               String   @id @default(cuid()) @db.VarChar(25)
-  cnpj             String   @db.VarChar(14)
-  year             DateTime @db.Date
-  scp_cnpj         String   @db.VarChar(115)
-  type_of_taxation Int      @db.SmallInt
-  taxation         String   @db.VarChar(115)
-  company_id       String?  @db.VarChar(25)
-  created_at       DateTime @default(now())
-  updated_at       DateTime @updatedAt
-}
-
-model Partner {
-  id                           String    @id @default(cuid()) @db.VarChar(25)
-  cnpj                         String    @db.VarChar(14)
-  partner_type                 String    @db.VarChar(2)
-  name                         String?   @db.VarChar(150)
-  etary_age                    String?   @db.VarChar(10)
-  identifier                   String    @db.VarChar(14)
-  inclusion_date               DateTime? @db.Date
-  coutry_code                  String?   @db.VarChar(5)
-  cpf_representative           String?   @db.VarChar(11)
-  name_representative          String?   @db.VarChar(150)
-  representative_qualification String?   @db.VarChar(2)
-  company_id                   String?   @db.VarChar(25)
-  created_at                   DateTime  @default(now())
-  updated_at                   DateTime  @updatedAt
-}
-
-model Brand {
-  id                String              @id @default(cuid()) @db.VarChar(25)
-  name              String
-  identifier        String?             @db.VarChar(14)
-  email             String
-  phone_number      String
-  user_id           String              @db.VarChar(25)
-  inpi_number       String?             @db.VarChar(30)
-  created_at        DateTime            @default(now())
-  updated_at        DateTime            @updatedAt
-  User              User                @relation(fields: [user_id], references: [id])
-  BrandAlert        BrandAlert[]
-  BrandMonitoring   BrandMonitoring[]
-  BrandNotification BrandNotification[]
-  MonitoringPlan    MonitoringPlan[]
-}
-
-model Cnae {
-  id         String   @id @default(cuid()) @db.VarChar(25)
-  code       String   @db.VarChar(11)
-  name       String   @db.VarChar(255)
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-}
-
-model Journal {
-  id         String   @id @default(cuid()) @db.VarChar(25)
-  name       String   @unique
-  extension  String   @db.VarChar(10)
-  size       String
-  loaded     Boolean  @default(false)
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-}
-
-model JournalToFetch {
-  id           String         @id @default(cuid()) @db.VarChar(25)
-  zip_name     String         @unique @db.VarChar(100)
-  name         String         @db.VarChar(100)
-  searched     Boolean        @default(false)
-  created_at   DateTime       @default(now())
-  updated_at   DateTime       @updatedAt
-  BrandAlert   BrandAlert[]
-  JournalAlert JournalAlert[]
-}
-
-model BrandAlert {
-  id                   String          @id @default(cuid()) @db.VarChar(25)
-  brand                String?
-  deposit_date         DateTime?
-  conception_date      DateTime?
-  effective_date       DateTime?
-  nature               String?         @db.VarChar(100)
-  presentation         String?         @db.VarChar(100)
-  classe_nice          Json?
-  prioridade_unionista Json?
-  apostila             String?
-  classe_viena         Json?
-  journal_number       String
-  journal_date         DateTime
-  process_number       String          @db.VarChar(50)
-  attorney             String?
-  titular              Json
-  despacho             Json
-  sobrestador          Json
-  brand_id             String          @db.VarChar(25)
-  brand_monitoring_id  String          @db.VarChar(25)
-  user_id              String          @db.VarChar(25)
-  jornal_to_fetch_id   String          @db.VarChar(25)
-  created_at           DateTime        @default(now())
-  updated_at           DateTime        @updatedAt
-  Brand                Brand           @relation(fields: [brand_id], references: [id])
-  BrandMonitoring      BrandMonitoring @relation(fields: [brand_monitoring_id], references: [id])
-  Journal_to_fetch     JournalToFetch  @relation(fields: [jornal_to_fetch_id], references: [id])
-  User                 User            @relation(fields: [user_id], references: [id])
-}
-
-model BrandMonitoring {
-  id                      String              @id @default(cuid()) @db.VarChar(25)
-  processed_last_analysis Int                 @default(0)
-  total_processed         Int                 @default(0)
-  triggered_notifications Int                 @default(0)
-  status                  Int                 @db.SmallInt
-  user_id                 String              @db.VarChar(25)
-  brand_id                String              @db.VarChar(25)
-  inpi_number             String?             @db.VarChar(30)
-  last_magazine_searched  String?             @db.VarChar(20)
-  last_movement           DateTime?
-  deposit                 DateTime?
-  last_search             DateTime?
-  created_at              DateTime            @default(now())
-  updated_at              DateTime            @updatedAt
-  BrandAlert              BrandAlert[]
-  Brand                   Brand               @relation(fields: [brand_id], references: [id])
-  User                    User                @relation(fields: [user_id], references: [id])
-  BrandNotification       BrandNotification[]
-}
-
-model JournalAlert {
-  id                   String         @id @default(cuid()) @db.VarChar(25)
-  brand                String?
-  deposit_date         DateTime?
-  conception_date      DateTime?
-  effective_date       DateTime?
-  nature               String?        @db.VarChar(100)
-  presentation         String?        @db.VarChar(100)
-  classe_nice          Json?
-  prioridade_unionista Json?
-  apostila             String?
-  classe_viena         Json?
-  journal_number       String
-  journal_date         DateTime
-  process_number       String         @db.VarChar(50)
-  attorney             String?
-  titular              Json
-  despacho             Json
-  sobrestador          Json
-  jornal_to_fetch_id   String         @db.VarChar(25)
-  created_at           DateTime       @default(now())
-  updated_at           DateTime       @updatedAt
-  Journal_to_fetch     JournalToFetch @relation(fields: [jornal_to_fetch_id], references: [id])
-
-  @@index([brand], type: SpGist)
-}
-
-model BrandAnalysis {
-  id                   String                 @id @default(cuid()) @db.VarChar(25)
-  user_message         Json
-  response             Json
-  json_data_response   Json
-  md_data_reposnse     Json
-  html_data_response   Json
-  brand                String                 @db.VarChar(255)
-  niche                String                 @db.VarChar(155)
-  description          String                 @db.VarChar(255)
-  user_id              String                 @db.VarChar(25)
-  created_at           DateTime               @default(now())
-  updated_at           DateTime               @updatedAt
-  User                 User                   @relation(fields: [user_id], references: [id])
-  BrandAnalysisRequest BrandAnalysisRequest[]
-  BrandAnalysisToken   BrandAnalysisToken[]
-
-  @@index([brand])
-}
-
-model BrandAnalysisRequest {
-  id                      String             @id @default(cuid()) @db.VarChar(25)
-  valid                   Boolean
-  brand_analysis_id       String?            @db.VarChar(25)
-  user_id                 String             @db.VarChar(25)
-  created_at              DateTime           @default(now())
-  updated_at              DateTime           @updatedAt
-  brand_analysis_token_id String             @db.VarChar(25)
-  Brand_analysis          BrandAnalysis?     @relation(fields: [brand_analysis_id], references: [id])
-  Brand_analysis_token    BrandAnalysisToken @relation(fields: [brand_analysis_token_id], references: [id])
-  User                    User               @relation(fields: [user_id], references: [id])
-}
-
-model BrandAnalysisToken {
-  id                   String                 @id @default(cuid()) @db.VarChar(25)
-  status               Int                    @db.SmallInt
-  brand_analysis_id    String?                @db.VarChar(25)
-  user_id              String                 @db.VarChar(25)
-  created_at           DateTime               @default(now())
-  updated_at           DateTime               @updatedAt
-  BrandAnalysisRequest BrandAnalysisRequest[]
-  Brand_analysis       BrandAnalysis?         @relation(fields: [brand_analysis_id], references: [id])
-  User                 User                   @relation(fields: [user_id], references: [id])
-}
-
-model BrandNotification {
-  id                  String          @id @default(cuid()) @db.VarChar(25)
-  brand_id            String          @db.VarChar(25)
-  user_id             String          @db.VarChar(25)
-  brand_monitoring_id String          @db.VarChar(25)
-  created_at          DateTime        @default(now())
-  updated_at          DateTime        @updatedAt
-  Brand               Brand           @relation(fields: [brand_id], references: [id])
-  Brand_monitoring    BrandMonitoring @relation(fields: [brand_monitoring_id], references: [id])
-  User                User            @relation(fields: [user_id], references: [id])
-}
-
-model CompanyExport {
-  id             String    @id @default(cuid()) @db.VarChar(25)
-  total_exported Int
-  company_count  Int
-  status         Int       @db.SmallInt
-  page           Int
-  page_count     Int
-  public_link    String?
-  deletion_date  DateTime?
-  filters        Json
-  user_id        String    @db.VarChar(25)
-  created_at     DateTime  @default(now())
-  updated_at     DateTime  @updatedAt
-  User           User      @relation(fields: [user_id], references: [id])
-}
-
-model PublicBrandSearch {
-  id         String   @id @default(cuid()) @db.VarChar(25)
-  name       String
-  email      String
-  brand      String
-  radical    Boolean
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-}
-
-model APIToken {
-  id                 String   @id @default(cuid()) @db.VarChar(25)
-  api_identifier     String   @unique @db.VarChar(25)
-  hash_id_token      String
-  hash_acess_token   String
-  hash_refresh_token String
-  salt               String
-  last_refresh       Int?
-  expires_in         DateTime
-  active             Boolean  @default(false)
-  created_at         DateTime @default(now())
-  updated_at         DateTime @updatedAt
-}
-
 model Lead {
   id             String           @id @default(uuid()) @db.Uuid
   name           String?          @db.VarChar(255)
@@ -622,25 +163,6 @@ model Lead {
   @@index([country])
   @@index([city])
   @@index([created_at])
-}
-
-model LeadQualificationMessage {
-  id                 String   @id @default(cuid()) @db.VarChar(25)
-  analyzed           Boolean  @default(false)
-  temperature        Int?     @db.SmallInt
-  prompt_token       Int
-  completion_token   Int
-  json               Json
-  profile_name       String   @db.VarChar(100)
-  phone_number_id    String   @db.VarChar(100)
-  phone_number       String   @db.VarChar(80)
-  type               String   @db.VarChar(30)
-  kb_card            String   @default("sem-contato")
-  screening_complete Boolean  @default(false)
-  message            String
-  message_date       DateTime
-  created_at         DateTime @default(now())
-  updated_at         DateTime @updatedAt
 }
 
 model Admin {
@@ -700,15 +222,14 @@ model Tenant {
   B2CProductPrices          ProductPrice[]              @relation("B2CProductPrices")
   B2CProducts               Product[]
   B2CUserProductAccess      UserProductAccess[]         @relation("B2CUserProductAccess")
-  Customers                 Customer[]
   discountCoupons           DiscountCoupon[]            @relation("DiscountCoupons")
   StatsIntegration          StatsIntegration[]
   StripeSubscription        StripeSubscription?
   TenantBillingConfig       TenantBillingConfig?
-  PracticeExams             PracticeExam[]
-  PracticeExamBundles       PracticeExamBundle[]
   NotificationReceipts      TenantNotificationReceipt[]
   NotificationSettings      TenantNotificationSettings?
+  HotelConfig               HotelClient?                @relation("HotelTenantConfig")
+  HotelReservations         HotelReservation[]
 
   @@index([stripe_customer_id])
   @@index([subscription_status])
@@ -1465,20 +986,16 @@ model UserProductAccess {
   currency                 String       @default("brl") @db.VarChar(3)
   created_at               DateTime     @default(now())
   updated_at               DateTime     @updatedAt
-  customer_id              String?      @db.VarChar(25)
   Product                  Product      @relation(fields: [product_id], references: [id])
   ProductPrice             ProductPrice @relation(fields: [product_price_id], references: [id])
   tenant                   Tenant       @relation("B2CUserProductAccess", fields: [tenant_id], references: [id], onDelete: Cascade)
   User                     User?        @relation(fields: [user_id], references: [id])
-  Customer                 Customer?    @relation(fields: [customer_id], references: [id])
 
   @@unique([tenant_id, stripe_subscription_id])
   @@index([tenant_id])
   @@index([tenant_id, user_id, status])
   @@index([user_id, status])
   @@index([user_id, product_id, status])
-  @@index([customer_id])
-  @@index([tenant_id, customer_id, status])
   @@index([stripe_subscription_id])
   @@index([access_type, status])
   @@index([access_expires_at])
@@ -1793,11 +1310,6 @@ enum EAdminRole {
   company_admin
 }
 
-enum ECustomerRole {
-  study
-  admin
-}
-
 enum EArticleStatus {
   draft
   scheduled
@@ -1848,130 +1360,6 @@ enum EAccessType {
   temporary
 }
 
-enum EExamSection {
-  B_AND_F
-  TRADE
-  B_AND_F_TRADE
-}
-
-enum EAttemptStatus {
-  IN_PROGRESS
-  COMPLETED
-  TIMED_OUT
-}
-
-model PracticeExam {
-  id          String        @id @default(cuid()) @db.VarChar(25)
-  tenant_id   String        @db.VarChar(25)
-  title       String        @db.VarChar(255)
-  section     EExamSection
-  time_limit  Int
-  description String?       @db.Text
-  is_active   Boolean       @default(true)
-  created_at  DateTime      @default(now())
-  updated_at  DateTime      @updatedAt
-  Tenant      Tenant        @relation(fields: [tenant_id], references: [id])
-  Questions   Question[]
-  Attempts    ExamAttempt[]
-
-  @@index([tenant_id, is_active])
-  @@map("practice_exams")
-}
-
-model Question {
-  id               String             @id @default(cuid()) @db.VarChar(25)
-  practice_exam_id String             @db.VarChar(25)
-  statement        String             @db.Text
-  correct_option   String             @db.VarChar(1)
-  explanation      String?            @db.Text
-  order            Int
-  deleted_at       DateTime?
-  created_at       DateTime           @default(now())
-  updated_at       DateTime           @updatedAt
-  PracticeExam     PracticeExam       @relation(fields: [practice_exam_id], references: [id])
-  Options          OptionQuestion[]
-  Responses        QuestionResponse[]
-
-  @@index([practice_exam_id, order])
-  @@map("questions")
-}
-
-model OptionQuestion {
-  id          String   @id @default(cuid()) @db.VarChar(25)
-  question_id String   @db.VarChar(25)
-  label       String   @db.VarChar(1)
-  text        String   @db.Text
-  created_at  DateTime @default(now())
-  updated_at  DateTime @updatedAt
-  Question    Question @relation(fields: [question_id], references: [id])
-
-  @@unique([question_id, label])
-  @@index([question_id])
-  @@map("option_questions")
-}
-
-model ExamAttempt {
-  id               String             @id @default(cuid()) @db.VarChar(25)
-  customer_id      String             @db.VarChar(25)
-  practice_exam_id String             @db.VarChar(25)
-  started_at       DateTime           @default(now())
-  finished_at      DateTime?
-  score            Float?
-  status           EAttemptStatus     @default(IN_PROGRESS)
-  created_at       DateTime           @default(now())
-  updated_at       DateTime           @updatedAt
-  Customer         Customer           @relation(fields: [customer_id], references: [id])
-  PracticeExam     PracticeExam       @relation(fields: [practice_exam_id], references: [id])
-  Responses        QuestionResponse[]
-
-  @@index([customer_id, practice_exam_id])
-  @@index([customer_id, status])
-  @@map("exam_attempts")
-}
-
-model QuestionResponse {
-  id              String      @id @default(cuid()) @db.VarChar(25)
-  attempt_id      String      @db.VarChar(25)
-  question_id     String      @db.VarChar(25)
-  selected_option String?     @db.VarChar(1)
-  is_correct      Boolean?
-  flagged         Boolean     @default(false)
-  answered_at     DateTime?
-  created_at      DateTime    @default(now())
-  updated_at      DateTime    @updatedAt
-  Attempt         ExamAttempt @relation(fields: [attempt_id], references: [id])
-  Question        Question    @relation(fields: [question_id], references: [id])
-
-  @@unique([attempt_id, question_id])
-  @@index([attempt_id])
-  @@map("question_responses")
-}
-
-model PracticeExamBundle {
-  id                String                   @id @default(cuid()) @db.VarChar(25)
-  tenant_id         String                   @db.VarChar(25)
-  title             String                   @db.VarChar(255)
-  description       String?                  @db.Text
-  is_active         Boolean                  @default(true)
-  stripe_product_id String?                  @db.VarChar(255)
-  created_at        DateTime                 @default(now())
-  updated_at        DateTime                 @updatedAt
-  Tenant            Tenant                   @relation(fields: [tenant_id], references: [id])
-  Exams             PracticeExamBundleExam[]
-
-  @@index([tenant_id, is_active])
-  @@map("practice_exam_bundles")
-}
-
-model PracticeExamBundleExam {
-  bundle_id String             @db.VarChar(25)
-  exam_id   String             @db.VarChar(25)
-  Bundle    PracticeExamBundle @relation(fields: [bundle_id], references: [id], onDelete: Cascade)
-
-  @@id([bundle_id, exam_id])
-  @@map("practice_exam_bundle_exams")
-}
-
 // ============================================================
 // RESERVE CLIENT PORTAL — Hotel Marketing Dashboard
 // ============================================================
@@ -2005,6 +1393,10 @@ enum EReportStatus {
 model HotelClient {
   id                  String              @id @default(cuid()) @db.VarChar(25)
   admin_id            String              @db.VarChar(25)
+  tenant_id           String?             @unique @db.VarChar(25)
+  booking_engine_type EBookingEngineType  @default(MANUAL)
+  webhook_secret      String?             @db.VarChar(100)
+  Tenant              Tenant?             @relation("HotelTenantConfig", fields: [tenant_id], references: [id])
   hotel_name          String              @db.VarChar(255)
   logo_url            String?             @db.VarChar(500)
   country             String              @db.VarChar(100)
@@ -2016,12 +1408,20 @@ model HotelClient {
   created_at          DateTime            @default(now())
   updated_at          DateTime            @updatedAt
   Admin               Admin               @relation(fields: [admin_id], references: [id])
-  ApiCredentials      HotelApiCredential[]
-  DashboardSnapshots  DashboardSnapshot[]
-  CampaignMetrics     CampaignMetric[]
-  SiteMetrics         SiteMetric[]
-  OtaMonthlyData      OtaMonthlyData[]
-  MonthlyReports      MonthlyReport[]
+  ApiCredentials       HotelApiCredential[]
+  DashboardSnapshots   DashboardSnapshot[]
+  CampaignMetrics      CampaignMetric[]
+  SiteMetrics          SiteMetric[]
+  OtaMonthlyData       OtaMonthlyData[]
+  MonthlyReports       MonthlyReport[]
+  ReputationMetrics    HotelReputationMetric[]
+  MonthlyKpis          HotelMonthlyKpi[]
+  BookingWindowMetrics BookingWindowMetric[]
+  WhatsAppTemplates    WhatsAppTemplate[]
+  WhatsAppTrackingLinks WhatsAppTrackingLink[]
+  RateParityChecks     RateParityCheck[]
+  MarketingBudgets     MarketingBudget[]
+  Guests               HotelGuest[]
 
   @@index([admin_id, is_active])
   @@map("hotel_clients")
@@ -2147,4 +1547,309 @@ model MonthlyReport {
   @@unique([client_id, reference_month])
   @@index([client_id, status])
   @@map("monthly_reports")
+}
+
+// ============================================================
+// HOTEL CRM — Extended Features
+// ============================================================
+
+enum EWhatsAppTemplateType {
+  PRE_ARRIVAL
+  POST_STAY
+  REACTIVATION
+  UPSELL
+}
+
+enum EWhatsAppMessageStatus {
+  PENDING
+  SENT
+  DELIVERED
+  READ
+  FAILED
+}
+
+enum EGuestSegment {
+  leisure
+  business
+  honeymoon
+  family
+  group
+}
+
+model HotelReputationMetric {
+  id                   String      @id @default(cuid()) @db.VarChar(25)
+  client_id            String      @db.VarChar(25)
+  reference_month      DateTime
+  google_rating        Float?
+  google_reviews_count Int         @default(0)
+  tripadvisor_rating   Float?
+  tripadvisor_reviews  Int         @default(0)
+  booking_rating       Float?
+  booking_reviews      Int         @default(0)
+  overall_sentiment    String?     @db.VarChar(20)
+  inserted_by          String      @db.VarChar(25)
+  created_at           DateTime    @default(now())
+  updated_at           DateTime    @updatedAt
+  HotelClient          HotelClient @relation(fields: [client_id], references: [id])
+
+  @@unique([client_id, reference_month])
+  @@index([client_id, reference_month])
+  @@map("hotel_reputation_metrics")
+}
+
+model HotelMonthlyKpi {
+  id              String      @id @default(cuid()) @db.VarChar(25)
+  client_id       String      @db.VarChar(25)
+  reference_month DateTime
+  total_rooms     Int
+  occupied_rooms  Int         @default(0)
+  adr             Float       @default(0)
+  revpar          Float       @default(0)
+  total_revenue   Float       @default(0)
+  direct_revenue  Float       @default(0)
+  inserted_by     String      @db.VarChar(25)
+  created_at      DateTime    @default(now())
+  updated_at      DateTime    @updatedAt
+  HotelClient     HotelClient @relation(fields: [client_id], references: [id])
+
+  @@unique([client_id, reference_month])
+  @@index([client_id, reference_month])
+  @@map("hotel_monthly_kpis")
+}
+
+model BookingWindowMetric {
+  id                String      @id @default(cuid()) @db.VarChar(25)
+  client_id         String      @db.VarChar(25)
+  reference_month   DateTime
+  last_minute_count Int         @default(0)
+  medium_term_count Int         @default(0)
+  long_term_count   Int         @default(0)
+  last_minute_pct   Float       @default(0)
+  medium_term_pct   Float       @default(0)
+  long_term_pct     Float       @default(0)
+  inserted_by       String      @db.VarChar(25)
+  created_at        DateTime    @default(now())
+  updated_at        DateTime    @updatedAt
+  HotelClient       HotelClient @relation(fields: [client_id], references: [id])
+
+  @@unique([client_id, reference_month])
+  @@index([client_id, reference_month])
+  @@map("booking_window_metrics")
+}
+
+model WhatsAppTemplate {
+  id          String                @id @default(cuid()) @db.VarChar(25)
+  client_id   String                @db.VarChar(25)
+  name        String                @db.VarChar(100)
+  type        EWhatsAppTemplateType
+  body        String                @db.Text
+  active      Boolean               @default(true)
+  created_at  DateTime              @default(now())
+  updated_at  DateTime              @updatedAt
+  HotelClient HotelClient           @relation(fields: [client_id], references: [id])
+  Messages    WhatsAppMessage[]
+
+  @@index([client_id, type])
+  @@map("whatsapp_templates")
+}
+
+model WhatsAppMessage {
+  id          String                 @id @default(cuid()) @db.VarChar(25)
+  client_id   String                 @db.VarChar(25)
+  template_id String                 @db.VarChar(25)
+  guest_phone String                 @db.VarChar(20)
+  guest_name  String?                @db.VarChar(100)
+  status      EWhatsAppMessageStatus @default(PENDING)
+  sent_at     DateTime?
+  error       String?                @db.Text
+  created_at  DateTime               @default(now())
+  updated_at  DateTime               @updatedAt
+  Template    WhatsAppTemplate       @relation(fields: [template_id], references: [id])
+
+  @@index([client_id, status])
+  @@index([template_id])
+  @@map("whatsapp_messages")
+}
+
+model WhatsAppTrackingLink {
+  id           String              @id @default(cuid()) @db.VarChar(25)
+  client_id    String              @db.VarChar(25)
+  name         String              @db.VarChar(100)
+  description  String?             @db.VarChar(255)
+  phone_number String              @db.VarChar(20)
+  message      String?             @db.Text
+  short_code   String              @unique @db.VarChar(20)
+  utm_source   String?             @db.VarChar(100)
+  utm_medium   String?             @db.VarChar(100)
+  utm_campaign String?             @db.VarChar(100)
+  is_active    Boolean             @default(true)
+  created_by   String              @db.VarChar(25)
+  created_at   DateTime            @default(now())
+  updated_at   DateTime            @updatedAt
+  HotelClient  HotelClient         @relation(fields: [client_id], references: [id])
+  Clicks       WhatsAppLinkClick[]
+
+  @@index([client_id])
+  @@index([short_code])
+  @@map("whatsapp_tracking_links")
+}
+
+model WhatsAppLinkClick {
+  id          String               @id @default(cuid()) @db.VarChar(25)
+  link_id     String               @db.VarChar(25)
+  clicked_at  DateTime             @default(now())
+  ip_address  String?              @db.VarChar(45)
+  user_agent  String?              @db.Text
+  referer     String?              @db.VarChar(500)
+  country     String?              @db.VarChar(100)
+  city        String?              @db.VarChar(100)
+  device_type String?              @db.VarChar(20)
+  Link        WhatsAppTrackingLink @relation(fields: [link_id], references: [id], onDelete: Cascade)
+
+  @@index([link_id, clicked_at])
+  @@map("whatsapp_link_clicks")
+}
+
+model RateParityCheck {
+  id            String      @id @default(cuid()) @db.VarChar(25)
+  client_id     String      @db.VarChar(25)
+  check_date    DateTime
+  direct_rate   Float
+  booking_rate  Float?
+  expedia_rate  Float?
+  airbnb_rate   Float?
+  has_violation Boolean     @default(false)
+  notes         String?     @db.Text
+  inserted_by   String      @db.VarChar(25)
+  created_at    DateTime    @default(now())
+  updated_at    DateTime    @updatedAt
+  HotelClient   HotelClient @relation(fields: [client_id], references: [id])
+
+  @@index([client_id, check_date])
+  @@index([client_id, has_violation])
+  @@map("rate_parity_checks")
+}
+
+model MarketingBudget {
+  id                String      @id @default(cuid()) @db.VarChar(25)
+  client_id         String      @db.VarChar(25)
+  reference_month   DateTime
+  total_budget      Float
+  meta_ads_budget   Float       @default(0)
+  google_ads_budget Float       @default(0)
+  other_budget      Float       @default(0)
+  notes             String?     @db.Text
+  inserted_by       String      @db.VarChar(25)
+  created_at        DateTime    @default(now())
+  updated_at        DateTime    @updatedAt
+  HotelClient       HotelClient @relation(fields: [client_id], references: [id])
+
+  @@unique([client_id, reference_month])
+  @@index([client_id, reference_month])
+  @@map("marketing_budgets")
+}
+
+model HotelGuest {
+  id             String        @id @default(cuid()) @db.VarChar(25)
+  client_id      String        @db.VarChar(25)
+  name           String        @db.VarChar(255)
+  email          String?       @db.VarChar(255)
+  phone          String?       @db.VarChar(20)
+  country        String?       @db.VarChar(100)
+  segment        EGuestSegment @default(leisure)
+  total_stays    Int           @default(0)
+  total_revenue  Float         @default(0)
+  first_stay     DateTime?
+  last_stay      DateTime?
+  booking_source String?       @db.VarChar(100)
+  notes          String?       @db.Text
+  created_at     DateTime      @default(now())
+  updated_at     DateTime      @updatedAt
+  HotelClient    HotelClient   @relation(fields: [client_id], references: [id])
+  Stays          GuestStay[]
+
+  @@index([client_id])
+  @@index([client_id, segment])
+  @@index([client_id, last_stay])
+  @@map("hotel_guests")
+}
+
+model GuestStay {
+  id                  String     @id @default(cuid()) @db.VarChar(25)
+  guest_id            String     @db.VarChar(25)
+  check_in            DateTime
+  check_out           DateTime
+  room_type           String?    @db.VarChar(100)
+  revenue             Float      @default(0)
+  booking_source      String?    @db.VarChar(100)
+  booking_window_days Int?
+  notes               String?    @db.Text
+  created_at          DateTime   @default(now())
+  updated_at          DateTime   @updatedAt
+  Guest               HotelGuest @relation(fields: [guest_id], references: [id])
+
+  @@index([guest_id])
+  @@index([guest_id, check_in])
+  @@map("guest_stays")
+}
+
+enum EBookingEngineType {
+  MANUAL
+  OMNIBEES
+  STAYS
+  FOCO
+  HITS
+  TOTVS
+  GENERIC_WEBHOOK
+}
+
+enum EReservationSource {
+  DIRECT
+  BOOKING_COM
+  EXPEDIA
+  AIRBNB
+  TRIPADVISOR
+  GOOGLE_HOTEL_ADS
+  OTHER_OTA
+  MANUAL
+}
+
+enum EReservationStatus {
+  CONFIRMED
+  CANCELLED
+  NO_SHOW
+  CHECKED_IN
+  CHECKED_OUT
+}
+
+model HotelReservation {
+  id                  String             @id @default(cuid()) @db.VarChar(25)
+  tenant_id           String             @db.VarChar(25)
+  external_id         String?            @db.VarChar(100)
+  engine_type         EBookingEngineType @default(MANUAL)
+  source              EReservationSource @default(DIRECT)
+  status              EReservationStatus @default(CONFIRMED)
+  guest_name          String             @db.VarChar(255)
+  guest_email         String?            @db.VarChar(255)
+  guest_phone         String?            @db.VarChar(20)
+  guest_country       String?            @db.VarChar(100)
+  check_in            DateTime           @db.Date
+  check_out           DateTime           @db.Date
+  room_type           String?            @db.VarChar(100)
+  total_amount        Float              @default(0)
+  commission_amount   Float              @default(0)
+  booking_date        DateTime
+  booking_window_days Int?
+  raw_payload         Json?
+  processed           Boolean            @default(false)
+  created_at          DateTime           @default(now())
+  updated_at          DateTime           @updatedAt
+  Tenant              Tenant             @relation(fields: [tenant_id], references: [id])
+
+  @@index([tenant_id, status])
+  @@index([tenant_id, source])
+  @@index([tenant_id, check_in])
+  @@index([tenant_id, booking_date])
+  @@index([external_id])
+  @@map("hotel_reservations")
 }

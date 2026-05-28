@@ -71,21 +71,6 @@ export class UserController {
         return res.status(result.status).json(result.data)
     }
 
-    @Get('/feed')
-    @UseGuards(UserJwtGuard)
-    @ApiBearerAuth()
-    @ApiOperation({ summary: 'Get user feed data' })
-    @ApiResponse({ status: 200, description: 'Feed data returned' })
-    @ApiResponse({ status: 401, description: 'Invalid or expired token' })
-    async feed(
-        @Res() res: Response,
-        @Req() req: Request & { user_id: string },
-    ) {
-        const userId = req.user_id;
-        const result = await this.userService.feed(userId);
-        return res.status(result.status).json(result.data)
-    }
-
     @Get('/me')
     @UseGuards(UserJwtGuard)
     @ApiBearerAuth()
@@ -179,42 +164,4 @@ export class UserController {
         return res.status(result.status).json(result.data);
     }
 
-    @Post('/order-brand-analysis/checkout/:slug')
-    @UseGuards(UserJwtGuard)
-    @ApiBearerAuth()
-    @ApiOperation({ summary: 'Checkout for brand analysis order' })
-    @ApiParam({ name: 'slug', description: 'Brand analysis plan slug' })
-    @ApiResponse({ status: 200, description: 'Brand analysis checkout session created' })
-    @ApiResponse({ status: 401, description: 'Invalid or expired token' })
-    async checkoutOrderBrandAnalysis(
-        @Res() res: Response,
-        @Req() req: Request & { user_id: string; },
-        @Param('slug') slug: string,
-    ) {
-        const result = await this.userService.checkoutOrderBrandAnalysis(slug, req.user_id);
-        return res.status(result.status).json(result.data);
-    }
-
-    // TODO: Add a guard to validate token generation via keys stored in the database
-    @Post('/webhook/generate-tokens/:key/:user_id/:tokens')
-    @ApiOperation({ summary: 'Webhook to generate user tokens' })
-    @ApiParam({ name: 'key', description: 'Webhook secret key' })
-    @ApiParam({ name: 'user_id', description: 'Target user CUID (25-character identifier)', example: 'cma1bcdef0001ghijklmno23p' })
-    @ApiParam({ name: 'tokens', description: 'Number of tokens to generate' })
-    @ApiResponse({ status: 200, description: 'Tokens generated successfully' })
-    @ApiResponse({ status: 400, description: 'Invalid parameters' })
-    async generateTokens(
-        @Res() res: Response,
-        @Req() req: Request,
-        @Param('key') key: string,
-        @Param('tokens') tokens: string,
-        @Param('user_id', ParseCuidPipe) userId: string
-    ) {
-        const result = await this.userService.generateTokens(
-            key,
-            +tokens,
-            userId,
-        );
-        return res.status(result.status).json(result.data);
-    }
 }

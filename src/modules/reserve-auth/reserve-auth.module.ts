@@ -44,14 +44,6 @@ import {
   USER_COLLECTION_MEMBERSHIP_REPOSITORY,
 } from './domain/interfaces';
 
-// Cross-context repositories (temporary, to be replaced by module imports)
-import SearchRepository from '../reserve-cnpjs/infrastructure/repositories/search.repository';
-import BrandRepository from '../reserve-brands/infrastructure/repositories/brand.repository';
-import BrandAlertRepository from '../reserve-brands/infrastructure/repositories/brand-alert.repository';
-import BrandAnalysisRepository from '../reserve-brands/infrastructure/repositories/brand-analysis.repository';
-import AdditionalTokenPackRepository from '../reserve-pi-bot/infrastructure/repositories/additional-token-pack.repository';
-import APITokenRepository from '../reserve-brands/infrastructure/repositories/api-token.repository';
-
 // DIP Guards
 import { AdminJwtGuard, UserJwtGuard, RolesGuard, TenantGuard, UserTenantGuard, UserRolesGuard } from '../../shared/auth/guards';
 import { ADMIN_TOKEN_VALIDATOR, USER_TOKEN_VALIDATOR } from '../../shared/auth/interfaces/token-validator.interface';
@@ -60,8 +52,6 @@ import { ADMIN_TOKEN_VALIDATOR, USER_TOKEN_VALIDATOR } from '../../shared/auth/i
 import { AdminTokenValidator } from './infrastructure/providers/admin-token-validator.provider';
 import { UserTokenValidator } from './infrastructure/providers/user-token-validator.provider';
 
-// Providers
-import { FXGoogleAPITokenProvider } from './infrastructure/providers/fx-google-api-token.provider';
 
 /**
  * Reserve Auth Module
@@ -130,16 +120,6 @@ import { FXGoogleAPITokenProvider } from './infrastructure/providers/fx-google-a
     { provide: USER_COLLECTION_REPOSITORY, useExisting: UserCollectionRepository },
     { provide: USER_COLLECTION_MEMBERSHIP_REPOSITORY, useExisting: UserCollectionMembershipRepository },
 
-    // Cross-context repositories (temporary coupling)
-    SearchRepository,
-    BrandRepository,
-    BrandAlertRepository,
-    BrandAnalysisRepository,
-    AdditionalTokenPackRepository,
-    APITokenRepository,
-
-    // Providers
-    FXGoogleAPITokenProvider,
   ],
   exports: [
     AdminService,

@@ -1,0 +1,28 @@
+export enum EReservationSource {
+  DIRECT = 'DIRECT',
+  BOOKING_COM = 'BOOKING_COM',
+  EXPEDIA = 'EXPEDIA',
+  AIRBNB = 'AIRBNB',
+  TRIPADVISOR = 'TRIPADVISOR',
+  GOOGLE_HOTEL_ADS = 'GOOGLE_HOTEL_ADS',
+  OTHER_OTA = 'OTHER_OTA',
+  MANUAL = 'MANUAL',
+}
+
+export enum EReservationStatus {
+  CONFIRMED = 'CONFIRMED',
+  CANCELLED = 'CANCELLED',
+  NO_SHOW = 'NO_SHOW',
+  CHECKED_IN = 'CHECKED_IN',
+  CHECKED_OUT = 'CHECKED_OUT',
+}
+
+export enum EBookingEngineType {
+  MANUAL = 'MANUAL',
+  OMNIBEES = 'OMNIBEES',
+  STAYS = 'STAYS',
+  FOCO = 'FOCO',
+  HITS = 'HITS',
+  TOTVS = 'TOTVS',
+  GENERIC_WEBHOOK = 'GENERIC_WEBHOOK',
+}

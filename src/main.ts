@@ -17,7 +17,7 @@ async function bootstrap() {
   });
 
   app.use(cookieParser());
-  app.setGlobalPrefix('api');
+  app.setGlobalPrefix('api', { exclude: ['wa/:code'] });
 
   app.enableCors({
     origin: process.env.CORS_ORIGINS?.split(',') ?? ['http://localhost:3001'],
