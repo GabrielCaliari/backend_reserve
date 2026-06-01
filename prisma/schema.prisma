@@ -279,6 +279,19 @@ model TenantDomain {
   @@index([tenant_id])
 }
 
+model TenantTypeModulePolicy {
+  id          String      @id @default(cuid()) @db.VarChar(25)
+  tenant_type ETenantType
+  module_key  String      @db.VarChar(100)
+  enabled     Boolean
+  version     Int         @default(1)
+  created_at  DateTime    @default(now())
+  updated_at  DateTime    @updatedAt
+
+  @@unique([tenant_type, module_key])
+  @@index([tenant_type, enabled])
+}
+
 model LeadCollection {
   id              String                @id @default(cuid()) @db.VarChar(25)
   name            String                @db.VarChar(150)
