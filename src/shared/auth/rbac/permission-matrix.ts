@@ -147,6 +147,13 @@ export const PERMISSIONS = [
   'hotel-portal.reports.publish',
   'hotel-portal.whatsapp.manage',
   'hotel-portal.whatsapp-links.manage',
+
+  // settings (Fase 3, não-gateable)
+  'settings.read',
+  'settings.manage',
+  'settings.modules.read',
+  'settings.modules.manage',
+  'settings.domains.manage',
 ] as const;
 
 export type PermissionName = (typeof PERMISSIONS)[number];
@@ -171,6 +178,8 @@ const VIEWER: readonly PermissionName[] = [
   'billing-config.read',
   'b2c-products.read',
   'b2c-fees.read',
+  'settings.read',
+  'settings.modules.read',
 ];
 
 const EDITOR: readonly PermissionName[] = [
@@ -235,6 +244,7 @@ const MANAGER: readonly PermissionName[] = [
   'hotel-portal.reports.manage',
   'hotel-portal.whatsapp.manage',
   'hotel-portal.whatsapp-links.manage',
+  'settings.manage',
 ];
 
 const OWNER: readonly PermissionName[] = [
