@@ -239,9 +239,16 @@ export class WhatsAppTrackingService {
     referer: string,
     geoHeaders?: GeoHeaders,
   ): Promise<string | null> {
-    const link = await this.prisma.whatsAppTrackingLink.findUnique({
-      where: { short_code: shortCode },
-    });
+    let link;
+    try {
+      link = await this.prisma.whatsAppTrackingLink.findUnique({
+        where: { short_code: shortCode },
+      });
+    } catch {
+      // DB lookup failed — return null so the controller responds gracefully
+      // instead of letting the error crash the serverless function.
+      return null;
+    }
 
     if (!link || !link.is_active) return null;
 
