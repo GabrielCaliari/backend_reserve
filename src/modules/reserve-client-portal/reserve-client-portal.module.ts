@@ -61,6 +61,7 @@ import { CronSyncProvider } from './infrastructure/providers/cron-sync.provider'
 import { AesEncryptionProvider } from './infrastructure/providers/aes-encryption.provider';
 import { WhatsAppProvider } from './infrastructure/providers/whatsapp.provider';
 import { GeolocationProvider } from '../../shared/providers/geolocation.provider';
+import { HashProvider } from '../../shared/providers/hash.provider';
 
 // Auth guards (re-exported from ReserveAuthModule via shared/auth)
 import { AdminJwtGuard } from '../../shared/auth/guards/admin-jwt.guard';
@@ -128,6 +129,7 @@ import { ReserveAuthModule } from '../reserve-auth/reserve-auth.module';
     CronSyncProvider,
     WhatsAppProvider,
     GeolocationProvider,
+    HashProvider,
 
     // Concrete repositories
     PrismaHotelClientRepository,

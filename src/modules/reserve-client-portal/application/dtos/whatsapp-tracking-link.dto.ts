@@ -18,6 +18,19 @@ export class CreateWhatsAppTrackingLinkDto {
   @IsString()
   message?: string;
 
+  /**
+   * Custom slug for the public link (the text after /wa/).
+   * Letters, numbers, hyphen and underscore only. If omitted, a random
+   * 8-char code is generated.
+   */
+  @IsOptional()
+  @IsString()
+  @Length(3, 50)
+  @Matches(/^[a-zA-Z0-9_-]+$/, {
+    message: 'custom_code deve conter apenas letras, números, hífen ou underscore',
+  })
+  custom_code?: string;
+
   @IsOptional()
   @IsString()
   @Length(1, 100)
@@ -52,6 +65,15 @@ export class UpdateWhatsAppTrackingLinkDto {
   @IsOptional()
   @IsBoolean()
   is_active?: boolean;
+
+  /** Change the public slug (the text after /wa/). Must stay unique. */
+  @IsOptional()
+  @IsString()
+  @Length(3, 50)
+  @Matches(/^[a-zA-Z0-9_-]+$/, {
+    message: 'custom_code deve conter apenas letras, números, hífen ou underscore',
+  })
+  custom_code?: string;
 
   @IsOptional()
   @IsString()

@@ -4,18 +4,28 @@ import {
   IsNumber,
   IsDateString,
   IsUrl,
+  IsEmail,
   Min,
   Max,
   MaxLength,
+  MinLength,
 } from 'class-validator';
 
 export class CreateClientDto {
   @IsString()
-  @MaxLength(255)
-  hotel_name: string;
+  tenant_id: string;
+
+  @IsEmail()
+  email: string;
+
+  @IsOptional()
+  @IsString()
+  @MinLength(6)
+  password?: string;
 
   @IsString()
-  admin_id: string;
+  @MaxLength(255)
+  hotel_name: string;
 
   @IsOptional()
   @IsUrl()

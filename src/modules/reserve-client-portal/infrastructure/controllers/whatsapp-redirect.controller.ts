@@ -20,7 +20,24 @@ export class WhatsAppRedirectController {
     const userAgent = req.headers['user-agent'] ?? '';
     const referer = req.headers['referer'] ?? '';
 
-    const waUrl = await this.trackingService.resolveAndTrack(code, ip, userAgent, referer);
+    // Geo headers injected for free by Vercel's edge network — no external
+    // lookup, no rate limit, includes city/region/country.
+    const decode = (v: unknown): string | null =>
+      typeof v === 'string' && v.length ? decodeURIComponent(v) : null;
+
+    const geoHeaders = {
+      country: decode(req.headers['x-vercel-ip-country']),
+      region: decode(req.headers['x-vercel-ip-country-region']),
+      city: decode(req.headers['x-vercel-ip-city']),
+    };
+
+    const waUrl = await this.trackingService.resolveAndTrack(
+      code,
+      ip,
+      userAgent,
+      referer,
+      geoHeaders,
+    );
 
     if (!waUrl) {
       return res.status(404).json({ message: 'Link not found or inactive' });

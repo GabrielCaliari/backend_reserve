@@ -1702,6 +1702,7 @@ model WhatsAppLinkClick {
   user_agent  String?              @db.Text
   referer     String?              @db.VarChar(500)
   country     String?              @db.VarChar(100)
+  region      String?              @db.VarChar(100)
   city        String?              @db.VarChar(100)
   device_type String?              @db.VarChar(20)
   Link        WhatsAppTrackingLink @relation(fields: [link_id], references: [id], onDelete: Cascade)

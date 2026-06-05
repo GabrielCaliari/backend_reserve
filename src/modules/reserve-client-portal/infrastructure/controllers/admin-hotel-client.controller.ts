@@ -3,14 +3,16 @@ import {
   Controller,
   Delete,
   Get,
+  Headers,
   Param,
   Patch,
   Post,
   Query,
+  Req,
   Res,
   UseGuards,
 } from '@nestjs/common';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { HotelClientService } from '../../application/services/hotel-client.service';
 import { OtaDirectService } from '../../application/services/ota-direct.service';
 import { CreateClientDto } from '../../application/dtos/create-client.dto';
@@ -43,11 +45,26 @@ export class AdminHotelClientController {
 
   @Get()
   async findAll(
+    @Headers('x-skip-tenant') skipTenant: string,
+    @Headers('x-tenant-id') tenantIdHeader: string,
+    @Req() req: Request,
     @Query('page') page = '1',
     @Query('limit') limit = '20',
     @Res() res: Response,
   ) {
-    const result = await this.hotelClientService.findAll(Number(page), Number(limit));
+    // x-skip-tenant: true → super admin listing all clients
+    if (skipTenant === 'true') {
+      const result = await this.hotelClientService.findAll(Number(page), Number(limit));
+      return res.status(result.status).json(result.data);
+    }
+
+    // x-tenant-id present → return all HotelClients for that tenant
+    const tenantId = tenantIdHeader ?? (req as any).tenant_id;
+    if (!tenantId) {
+      return res.status(400).json({ message: 'Missing x-tenant-id header' });
+    }
+
+    const result = await this.hotelClientService.findAllByTenant(tenantId);
     return res.status(result.status).json(result.data);
   }
 
