@@ -1,10 +1,15 @@
 import { Controller, Get, Param, Post, Query, Res, UseGuards, Headers } from '@nestjs/common';
 import { Response } from 'express';
-import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiOkResponse } from '@nestjs/swagger';
 import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
 import { CurrentAdmin, CurrentAdminPayload } from '../../../../shared/auth/decorators/current-admin.decorator';
 import { ParseCuidPipe } from '../../../../shared/pipes';
 import { NotificationTenantService } from '../../application/services/notification-tenant.service';
+import {
+  OkResponseDto,
+  PaginatedTenantNotificationsResponseDto,
+  UnreadCountResponseDto,
+} from '../../application/dtos/notification-response.dto';
 
 @ApiTags('Notifications (tenant admin)')
 @ApiBearerAuth()
@@ -15,6 +20,7 @@ export class NotificationTenantController {
 
   @Get('me/unread-count')
   @ApiOperation({ summary: 'Get unread notification count for current admin' })
+  @ApiOkResponse({ type: UnreadCountResponseDto })
   async unreadCount(
     @CurrentAdmin() admin: CurrentAdminPayload,
     @Headers('x-tenant-id') tenantId: string,
@@ -26,6 +32,7 @@ export class NotificationTenantController {
 
   @Get()
   @ApiOperation({ summary: 'List notifications for tenant admin inbox' })
+  @ApiOkResponse({ type: PaginatedTenantNotificationsResponseDto })
   async list(
     @CurrentAdmin() admin: CurrentAdminPayload,
     @Headers('x-tenant-id') tenantId: string,
@@ -39,6 +46,7 @@ export class NotificationTenantController {
 
   @Post('/:id/view')
   @ApiOperation({ summary: 'Mark notification as viewed' })
+  @ApiOkResponse({ type: OkResponseDto })
   async markViewed(
     @Param('id', ParseCuidPipe) id: string,
     @CurrentAdmin() admin: CurrentAdminPayload,
