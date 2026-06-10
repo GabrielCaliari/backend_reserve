@@ -6,3 +6,5 @@ export * from './user-tenant.guard';
 export * from './user-roles.guard';
 export * from './permissions.guard';
 export * from './security-posture.guard';
+export * from './module-access.guard';
+export * from './master-tenant.guard';
