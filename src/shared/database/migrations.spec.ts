@@ -70,3 +70,30 @@ describe('20260801000003_add_tenant_setting', () => {
     expect(sql).toMatch(/TenantSetting_tenant_id_fkey[\s\S]*ON DELETE CASCADE/);
   });
 });
+
+describe('20260804000001_add_attribution_tables', () => {
+  const sql = readMigration('20260804000001_add_attribution_tables');
+
+  it('creates atribuicao_conversa and attribution_settings in snake_case', () => {
+    expect(sql).toContain('CREATE TABLE "atribuicao_conversa"');
+    expect(sql).toContain('CREATE TABLE "attribution_settings"');
+    expect(sql).toContain('"tenant_id" VARCHAR(25) NOT NULL');
+    expect(sql).toContain('"ctwa_clid"');
+    expect(sql).toContain('"link_code"');
+    expect(sql).not.toMatch(/"tenantId"|"ctwaClid"|"linkCode"/);
+  });
+
+  it('gives attribution_settings one row per tenant', () => {
+    expect(sql).toContain('CREATE UNIQUE INDEX "attribution_settings_tenant_id_key"');
+  });
+
+  it('indexes atribuicao_conversa for contact/date and link_code lookups', () => {
+    expect(sql).toContain('atribuicao_conversa_tenant_id_numero_contato_idx');
+    expect(sql).toContain('atribuicao_conversa_link_code_idx');
+  });
+
+  it('cascades on tenant delete', () => {
+    expect(sql).toMatch(/atribuicao_conversa_tenant_id_fkey[\s\S]*ON DELETE CASCADE/);
+    expect(sql).toMatch(/attribution_settings_tenant_id_fkey[\s\S]*ON DELETE CASCADE/);
+  });
+});

@@ -241,10 +241,56 @@ model Tenant {
   AdminPermissionOverride   AdminPermissionOverride[]
   TenantDomains             TenantDomain[]
   TenantSettings            TenantSetting[]
+  ConversationAttributions  ConversationAttribution[]
+  AttributionSettings       AttributionSettings?
 
   @@index([stripe_customer_id])
   @@index([subscription_status])
   @@index([tenant_type])
+}
+
+enum EAttributionSource {
+  anuncio
+  link
+  organico
+  site
+}
+
+model ConversationAttribution {
+  id             String             @id @default(cuid()) @db.VarChar(25)
+  tenant_id      String             @db.VarChar(25)
+  numero_contato String             @db.VarChar(20)
+  ocorrido_em    DateTime
+  fonte          EAttributionSource
+  ad_id          String?            @db.VarChar(100)
+  adset_id       String?            @db.VarChar(100)
+  campaign_id    String?            @db.VarChar(100)
+  ctwa_clid      String?            @db.VarChar(255)
+  link_code      String?            @db.VarChar(20)
+  utm_source     String?            @db.VarChar(100)
+  utm_medium     String?            @db.VarChar(100)
+  utm_campaign   String?            @db.VarChar(100)
+  primeiro_toque Boolean            @default(false)
+  ultimo_toque   Boolean            @default(false)
+  created_at     DateTime           @default(now())
+  Tenant         Tenant             @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+
+  @@index([tenant_id, numero_contato])
+  @@index([tenant_id, ocorrido_em])
+  @@index([link_code])
+  @@map("atribuicao_conversa")
+}
+
+model AttributionSettings {
+  id              String   @id @default(cuid()) @db.VarChar(25)
+  tenant_id       String   @unique @db.VarChar(25)
+  window_days     Int      @default(30)
+  source_priority Json     @default("[]")
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+  Tenant          Tenant   @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+
+  @@map("attribution_settings")
 }
 
 model TenantSetting {
