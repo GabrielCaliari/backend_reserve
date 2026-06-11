@@ -147,6 +147,9 @@ export const PERMISSIONS = [
   'hotel-portal.reports.publish',
   'hotel-portal.whatsapp.manage',
   'hotel-portal.whatsapp-links.manage',
+
+  // Painel Reserve (docs/superpowers/plans/2026-08-04-plano-painel-reserve-backend.md)
+  'hotel-portal.attribution.manage',
 ] as const;
 
 export type PermissionName = (typeof PERMISSIONS)[number];
@@ -235,6 +238,7 @@ const MANAGER: readonly PermissionName[] = [
   'hotel-portal.reports.manage',
   'hotel-portal.whatsapp.manage',
   'hotel-portal.whatsapp-links.manage',
+  'hotel-portal.attribution.manage',
 ];
 
 const OWNER: readonly PermissionName[] = [

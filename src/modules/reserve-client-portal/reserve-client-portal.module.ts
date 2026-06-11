@@ -11,6 +11,7 @@ import { WhatsAppTrackingController } from './infrastructure/controllers/whatsap
 import { WhatsAppRedirectController } from './infrastructure/controllers/whatsapp-redirect.controller';
 import { BookingWebhookController } from './infrastructure/controllers/booking-webhook.controller';
 import { AdminReservationsController } from './infrastructure/controllers/admin-reservations.controller';
+import { AdminAttributionSettingsController } from './infrastructure/controllers/admin-attribution-settings.controller';
 
 // Application services
 import { HotelClientService } from './application/services/hotel-client.service';
@@ -31,6 +32,7 @@ import { MarketingBudgetService } from './application/services/marketing-budget.
 import { GuestCrmService } from './application/services/guest-crm.service';
 import { WhatsAppService } from './application/services/whatsapp.service';
 import { WhatsAppTrackingService } from './application/services/whatsapp-tracking.service';
+import { AttributionSettingsService } from './application/services/attribution-settings.service';
 
 // Use cases
 import { ProcessReservationUseCase } from './application/use-cases/process-reservation.use-case';
@@ -92,6 +94,7 @@ import { ReserveAuthModule } from '../reserve-auth/reserve-auth.module';
     WhatsAppRedirectController,
     BookingWebhookController,
     AdminReservationsController,
+    AdminAttributionSettingsController,
   ],
   providers: [
     // Application services
@@ -113,6 +116,7 @@ import { ReserveAuthModule } from '../reserve-auth/reserve-auth.module';
     GuestCrmService,
     WhatsAppService,
     WhatsAppTrackingService,
+    AttributionSettingsService,
 
     // Use cases
     ProcessReservationUseCase,
