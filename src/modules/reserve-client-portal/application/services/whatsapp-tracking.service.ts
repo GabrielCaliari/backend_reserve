@@ -268,7 +268,7 @@ export class WhatsAppTrackingService {
       );
     }
 
-    return this.buildWhatsAppUrl(link.phone_number, link.message);
+    return this.buildWhatsAppUrl(link.phone_number, link.message, link.short_code);
   }
 
   private async recordClick(
@@ -339,13 +339,18 @@ export class WhatsAppTrackingService {
     return map[code.toUpperCase()] ?? code.toUpperCase();
   }
 
-  private buildWhatsAppUrl(phone: string, message?: string | null): string {
+  /**
+   * §6.2: the bot recovers which link a conversation started from by parsing
+   * a `[shortCode]` token out of the very first inbound message. Appending it
+   * here guarantees the token is always present and recoverable, whether or
+   * not the admin configured a custom pre-filled message.
+   */
+  private buildWhatsAppUrl(phone: string, message: string | null | undefined, shortCode: string): string {
     const clean = phone.replace(/\D/g, '');
     const base = `https://wa.me/${clean}`;
-    if (message) {
-      return `${base}?text=${encodeURIComponent(message)}`;
-    }
-    return base;
+    const codeToken = `[${shortCode}]`;
+    const text = message ? `${message}\n${codeToken}` : codeToken;
+    return `${base}?text=${encodeURIComponent(text)}`;
   }
 
   private buildRedirectUrl(shortCode: string): string {
