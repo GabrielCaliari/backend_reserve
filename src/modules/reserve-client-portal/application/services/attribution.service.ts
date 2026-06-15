@@ -52,11 +52,11 @@ export class AttributionService {
           numero_contato: input.numeroContato,
           ocorrido_em: input.ocorridoEm,
           fonte,
-          // Meta's referral payload only ever gives a generic ad/post id, not a
-          // full campaign_id — stored here as ad_id. Resolving ad_id -> campaign_id
-          // (needed by Fase 2 Task 5's per-campaign rollup) requires a separate
-          // Meta Ads campaign-structure join that is out of this task's scope.
-          ad_id: input.sourceId ?? null,
+          // Meta's referral payload only gives a generic ad/post source_id, not a
+          // distinct ad_id/adset_id/campaign_id triad. Stored as campaign_id since
+          // that is the join key Fase 2 Task 5's per-campaign rollup depends on;
+          // ad_id/adset_id stay null pending a richer ingestion payload.
+          campaign_id: input.sourceId ?? null,
           ctwa_clid: input.ctwaClid ?? null,
           link_code: input.linkCode ?? null,
           utm_source: input.utmSource ?? null,
