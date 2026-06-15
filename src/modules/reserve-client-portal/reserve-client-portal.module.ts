@@ -33,6 +33,7 @@ import { GuestCrmService } from './application/services/guest-crm.service';
 import { WhatsAppService } from './application/services/whatsapp.service';
 import { WhatsAppTrackingService } from './application/services/whatsapp-tracking.service';
 import { AttributionSettingsService } from './application/services/attribution-settings.service';
+import { AttributionService } from './application/services/attribution.service';
 
 // Use cases
 import { ProcessReservationUseCase } from './application/use-cases/process-reservation.use-case';
@@ -117,6 +118,7 @@ import { ReserveAuthModule } from '../reserve-auth/reserve-auth.module';
     WhatsAppService,
     WhatsAppTrackingService,
     AttributionSettingsService,
+    AttributionService,
 
     // Use cases
     ProcessReservationUseCase,
