@@ -6,6 +6,7 @@ import {
   CreateWhatsAppTrackingLinkDto,
   UpdateWhatsAppTrackingLinkDto,
 } from '../dtos/whatsapp-tracking-link.dto';
+import { PeriodComparisonService } from '../../../../shared/analytics/period-comparison.service';
 
 interface GeoHeaders {
   country: string | null;
@@ -18,6 +19,7 @@ export class WhatsAppTrackingService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly geolocation: GeolocationProvider,
+    private readonly periodComparison: PeriodComparisonService,
   ) {}
 
   async createLink(clientId: string, adminId: string, dto: CreateWhatsAppTrackingLinkDto) {
@@ -111,6 +113,15 @@ export class WhatsAppTrackingService {
 
       if (!link) return errorResponse('404:WHATSAPP_LINK_NOT_FOUND', 404);
 
+      // Fase 2 Task 6: cliques -> conversas iniciadas conversion rate for this
+      // exact link. ConversationAttribution rows only exist once the bot event
+      // pipeline (Fase 3) writes them via AttributionService.record(), so this
+      // legitimately reads 0 conversations until then — not an error.
+      const conversationsCount = await this.prisma.conversationAttribution.count({
+        where: { link_code: link.short_code },
+      });
+      const totalClicks = link._count.Clicks;
+
       const clicksByDay = await this.prisma.$queryRaw<{ day: string; count: number }[]>`
         SELECT DATE(clicked_at) as day, COUNT(*) as count
         FROM whatsapp_link_clicks
@@ -170,6 +181,11 @@ export class WhatsAppTrackingService {
           by_country: clicksByCountry.map((r) => ({ country: r.country, count: Number(r.count) })),
           by_region: clicksByRegion.map((r) => ({ region: r.region, count: Number(r.count) })),
           by_city: clicksByCity.map((r) => ({ city: r.city, count: Number(r.count) })),
+        },
+        conversion: {
+          clicks: totalClicks,
+          conversations: conversationsCount,
+          rate: this.periodComparison.ratio(conversationsCount, totalClicks),
         },
       });
     } catch (error) {
