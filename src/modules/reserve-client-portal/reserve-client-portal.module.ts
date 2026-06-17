@@ -34,6 +34,8 @@ import { WhatsAppService } from './application/services/whatsapp.service';
 import { WhatsAppTrackingService } from './application/services/whatsapp-tracking.service';
 import { AttributionSettingsService } from './application/services/attribution-settings.service';
 import { AttributionService } from './application/services/attribution.service';
+import { BotKeyProvider } from './infrastructure/providers/bot-key.provider';
+import { BotEventKeyGuard } from './infrastructure/guards/bot-event-key.guard';
 
 // Use cases
 import { ProcessReservationUseCase } from './application/use-cases/process-reservation.use-case';
@@ -119,6 +121,8 @@ import { ReserveAuthModule } from '../reserve-auth/reserve-auth.module';
     WhatsAppTrackingService,
     AttributionSettingsService,
     AttributionService,
+    BotKeyProvider,
+    BotEventKeyGuard,
 
     // Use cases
     ProcessReservationUseCase,
