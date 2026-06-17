@@ -243,6 +243,7 @@ model Tenant {
   TenantSettings            TenantSetting[]
   ConversationAttributions  ConversationAttribution[]
   AttributionSettings       AttributionSettings?
+  BotIntegrationConfig      BotIntegrationConfig?
 
   @@index([stripe_customer_id])
   @@index([subscription_status])
@@ -291,6 +292,132 @@ model AttributionSettings {
   Tenant          Tenant   @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
 
   @@map("attribution_settings")
+}
+
+enum EBotContactStatus {
+  ATIVO
+  PAUSADO
+}
+
+enum EBotMessageRole {
+  user
+  assistant
+  human
+}
+
+enum EBotMessageType {
+  texto
+  audio
+  imagem
+}
+
+enum EFunnelStage {
+  NOVO
+  QUALIFICADO
+  PAGAMENTO
+  FECHADO
+  FRIO
+}
+
+enum EFunnelEventAuthor {
+  bot
+  humano
+}
+
+model BotIntegrationConfig {
+  id                             String    @id @default(cuid()) @db.VarChar(25)
+  tenant_id                      String    @unique @db.VarChar(25)
+  tenant_key_hash                String
+  tenant_key_salt                String
+  active                         Boolean   @default(true)
+  n8n_stage_webhook_url          String?   @db.VarChar(500)
+  n8n_config_publish_webhook_url String?   @db.VarChar(500)
+  last_heartbeat_at              DateTime?
+  created_at                     DateTime  @default(now())
+  updated_at                     DateTime  @updatedAt
+  Tenant                         Tenant    @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+
+  @@map("bot_integration_configs")
+}
+
+model BotIngestionEvent {
+  id            String    @id @default(cuid()) @db.VarChar(25)
+  tenant_id     String    @db.VarChar(25)
+  event_id      String    @db.VarChar(100)
+  event_type    String    @db.VarChar(50)
+  occurred_at   DateTime
+  payload       Json
+  status        String    @default("RECEIVED") @db.VarChar(20) // RECEIVED | PROCESSED | FAILED
+  error_message String?   @db.Text
+  received_at   DateTime  @default(now())
+  processed_at  DateTime?
+
+  @@unique([tenant_id, event_id])
+  @@index([tenant_id, event_type, received_at])
+  @@map("bot_ingestion_events")
+}
+
+model BotContact {
+  id                 String            @id @default(cuid()) @db.VarChar(25)
+  tenant_id          String            @db.VarChar(25)
+  numero_contato     String            @db.VarChar(20)
+  nome               String?           @db.VarChar(150)
+  origem             String?           @db.VarChar(20) // anuncio | organico
+  status_bot         EBotContactStatus @default(ATIVO)
+  motivo_pausa       String?           @db.VarChar(255)
+  janela_expira      DateTime?
+  consentimento_lgpd Boolean           @default(false)
+  last_message_at    DateTime?
+  created_at         DateTime          @default(now())
+  updated_at         DateTime          @updatedAt
+
+  @@unique([tenant_id, numero_contato])
+  @@map("bot_contacts")
+}
+
+model BotMessage {
+  id              String          @id @default(cuid()) @db.VarChar(25)
+  tenant_id       String          @db.VarChar(25)
+  numero_contato  String          @db.VarChar(20)
+  role            EBotMessageRole
+  tipo            EBotMessageType
+  content_preview String?         @db.VarChar(280)
+  ocorrido_em     DateTime
+  created_at      DateTime        @default(now())
+
+  @@index([tenant_id, numero_contato, ocorrido_em])
+  @@map("bot_messages")
+}
+
+model FunnelEvent {
+  id             String             @id @default(cuid()) @db.VarChar(25)
+  tenant_id      String             @db.VarChar(25)
+  numero_contato String             @db.VarChar(20)
+  de_estagio     EFunnelStage?
+  para_estagio   EFunnelStage
+  autor_tipo     EFunnelEventAuthor
+  autor_id       String?            @db.VarChar(25)
+  motivo         String?            @db.VarChar(255)
+  ocorrido_em    DateTime
+  created_at     DateTime           @default(now())
+
+  @@index([tenant_id, numero_contato, ocorrido_em])
+  @@index([tenant_id, para_estagio])
+  @@map("funil_eventos")
+}
+
+model BotLead {
+  id                   String       @id @default(cuid()) @db.VarChar(25)
+  tenant_id            String       @db.VarChar(25)
+  numero_contato       String       @db.VarChar(20)
+  current_stage        EFunnelStage @default(NOVO)
+  perfil               String?      @db.VarChar(100)
+  acomodacao_interesse String?      @db.VarChar(255)
+  datas_interesse      Json?
+  updated_at           DateTime     @updatedAt
+
+  @@unique([tenant_id, numero_contato])
+  @@map("bot_leads")
 }
 
 model TenantSetting {
