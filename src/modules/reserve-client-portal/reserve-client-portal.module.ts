@@ -12,6 +12,7 @@ import { WhatsAppRedirectController } from './infrastructure/controllers/whatsap
 import { BookingWebhookController } from './infrastructure/controllers/booking-webhook.controller';
 import { AdminReservationsController } from './infrastructure/controllers/admin-reservations.controller';
 import { AdminAttributionSettingsController } from './infrastructure/controllers/admin-attribution-settings.controller';
+import { BotEventIngestionController } from './infrastructure/controllers/bot-event-ingestion.controller';
 
 // Application services
 import { HotelClientService } from './application/services/hotel-client.service';
@@ -36,6 +37,8 @@ import { AttributionSettingsService } from './application/services/attribution-s
 import { AttributionService } from './application/services/attribution.service';
 import { BotKeyProvider } from './infrastructure/providers/bot-key.provider';
 import { BotEventKeyGuard } from './infrastructure/guards/bot-event-key.guard';
+import { BotEventIngestionService } from './application/services/bot-event-ingestion.service';
+import { BotEventProcessorService } from './application/services/bot-event-processor.service';
 
 // Use cases
 import { ProcessReservationUseCase } from './application/use-cases/process-reservation.use-case';
@@ -98,6 +101,7 @@ import { ReserveAuthModule } from '../reserve-auth/reserve-auth.module';
     BookingWebhookController,
     AdminReservationsController,
     AdminAttributionSettingsController,
+    BotEventIngestionController,
   ],
   providers: [
     // Application services
@@ -123,6 +127,8 @@ import { ReserveAuthModule } from '../reserve-auth/reserve-auth.module';
     AttributionService,
     BotKeyProvider,
     BotEventKeyGuard,
+    BotEventIngestionService,
+    BotEventProcessorService,
 
     // Use cases
     ProcessReservationUseCase,
