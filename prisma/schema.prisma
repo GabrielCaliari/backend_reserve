@@ -420,6 +420,20 @@ model BotLead {
   @@map("bot_leads")
 }
 
+model FollowupAttempt {
+  id             String   @id @default(cuid()) @db.VarChar(25)
+  tenant_id      String   @db.VarChar(25)
+  numero_contato String   @db.VarChar(20)
+  tentativa      Int      @db.SmallInt // 1-4
+  tipo_janela    String   @db.VarChar(10) // 4h | 24h | 72h | 7d
+  status         String   @db.VarChar(20) // AGUARDANDO | RESPONDEU | FRIO
+  ocorrido_em    DateTime
+  created_at     DateTime @default(now())
+
+  @@index([tenant_id, numero_contato])
+  @@map("bot_followup_attempts")
+}
+
 model TenantSetting {
   id         String   @id @default(cuid()) @db.VarChar(25)
   tenant_id  String   @db.VarChar(25)

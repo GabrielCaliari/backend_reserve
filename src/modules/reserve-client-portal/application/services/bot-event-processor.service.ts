@@ -2,7 +2,11 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../../../shared/database/prisma.service';
 import { AttributionService } from './attribution.service';
 import { BotEventDto } from '../dtos/bot-event.dto';
-import { EBotMessageType } from '../../../../generated/prisma/enums';
+import {
+  EBotContactStatus,
+  EBotMessageType,
+  EFunnelStage,
+} from '../../../../generated/prisma/enums';
 
 const CONTENT_PREVIEW_MAX_LENGTH = 280;
 
@@ -32,6 +36,37 @@ export class BotEventProcessorService {
         return this.handleMensagem(tenantId, payload, occurredAt, 'user');
       case 'mensagem.enviada':
         return this.handleMensagem(tenantId, payload, occurredAt, 'assistant');
+      case 'lead.estagio_alterado':
+        return this.moveStage(
+          tenantId,
+          String(payload.contato ?? ''),
+          this.parseStage(payload.para),
+          occurredAt,
+        );
+      case 'lead.pronto_para_fechar':
+        return this.handleProntoParaFechar(tenantId, String(payload.contato ?? ''), occurredAt);
+      case 'pagamento.solicitado':
+        return this.moveStage(
+          tenantId,
+          String(payload.contato ?? ''),
+          EFunnelStage.PAGAMENTO,
+          occurredAt,
+        );
+      case 'lead.fechado':
+        return this.moveStage(
+          tenantId,
+          String(payload.contato ?? ''),
+          EFunnelStage.FECHADO,
+          occurredAt,
+        );
+      case 'bot.pausado':
+        return this.handleBotPause(tenantId, payload, true);
+      case 'bot.reativado':
+        return this.handleBotPause(tenantId, payload, false);
+      case 'sistema.heartbeat':
+        return this.handleHeartbeat(tenantId, occurredAt);
+      case 'followup.enviado':
+        return this.handleFollowupEnviado(tenantId, payload, occurredAt);
       default:
         return this.handleUnknown(tenantId, event.event_type);
     }
@@ -110,5 +145,124 @@ export class BotEventProcessorService {
     // acknowledged 202 — never thrown, never retried (a retried schema
     // mismatch never succeeds).
     this.logger.warn(`Unknown bot event_type "${eventType}" (tenant=${tenantId})`);
+  }
+
+  /**
+   * lead.estagio_alterado / pagamento.solicitado / lead.fechado all share the
+   * same append-only-log write shape: one FunnelEvent row (de_estagio: the
+   * lead's current cached stage, para_estagio: the new one) plus a BotLead
+   * upsert to keep the read projection in sync — both writes in a single
+   * $transaction, which is the append-only invariant's enforcement point.
+   */
+  private async moveStage(
+    tenantId: string,
+    numeroContato: string,
+    paraEstagio: EFunnelStage,
+    occurredAt: Date,
+    motivo?: string,
+  ): Promise<void> {
+    const currentLead = await this.prisma.botLead.findUnique({
+      where: { tenant_id_numero_contato: { tenant_id: tenantId, numero_contato: numeroContato } },
+    });
+    const deEstagio = currentLead?.current_stage ?? EFunnelStage.NOVO;
+
+    await this.prisma.$transaction([
+      this.prisma.funnelEvent.create({
+        data: {
+          tenant_id: tenantId,
+          numero_contato: numeroContato,
+          de_estagio: deEstagio,
+          para_estagio: paraEstagio,
+          autor_tipo: 'bot',
+          motivo: motivo ?? null,
+          ocorrido_em: occurredAt,
+        },
+      }),
+      this.prisma.botLead.upsert({
+        where: { tenant_id_numero_contato: { tenant_id: tenantId, numero_contato: numeroContato } },
+        create: { tenant_id: tenantId, numero_contato: numeroContato, current_stage: paraEstagio },
+        update: { current_stage: paraEstagio },
+      }),
+    ]);
+  }
+
+  /**
+   * §5.6 lists lead.pronto_para_fechar as a distinct event from
+   * lead.estagio_alterado, but §5.4's stage list (NOVO/QUALIFICADO/PAGAMENTO/
+   * FECHADO/FRIO) has no "pronto para fechar" stage and §3.3 ties the concept
+   * to the [TRANSFERIR] tag instead. Treated here as a non-stage-changing
+   * annotation event (de_estagio: null, para_estagio: the lead's current
+   * stage unchanged) carrying motivo: 'TRANSFERIR', rather than inventing a
+   * sixth EFunnelStage value the master doc never lists. Flagged as a
+   * product decision in the plan's final report.
+   */
+  private async handleProntoParaFechar(
+    tenantId: string,
+    numeroContato: string,
+    occurredAt: Date,
+  ): Promise<void> {
+    const currentLead = await this.prisma.botLead.findUnique({
+      where: { tenant_id_numero_contato: { tenant_id: tenantId, numero_contato: numeroContato } },
+    });
+    const currentStage = currentLead?.current_stage ?? EFunnelStage.NOVO;
+
+    await this.prisma.funnelEvent.create({
+      data: {
+        tenant_id: tenantId,
+        numero_contato: numeroContato,
+        de_estagio: null,
+        para_estagio: currentStage,
+        autor_tipo: 'bot',
+        motivo: 'TRANSFERIR',
+        ocorrido_em: occurredAt,
+      },
+    });
+  }
+
+  private async handleBotPause(
+    tenantId: string,
+    payload: Record<string, unknown>,
+    paused: boolean,
+  ): Promise<void> {
+    const numeroContato = String(payload.contato ?? '');
+    await this.prisma.botContact.updateMany({
+      where: { tenant_id: tenantId, numero_contato: numeroContato },
+      data: {
+        status_bot: paused ? EBotContactStatus.PAUSADO : EBotContactStatus.ATIVO,
+        motivo_pausa: paused ? ((payload.motivo as string) ?? null) : null,
+      },
+    });
+  }
+
+  private async handleHeartbeat(tenantId: string, occurredAt: Date): Promise<void> {
+    // Heartbeat events can arrive slightly delayed — store what N8N reported
+    // (event.occurred_at), not now(), so staleness checks (Task 8) reflect
+    // the bot's actual last-seen time.
+    await this.prisma.botIntegrationConfig.updateMany({
+      where: { tenant_id: tenantId },
+      data: { last_heartbeat_at: occurredAt },
+    });
+  }
+
+  private async handleFollowupEnviado(
+    tenantId: string,
+    payload: Record<string, unknown>,
+    occurredAt: Date,
+  ): Promise<void> {
+    await this.prisma.followupAttempt.create({
+      data: {
+        tenant_id: tenantId,
+        numero_contato: String(payload.contato ?? ''),
+        tentativa: Number(payload.tentativa ?? 1),
+        tipo_janela: String(payload.tipo_janela ?? ''),
+        status: String(payload.status ?? 'AGUARDANDO'),
+        ocorrido_em: occurredAt,
+      },
+    });
+  }
+
+  private parseStage(value: unknown): EFunnelStage {
+    const stage = String(value ?? '').toUpperCase();
+    return (EFunnelStage as Record<string, EFunnelStage>)[stage] ?? EFunnelStage.NOVO;
   }
 }
