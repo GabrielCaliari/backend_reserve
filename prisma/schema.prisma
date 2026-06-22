@@ -1485,6 +1485,7 @@ enum EPlatform {
   GA4
   META_ADS
   GOOGLE_ADS
+  INSTAGRAM
 }
 
 enum EIntegrationStatus {

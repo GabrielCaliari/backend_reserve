@@ -1,0 +1,2 @@
+-- AlterEnum
+ALTER TYPE "EPlatform" ADD VALUE 'INSTAGRAM';
