@@ -62,6 +62,7 @@ import { FocoAdapter } from './infrastructure/providers/adapters/foco.adapter';
 import { Ga4Provider } from './infrastructure/providers/ga4.provider';
 import { MetaAdsProvider } from './infrastructure/providers/meta-ads.provider';
 import { GoogleAdsProvider } from './infrastructure/providers/google-ads.provider';
+import { InstagramProvider } from './infrastructure/providers/instagram.provider';
 import { CronSyncProvider } from './infrastructure/providers/cron-sync.provider';
 import { AesEncryptionProvider } from './infrastructure/providers/aes-encryption.provider';
 import { WhatsAppProvider } from './infrastructure/providers/whatsapp.provider';
@@ -133,6 +134,7 @@ import { ReserveAuthModule } from '../reserve-auth/reserve-auth.module';
     Ga4Provider,
     MetaAdsProvider,
     GoogleAdsProvider,
+    InstagramProvider,
     AesEncryptionProvider,
     CronSyncProvider,
     WhatsAppProvider,
