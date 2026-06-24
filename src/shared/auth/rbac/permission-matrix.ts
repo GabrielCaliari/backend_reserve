@@ -150,6 +150,7 @@ export const PERMISSIONS = [
 
   // Painel Reserve (docs/superpowers/plans/2026-08-04-plano-painel-reserve-backend.md)
   'hotel-portal.attribution.manage',
+  'hotel-portal.whatsapp-funnel.manage',
 ] as const;
 
 export type PermissionName = (typeof PERMISSIONS)[number];
@@ -207,6 +208,8 @@ const EDITOR: readonly PermissionName[] = [
   'leads.attachment.create',
   'leads.attachment.delete',
   'leads.update',
+  // Painel Reserve: viewer excluded, editor+ can move leads (§8 Fase 3 Task 6).
+  'hotel-portal.whatsapp-funnel.manage',
 ];
 
 const MANAGER: readonly PermissionName[] = [

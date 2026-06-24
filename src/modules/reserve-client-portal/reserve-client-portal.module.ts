@@ -13,6 +13,7 @@ import { BookingWebhookController } from './infrastructure/controllers/booking-w
 import { AdminReservationsController } from './infrastructure/controllers/admin-reservations.controller';
 import { AdminAttributionSettingsController } from './infrastructure/controllers/admin-attribution-settings.controller';
 import { BotEventIngestionController } from './infrastructure/controllers/bot-event-ingestion.controller';
+import { AdminWhatsAppFunnelController } from './infrastructure/controllers/admin-whatsapp-funnel.controller';
 
 // Application services
 import { HotelClientService } from './application/services/hotel-client.service';
@@ -39,6 +40,9 @@ import { BotKeyProvider } from './infrastructure/providers/bot-key.provider';
 import { BotEventKeyGuard } from './infrastructure/guards/bot-event-key.guard';
 import { BotEventIngestionService } from './application/services/bot-event-ingestion.service';
 import { BotEventProcessorService } from './application/services/bot-event-processor.service';
+import { FunnelService } from './application/services/funnel.service';
+import { BotStageWebhookProvider } from './infrastructure/providers/bot-stage-webhook.provider';
+import { BotReconciliationCronProvider } from './infrastructure/providers/bot-reconciliation-cron.provider';
 
 // Use cases
 import { ProcessReservationUseCase } from './application/use-cases/process-reservation.use-case';
@@ -102,6 +106,7 @@ import { ReserveAuthModule } from '../reserve-auth/reserve-auth.module';
     AdminReservationsController,
     AdminAttributionSettingsController,
     BotEventIngestionController,
+    AdminWhatsAppFunnelController,
   ],
   providers: [
     // Application services
@@ -129,6 +134,9 @@ import { ReserveAuthModule } from '../reserve-auth/reserve-auth.module';
     BotEventKeyGuard,
     BotEventIngestionService,
     BotEventProcessorService,
+    FunnelService,
+    BotStageWebhookProvider,
+    BotReconciliationCronProvider,
 
     // Use cases
     ProcessReservationUseCase,
