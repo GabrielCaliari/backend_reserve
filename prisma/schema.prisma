@@ -434,6 +434,19 @@ model FollowupAttempt {
   @@map("bot_followup_attempts")
 }
 
+model BotStageWebhookDispatch {
+  id              String    @id @default(cuid()) @db.VarChar(25)
+  tenant_id       String    @db.VarChar(25)
+  funnel_event_id String    @db.VarChar(25)
+  status          String    @default("PENDING") @db.VarChar(10) // PENDING | SENT | FAILED
+  attempts        Int       @default(0) @db.SmallInt
+  last_attempt_at DateTime?
+  created_at      DateTime  @default(now())
+
+  @@index([tenant_id, status])
+  @@map("bot_stage_webhook_dispatches")
+}
+
 model TenantSetting {
   id         String   @id @default(cuid()) @db.VarChar(25)
   tenant_id  String   @db.VarChar(25)
