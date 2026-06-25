@@ -241,6 +241,16 @@ model Tenant {
   AdminPermissionOverride   AdminPermissionOverride[]
   TenantDomains             TenantDomain[]
   TenantSettings            TenantSetting[]
+  // --- Fase 5 (Painel Reserve) shim: ConversationAttribution/AttributionSettings
+  // and BotIntegrationConfig are owned by Fase 2/3 (branch `plano-painel-backend`,
+  // not merged into main as of this branch's creation). Declared here so Fase 5's
+  // ROI/digest/bot-config-proposal services compile and are testable in isolation.
+  // TODO(integration): once Fase 2/3 merges into main, drop this duplicate block
+  // (and its migration) in favor of the canonical one — shapes were copied verbatim
+  // so the merge should be a no-op once de-duplicated.
+  ConversationAttributions  ConversationAttribution[]
+  AttributionSettings       AttributionSettings?
+  BotIntegrationConfig      BotIntegrationConfig?
 
   @@index([stripe_customer_id])
   @@index([subscription_status])
@@ -1970,4 +1980,257 @@ model HotelReservation {
   @@index([tenant_id, booking_date])
   @@index([external_id])
   @@map("hotel_reservations")
+}
+
+// ============================================================
+// Fase 5 — Painel Reserve: shim for Fase 2/3 dependencies
+// ============================================================
+// `plano-painel-backend` (Fase 2 attribution + Fase 3 bot automation) is not
+// merged into main yet. Fase 5 (ROI análise, digest, bot-config-propostas)
+// reads from these models, so they are re-declared here verbatim from the
+// plan's own Fase 2 Task 1 / Fase 3 Task 1 interfaces so this branch compiles
+// and is independently testable. INTEGRATION TODO: once Fase 2/3 merges into
+// main, delete this block + its migration (`..._fase5_shim_upstream_dependencies`)
+// in favor of the canonical models — same shape, so it should be a no-op merge.
+
+enum EAttributionSource {
+  anuncio
+  link
+  organico
+  site
+}
+
+model ConversationAttribution {
+  id             String             @id @default(cuid()) @db.VarChar(25)
+  tenant_id      String             @db.VarChar(25)
+  numero_contato String             @db.VarChar(20)
+  ocorrido_em    DateTime
+  fonte          EAttributionSource
+  ad_id          String?            @db.VarChar(100)
+  adset_id       String?            @db.VarChar(100)
+  campaign_id    String?            @db.VarChar(100)
+  ctwa_clid      String?            @db.VarChar(255)
+  link_code      String?            @db.VarChar(20)
+  utm_source     String?            @db.VarChar(100)
+  utm_medium     String?            @db.VarChar(100)
+  utm_campaign   String?            @db.VarChar(100)
+  primeiro_toque Boolean            @default(false)
+  ultimo_toque   Boolean            @default(false)
+  created_at     DateTime           @default(now())
+  Tenant         Tenant             @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+
+  @@index([tenant_id, numero_contato])
+  @@index([tenant_id, ocorrido_em])
+  @@index([link_code])
+  @@map("atribuicao_conversa")
+}
+
+model AttributionSettings {
+  id              String   @id @default(cuid()) @db.VarChar(25)
+  tenant_id       String   @unique @db.VarChar(25)
+  window_days     Int      @default(30)
+  source_priority Json     @default("[]")
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+  Tenant          Tenant   @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+
+  @@map("attribution_settings")
+}
+
+enum EFunnelStage {
+  NOVO
+  QUALIFICADO
+  PAGAMENTO
+  FECHADO
+  FRIO
+}
+
+enum EFunnelEventAuthor {
+  bot
+  humano
+}
+
+model FunnelEvent {
+  id             String             @id @default(cuid()) @db.VarChar(25)
+  tenant_id      String             @db.VarChar(25)
+  numero_contato String             @db.VarChar(20)
+  de_estagio     EFunnelStage?
+  para_estagio   EFunnelStage
+  autor_tipo     EFunnelEventAuthor
+  autor_id       String?            @db.VarChar(25)
+  motivo         String?            @db.VarChar(255)
+  ocorrido_em    DateTime
+  created_at     DateTime           @default(now())
+
+  @@index([tenant_id, numero_contato, ocorrido_em])
+  @@index([tenant_id, para_estagio])
+  @@map("funil_eventos")
+}
+
+model BotIntegrationConfig {
+  id                             String    @id @default(cuid()) @db.VarChar(25)
+  tenant_id                      String    @unique @db.VarChar(25)
+  tenant_key_hash                String
+  tenant_key_salt                String
+  active                         Boolean   @default(true)
+  n8n_stage_webhook_url          String?   @db.VarChar(500)
+  n8n_config_publish_webhook_url String?   @db.VarChar(500)
+  last_heartbeat_at              DateTime?
+  created_at                     DateTime  @default(now())
+  updated_at                     DateTime  @updatedAt
+  Tenant                         Tenant    @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+
+  @@map("bot_integration_configs")
+}
+
+// ============================================================
+// Fase 5 — Narrativa, direção e retenção
+// ============================================================
+
+enum EDigestStatus {
+  DRAFT
+  PUBLISHED
+}
+
+model DigestReport {
+  id                String        @id @default(cuid()) @db.VarChar(25)
+  tenant_id         String        @db.VarChar(25)
+  period_start      DateTime      @db.Date
+  period_end        DateTime      @db.Date
+  status            EDigestStatus @default(DRAFT)
+  executive_summary String?       @db.Text
+  highlights        Json?
+  next_steps        Json?
+  admin_comment     String?       @db.Text
+  metrics_payload   Json
+  published_at      DateTime?
+  notification_sent Boolean       @default(false)
+  created_at        DateTime      @default(now())
+  updated_at        DateTime      @updatedAt
+  Runs              DigestRun[]
+
+  @@unique([tenant_id, period_start])
+  @@map("digest_reports")
+}
+
+model DigestRun {
+  id              String        @id @default(cuid()) @db.VarChar(25)
+  tenant_id       String        @db.VarChar(25)
+  period_start    DateTime      @db.Date
+  period_end      DateTime      @db.Date
+  status          String        @default("gerado") @db.VarChar(15) // gerado | publicado
+  metrics_payload Json
+  report_id       String?       @db.VarChar(25)
+  generated_at    DateTime      @default(now())
+  published_at    DateTime?
+  DigestReport    DigestReport? @relation(fields: [report_id], references: [id])
+
+  @@index([tenant_id, period_start])
+  @@map("digest_runs")
+}
+
+model Milestone {
+  id         String   @id @default(cuid()) @db.VarChar(25)
+  tenant_id  String   @db.VarChar(25)
+  date       DateTime
+  title      String   @db.VarChar(200)
+  type       String   @db.VarChar(20) // marco_zero|seguidor|campanha|bot|recorde|custom
+  created_at DateTime @default(now())
+
+  @@index([tenant_id, date])
+  @@map("milestones")
+}
+
+model SemesterPlan {
+  id         String                 @id @default(cuid()) @db.VarChar(25)
+  tenant_id  String                 @db.VarChar(25)
+  semestre   String                 @db.VarChar(10) // e.g. "2026-2"
+  titulo     String                 @db.VarChar(150)
+  eixos      Json
+  criado_por String                 @db.VarChar(25)
+  criado_em  DateTime               @default(now())
+  Deliveries SemesterPlanDelivery[]
+
+  @@unique([tenant_id, semestre])
+  @@map("plano_semestral")
+}
+
+model SemesterPlanDelivery {
+  id           String       @id @default(cuid()) @db.VarChar(25)
+  plano_id     String       @db.VarChar(25)
+  mes          Int          @db.SmallInt // 1-6, ordinal within the semester
+  titulo       String       @db.VarChar(150)
+  descricao    String?      @db.Text
+  status       String       @default("planejado") @db.VarChar(15) // planejado|em_andamento|concluido
+  milestone_id String?      @db.VarChar(25)
+  ordem        Int          @default(0)
+  Plan         SemesterPlan @relation(fields: [plano_id], references: [id], onDelete: Cascade)
+
+  @@index([plano_id])
+  @@map("plano_entregas")
+}
+
+model MetricGoal {
+  id            String   @id @default(cuid()) @db.VarChar(25)
+  tenant_id     String   @db.VarChar(25)
+  metric_key    String   @db.VarChar(50)
+  period        String   @db.VarChar(10) // biweekly|monthly
+  target_value  Float    @default(0)
+  show_goal     Boolean  @default(false)
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  @@unique([tenant_id, metric_key, period])
+  @@map("metric_goals")
+}
+
+model BotConfigProposal {
+  id             String   @id @default(cuid()) @db.VarChar(25)
+  tenant_id      String   @db.VarChar(25)
+  campo          String   @db.VarChar(100)
+  categoria      String   @db.VarChar(20) // pricing | policies | packages | hours
+  valor_atual    Json?
+  valor_proposto Json
+  status         String   @default("PENDENTE") @db.VarChar(10) // PENDENTE|APROVADA|REJEITADA
+  autor_id       String   @db.VarChar(25)
+  revisor_id     String?  @db.VarChar(25)
+  justificativa  String?  @db.Text
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  @@index([tenant_id, status])
+  @@map("bot_config_propostas")
+}
+
+// --- Fase 4 (Instagram/Conteúdo) dependencies, minimally shimmed for Fase 5's
+// activity-log wiring and the historical-baseline job. Same integration TODO
+// as the Fase 2/3 shim above: de-duplicate once Fase 4 merges into main.
+
+model ActivityLog {
+  id          String   @id @default(cuid()) @db.VarChar(25)
+  tenant_id   String   @db.VarChar(25)
+  type        String   @db.VarChar(10) // auto|manual
+  category    String   @db.VarChar(20) // post|campaign|report|bot|meeting|other
+  title       String   @db.VarChar(200)
+  description String?  @db.Text
+  icon        String?  @db.VarChar(50)
+  created_by  String?  @db.VarChar(25)
+  created_at  DateTime @default(now())
+
+  @@index([tenant_id, created_at])
+  @@map("activity_log")
+}
+
+model IgDailySnapshot {
+  id                 String   @id @default(cuid()) @db.VarChar(25)
+  tenant_id          String   @db.VarChar(25)
+  date               DateTime @db.Date
+  followers_count    Int      @default(0)
+  reach              Int      @default(0)
+  engaged_accounts   Int      @default(0)
+  total_interactions Int      @default(0)
+  created_at         DateTime @default(now())
+
+  @@unique([tenant_id, date])
+  @@map("ig_daily_snapshot")
 }
