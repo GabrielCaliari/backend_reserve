@@ -41,6 +41,7 @@ import { BotEventKeyGuard } from './infrastructure/guards/bot-event-key.guard';
 import { BotEventIngestionService } from './application/services/bot-event-ingestion.service';
 import { BotEventProcessorService } from './application/services/bot-event-processor.service';
 import { FunnelService } from './application/services/funnel.service';
+import { BotChannelHealthService } from './application/services/bot-channel-health.service';
 import { BotStageWebhookProvider } from './infrastructure/providers/bot-stage-webhook.provider';
 import { BotReconciliationCronProvider } from './infrastructure/providers/bot-reconciliation-cron.provider';
 
@@ -135,6 +136,7 @@ import { ReserveAuthModule } from '../reserve-auth/reserve-auth.module';
     BotEventIngestionService,
     BotEventProcessorService,
     FunnelService,
+    BotChannelHealthService,
     BotStageWebhookProvider,
     BotReconciliationCronProvider,
 

@@ -10,6 +10,7 @@ import { Response } from 'express';
 import { DashboardService } from '../../application/services/dashboard.service';
 import { OverviewService } from '../../application/services/overview.service';
 import { LeadsOverviewService } from '../../application/services/leads-overview.service';
+import { BotChannelHealthService } from '../../application/services/bot-channel-health.service';
 import { HotelClientService } from '../../application/services/hotel-client.service';
 import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
 import { CurrentAdmin, CurrentAdminPayload } from '../../../../shared/auth/decorators/current-admin.decorator';
@@ -26,6 +27,7 @@ export class ClientPortalController {
     private readonly dashboardService: DashboardService,
     private readonly overviewService: OverviewService,
     private readonly leadsOverviewService: LeadsOverviewService,
+    private readonly botChannelHealthService: BotChannelHealthService,
     private readonly hotelClientService: HotelClientService,
   ) {}
 
@@ -51,6 +53,11 @@ export class ClientPortalController {
     const fromDate = from ? new Date(from) : this.defaultFrom();
     const toDate = to ? new Date(to) : new Date();
     return this.leadsOverviewService.getOverview(clientId, fromDate, toDate);
+  }
+
+  @Get(':clientId/whatsapp/channels')
+  async getWhatsAppChannels(@Param('clientId') clientId: string) {
+    return this.botChannelHealthService.getChannels(clientId);
   }
 
   @Get('my-clients')
