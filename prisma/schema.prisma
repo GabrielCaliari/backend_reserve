@@ -1555,6 +1555,10 @@ model HotelApiCredential {
   last_sync_at     DateTime?
   sync_status      EIntegrationStatus @default(PENDING)
   error_message    String?            @db.Text
+  // IG Business Account ID the Graph API calls resolve against (platform:
+  // INSTAGRAM only). Nullable because it's meaningless for GA4/META_ADS/GOOGLE_ADS
+  // credentials — reusing HotelApiCredential per §3.4 needed one additive field.
+  ig_user_id       String?            @db.VarChar(50)
   created_at       DateTime           @default(now())
   updated_at       DateTime           @updatedAt
   HotelClient      HotelClient        @relation(fields: [client_id], references: [id])
@@ -1971,4 +1975,28 @@ model HotelReservation {
   @@index([tenant_id, booking_date])
   @@index([external_id])
   @@map("hotel_reservations")
+}
+
+// ============================================================
+// PAINEL RESERVE — Fase 4: Instagram + Conteúdo
+// ============================================================
+
+/**
+ * Daily follower/engagement snapshot for a tenant's connected Instagram
+ * account. followers_count has no historical API — this table is the
+ * historical record, upserted once per (tenant, day) by the sync cron
+ * (§3.6: "registrar snapshot no dia do onboarding como baseline").
+ */
+model IgDailySnapshot {
+  id                 String   @id @default(cuid()) @db.VarChar(25)
+  tenant_id          String   @db.VarChar(25)
+  date               DateTime @db.Date
+  followers_count    Int      @default(0)
+  reach              Int      @default(0)
+  engaged_accounts   Int      @default(0)
+  total_interactions Int      @default(0)
+  created_at         DateTime @default(now())
+
+  @@unique([tenant_id, date])
+  @@map("ig_daily_snapshot")
 }

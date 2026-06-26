@@ -37,6 +37,7 @@ import { ProcessReservationUseCase } from './application/use-cases/process-reser
 import { SyncGa4DataUseCase } from './application/use-cases/sync-ga4-data.use-case';
 import { SyncMetaAdsDataUseCase } from './application/use-cases/sync-meta-ads-data.use-case';
 import { SyncGoogleAdsDataUseCase } from './application/use-cases/sync-google-ads-data.use-case';
+import { SyncInstagramDataUseCase } from './application/use-cases/sync-instagram-data.use-case';
 import { InsertOtaDataUseCase } from './application/use-cases/insert-ota-data.use-case';
 import { PublishMonthlyReportUseCase } from './application/use-cases/publish-monthly-report.use-case';
 
@@ -120,6 +121,7 @@ import { ReserveAuthModule } from '../reserve-auth/reserve-auth.module';
     SyncGa4DataUseCase,
     SyncMetaAdsDataUseCase,
     SyncGoogleAdsDataUseCase,
+    SyncInstagramDataUseCase,
     InsertOtaDataUseCase,
     PublishMonthlyReportUseCase,
 
