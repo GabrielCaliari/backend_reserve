@@ -31,6 +31,7 @@ import { MarketingBudgetService } from './application/services/marketing-budget.
 import { GuestCrmService } from './application/services/guest-crm.service';
 import { WhatsAppService } from './application/services/whatsapp.service';
 import { WhatsAppTrackingService } from './application/services/whatsapp-tracking.service';
+import { RoiAnalysisService } from './application/services/roi-analysis.service';
 
 // Use cases
 import { ProcessReservationUseCase } from './application/use-cases/process-reservation.use-case';
@@ -113,6 +114,7 @@ import { ReserveAuthModule } from '../reserve-auth/reserve-auth.module';
     GuestCrmService,
     WhatsAppService,
     WhatsAppTrackingService,
+    RoiAnalysisService,
 
     // Use cases
     ProcessReservationUseCase,
