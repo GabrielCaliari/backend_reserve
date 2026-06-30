@@ -42,6 +42,7 @@ import { BotEventIngestionService } from './application/services/bot-event-inges
 import { BotEventProcessorService } from './application/services/bot-event-processor.service';
 import { FunnelService } from './application/services/funnel.service';
 import { BotChannelHealthService } from './application/services/bot-channel-health.service';
+import { BotConversationService } from './application/services/bot-conversation.service';
 import { BotStageWebhookProvider } from './infrastructure/providers/bot-stage-webhook.provider';
 import { BotReconciliationCronProvider } from './infrastructure/providers/bot-reconciliation-cron.provider';
 
@@ -137,6 +138,7 @@ import { ReserveAuthModule } from '../reserve-auth/reserve-auth.module';
     BotEventProcessorService,
     FunnelService,
     BotChannelHealthService,
+    BotConversationService,
     BotStageWebhookProvider,
     BotReconciliationCronProvider,
 

@@ -332,6 +332,7 @@ model BotIntegrationConfig {
   active                         Boolean   @default(true)
   n8n_stage_webhook_url          String?   @db.VarChar(500)
   n8n_config_publish_webhook_url String?   @db.VarChar(500)
+  chatwoot_base_url              String?   @db.VarChar(500)
   last_heartbeat_at              DateTime?
   created_at                     DateTime  @default(now())
   updated_at                     DateTime  @updatedAt
