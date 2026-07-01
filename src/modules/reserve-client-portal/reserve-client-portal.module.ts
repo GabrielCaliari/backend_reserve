@@ -32,6 +32,7 @@ import { GuestCrmService } from './application/services/guest-crm.service';
 import { WhatsAppService } from './application/services/whatsapp.service';
 import { WhatsAppTrackingService } from './application/services/whatsapp-tracking.service';
 import { RoiAnalysisService } from './application/services/roi-analysis.service';
+import { DigestService } from './application/services/digest.service';
 
 // Use cases
 import { ProcessReservationUseCase } from './application/use-cases/process-reservation.use-case';
@@ -64,6 +65,7 @@ import { Ga4Provider } from './infrastructure/providers/ga4.provider';
 import { MetaAdsProvider } from './infrastructure/providers/meta-ads.provider';
 import { GoogleAdsProvider } from './infrastructure/providers/google-ads.provider';
 import { CronSyncProvider } from './infrastructure/providers/cron-sync.provider';
+import { DigestGenerationCronProvider } from './infrastructure/providers/digest-generation-cron.provider';
 import { AesEncryptionProvider } from './infrastructure/providers/aes-encryption.provider';
 import { WhatsAppProvider } from './infrastructure/providers/whatsapp.provider';
 import { GeolocationProvider } from '../../shared/providers/geolocation.provider';
@@ -115,6 +117,7 @@ import { ReserveAuthModule } from '../reserve-auth/reserve-auth.module';
     WhatsAppService,
     WhatsAppTrackingService,
     RoiAnalysisService,
+    DigestService,
 
     // Use cases
     ProcessReservationUseCase,
@@ -137,6 +140,7 @@ import { ReserveAuthModule } from '../reserve-auth/reserve-auth.module';
     GoogleAdsProvider,
     AesEncryptionProvider,
     CronSyncProvider,
+    DigestGenerationCronProvider,
     WhatsAppProvider,
     GeolocationProvider,
     HashProvider,
