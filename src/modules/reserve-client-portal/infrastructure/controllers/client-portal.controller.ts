@@ -13,6 +13,7 @@ import { LeadsOverviewService } from '../../application/services/leads-overview.
 import { BotChannelHealthService } from '../../application/services/bot-channel-health.service';
 import { BotConversationService } from '../../application/services/bot-conversation.service';
 import { ListConversationsQueryDto } from '../../application/dtos/list-conversations-query.dto';
+import { FunnelMetricsService } from '../../application/services/funnel-metrics.service';
 import { HotelClientService } from '../../application/services/hotel-client.service';
 import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
 import { CurrentAdmin, CurrentAdminPayload } from '../../../../shared/auth/decorators/current-admin.decorator';
@@ -31,6 +32,7 @@ export class ClientPortalController {
     private readonly leadsOverviewService: LeadsOverviewService,
     private readonly botChannelHealthService: BotChannelHealthService,
     private readonly botConversationService: BotConversationService,
+    private readonly funnelMetricsService: FunnelMetricsService,
     private readonly hotelClientService: HotelClientService,
   ) {}
 
@@ -77,6 +79,22 @@ export class ClientPortalController {
     @Param('numeroContato') numeroContato: string,
   ) {
     return this.botConversationService.detail(clientId, numeroContato);
+  }
+
+  @Get(':clientId/whatsapp/funnel')
+  async getWhatsAppFunnelBoard(@Param('clientId') clientId: string) {
+    return this.funnelMetricsService.getBoard(clientId);
+  }
+
+  @Get(':clientId/whatsapp/funnel/metrics')
+  async getWhatsAppFunnelMetrics(
+    @Param('clientId') clientId: string,
+    @Query('from') from: string,
+    @Query('to') to: string,
+  ) {
+    const fromDate = from ? new Date(from) : this.defaultFrom();
+    const toDate = to ? new Date(to) : new Date();
+    return this.funnelMetricsService.getMetrics(clientId, fromDate, toDate);
   }
 
   @Get('my-clients')
