@@ -11,6 +11,7 @@ import { WhatsAppTrackingController } from './infrastructure/controllers/whatsap
 import { WhatsAppRedirectController } from './infrastructure/controllers/whatsapp-redirect.controller';
 import { BookingWebhookController } from './infrastructure/controllers/booking-webhook.controller';
 import { AdminReservationsController } from './infrastructure/controllers/admin-reservations.controller';
+import { AdminDigestController } from './infrastructure/controllers/admin-digest.controller';
 
 // Application services
 import { HotelClientService } from './application/services/hotel-client.service';
@@ -33,6 +34,7 @@ import { WhatsAppService } from './application/services/whatsapp.service';
 import { WhatsAppTrackingService } from './application/services/whatsapp-tracking.service';
 import { RoiAnalysisService } from './application/services/roi-analysis.service';
 import { DigestService } from './application/services/digest.service';
+import { ActivityLogService } from './application/services/activity-log.service';
 
 // Use cases
 import { ProcessReservationUseCase } from './application/use-cases/process-reservation.use-case';
@@ -75,6 +77,7 @@ import { HashProvider } from '../../shared/providers/hash.provider';
 import { AdminJwtGuard } from '../../shared/auth/guards/admin-jwt.guard';
 import { RolesGuard } from '../../shared/auth/guards/roles.guard';
 import { ReserveAuthModule } from '../reserve-auth/reserve-auth.module';
+import { ReserveNotificationsModule } from '../reserve-notifications/reserve-notifications.module';
 
 /**
  * Reserve Client Portal Module
@@ -83,7 +86,7 @@ import { ReserveAuthModule } from '../reserve-auth/reserve-auth.module';
  * Portal routes:  /api/hotel-portal/...
  */
 @Module({
-  imports: [ReserveAuthModule],
+  imports: [ReserveAuthModule, ReserveNotificationsModule],
   controllers: [
     AdminHotelClientController,
     ClientPortalController,
@@ -95,6 +98,7 @@ import { ReserveAuthModule } from '../reserve-auth/reserve-auth.module';
     WhatsAppRedirectController,
     BookingWebhookController,
     AdminReservationsController,
+    AdminDigestController,
   ],
   providers: [
     // Application services
@@ -118,6 +122,7 @@ import { ReserveAuthModule } from '../reserve-auth/reserve-auth.module';
     WhatsAppTrackingService,
     RoiAnalysisService,
     DigestService,
+    ActivityLogService,
 
     // Use cases
     ProcessReservationUseCase,
