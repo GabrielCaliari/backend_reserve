@@ -11,6 +11,7 @@ import { WhatsAppTrackingController } from './infrastructure/controllers/whatsap
 import { WhatsAppRedirectController } from './infrastructure/controllers/whatsapp-redirect.controller';
 import { BookingWebhookController } from './infrastructure/controllers/booking-webhook.controller';
 import { AdminReservationsController } from './infrastructure/controllers/admin-reservations.controller';
+import { AdminContentPostController } from './infrastructure/controllers/admin-content-post.controller';
 
 // Application services
 import { HotelClientService } from './application/services/hotel-client.service';
@@ -19,6 +20,7 @@ import { DashboardService } from './application/services/dashboard.service';
 import { OverviewService } from './application/services/overview.service';
 import { LeadsOverviewService } from './application/services/leads-overview.service';
 import { InstagramOverviewService } from './application/services/instagram-overview.service';
+import { ContentPostService } from './application/services/content-post.service';
 import { PeriodComparisonService } from '../../shared/analytics/period-comparison.service';
 import { CampaignService } from './application/services/campaign.service';
 import { SiteAnalyticsService } from './application/services/site-analytics.service';
@@ -95,6 +97,7 @@ import { ReserveAuthModule } from '../reserve-auth/reserve-auth.module';
     WhatsAppRedirectController,
     BookingWebhookController,
     AdminReservationsController,
+    AdminContentPostController,
   ],
   providers: [
     // Application services
@@ -104,6 +107,7 @@ import { ReserveAuthModule } from '../reserve-auth/reserve-auth.module';
     OverviewService,
     LeadsOverviewService,
     InstagramOverviewService,
+    ContentPostService,
     PeriodComparisonService,
     CampaignService,
     SiteAnalyticsService,

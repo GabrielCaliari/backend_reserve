@@ -2000,3 +2000,42 @@ model IgDailySnapshot {
   @@unique([tenant_id, date])
   @@map("ig_daily_snapshot")
 }
+
+enum EContentPlatform {
+  instagram
+  facebook
+}
+
+enum EContentPostStatus {
+  draft
+  scheduled
+  published
+}
+
+/**
+ * Content calendar entry. Admin-authored (draft/scheduled) and/or synced
+ * from Meta once published — see Fase 4 Task 6's spike doc for whether the
+ * Graph API exposes Business-Suite-scheduled posts; this schema assumes the
+ * "ContentPost as source of truth, Meta only confirms published_at/permalink"
+ * fallback path by default.
+ */
+model ContentPost {
+  id              String              @id @default(cuid()) @db.VarChar(25)
+  tenant_id       String              @db.VarChar(25)
+  platform        EContentPlatform
+  scheduled_for   DateTime?
+  published_at    DateTime?
+  status          EContentPostStatus  @default(draft)
+  caption_preview String?             @db.VarChar(280)
+  thumbnail_url   String?             @db.VarChar(500)
+  external_id     String?             @db.VarChar(100)
+  permalink       String?             @db.VarChar(500)
+  created_by      String              @db.VarChar(25)
+  created_at      DateTime            @default(now())
+  updated_at      DateTime            @updatedAt
+
+  @@index([tenant_id, scheduled_for])
+  @@index([tenant_id, published_at])
+  @@index([tenant_id, status])
+  @@map("content_posts")
+}
