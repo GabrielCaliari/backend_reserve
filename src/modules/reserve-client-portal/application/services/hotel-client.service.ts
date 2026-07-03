@@ -9,6 +9,7 @@ import { errorResponse, successResponse } from '../../../../shared/helpers';
 import { PrismaService } from '../../../../shared/database/prisma.service';
 import { HashProvider } from '../../../../shared/providers/hash.provider';
 import { EAdminRole } from '../../../reserve-auth/domain/enums/admin-role.enum';
+import { MilestoneService } from './milestone.service';
 
 @Injectable()
 export class HotelClientService {
@@ -17,6 +18,7 @@ export class HotelClientService {
     private readonly hotelClientRepository: IHotelClientRepository,
     private readonly prisma: PrismaService,
     private readonly hashProvider: HashProvider,
+    private readonly milestoneService: MilestoneService,
   ) {}
 
   async create(dto: CreateClientDto, requestingAdminId: string) {
@@ -58,6 +60,13 @@ export class HotelClientService {
         },
         include: { ApiCredentials: true },
       });
+
+      // Fase 5 Task 4: marco-zero é criado automaticamente assim que o
+      // HotelClient (com tenant_id vinculado) existe — idempotente, nunca
+      // duplica em re-tentativas.
+      if (raw.tenant_id) {
+        await this.milestoneService.createMarcoZero(raw.tenant_id, raw.contract_start);
+      }
 
       return successResponse(
         {

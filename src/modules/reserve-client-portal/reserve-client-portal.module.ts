@@ -12,6 +12,7 @@ import { WhatsAppRedirectController } from './infrastructure/controllers/whatsap
 import { BookingWebhookController } from './infrastructure/controllers/booking-webhook.controller';
 import { AdminReservationsController } from './infrastructure/controllers/admin-reservations.controller';
 import { AdminDigestController } from './infrastructure/controllers/admin-digest.controller';
+import { AdminMilestoneController } from './infrastructure/controllers/admin-milestone.controller';
 
 // Application services
 import { HotelClientService } from './application/services/hotel-client.service';
@@ -35,6 +36,7 @@ import { WhatsAppTrackingService } from './application/services/whatsapp-trackin
 import { RoiAnalysisService } from './application/services/roi-analysis.service';
 import { DigestService } from './application/services/digest.service';
 import { ActivityLogService } from './application/services/activity-log.service';
+import { MilestoneService } from './application/services/milestone.service';
 
 // Use cases
 import { ProcessReservationUseCase } from './application/use-cases/process-reservation.use-case';
@@ -99,6 +101,7 @@ import { ReserveNotificationsModule } from '../reserve-notifications/reserve-not
     BookingWebhookController,
     AdminReservationsController,
     AdminDigestController,
+    AdminMilestoneController,
   ],
   providers: [
     // Application services
@@ -123,6 +126,7 @@ import { ReserveNotificationsModule } from '../reserve-notifications/reserve-not
     RoiAnalysisService,
     DigestService,
     ActivityLogService,
+    MilestoneService,
 
     // Use cases
     ProcessReservationUseCase,
