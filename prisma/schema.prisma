@@ -448,6 +448,16 @@ model BotStageWebhookDispatch {
   @@map("bot_stage_webhook_dispatches")
 }
 
+model BotDataRetentionSetting {
+  id             String   @id @default(cuid()) @db.VarChar(25)
+  tenant_id      String   @unique @db.VarChar(25)
+  retention_days Int      @default(365)
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  @@map("bot_data_retention_settings")
+}
+
 model TenantSetting {
   id         String   @id @default(cuid()) @db.VarChar(25)
   tenant_id  String   @db.VarChar(25)

@@ -151,6 +151,9 @@ export const PERMISSIONS = [
   // Painel Reserve (docs/superpowers/plans/2026-08-04-plano-painel-reserve-backend.md)
   'hotel-portal.attribution.manage',
   'hotel-portal.whatsapp-funnel.manage',
+  // Deliberately absent from every role grant array below (super_admin-only
+  // by the PermissionsGuard bypass) — §5.8's LGPD export/erase.
+  'hotel-portal.whatsapp-contacts.manage',
 ] as const;
 
 export type PermissionName = (typeof PERMISSIONS)[number];

@@ -44,6 +44,9 @@ import { FunnelService } from './application/services/funnel.service';
 import { BotChannelHealthService } from './application/services/bot-channel-health.service';
 import { BotConversationService } from './application/services/bot-conversation.service';
 import { FunnelMetricsService } from './application/services/funnel-metrics.service';
+import { BotRetentionService } from './application/services/bot-retention.service';
+import { BotRetentionPurgeCronProvider } from './infrastructure/providers/bot-retention-purge-cron.provider';
+import { AdminWhatsAppContactController } from './infrastructure/controllers/admin-whatsapp-contact.controller';
 import { BotStageWebhookProvider } from './infrastructure/providers/bot-stage-webhook.provider';
 import { BotReconciliationCronProvider } from './infrastructure/providers/bot-reconciliation-cron.provider';
 
@@ -110,6 +113,7 @@ import { ReserveAuthModule } from '../reserve-auth/reserve-auth.module';
     AdminAttributionSettingsController,
     BotEventIngestionController,
     AdminWhatsAppFunnelController,
+    AdminWhatsAppContactController,
   ],
   providers: [
     // Application services
@@ -141,6 +145,8 @@ import { ReserveAuthModule } from '../reserve-auth/reserve-auth.module';
     BotChannelHealthService,
     BotConversationService,
     FunnelMetricsService,
+    BotRetentionService,
+    BotRetentionPurgeCronProvider,
     BotStageWebhookProvider,
     BotReconciliationCronProvider,
 
