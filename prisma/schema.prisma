@@ -2039,3 +2039,39 @@ model ContentPost {
   @@index([tenant_id, status])
   @@map("content_posts")
 }
+
+enum EActivityLogType {
+  auto
+  manual
+}
+
+enum EActivityLogCategory {
+  post
+  campaign
+  report
+  bot
+  meeting
+  other
+}
+
+/**
+ * Append-style feed of client-facing activity events. A plain injectable
+ * service method (ActivityLogService.record), not an event bus — matching
+ * the codebase's existing direct-service-call convention
+ * (NotificationEventService.dispatch is called directly from call sites
+ * today, not via emitted events).
+ */
+model ActivityLog {
+  id          String               @id @default(cuid()) @db.VarChar(25)
+  tenant_id   String               @db.VarChar(25)
+  type        EActivityLogType
+  category    EActivityLogCategory
+  title       String               @db.VarChar(255)
+  description String?              @db.Text
+  icon        String?              @db.VarChar(50)
+  created_by  String?              @db.VarChar(25)
+  created_at  DateTime             @default(now())
+
+  @@index([tenant_id, created_at])
+  @@map("activity_log")
+}

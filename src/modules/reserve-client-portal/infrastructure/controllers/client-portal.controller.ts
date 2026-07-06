@@ -13,6 +13,7 @@ import { LeadsOverviewService } from '../../application/services/leads-overview.
 import { HotelClientService } from '../../application/services/hotel-client.service';
 import { InstagramOverviewService } from '../../application/services/instagram-overview.service';
 import { ContentPostService } from '../../application/services/content-post.service';
+import { ActivityLogService } from '../../application/services/activity-log.service';
 import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
 import { CurrentAdmin, CurrentAdminPayload } from '../../../../shared/auth/decorators/current-admin.decorator';
 
@@ -31,6 +32,7 @@ export class ClientPortalController {
     private readonly hotelClientService: HotelClientService,
     private readonly instagramOverviewService: InstagramOverviewService,
     private readonly contentPostService: ContentPostService,
+    private readonly activityLogService: ActivityLogService,
   ) {}
 
   @Get(':clientId/overview')
@@ -135,6 +137,15 @@ export class ClientPortalController {
     @Query('month') month: string,
   ) {
     return this.contentPostService.getCalendar(clientId, month);
+  }
+
+  @Get(':clientId/activities')
+  async getActivities(
+    @Param('clientId') clientId: string,
+    @Query('page') page = '1',
+    @Query('limit') limit = '20',
+  ) {
+    return this.activityLogService.listByClient(clientId, Number(page), Number(limit));
   }
 
   private defaultFrom(): Date {

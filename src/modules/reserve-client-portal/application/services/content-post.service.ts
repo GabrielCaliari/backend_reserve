@@ -2,6 +2,9 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { PrismaService } from '../../../../shared/database/prisma.service';
 import { CreateContentPostDto, UpdateContentPostDto } from '../dtos/content-post.dto';
 import { EContentPostStatus } from '../../domain/enums/content-post-status.enum';
+import { ActivityLogService } from './activity-log.service';
+import { EActivityLogType } from '../../domain/enums/activity-log-type.enum';
+import { EActivityLogCategory } from '../../domain/enums/activity-log-category.enum';
 
 /**
  * §3.5 content calendar. Admin CRUD is tenant-scoped (ContentPost is keyed
@@ -10,7 +13,10 @@ import { EContentPostStatus } from '../../domain/enums/content-post-status.enum'
  */
 @Injectable()
 export class ContentPostService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly activityLogService: ActivityLogService,
+  ) {}
 
   async create(tenantId: string, dto: CreateContentPostDto, createdBy: string) {
     return this.prisma.contentPost.create({
@@ -73,10 +79,18 @@ export class ContentPostService {
    */
   async publish(tenantId: string, id: string) {
     await this.findById(tenantId, id);
-    return this.prisma.contentPost.update({
+    const post = await this.prisma.contentPost.update({
       where: { id },
       data: { status: EContentPostStatus.PUBLISHED, published_at: new Date() },
     });
+
+    await this.activityLogService.record(tenantId, {
+      type: EActivityLogType.AUTO,
+      category: EActivityLogCategory.POST,
+      title: `Novo post publicado (${post.platform})`,
+    });
+
+    return post;
   }
 
   /**

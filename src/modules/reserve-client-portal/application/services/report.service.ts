@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import {
   REPORT_REPOSITORY,
   IReportRepository,
@@ -6,12 +6,20 @@ import {
 import { EReportStatus } from '../../domain/enums/report-status.enum';
 import { CreateReportDto, PublishReportDto } from '../dtos/publish-report.dto';
 import { errorResponse, successResponse } from '../../../../shared/helpers';
+import { PrismaService } from '../../../../shared/database/prisma.service';
+import { ActivityLogService } from './activity-log.service';
+import { EActivityLogType } from '../../domain/enums/activity-log-type.enum';
+import { EActivityLogCategory } from '../../domain/enums/activity-log-category.enum';
 
 @Injectable()
 export class ReportService {
+  private readonly logger = new Logger(ReportService.name);
+
   constructor(
     @Inject(REPORT_REPOSITORY)
     private readonly reportRepository: IReportRepository,
+    private readonly prisma: PrismaService,
+    private readonly activityLogService: ActivityLogService,
   ) {}
 
   async createReport(dto: CreateReportDto) {
@@ -98,9 +106,41 @@ export class ReportService {
         published_at: new Date(),
       });
 
+      await this.recordPublishedActivity(report.client_id);
+
       return successResponse(updated);
     } catch (error) {
       return errorResponse('500:REPORT_NOT_PUBLISHED', 500, error);
+    }
+  }
+
+  /**
+   * Fase 4 Task 7 auto-event wiring. Best-effort: a report the client
+   * doesn't yet have a linked tenant_id for (Global Constraints — the split
+   * is pre-existing and HotelClient.tenant_id is nullable) must not fail the
+   * publish action itself, so this only logs a warning instead of throwing.
+   */
+  private async recordPublishedActivity(clientId: string): Promise<void> {
+    try {
+      const client = await this.prisma.hotelClient.findUnique({
+        where: { id: clientId },
+        select: { tenant_id: true },
+      });
+
+      if (!client?.tenant_id) {
+        this.logger.warn(
+          `Report published for client ${clientId} with no tenant_id — skipping activity-log event`,
+        );
+        return;
+      }
+
+      await this.activityLogService.record(client.tenant_id, {
+        type: EActivityLogType.AUTO,
+        category: EActivityLogCategory.REPORT,
+        title: 'Novo relatório publicado',
+      });
+    } catch (error) {
+      this.logger.error(`Failed to record activity-log event for report publish:`, error);
     }
   }
 }
