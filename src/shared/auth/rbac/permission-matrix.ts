@@ -154,6 +154,8 @@ export const PERMISSIONS = [
   // Deliberately absent from every role grant array below (super_admin-only
   // by the PermissionsGuard bypass) — §5.8's LGPD export/erase.
   'hotel-portal.whatsapp-contacts.manage',
+  // super_admin/owner only — mints the secret N8N key (Fase 3 Task 12).
+  'hotel-portal.bot-integration.manage',
 ] as const;
 
 export type PermissionName = (typeof PERMISSIONS)[number];
@@ -251,6 +253,7 @@ const OWNER: readonly PermissionName[] = [
   ...MANAGER,
   'cms.blog.manage-key',
   'hotel-portal.reports.publish',
+  'hotel-portal.bot-integration.manage',
 ];
 
 export const ROLE_GRANTS: Partial<Record<EAdminRole, readonly PermissionName[]>> = {
