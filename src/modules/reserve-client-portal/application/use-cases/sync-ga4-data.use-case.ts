@@ -17,7 +17,7 @@ export class SyncGa4DataUseCase {
     private readonly aesEncryption: AesEncryptionProvider,
   ) {}
 
-  async execute(clientId: string): Promise<void> {
+  async execute(clientId: string, range?: { from: Date; to: Date }): Promise<void> {
     this.logger.log(`Starting GA4 sync for client ${clientId}`);
 
     const credential = await this.prisma.hotelApiCredential.findUnique({
@@ -33,7 +33,7 @@ export class SyncGa4DataUseCase {
 
     try {
       const accessToken = this.aesEncryption.decrypt(credential.encrypted_token);
-      const metrics = await this.ga4Provider.fetchSiteMetrics(accessToken, clientId);
+      const metrics = await this.ga4Provider.fetchSiteMetrics(accessToken, clientId, range);
 
       for (const metric of metrics) {
         await this.siteAnalyticsService.upsertMetric({

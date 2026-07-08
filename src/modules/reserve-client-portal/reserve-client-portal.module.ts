@@ -45,6 +45,7 @@ import { SyncMetaAdsDataUseCase } from './application/use-cases/sync-meta-ads-da
 import { SyncGoogleAdsDataUseCase } from './application/use-cases/sync-google-ads-data.use-case';
 import { InsertOtaDataUseCase } from './application/use-cases/insert-ota-data.use-case';
 import { PublishMonthlyReportUseCase } from './application/use-cases/publish-monthly-report.use-case';
+import { ImportHistoricalBaselineUseCase } from './application/use-cases/import-historical-baseline.use-case';
 
 // Infrastructure repositories
 import { PrismaHotelClientRepository } from './infrastructure/repositories/prisma-hotel-client.repository';
@@ -135,6 +136,7 @@ import { ReserveNotificationsModule } from '../reserve-notifications/reserve-not
     SyncGoogleAdsDataUseCase,
     InsertOtaDataUseCase,
     PublishMonthlyReportUseCase,
+    ImportHistoricalBaselineUseCase,
 
     // Booking engine providers
     BookingEngineFactory,

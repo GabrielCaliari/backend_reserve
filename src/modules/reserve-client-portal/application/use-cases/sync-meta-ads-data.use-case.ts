@@ -18,7 +18,7 @@ export class SyncMetaAdsDataUseCase {
     private readonly aesEncryption: AesEncryptionProvider,
   ) {}
 
-  async execute(clientId: string): Promise<void> {
+  async execute(clientId: string, range?: { from: Date; to: Date }): Promise<void> {
     this.logger.log(`Starting Meta Ads sync for client ${clientId}`);
 
     const credential = await this.prisma.hotelApiCredential.findUnique({
@@ -34,7 +34,7 @@ export class SyncMetaAdsDataUseCase {
 
     try {
       const accessToken = this.aesEncryption.decrypt(credential.encrypted_token);
-      const campaigns = await this.metaAdsProvider.fetchCampaignMetrics(accessToken, clientId);
+      const campaigns = await this.metaAdsProvider.fetchCampaignMetrics(accessToken, clientId, range);
 
       for (const campaign of campaigns) {
         await this.campaignService.upsertMetric({
