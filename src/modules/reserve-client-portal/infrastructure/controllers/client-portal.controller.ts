@@ -12,6 +12,7 @@ import { OverviewService } from '../../application/services/overview.service';
 import { LeadsOverviewService } from '../../application/services/leads-overview.service';
 import { HotelClientService } from '../../application/services/hotel-client.service';
 import { RoiAnalysisService } from '../../application/services/roi-analysis.service';
+import { SemesterPlanService } from '../../application/services/semester-plan.service';
 import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
 import { CurrentAdmin, CurrentAdminPayload } from '../../../../shared/auth/decorators/current-admin.decorator';
 
@@ -29,6 +30,7 @@ export class ClientPortalController {
     private readonly leadsOverviewService: LeadsOverviewService,
     private readonly hotelClientService: HotelClientService,
     private readonly roiAnalysisService: RoiAnalysisService,
+    private readonly semesterPlanService: SemesterPlanService,
   ) {}
 
   @Get(':clientId/overview')
@@ -65,6 +67,12 @@ export class ClientPortalController {
     const fromDate = from ? new Date(from) : this.defaultFrom();
     const toDate = to ? new Date(to) : new Date();
     const result = await this.roiAnalysisService.getRoi(clientId, fromDate, toDate);
+    return res.status(result.status).json(result.data);
+  }
+
+  @Get(':clientId/semester-plan')
+  async getSemesterPlan(@Param('clientId') clientId: string, @Res() res: Response) {
+    const result = await this.semesterPlanService.findByClientId(clientId);
     return res.status(result.status).json(result.data);
   }
 

@@ -13,6 +13,7 @@ import { BookingWebhookController } from './infrastructure/controllers/booking-w
 import { AdminReservationsController } from './infrastructure/controllers/admin-reservations.controller';
 import { AdminDigestController } from './infrastructure/controllers/admin-digest.controller';
 import { AdminMilestoneController } from './infrastructure/controllers/admin-milestone.controller';
+import { AdminSemesterPlanController } from './infrastructure/controllers/admin-semester-plan.controller';
 
 // Application services
 import { HotelClientService } from './application/services/hotel-client.service';
@@ -37,6 +38,7 @@ import { RoiAnalysisService } from './application/services/roi-analysis.service'
 import { DigestService } from './application/services/digest.service';
 import { ActivityLogService } from './application/services/activity-log.service';
 import { MilestoneService } from './application/services/milestone.service';
+import { SemesterPlanService } from './application/services/semester-plan.service';
 
 // Use cases
 import { ProcessReservationUseCase } from './application/use-cases/process-reservation.use-case';
@@ -103,6 +105,7 @@ import { ReserveNotificationsModule } from '../reserve-notifications/reserve-not
     AdminReservationsController,
     AdminDigestController,
     AdminMilestoneController,
+    AdminSemesterPlanController,
   ],
   providers: [
     // Application services
@@ -128,6 +131,7 @@ import { ReserveNotificationsModule } from '../reserve-notifications/reserve-not
     DigestService,
     ActivityLogService,
     MilestoneService,
+    SemesterPlanService,
 
     // Use cases
     ProcessReservationUseCase,
