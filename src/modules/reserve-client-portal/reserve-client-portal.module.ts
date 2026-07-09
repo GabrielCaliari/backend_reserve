@@ -11,6 +11,8 @@ import { WhatsAppTrackingController } from './infrastructure/controllers/whatsap
 import { WhatsAppRedirectController } from './infrastructure/controllers/whatsapp-redirect.controller';
 import { BookingWebhookController } from './infrastructure/controllers/booking-webhook.controller';
 import { AdminReservationsController } from './infrastructure/controllers/admin-reservations.controller';
+import { AdminContentPostController } from './infrastructure/controllers/admin-content-post.controller';
+import { AdminActivityLogController } from './infrastructure/controllers/admin-activity-log.controller';
 
 // Application services
 import { HotelClientService } from './application/services/hotel-client.service';
@@ -18,6 +20,9 @@ import { ReservationService } from './application/services/reservation.service';
 import { DashboardService } from './application/services/dashboard.service';
 import { OverviewService } from './application/services/overview.service';
 import { LeadsOverviewService } from './application/services/leads-overview.service';
+import { InstagramOverviewService } from './application/services/instagram-overview.service';
+import { ContentPostService } from './application/services/content-post.service';
+import { ActivityLogService } from './application/services/activity-log.service';
 import { PeriodComparisonService } from '../../shared/analytics/period-comparison.service';
 import { CampaignService } from './application/services/campaign.service';
 import { SiteAnalyticsService } from './application/services/site-analytics.service';
@@ -37,6 +42,7 @@ import { ProcessReservationUseCase } from './application/use-cases/process-reser
 import { SyncGa4DataUseCase } from './application/use-cases/sync-ga4-data.use-case';
 import { SyncMetaAdsDataUseCase } from './application/use-cases/sync-meta-ads-data.use-case';
 import { SyncGoogleAdsDataUseCase } from './application/use-cases/sync-google-ads-data.use-case';
+import { SyncInstagramDataUseCase } from './application/use-cases/sync-instagram-data.use-case';
 import { InsertOtaDataUseCase } from './application/use-cases/insert-ota-data.use-case';
 import { PublishMonthlyReportUseCase } from './application/use-cases/publish-monthly-report.use-case';
 
@@ -62,6 +68,7 @@ import { FocoAdapter } from './infrastructure/providers/adapters/foco.adapter';
 import { Ga4Provider } from './infrastructure/providers/ga4.provider';
 import { MetaAdsProvider } from './infrastructure/providers/meta-ads.provider';
 import { GoogleAdsProvider } from './infrastructure/providers/google-ads.provider';
+import { InstagramProvider } from './infrastructure/providers/instagram.provider';
 import { CronSyncProvider } from './infrastructure/providers/cron-sync.provider';
 import { AesEncryptionProvider } from './infrastructure/providers/aes-encryption.provider';
 import { WhatsAppProvider } from './infrastructure/providers/whatsapp.provider';
@@ -92,6 +99,8 @@ import { ReserveAuthModule } from '../reserve-auth/reserve-auth.module';
     WhatsAppRedirectController,
     BookingWebhookController,
     AdminReservationsController,
+    AdminContentPostController,
+    AdminActivityLogController,
   ],
   providers: [
     // Application services
@@ -100,6 +109,9 @@ import { ReserveAuthModule } from '../reserve-auth/reserve-auth.module';
     DashboardService,
     OverviewService,
     LeadsOverviewService,
+    InstagramOverviewService,
+    ContentPostService,
+    ActivityLogService,
     PeriodComparisonService,
     CampaignService,
     SiteAnalyticsService,
@@ -119,6 +131,7 @@ import { ReserveAuthModule } from '../reserve-auth/reserve-auth.module';
     SyncGa4DataUseCase,
     SyncMetaAdsDataUseCase,
     SyncGoogleAdsDataUseCase,
+    SyncInstagramDataUseCase,
     InsertOtaDataUseCase,
     PublishMonthlyReportUseCase,
 
@@ -133,6 +146,7 @@ import { ReserveAuthModule } from '../reserve-auth/reserve-auth.module';
     Ga4Provider,
     MetaAdsProvider,
     GoogleAdsProvider,
+    InstagramProvider,
     AesEncryptionProvider,
     CronSyncProvider,
     WhatsAppProvider,

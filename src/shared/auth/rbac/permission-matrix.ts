@@ -148,6 +148,10 @@ export const PERMISSIONS = [
   'hotel-portal.whatsapp.manage',
   'hotel-portal.whatsapp-links.manage',
 
+  // Painel Reserve — Fase 4 (docs/superpowers/plans/2026-08-04-plano-painel-reserve-backend.md)
+  'hotel-portal.content.manage',
+  'hotel-portal.activity-log.manage',
+
   // settings (Fase 3, não-gateable)
   'settings.read',
   'settings.manage',
@@ -213,6 +217,9 @@ const EDITOR: readonly PermissionName[] = [
   'leads.attachment.create',
   'leads.attachment.delete',
   'leads.update',
+  // Painel Reserve: viewer excluded, editor+ manages the content calendar
+  // (§8 Fase 4 Task 5).
+  'hotel-portal.content.manage',
 ];
 
 const MANAGER: readonly PermissionName[] = [
@@ -244,6 +251,7 @@ const MANAGER: readonly PermissionName[] = [
   'hotel-portal.reports.manage',
   'hotel-portal.whatsapp.manage',
   'hotel-portal.whatsapp-links.manage',
+  'hotel-portal.activity-log.manage',
   'settings.manage',
 ];
 
