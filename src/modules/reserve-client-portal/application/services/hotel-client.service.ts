@@ -10,6 +10,7 @@ import { PrismaService } from '../../../../shared/database/prisma.service';
 import { HashProvider } from '../../../../shared/providers/hash.provider';
 import { EAdminRole } from '../../../reserve-auth/domain/enums/admin-role.enum';
 import { MilestoneService } from './milestone.service';
+import { MetricGoalService } from './metric-goal.service';
 
 @Injectable()
 export class HotelClientService {
@@ -19,6 +20,7 @@ export class HotelClientService {
     private readonly prisma: PrismaService,
     private readonly hashProvider: HashProvider,
     private readonly milestoneService: MilestoneService,
+    private readonly metricGoalService: MetricGoalService,
   ) {}
 
   async create(dto: CreateClientDto, requestingAdminId: string) {
@@ -64,8 +66,12 @@ export class HotelClientService {
       // Fase 5 Task 4: marco-zero é criado automaticamente assim que o
       // HotelClient (com tenant_id vinculado) existe — idempotente, nunca
       // duplica em re-tentativas.
+      // Fase 5 Task 7: semeia a meta padrao de leads de WhatsApp (Decisao #3:
+      // "default: exibir meta apenas para leads de WhatsApp"). Gracioso
+      // quando o cliente ainda nao tem tenant_id vinculado (nao lanca).
       if (raw.tenant_id) {
         await this.milestoneService.createMarcoZero(raw.tenant_id, raw.contract_start);
+        await this.metricGoalService.seedDefaultGoal(raw.tenant_id);
       }
 
       return successResponse(
