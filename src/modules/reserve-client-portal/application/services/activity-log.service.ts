@@ -1,13 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../../shared/database/prisma.service';
-import { errorResponse, successResponse } from '../../../../shared/helpers';
+import { EActivityLogType } from '../../domain/enums/activity-log-type.enum';
+import { EActivityLogCategory } from '../../domain/enums/activity-log-category.enum';
 
-export type ActivityLogType = 'auto' | 'manual';
-export type ActivityLogCategory = 'post' | 'campaign' | 'report' | 'bot' | 'meeting' | 'other';
-
-export interface RecordActivityInput {
-  type: ActivityLogType;
-  category: ActivityLogCategory;
+export interface IRecordActivityLog {
+  type?: EActivityLogType;
+  category: EActivityLogCategory;
   title: string;
   description?: string;
   icon?: string;
@@ -15,25 +13,21 @@ export interface RecordActivityInput {
 }
 
 /**
- * `ActivityLog` (linha do tempo de atividades, §3.10/Fase 4 Task 7). A plain
- * injectable method, not an event-emitter/pub-sub bus — matches the
- * codebase's existing direct-service-call convention (NotificationEventService
- * is also called directly from call sites, not via emitted events).
- *
- * NOTE (integration): this model is officially Fase 4 Task 7's deliverable.
- * Declared here (see schema.prisma's Fase 5 shim block) because three Fase 5
- * tasks (digest publish, semester-plan delivery, bot-config approval) need to
- * write to the activity feed. De-duplicate with Fase 4's version once merged.
+ * §5.x client-facing activity feed. A plain injectable service method — not
+ * an event-emitter/pub-sub bus, matching the codebase's existing
+ * direct-service-call convention (introducing a bus for a handful of call
+ * sites would be over-engineering relative to how NotificationEventService
+ * .dispatch is already called directly today).
  */
 @Injectable()
 export class ActivityLogService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async record(tenantId: string, input: RecordActivityInput): Promise<void> {
-    await this.prisma.activityLog.create({
+  async record(tenantId: string, input: IRecordActivityLog) {
+    return this.prisma.activityLog.create({
       data: {
         tenant_id: tenantId,
-        type: input.type,
+        type: input.type ?? EActivityLogType.MANUAL,
         category: input.category,
         title: input.title,
         description: input.description ?? null,
@@ -43,23 +37,35 @@ export class ActivityLogService {
     });
   }
 
-  async findByTenantId(tenantId: string, page = 1, limit = 20) {
-    try {
-      const [data, total] = await this.prisma.$transaction([
-        this.prisma.activityLog.findMany({
-          where: { tenant_id: tenantId },
-          orderBy: { created_at: 'desc' },
-          skip: (page - 1) * limit,
-          take: limit,
-        }),
-        this.prisma.activityLog.count({ where: { tenant_id: tenantId } }),
-      ]);
-      return successResponse({
-        data,
-        pagination: { total, page, limit, totalPages: Math.ceil(total / limit) },
-      });
-    } catch (error) {
-      return errorResponse('500:ACTIVITIES_NOT_LISTED', 500, error);
+  /** Admin-side feed for a tenant, newest-first, paginated. */
+  async listByTenant(tenantId: string, page = 1, limit = 20) {
+    const [data, total] = await Promise.all([
+      this.prisma.activityLog.findMany({
+        where: { tenant_id: tenantId },
+        orderBy: { created_at: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      this.prisma.activityLog.count({ where: { tenant_id: tenantId } }),
+    ]);
+
+    return {
+      data,
+      pagination: { total, page, limit, totalPages: Math.ceil(total / limit) },
+    };
+  }
+
+  /** Client-portal feed, resolving client_id → tenant_id internally. */
+  async listByClient(clientId: string, page = 1, limit = 20) {
+    const client = await this.prisma.hotelClient.findUnique({
+      where: { id: clientId },
+      select: { tenant_id: true },
+    });
+
+    if (!client?.tenant_id) {
+      throw new BadRequestException('Client has no linked tenant_id');
     }
+
+    return this.listByTenant(client.tenant_id, page, limit);
   }
 }

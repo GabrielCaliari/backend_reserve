@@ -2,6 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../../shared/database/prisma.service';
 import { errorResponse, successResponse } from '../../../../shared/helpers';
 import { ActivityLogService } from './activity-log.service';
+import { EActivityLogType } from '../../domain/enums/activity-log-type.enum';
+import { EActivityLogCategory } from '../../domain/enums/activity-log-category.enum';
 import {
   CreateSemesterPlanDto,
   CreateSemesterPlanDeliveryDto,
@@ -128,8 +130,8 @@ export class SemesterPlanService {
 
       if (becomingConcluido) {
         await this.activityLogService.record(tenantId, {
-          type: 'manual',
-          category: 'other',
+          type: EActivityLogType.MANUAL,
+          category: EActivityLogCategory.OTHER,
           title: `Entrega concluída: ${updated.titulo}`,
         });
       }

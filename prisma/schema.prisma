@@ -1495,6 +1495,7 @@ enum EPlatform {
   GA4
   META_ADS
   GOOGLE_ADS
+  INSTAGRAM
 }
 
 enum EIntegrationStatus {
@@ -1564,6 +1565,10 @@ model HotelApiCredential {
   last_sync_at     DateTime?
   sync_status      EIntegrationStatus @default(PENDING)
   error_message    String?            @db.Text
+  // IG Business Account ID the Graph API calls resolve against (platform:
+  // INSTAGRAM only). Nullable because it's meaningless for GA4/META_ADS/GOOGLE_ADS
+  // credentials — reusing HotelApiCredential per §3.4 needed one additive field.
+  ig_user_id       String?            @db.VarChar(50)
   created_at       DateTime           @default(now())
   updated_at       DateTime           @updatedAt
   HotelClient      HotelClient        @relation(fields: [client_id], references: [id])
@@ -1986,8 +1991,10 @@ model HotelReservation {
 // Fase 5 — Painel Reserve: shim for Fase 2/3 dependencies
 // ============================================================
 // `plano-painel-backend` (Fase 2 attribution + Fase 3 bot automation) is not
-// merged into main yet. Fase 5 (ROI análise, digest, bot-config-propostas)
-// reads from these models, so they are re-declared here verbatim from the
+// merged into main yet (Fase 4 landed first — see ActivityLog/IgDailySnapshot/
+// ContentPost below, which came from that merge and replaced this branch's own
+// shims of them). Fase 5 (ROI análise, digest, bot-config-propostas) reads
+// from the models below, so they are re-declared here verbatim from the
 // plan's own Fase 2 Task 1 / Fase 3 Task 1 interfaces so this branch compiles
 // and is independently testable. INTEGRATION TODO: once Fase 2/3 merges into
 // main, delete this block + its migration (`..._fase5_shim_upstream_dependencies`)
@@ -2202,25 +2209,18 @@ model BotConfigProposal {
   @@map("bot_config_propostas")
 }
 
-// --- Fase 4 (Instagram/Conteúdo) dependencies, minimally shimmed for Fase 5's
-// activity-log wiring and the historical-baseline job. Same integration TODO
-// as the Fase 2/3 shim above: de-duplicate once Fase 4 merges into main.
+// ============================================================
+// PAINEL RESERVE — Fase 4: Instagram + Conteúdo (merged from main; this
+// branch's own shims of ActivityLog/IgDailySnapshot were removed in favor of
+// these canonical versions once Fase 4 landed on main).
+// ============================================================
 
-model ActivityLog {
-  id          String   @id @default(cuid()) @db.VarChar(25)
-  tenant_id   String   @db.VarChar(25)
-  type        String   @db.VarChar(10) // auto|manual
-  category    String   @db.VarChar(20) // post|campaign|report|bot|meeting|other
-  title       String   @db.VarChar(200)
-  description String?  @db.Text
-  icon        String?  @db.VarChar(50)
-  created_by  String?  @db.VarChar(25)
-  created_at  DateTime @default(now())
-
-  @@index([tenant_id, created_at])
-  @@map("activity_log")
-}
-
+/**
+ * Daily follower/engagement snapshot for a tenant's connected Instagram
+ * account. followers_count has no historical API — this table is the
+ * historical record, upserted once per (tenant, day) by the sync cron
+ * (§3.6: "registrar snapshot no dia do onboarding como baseline").
+ */
 model IgDailySnapshot {
   id                 String   @id @default(cuid()) @db.VarChar(25)
   tenant_id          String   @db.VarChar(25)
@@ -2233,4 +2233,79 @@ model IgDailySnapshot {
 
   @@unique([tenant_id, date])
   @@map("ig_daily_snapshot")
+}
+
+enum EContentPlatform {
+  instagram
+  facebook
+}
+
+enum EContentPostStatus {
+  draft
+  scheduled
+  published
+}
+
+/**
+ * Content calendar entry. Admin-authored (draft/scheduled) and/or synced
+ * from Meta once published — see Fase 4 Task 6's spike doc for whether the
+ * Graph API exposes Business-Suite-scheduled posts; this schema assumes the
+ * "ContentPost as source of truth, Meta only confirms published_at/permalink"
+ * fallback path by default.
+ */
+model ContentPost {
+  id              String              @id @default(cuid()) @db.VarChar(25)
+  tenant_id       String              @db.VarChar(25)
+  platform        EContentPlatform
+  scheduled_for   DateTime?
+  published_at    DateTime?
+  status          EContentPostStatus  @default(draft)
+  caption_preview String?             @db.VarChar(280)
+  thumbnail_url   String?             @db.VarChar(500)
+  external_id     String?             @db.VarChar(100)
+  permalink       String?             @db.VarChar(500)
+  created_by      String              @db.VarChar(25)
+  created_at      DateTime            @default(now())
+  updated_at      DateTime            @updatedAt
+
+  @@index([tenant_id, scheduled_for])
+  @@index([tenant_id, published_at])
+  @@index([tenant_id, status])
+  @@map("content_posts")
+}
+
+enum EActivityLogType {
+  auto
+  manual
+}
+
+enum EActivityLogCategory {
+  post
+  campaign
+  report
+  bot
+  meeting
+  other
+}
+
+/**
+ * Append-style feed of client-facing activity events. A plain injectable
+ * service method (ActivityLogService.record), not an event bus — matching
+ * the codebase's existing direct-service-call convention
+ * (NotificationEventService.dispatch is called directly from call sites
+ * today, not via emitted events).
+ */
+model ActivityLog {
+  id          String               @id @default(cuid()) @db.VarChar(25)
+  tenant_id   String               @db.VarChar(25)
+  type        EActivityLogType
+  category    EActivityLogCategory
+  title       String               @db.VarChar(255)
+  description String?              @db.Text
+  icon        String?              @db.VarChar(50)
+  created_by  String?              @db.VarChar(25)
+  created_at  DateTime             @default(now())
+
+  @@index([tenant_id, created_at])
+  @@map("activity_log")
 }

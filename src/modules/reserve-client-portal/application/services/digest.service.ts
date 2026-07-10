@@ -3,6 +3,8 @@ import { PrismaService } from '../../../../shared/database/prisma.service';
 import { errorResponse, successResponse } from '../../../../shared/helpers';
 import { RoiAnalysisService } from './roi-analysis.service';
 import { ActivityLogService } from './activity-log.service';
+import { EActivityLogType } from '../../domain/enums/activity-log-type.enum';
+import { EActivityLogCategory } from '../../domain/enums/activity-log-category.enum';
 import { NotificationEventService } from '../../../reserve-notifications/application/services/notification-event.service';
 import { NOTIFICATION_EVENTS } from '../../../reserve-notifications/domain/constants/notification-events';
 import { PublishDigestDto } from '../dtos/digest.dto';
@@ -137,8 +139,8 @@ export class DigestService {
       ]);
 
       await this.activityLogService.record(digest.tenant_id, {
-        type: 'auto',
-        category: 'report',
+        type: EActivityLogType.AUTO,
+        category: EActivityLogCategory.REPORT,
         title: 'Resumo quinzenal publicado',
       });
 

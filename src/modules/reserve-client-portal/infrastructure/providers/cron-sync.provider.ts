@@ -4,6 +4,7 @@ import { PrismaService } from '../../../../shared/database/prisma.service';
 import { SyncGa4DataUseCase } from '../../application/use-cases/sync-ga4-data.use-case';
 import { SyncMetaAdsDataUseCase } from '../../application/use-cases/sync-meta-ads-data.use-case';
 import { SyncGoogleAdsDataUseCase } from '../../application/use-cases/sync-google-ads-data.use-case';
+import { SyncInstagramDataUseCase } from '../../application/use-cases/sync-instagram-data.use-case';
 import { EPlatform } from '../../domain/enums/platform.enum';
 import { EIntegrationStatus } from '../../domain/enums/integration-status.enum';
 
@@ -16,6 +17,7 @@ export class CronSyncProvider {
     private readonly syncGa4: SyncGa4DataUseCase,
     private readonly syncMetaAds: SyncMetaAdsDataUseCase,
     private readonly syncGoogleAds: SyncGoogleAdsDataUseCase,
+    private readonly syncInstagram: SyncInstagramDataUseCase,
   ) {}
 
   /**
@@ -53,6 +55,9 @@ export class CronSyncProvider {
             break;
           case EPlatform.GOOGLE_ADS:
             await this.syncGoogleAds.execute(cred.client_id);
+            break;
+          case EPlatform.INSTAGRAM:
+            await this.syncInstagram.execute(cred.client_id);
             break;
           default:
             this.logger.warn(`Unknown platform: ${cred.platform}`);

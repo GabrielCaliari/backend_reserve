@@ -16,6 +16,8 @@ import { AdminMilestoneController } from './infrastructure/controllers/admin-mil
 import { AdminSemesterPlanController } from './infrastructure/controllers/admin-semester-plan.controller';
 import { AdminMetricGoalController } from './infrastructure/controllers/admin-metric-goal.controller';
 import { AdminBotConfigProposalController } from './infrastructure/controllers/admin-bot-config-proposal.controller';
+import { AdminContentPostController } from './infrastructure/controllers/admin-content-post.controller';
+import { AdminActivityLogController } from './infrastructure/controllers/admin-activity-log.controller';
 
 // Application services
 import { HotelClientService } from './application/services/hotel-client.service';
@@ -23,6 +25,8 @@ import { ReservationService } from './application/services/reservation.service';
 import { DashboardService } from './application/services/dashboard.service';
 import { OverviewService } from './application/services/overview.service';
 import { LeadsOverviewService } from './application/services/leads-overview.service';
+import { InstagramOverviewService } from './application/services/instagram-overview.service';
+import { ContentPostService } from './application/services/content-post.service';
 import { PeriodComparisonService } from '../../shared/analytics/period-comparison.service';
 import { CampaignService } from './application/services/campaign.service';
 import { SiteAnalyticsService } from './application/services/site-analytics.service';
@@ -49,6 +53,7 @@ import { ProcessReservationUseCase } from './application/use-cases/process-reser
 import { SyncGa4DataUseCase } from './application/use-cases/sync-ga4-data.use-case';
 import { SyncMetaAdsDataUseCase } from './application/use-cases/sync-meta-ads-data.use-case';
 import { SyncGoogleAdsDataUseCase } from './application/use-cases/sync-google-ads-data.use-case';
+import { SyncInstagramDataUseCase } from './application/use-cases/sync-instagram-data.use-case';
 import { InsertOtaDataUseCase } from './application/use-cases/insert-ota-data.use-case';
 import { PublishMonthlyReportUseCase } from './application/use-cases/publish-monthly-report.use-case';
 import { ImportHistoricalBaselineUseCase } from './application/use-cases/import-historical-baseline.use-case';
@@ -75,6 +80,7 @@ import { FocoAdapter } from './infrastructure/providers/adapters/foco.adapter';
 import { Ga4Provider } from './infrastructure/providers/ga4.provider';
 import { MetaAdsProvider } from './infrastructure/providers/meta-ads.provider';
 import { GoogleAdsProvider } from './infrastructure/providers/google-ads.provider';
+import { InstagramProvider } from './infrastructure/providers/instagram.provider';
 import { CronSyncProvider } from './infrastructure/providers/cron-sync.provider';
 import { DigestGenerationCronProvider } from './infrastructure/providers/digest-generation-cron.provider';
 import { AesEncryptionProvider } from './infrastructure/providers/aes-encryption.provider';
@@ -112,6 +118,8 @@ import { ReserveNotificationsModule } from '../reserve-notifications/reserve-not
     AdminSemesterPlanController,
     AdminMetricGoalController,
     AdminBotConfigProposalController,
+    AdminContentPostController,
+    AdminActivityLogController,
   ],
   providers: [
     // Application services
@@ -120,6 +128,9 @@ import { ReserveNotificationsModule } from '../reserve-notifications/reserve-not
     DashboardService,
     OverviewService,
     LeadsOverviewService,
+    InstagramOverviewService,
+    ContentPostService,
+    ActivityLogService,
     PeriodComparisonService,
     CampaignService,
     SiteAnalyticsService,
@@ -135,7 +146,6 @@ import { ReserveNotificationsModule } from '../reserve-notifications/reserve-not
     WhatsAppTrackingService,
     RoiAnalysisService,
     DigestService,
-    ActivityLogService,
     MilestoneService,
     SemesterPlanService,
     MetricGoalService,
@@ -146,6 +156,7 @@ import { ReserveNotificationsModule } from '../reserve-notifications/reserve-not
     SyncGa4DataUseCase,
     SyncMetaAdsDataUseCase,
     SyncGoogleAdsDataUseCase,
+    SyncInstagramDataUseCase,
     InsertOtaDataUseCase,
     PublishMonthlyReportUseCase,
     ImportHistoricalBaselineUseCase,
@@ -161,6 +172,7 @@ import { ReserveNotificationsModule } from '../reserve-notifications/reserve-not
     Ga4Provider,
     MetaAdsProvider,
     GoogleAdsProvider,
+    InstagramProvider,
     AesEncryptionProvider,
     CronSyncProvider,
     DigestGenerationCronProvider,

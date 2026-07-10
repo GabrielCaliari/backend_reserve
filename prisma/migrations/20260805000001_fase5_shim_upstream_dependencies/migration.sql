@@ -1,9 +1,12 @@
 -- Fase 5 (Painel Reserve) shim for Fase 2 (atribuição) / Fase 3 (automação
--- WhatsApp) / Fase 4 (Instagram + conteúdo) dependency tables. Those phases
--- are not merged into main as of this branch. Shapes copied verbatim from the
--- plan's Fase 2 Task 1, Fase 3 Task 1, and Fase 4 Task 3/7 interfaces.
+-- WhatsApp) dependency tables. Those phases are not merged into main as of
+-- this branch (Fase 4 merged first — activity_log / ig_daily_snapshot are
+-- already created by main's own Fase 4 migration, so this file no longer
+-- creates them; see git history if you need the original shimmed versions).
+-- Shapes copied verbatim from the plan's Fase 2 Task 1 / Fase 3 Task 1
+-- interfaces.
 --
--- INTEGRATION TODO: once Fase 2/3/4 merge into main, drop this migration (and
+-- INTEGRATION TODO: once Fase 2/3 merge into main, drop this migration (and
 -- the matching block in schema.prisma) in favor of the canonical one.
 
 -- CreateEnum
@@ -111,37 +114,6 @@ CREATE UNIQUE INDEX "bot_integration_configs_tenant_id_key" ON "bot_integration_
 -- AddForeignKey
 ALTER TABLE "bot_integration_configs" ADD CONSTRAINT "bot_integration_configs_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "Tenant"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
--- CreateTable (Fase 4 Task 7 shim, needed by Fase 5 digest/semester-plan/bot-config auto-events)
-CREATE TABLE "activity_log" (
-    "id" VARCHAR(25) NOT NULL,
-    "tenant_id" VARCHAR(25) NOT NULL,
-    "type" VARCHAR(10) NOT NULL,
-    "category" VARCHAR(20) NOT NULL,
-    "title" VARCHAR(200) NOT NULL,
-    "description" TEXT,
-    "icon" VARCHAR(50),
-    "created_by" VARCHAR(25),
-    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "activity_log_pkey" PRIMARY KEY ("id")
-);
-
--- CreateIndex
-CREATE INDEX "activity_log_tenant_id_created_at_idx" ON "activity_log"("tenant_id", "created_at");
-
--- CreateTable (Fase 4 Task 3 shim, needed by Fase 5 Task 5's baseline snapshot)
-CREATE TABLE "ig_daily_snapshot" (
-    "id" VARCHAR(25) NOT NULL,
-    "tenant_id" VARCHAR(25) NOT NULL,
-    "date" DATE NOT NULL,
-    "followers_count" INTEGER NOT NULL DEFAULT 0,
-    "reach" INTEGER NOT NULL DEFAULT 0,
-    "engaged_accounts" INTEGER NOT NULL DEFAULT 0,
-    "total_interactions" INTEGER NOT NULL DEFAULT 0,
-    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "ig_daily_snapshot_pkey" PRIMARY KEY ("id")
-);
-
--- CreateIndex
-CREATE UNIQUE INDEX "ig_daily_snapshot_tenant_id_date_key" ON "ig_daily_snapshot"("tenant_id", "date");
+-- activity_log and ig_daily_snapshot are created by main's Fase 4 migration
+-- (20260804000007_add_ig_daily_snapshot, 20260804000009_add_activity_log),
+-- which now sorts before this one — no longer shimmed here.

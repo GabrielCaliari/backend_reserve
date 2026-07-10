@@ -3,6 +3,8 @@ import axios from 'axios';
 import { PrismaService } from '../../../../shared/database/prisma.service';
 import { errorResponse, successResponse } from '../../../../shared/helpers';
 import { ActivityLogService } from './activity-log.service';
+import { EActivityLogType } from '../../domain/enums/activity-log-type.enum';
+import { EActivityLogCategory } from '../../domain/enums/activity-log-category.enum';
 import { CreateBotConfigProposalDto, RejectBotConfigProposalDto } from '../dtos/bot-config-proposal.dto';
 
 /**
@@ -102,8 +104,8 @@ export class BotConfigProposalService {
       await this.publishToN8n(tenantId, updated.campo, updated.valor_proposto);
 
       await this.activityLogService.record(tenantId, {
-        type: 'auto',
-        category: 'bot',
+        type: EActivityLogType.AUTO,
+        category: EActivityLogCategory.BOT,
         title: `Proposta de configuração aprovada: ${updated.campo}`,
       });
 
