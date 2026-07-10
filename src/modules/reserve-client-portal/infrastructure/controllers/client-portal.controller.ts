@@ -1,7 +1,9 @@
 import {
+  Body,
   Controller,
   Get,
   Param,
+  Post,
   Query,
   Res,
   UseGuards,
@@ -13,6 +15,8 @@ import { LeadsOverviewService } from '../../application/services/leads-overview.
 import { HotelClientService } from '../../application/services/hotel-client.service';
 import { RoiAnalysisService } from '../../application/services/roi-analysis.service';
 import { SemesterPlanService } from '../../application/services/semester-plan.service';
+import { BotConfigProposalService } from '../../application/services/bot-config-proposal.service';
+import { CreateBotConfigProposalDto } from '../../application/dtos/bot-config-proposal.dto';
 import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
 import { CurrentAdmin, CurrentAdminPayload } from '../../../../shared/auth/decorators/current-admin.decorator';
 
@@ -31,6 +35,7 @@ export class ClientPortalController {
     private readonly hotelClientService: HotelClientService,
     private readonly roiAnalysisService: RoiAnalysisService,
     private readonly semesterPlanService: SemesterPlanService,
+    private readonly botConfigProposalService: BotConfigProposalService,
   ) {}
 
   @Get(':clientId/overview')
@@ -73,6 +78,23 @@ export class ClientPortalController {
   @Get(':clientId/semester-plan')
   async getSemesterPlan(@Param('clientId') clientId: string, @Res() res: Response) {
     const result = await this.semesterPlanService.findByClientId(clientId);
+    return res.status(result.status).json(result.data);
+  }
+
+  @Post(':clientId/bot-config-proposals')
+  async submitBotConfigProposal(
+    @Param('clientId') clientId: string,
+    @Body() dto: CreateBotConfigProposalDto,
+    @CurrentAdmin() admin: CurrentAdminPayload,
+    @Res() res: Response,
+  ) {
+    const result = await this.botConfigProposalService.submitByClientId(clientId, admin.admin_id, dto);
+    return res.status(result.status).json(result.data);
+  }
+
+  @Get(':clientId/bot-config-proposals')
+  async getBotConfigProposals(@Param('clientId') clientId: string, @Res() res: Response) {
+    const result = await this.botConfigProposalService.findByClientId(clientId);
     return res.status(result.status).json(result.data);
   }
 

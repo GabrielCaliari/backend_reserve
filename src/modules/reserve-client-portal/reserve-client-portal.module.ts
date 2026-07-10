@@ -15,6 +15,7 @@ import { AdminDigestController } from './infrastructure/controllers/admin-digest
 import { AdminMilestoneController } from './infrastructure/controllers/admin-milestone.controller';
 import { AdminSemesterPlanController } from './infrastructure/controllers/admin-semester-plan.controller';
 import { AdminMetricGoalController } from './infrastructure/controllers/admin-metric-goal.controller';
+import { AdminBotConfigProposalController } from './infrastructure/controllers/admin-bot-config-proposal.controller';
 
 // Application services
 import { HotelClientService } from './application/services/hotel-client.service';
@@ -41,6 +42,7 @@ import { ActivityLogService } from './application/services/activity-log.service'
 import { MilestoneService } from './application/services/milestone.service';
 import { SemesterPlanService } from './application/services/semester-plan.service';
 import { MetricGoalService } from './application/services/metric-goal.service';
+import { BotConfigProposalService } from './application/services/bot-config-proposal.service';
 
 // Use cases
 import { ProcessReservationUseCase } from './application/use-cases/process-reservation.use-case';
@@ -109,6 +111,7 @@ import { ReserveNotificationsModule } from '../reserve-notifications/reserve-not
     AdminMilestoneController,
     AdminSemesterPlanController,
     AdminMetricGoalController,
+    AdminBotConfigProposalController,
   ],
   providers: [
     // Application services
@@ -136,6 +139,7 @@ import { ReserveNotificationsModule } from '../reserve-notifications/reserve-not
     MilestoneService,
     SemesterPlanService,
     MetricGoalService,
+    BotConfigProposalService,
 
     // Use cases
     ProcessReservationUseCase,
