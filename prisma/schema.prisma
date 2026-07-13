@@ -490,6 +490,19 @@ model TenantDomain {
   @@index([tenant_id])
 }
 
+model TenantTypeModulePolicy {
+  id          String      @id @default(cuid()) @db.VarChar(25)
+  tenant_type ETenantType
+  module_key  String      @db.VarChar(100)
+  enabled     Boolean
+  version     Int         @default(1)
+  created_at  DateTime    @default(now())
+  updated_at  DateTime    @updatedAt
+
+  @@unique([tenant_type, module_key])
+  @@index([tenant_type, enabled])
+}
+
 model LeadCollection {
   id              String                @id @default(cuid()) @db.VarChar(25)
   name            String                @db.VarChar(150)
@@ -1683,6 +1696,7 @@ enum EPlatform {
   GA4
   META_ADS
   GOOGLE_ADS
+  INSTAGRAM
 }
 
 enum EIntegrationStatus {
@@ -1752,6 +1766,10 @@ model HotelApiCredential {
   last_sync_at     DateTime?
   sync_status      EIntegrationStatus @default(PENDING)
   error_message    String?            @db.Text
+  // IG Business Account ID the Graph API calls resolve against (platform:
+  // INSTAGRAM only). Nullable because it's meaningless for GA4/META_ADS/GOOGLE_ADS
+  // credentials — reusing HotelApiCredential per §3.4 needed one additive field.
+  ig_user_id       String?            @db.VarChar(50)
   created_at       DateTime           @default(now())
   updated_at       DateTime           @updatedAt
   HotelClient      HotelClient        @relation(fields: [client_id], references: [id])
@@ -2168,4 +2186,103 @@ model HotelReservation {
   @@index([tenant_id, booking_date])
   @@index([external_id])
   @@map("hotel_reservations")
+}
+
+// ============================================================
+// PAINEL RESERVE — Fase 4: Instagram + Conteúdo
+// ============================================================
+
+/**
+ * Daily follower/engagement snapshot for a tenant's connected Instagram
+ * account. followers_count has no historical API — this table is the
+ * historical record, upserted once per (tenant, day) by the sync cron
+ * (§3.6: "registrar snapshot no dia do onboarding como baseline").
+ */
+model IgDailySnapshot {
+  id                 String   @id @default(cuid()) @db.VarChar(25)
+  tenant_id          String   @db.VarChar(25)
+  date               DateTime @db.Date
+  followers_count    Int      @default(0)
+  reach              Int      @default(0)
+  engaged_accounts   Int      @default(0)
+  total_interactions Int      @default(0)
+  created_at         DateTime @default(now())
+
+  @@unique([tenant_id, date])
+  @@map("ig_daily_snapshot")
+}
+
+enum EContentPlatform {
+  instagram
+  facebook
+}
+
+enum EContentPostStatus {
+  draft
+  scheduled
+  published
+}
+
+/**
+ * Content calendar entry. Admin-authored (draft/scheduled) and/or synced
+ * from Meta once published — see Fase 4 Task 6's spike doc for whether the
+ * Graph API exposes Business-Suite-scheduled posts; this schema assumes the
+ * "ContentPost as source of truth, Meta only confirms published_at/permalink"
+ * fallback path by default.
+ */
+model ContentPost {
+  id              String              @id @default(cuid()) @db.VarChar(25)
+  tenant_id       String              @db.VarChar(25)
+  platform        EContentPlatform
+  scheduled_for   DateTime?
+  published_at    DateTime?
+  status          EContentPostStatus  @default(draft)
+  caption_preview String?             @db.VarChar(280)
+  thumbnail_url   String?             @db.VarChar(500)
+  external_id     String?             @db.VarChar(100)
+  permalink       String?             @db.VarChar(500)
+  created_by      String              @db.VarChar(25)
+  created_at      DateTime            @default(now())
+  updated_at      DateTime            @updatedAt
+
+  @@index([tenant_id, scheduled_for])
+  @@index([tenant_id, published_at])
+  @@index([tenant_id, status])
+  @@map("content_posts")
+}
+
+enum EActivityLogType {
+  auto
+  manual
+}
+
+enum EActivityLogCategory {
+  post
+  campaign
+  report
+  bot
+  meeting
+  other
+}
+
+/**
+ * Append-style feed of client-facing activity events. A plain injectable
+ * service method (ActivityLogService.record), not an event bus — matching
+ * the codebase's existing direct-service-call convention
+ * (NotificationEventService.dispatch is called directly from call sites
+ * today, not via emitted events).
+ */
+model ActivityLog {
+  id          String               @id @default(cuid()) @db.VarChar(25)
+  tenant_id   String               @db.VarChar(25)
+  type        EActivityLogType
+  category    EActivityLogCategory
+  title       String               @db.VarChar(255)
+  description String?              @db.Text
+  icon        String?              @db.VarChar(50)
+  created_by  String?              @db.VarChar(25)
+  created_at  DateTime             @default(now())
+
+  @@index([tenant_id, created_at])
+  @@map("activity_log")
 }

@@ -6,3 +6,4 @@ export * from './multer-exception.filter';
 export * from './domain-exception.filter';
 export * from './connection-error.filter';
 export * from './prisma-exception.filter';
+export * from './module-disabled.error';

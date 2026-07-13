@@ -15,6 +15,9 @@ import { BotConversationService } from '../../application/services/bot-conversat
 import { ListConversationsQueryDto } from '../../application/dtos/list-conversations-query.dto';
 import { FunnelMetricsService } from '../../application/services/funnel-metrics.service';
 import { HotelClientService } from '../../application/services/hotel-client.service';
+import { InstagramOverviewService } from '../../application/services/instagram-overview.service';
+import { ContentPostService } from '../../application/services/content-post.service';
+import { ActivityLogService } from '../../application/services/activity-log.service';
 import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
 import { CurrentAdmin, CurrentAdminPayload } from '../../../../shared/auth/decorators/current-admin.decorator';
 
@@ -34,6 +37,9 @@ export class ClientPortalController {
     private readonly botConversationService: BotConversationService,
     private readonly funnelMetricsService: FunnelMetricsService,
     private readonly hotelClientService: HotelClientService,
+    private readonly instagramOverviewService: InstagramOverviewService,
+    private readonly contentPostService: ContentPostService,
+    private readonly activityLogService: ActivityLogService,
   ) {}
 
   @Get(':clientId/overview')
@@ -156,6 +162,34 @@ export class ClientPortalController {
     const toDate = to ? new Date(to) : new Date();
     const result = await this.dashboardService.getSiteMetrics(clientId, fromDate, toDate);
     return res.status(result.status).json(result.data);
+  }
+
+  @Get(':clientId/instagram')
+  async getInstagramOverview(
+    @Param('clientId') clientId: string,
+    @Query('from') from: string,
+    @Query('to') to: string,
+  ) {
+    const fromDate = from ? new Date(from) : this.defaultFrom();
+    const toDate = to ? new Date(to) : new Date();
+    return this.instagramOverviewService.getOverview(clientId, fromDate, toDate);
+  }
+
+  @Get(':clientId/content-posts')
+  async getContentPosts(
+    @Param('clientId') clientId: string,
+    @Query('month') month: string,
+  ) {
+    return this.contentPostService.getCalendar(clientId, month);
+  }
+
+  @Get(':clientId/activities')
+  async getActivities(
+    @Param('clientId') clientId: string,
+    @Query('page') page = '1',
+    @Query('limit') limit = '20',
+  ) {
+    return this.activityLogService.listByClient(clientId, Number(page), Number(limit));
   }
 
   private defaultFrom(): Date {

@@ -156,6 +156,16 @@ export const PERMISSIONS = [
   'hotel-portal.whatsapp-contacts.manage',
   // super_admin/owner only — mints the secret N8N key (Fase 3 Task 12).
   'hotel-portal.bot-integration.manage',
+  // Painel Reserve — Fase 4 (docs/superpowers/plans/2026-08-04-plano-painel-reserve-backend.md)
+  'hotel-portal.content.manage',
+  'hotel-portal.activity-log.manage',
+
+  // settings (Fase 3, não-gateable)
+  'settings.read',
+  'settings.manage',
+  'settings.modules.read',
+  'settings.modules.manage',
+  'settings.domains.manage',
 ] as const;
 
 export type PermissionName = (typeof PERMISSIONS)[number];
@@ -180,6 +190,8 @@ const VIEWER: readonly PermissionName[] = [
   'billing-config.read',
   'b2c-products.read',
   'b2c-fees.read',
+  'settings.read',
+  'settings.modules.read',
 ];
 
 const EDITOR: readonly PermissionName[] = [
@@ -215,6 +227,9 @@ const EDITOR: readonly PermissionName[] = [
   'leads.update',
   // Painel Reserve: viewer excluded, editor+ can move leads (§8 Fase 3 Task 6).
   'hotel-portal.whatsapp-funnel.manage',
+  // Painel Reserve: viewer excluded, editor+ manages the content calendar
+  // (§8 Fase 4 Task 5).
+  'hotel-portal.content.manage',
 ];
 
 const MANAGER: readonly PermissionName[] = [
@@ -247,6 +262,8 @@ const MANAGER: readonly PermissionName[] = [
   'hotel-portal.whatsapp.manage',
   'hotel-portal.whatsapp-links.manage',
   'hotel-portal.attribution.manage',
+  'hotel-portal.activity-log.manage',
+  'settings.manage',
 ];
 
 const OWNER: readonly PermissionName[] = [
