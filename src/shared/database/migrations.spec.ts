@@ -70,3 +70,67 @@ describe('20260801000003_add_tenant_setting', () => {
     expect(sql).toMatch(/TenantSetting_tenant_id_fkey[\s\S]*ON DELETE CASCADE/);
   });
 });
+
+describe('20260804000001_add_attribution_tables', () => {
+  const sql = readMigration('20260804000001_add_attribution_tables');
+
+  it('creates atribuicao_conversa and attribution_settings in snake_case', () => {
+    expect(sql).toContain('CREATE TABLE "atribuicao_conversa"');
+    expect(sql).toContain('CREATE TABLE "attribution_settings"');
+    expect(sql).toContain('"tenant_id" VARCHAR(25) NOT NULL');
+    expect(sql).toContain('"ctwa_clid"');
+    expect(sql).toContain('"link_code"');
+    expect(sql).not.toMatch(/"tenantId"|"ctwaClid"|"linkCode"/);
+  });
+
+  it('gives attribution_settings one row per tenant', () => {
+    expect(sql).toContain('CREATE UNIQUE INDEX "attribution_settings_tenant_id_key"');
+  });
+
+  it('indexes atribuicao_conversa for contact/date and link_code lookups', () => {
+    expect(sql).toContain('atribuicao_conversa_tenant_id_numero_contato_idx');
+    expect(sql).toContain('atribuicao_conversa_link_code_idx');
+  });
+
+  it('cascades on tenant delete', () => {
+    expect(sql).toMatch(/atribuicao_conversa_tenant_id_fkey[\s\S]*ON DELETE CASCADE/);
+    expect(sql).toMatch(/attribution_settings_tenant_id_fkey[\s\S]*ON DELETE CASCADE/);
+  });
+});
+
+describe('20260804000002_add_bot_automation_tables', () => {
+  const sql = readMigration('20260804000002_add_bot_automation_tables');
+
+  it('creates all six tables', () => {
+    for (const table of [
+      'bot_integration_configs',
+      'bot_ingestion_events',
+      'bot_contacts',
+      'bot_messages',
+      'funil_eventos',
+      'bot_leads',
+    ]) {
+      expect(sql).toContain(`CREATE TABLE "${table}"`);
+    }
+  });
+
+  it('gives bot_ingestion_events an idempotency key per tenant/event_id', () => {
+    expect(sql).toContain('CREATE UNIQUE INDEX "bot_ingestion_events_tenant_id_event_id_key"');
+  });
+
+  it('gives bot_contacts and bot_leads one row per tenant/contact', () => {
+    expect(sql).toContain('CREATE UNIQUE INDEX "bot_contacts_tenant_id_numero_contato_key"');
+    expect(sql).toContain('CREATE UNIQUE INDEX "bot_leads_tenant_id_numero_contato_key"');
+  });
+
+  it('keeps funil_eventos append-only: no unique constraint on (tenant_id, numero_contato)', () => {
+    const funilBlockMatch = sql.match(
+      /CREATE TABLE "funil_eventos"[\s\S]*?(?=-- Create|$)/,
+    );
+    expect(funilBlockMatch).not.toBeNull();
+    // Every CREATE UNIQUE INDEX anywhere in this migration must NOT target
+    // funil_eventos — the schema-level encoding of "always INSERT, never
+    // UPDATE" for the append-only funnel log.
+    expect(sql).not.toMatch(/CREATE UNIQUE INDEX "funil_eventos[^"]*"/);
+  });
+});

@@ -241,13 +241,6 @@ model Tenant {
   AdminPermissionOverride   AdminPermissionOverride[]
   TenantDomains             TenantDomain[]
   TenantSettings            TenantSetting[]
-  // --- Fase 5 (Painel Reserve) shim: ConversationAttribution/AttributionSettings
-  // and BotIntegrationConfig are owned by Fase 2/3 (branch `plano-painel-backend`,
-  // not merged into main as of this branch's creation). Declared here so Fase 5's
-  // ROI/digest/bot-config-proposal services compile and are testable in isolation.
-  // TODO(integration): once Fase 2/3 merges into main, drop this duplicate block
-  // (and its migration) in favor of the canonical one — shapes were copied verbatim
-  // so the merge should be a no-op once de-duplicated.
   ConversationAttributions  ConversationAttribution[]
   AttributionSettings       AttributionSettings?
   BotIntegrationConfig      BotIntegrationConfig?
@@ -255,6 +248,214 @@ model Tenant {
   @@index([stripe_customer_id])
   @@index([subscription_status])
   @@index([tenant_type])
+}
+
+enum EAttributionSource {
+  anuncio
+  link
+  organico
+  site
+}
+
+model ConversationAttribution {
+  id             String             @id @default(cuid()) @db.VarChar(25)
+  tenant_id      String             @db.VarChar(25)
+  numero_contato String             @db.VarChar(20)
+  ocorrido_em    DateTime
+  fonte          EAttributionSource
+  ad_id          String?            @db.VarChar(100)
+  adset_id       String?            @db.VarChar(100)
+  campaign_id    String?            @db.VarChar(100)
+  ctwa_clid      String?            @db.VarChar(255)
+  link_code      String?            @db.VarChar(20)
+  utm_source     String?            @db.VarChar(100)
+  utm_medium     String?            @db.VarChar(100)
+  utm_campaign   String?            @db.VarChar(100)
+  primeiro_toque Boolean            @default(false)
+  ultimo_toque   Boolean            @default(false)
+  created_at     DateTime           @default(now())
+  Tenant         Tenant             @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+
+  @@index([tenant_id, numero_contato])
+  @@index([tenant_id, ocorrido_em])
+  @@index([link_code])
+  @@map("atribuicao_conversa")
+}
+
+model AttributionSettings {
+  id              String   @id @default(cuid()) @db.VarChar(25)
+  tenant_id       String   @unique @db.VarChar(25)
+  window_days     Int      @default(30)
+  source_priority Json     @default("[]")
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+  Tenant          Tenant   @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+
+  @@map("attribution_settings")
+}
+
+enum EBotContactStatus {
+  ATIVO
+  PAUSADO
+}
+
+enum EBotMessageRole {
+  user
+  assistant
+  human
+}
+
+enum EBotMessageType {
+  texto
+  audio
+  imagem
+}
+
+enum EFunnelStage {
+  NOVO
+  QUALIFICADO
+  PAGAMENTO
+  FECHADO
+  FRIO
+}
+
+enum EFunnelEventAuthor {
+  bot
+  humano
+}
+
+model BotIntegrationConfig {
+  id                             String    @id @default(cuid()) @db.VarChar(25)
+  tenant_id                      String    @unique @db.VarChar(25)
+  tenant_key_hash                String
+  tenant_key_salt                String
+  active                         Boolean   @default(true)
+  n8n_stage_webhook_url          String?   @db.VarChar(500)
+  n8n_config_publish_webhook_url String?   @db.VarChar(500)
+  chatwoot_base_url              String?   @db.VarChar(500)
+  last_heartbeat_at              DateTime?
+  created_at                     DateTime  @default(now())
+  updated_at                     DateTime  @updatedAt
+  Tenant                         Tenant    @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+
+  @@map("bot_integration_configs")
+}
+
+model BotIngestionEvent {
+  id            String    @id @default(cuid()) @db.VarChar(25)
+  tenant_id     String    @db.VarChar(25)
+  event_id      String    @db.VarChar(100)
+  event_type    String    @db.VarChar(50)
+  occurred_at   DateTime
+  payload       Json
+  status        String    @default("RECEIVED") @db.VarChar(20) // RECEIVED | PROCESSED | FAILED
+  error_message String?   @db.Text
+  received_at   DateTime  @default(now())
+  processed_at  DateTime?
+
+  @@unique([tenant_id, event_id])
+  @@index([tenant_id, event_type, received_at])
+  @@map("bot_ingestion_events")
+}
+
+model BotContact {
+  id                 String            @id @default(cuid()) @db.VarChar(25)
+  tenant_id          String            @db.VarChar(25)
+  numero_contato     String            @db.VarChar(20)
+  nome               String?           @db.VarChar(150)
+  origem             String?           @db.VarChar(20) // anuncio | organico
+  status_bot         EBotContactStatus @default(ATIVO)
+  motivo_pausa       String?           @db.VarChar(255)
+  janela_expira      DateTime?
+  consentimento_lgpd Boolean           @default(false)
+  last_message_at    DateTime?
+  created_at         DateTime          @default(now())
+  updated_at         DateTime          @updatedAt
+
+  @@unique([tenant_id, numero_contato])
+  @@map("bot_contacts")
+}
+
+model BotMessage {
+  id              String          @id @default(cuid()) @db.VarChar(25)
+  tenant_id       String          @db.VarChar(25)
+  numero_contato  String          @db.VarChar(20)
+  role            EBotMessageRole
+  tipo            EBotMessageType
+  content_preview String?         @db.VarChar(280)
+  ocorrido_em     DateTime
+  created_at      DateTime        @default(now())
+
+  @@index([tenant_id, numero_contato, ocorrido_em])
+  @@map("bot_messages")
+}
+
+model FunnelEvent {
+  id             String             @id @default(cuid()) @db.VarChar(25)
+  tenant_id      String             @db.VarChar(25)
+  numero_contato String             @db.VarChar(20)
+  de_estagio     EFunnelStage?
+  para_estagio   EFunnelStage
+  autor_tipo     EFunnelEventAuthor
+  autor_id       String?            @db.VarChar(25)
+  motivo         String?            @db.VarChar(255)
+  ocorrido_em    DateTime
+  created_at     DateTime           @default(now())
+
+  @@index([tenant_id, numero_contato, ocorrido_em])
+  @@index([tenant_id, para_estagio])
+  @@map("funil_eventos")
+}
+
+model BotLead {
+  id                   String       @id @default(cuid()) @db.VarChar(25)
+  tenant_id            String       @db.VarChar(25)
+  numero_contato       String       @db.VarChar(20)
+  current_stage        EFunnelStage @default(NOVO)
+  perfil               String?      @db.VarChar(100)
+  acomodacao_interesse String?      @db.VarChar(255)
+  datas_interesse      Json?
+  updated_at           DateTime     @updatedAt
+
+  @@unique([tenant_id, numero_contato])
+  @@map("bot_leads")
+}
+
+model FollowupAttempt {
+  id             String   @id @default(cuid()) @db.VarChar(25)
+  tenant_id      String   @db.VarChar(25)
+  numero_contato String   @db.VarChar(20)
+  tentativa      Int      @db.SmallInt // 1-4
+  tipo_janela    String   @db.VarChar(10) // 4h | 24h | 72h | 7d
+  status         String   @db.VarChar(20) // AGUARDANDO | RESPONDEU | FRIO
+  ocorrido_em    DateTime
+  created_at     DateTime @default(now())
+
+  @@index([tenant_id, numero_contato])
+  @@map("bot_followup_attempts")
+}
+
+model BotStageWebhookDispatch {
+  id              String    @id @default(cuid()) @db.VarChar(25)
+  tenant_id       String    @db.VarChar(25)
+  funnel_event_id String    @db.VarChar(25)
+  status          String    @default("PENDING") @db.VarChar(10) // PENDING | SENT | FAILED
+  attempts        Int       @default(0) @db.SmallInt
+  last_attempt_at DateTime?
+  created_at      DateTime  @default(now())
+
+  @@index([tenant_id, status])
+  @@map("bot_stage_webhook_dispatches")
+}
+
+model BotDataRetentionSetting {
+  id             String   @id @default(cuid()) @db.VarChar(25)
+  tenant_id      String   @unique @db.VarChar(25)
+  retention_days Int      @default(365)
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  @@map("bot_data_retention_settings")
 }
 
 model TenantSetting {
@@ -1988,111 +2189,11 @@ model HotelReservation {
 }
 
 // ============================================================
-// Fase 5 — Painel Reserve: shim for Fase 2/3 dependencies
-// ============================================================
-// `plano-painel-backend` (Fase 2 attribution + Fase 3 bot automation) is not
-// merged into main yet (Fase 4 landed first — see ActivityLog/IgDailySnapshot/
-// ContentPost below, which came from that merge and replaced this branch's own
-// shims of them). Fase 5 (ROI análise, digest, bot-config-propostas) reads
-// from the models below, so they are re-declared here verbatim from the
-// plan's own Fase 2 Task 1 / Fase 3 Task 1 interfaces so this branch compiles
-// and is independently testable. INTEGRATION TODO: once Fase 2/3 merges into
-// main, delete this block + its migration (`..._fase5_shim_upstream_dependencies`)
-// in favor of the canonical models — same shape, so it should be a no-op merge.
-
-enum EAttributionSource {
-  anuncio
-  link
-  organico
-  site
-}
-
-model ConversationAttribution {
-  id             String             @id @default(cuid()) @db.VarChar(25)
-  tenant_id      String             @db.VarChar(25)
-  numero_contato String             @db.VarChar(20)
-  ocorrido_em    DateTime
-  fonte          EAttributionSource
-  ad_id          String?            @db.VarChar(100)
-  adset_id       String?            @db.VarChar(100)
-  campaign_id    String?            @db.VarChar(100)
-  ctwa_clid      String?            @db.VarChar(255)
-  link_code      String?            @db.VarChar(20)
-  utm_source     String?            @db.VarChar(100)
-  utm_medium     String?            @db.VarChar(100)
-  utm_campaign   String?            @db.VarChar(100)
-  primeiro_toque Boolean            @default(false)
-  ultimo_toque   Boolean            @default(false)
-  created_at     DateTime           @default(now())
-  Tenant         Tenant             @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
-
-  @@index([tenant_id, numero_contato])
-  @@index([tenant_id, ocorrido_em])
-  @@index([link_code])
-  @@map("atribuicao_conversa")
-}
-
-model AttributionSettings {
-  id              String   @id @default(cuid()) @db.VarChar(25)
-  tenant_id       String   @unique @db.VarChar(25)
-  window_days     Int      @default(30)
-  source_priority Json     @default("[]")
-  created_at      DateTime @default(now())
-  updated_at      DateTime @updatedAt
-  Tenant          Tenant   @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
-
-  @@map("attribution_settings")
-}
-
-enum EFunnelStage {
-  NOVO
-  QUALIFICADO
-  PAGAMENTO
-  FECHADO
-  FRIO
-}
-
-enum EFunnelEventAuthor {
-  bot
-  humano
-}
-
-model FunnelEvent {
-  id             String             @id @default(cuid()) @db.VarChar(25)
-  tenant_id      String             @db.VarChar(25)
-  numero_contato String             @db.VarChar(20)
-  de_estagio     EFunnelStage?
-  para_estagio   EFunnelStage
-  autor_tipo     EFunnelEventAuthor
-  autor_id       String?            @db.VarChar(25)
-  motivo         String?            @db.VarChar(255)
-  ocorrido_em    DateTime
-  created_at     DateTime           @default(now())
-
-  @@index([tenant_id, numero_contato, ocorrido_em])
-  @@index([tenant_id, para_estagio])
-  @@map("funil_eventos")
-}
-
-model BotIntegrationConfig {
-  id                             String    @id @default(cuid()) @db.VarChar(25)
-  tenant_id                      String    @unique @db.VarChar(25)
-  tenant_key_hash                String
-  tenant_key_salt                String
-  active                         Boolean   @default(true)
-  n8n_stage_webhook_url          String?   @db.VarChar(500)
-  n8n_config_publish_webhook_url String?   @db.VarChar(500)
-  last_heartbeat_at              DateTime?
-  created_at                     DateTime  @default(now())
-  updated_at                     DateTime  @updatedAt
-  Tenant                         Tenant    @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
-
-  @@map("bot_integration_configs")
-}
-
-// ============================================================
 // Fase 5 — Narrativa, direção e retenção
 // ============================================================
+// (ConversationAttribution/AttributionSettings/FunnelEvent/BotIntegrationConfig
+// used to be shimmed here pending Fase 2/3's merge; Fase 3 landed on main with
+// the canonical versions above, so the duplicate block was removed.)
 
 enum EDigestStatus {
   DRAFT

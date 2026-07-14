@@ -6,6 +6,7 @@ import {
   CreateWhatsAppTrackingLinkDto,
   UpdateWhatsAppTrackingLinkDto,
 } from '../dtos/whatsapp-tracking-link.dto';
+import { PeriodComparisonService } from '../../../../shared/analytics/period-comparison.service';
 
 interface GeoHeaders {
   country: string | null;
@@ -18,6 +19,7 @@ export class WhatsAppTrackingService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly geolocation: GeolocationProvider,
+    private readonly periodComparison: PeriodComparisonService,
   ) {}
 
   async createLink(clientId: string, adminId: string, dto: CreateWhatsAppTrackingLinkDto) {
@@ -111,6 +113,15 @@ export class WhatsAppTrackingService {
 
       if (!link) return errorResponse('404:WHATSAPP_LINK_NOT_FOUND', 404);
 
+      // Fase 2 Task 6: cliques -> conversas iniciadas conversion rate for this
+      // exact link. ConversationAttribution rows only exist once the bot event
+      // pipeline (Fase 3) writes them via AttributionService.record(), so this
+      // legitimately reads 0 conversations until then — not an error.
+      const conversationsCount = await this.prisma.conversationAttribution.count({
+        where: { link_code: link.short_code },
+      });
+      const totalClicks = link._count.Clicks;
+
       const clicksByDay = await this.prisma.$queryRaw<{ day: string; count: number }[]>`
         SELECT DATE(clicked_at) as day, COUNT(*) as count
         FROM whatsapp_link_clicks
@@ -170,6 +181,11 @@ export class WhatsAppTrackingService {
           by_country: clicksByCountry.map((r) => ({ country: r.country, count: Number(r.count) })),
           by_region: clicksByRegion.map((r) => ({ region: r.region, count: Number(r.count) })),
           by_city: clicksByCity.map((r) => ({ city: r.city, count: Number(r.count) })),
+        },
+        conversion: {
+          clicks: totalClicks,
+          conversations: conversationsCount,
+          rate: this.periodComparison.ratio(conversationsCount, totalClicks),
         },
       });
     } catch (error) {
@@ -268,7 +284,7 @@ export class WhatsAppTrackingService {
       );
     }
 
-    return this.buildWhatsAppUrl(link.phone_number, link.message);
+    return this.buildWhatsAppUrl(link.phone_number, link.message, link.short_code);
   }
 
   private async recordClick(
@@ -339,13 +355,18 @@ export class WhatsAppTrackingService {
     return map[code.toUpperCase()] ?? code.toUpperCase();
   }
 
-  private buildWhatsAppUrl(phone: string, message?: string | null): string {
+  /**
+   * §6.2: the bot recovers which link a conversation started from by parsing
+   * a `[shortCode]` token out of the very first inbound message. Appending it
+   * here guarantees the token is always present and recoverable, whether or
+   * not the admin configured a custom pre-filled message.
+   */
+  private buildWhatsAppUrl(phone: string, message: string | null | undefined, shortCode: string): string {
     const clean = phone.replace(/\D/g, '');
     const base = `https://wa.me/${clean}`;
-    if (message) {
-      return `${base}?text=${encodeURIComponent(message)}`;
-    }
-    return base;
+    const codeToken = `[${shortCode}]`;
+    const text = message ? `${message}\n${codeToken}` : codeToken;
+    return `${base}?text=${encodeURIComponent(text)}`;
   }
 
   private buildRedirectUrl(shortCode: string): string {

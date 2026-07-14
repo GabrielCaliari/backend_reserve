@@ -157,6 +157,14 @@ export const PERMISSIONS = [
   'hotel-portal.goals.manage',
   'hotel-portal.bot-config-proposals.manage',
 
+  // Painel Reserve (docs/superpowers/plans/2026-08-04-plano-painel-reserve-backend.md)
+  'hotel-portal.attribution.manage',
+  'hotel-portal.whatsapp-funnel.manage',
+  // Deliberately absent from every role grant array below (super_admin-only
+  // by the PermissionsGuard bypass) — §5.8's LGPD export/erase.
+  'hotel-portal.whatsapp-contacts.manage',
+  // super_admin/owner only — mints the secret N8N key (Fase 3 Task 12).
+  'hotel-portal.bot-integration.manage',
   // Painel Reserve — Fase 4 (docs/superpowers/plans/2026-08-04-plano-painel-reserve-backend.md)
   'hotel-portal.content.manage',
   'hotel-portal.activity-log.manage',
@@ -226,6 +234,8 @@ const EDITOR: readonly PermissionName[] = [
   'leads.attachment.create',
   'leads.attachment.delete',
   'leads.update',
+  // Painel Reserve: viewer excluded, editor+ can move leads (§8 Fase 3 Task 6).
+  'hotel-portal.whatsapp-funnel.manage',
   // Painel Reserve: viewer excluded, editor+ manages the content calendar
   // (§8 Fase 4 Task 5).
   'hotel-portal.content.manage',
@@ -265,6 +275,7 @@ const MANAGER: readonly PermissionName[] = [
   'hotel-portal.semester-plan.manage',
   'hotel-portal.goals.manage',
   'hotel-portal.bot-config-proposals.manage',
+  'hotel-portal.attribution.manage',
   'hotel-portal.activity-log.manage',
   'settings.manage',
 ];
@@ -274,6 +285,7 @@ const OWNER: readonly PermissionName[] = [
   'cms.blog.manage-key',
   'hotel-portal.reports.publish',
   'hotel-portal.digests.publish',
+  'hotel-portal.bot-integration.manage',
 ];
 
 export const ROLE_GRANTS: Partial<Record<EAdminRole, readonly PermissionName[]>> = {

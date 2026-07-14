@@ -16,6 +16,9 @@ import { AdminMilestoneController } from './infrastructure/controllers/admin-mil
 import { AdminSemesterPlanController } from './infrastructure/controllers/admin-semester-plan.controller';
 import { AdminMetricGoalController } from './infrastructure/controllers/admin-metric-goal.controller';
 import { AdminBotConfigProposalController } from './infrastructure/controllers/admin-bot-config-proposal.controller';
+import { AdminAttributionSettingsController } from './infrastructure/controllers/admin-attribution-settings.controller';
+import { BotEventIngestionController } from './infrastructure/controllers/bot-event-ingestion.controller';
+import { AdminWhatsAppFunnelController } from './infrastructure/controllers/admin-whatsapp-funnel.controller';
 import { AdminContentPostController } from './infrastructure/controllers/admin-content-post.controller';
 import { AdminActivityLogController } from './infrastructure/controllers/admin-activity-log.controller';
 
@@ -47,6 +50,23 @@ import { MilestoneService } from './application/services/milestone.service';
 import { SemesterPlanService } from './application/services/semester-plan.service';
 import { MetricGoalService } from './application/services/metric-goal.service';
 import { BotConfigProposalService } from './application/services/bot-config-proposal.service';
+import { AttributionSettingsService } from './application/services/attribution-settings.service';
+import { AttributionService } from './application/services/attribution.service';
+import { BotKeyProvider } from './infrastructure/providers/bot-key.provider';
+import { BotEventKeyGuard } from './infrastructure/guards/bot-event-key.guard';
+import { BotEventIngestionService } from './application/services/bot-event-ingestion.service';
+import { BotEventProcessorService } from './application/services/bot-event-processor.service';
+import { FunnelService } from './application/services/funnel.service';
+import { BotChannelHealthService } from './application/services/bot-channel-health.service';
+import { BotConversationService } from './application/services/bot-conversation.service';
+import { FunnelMetricsService } from './application/services/funnel-metrics.service';
+import { BotRetentionService } from './application/services/bot-retention.service';
+import { BotRetentionPurgeCronProvider } from './infrastructure/providers/bot-retention-purge-cron.provider';
+import { AdminWhatsAppContactController } from './infrastructure/controllers/admin-whatsapp-contact.controller';
+import { BotIntegrationConfigService } from './application/services/bot-integration-config.service';
+import { AdminBotIntegrationConfigController } from './infrastructure/controllers/admin-bot-integration-config.controller';
+import { BotStageWebhookProvider } from './infrastructure/providers/bot-stage-webhook.provider';
+import { BotReconciliationCronProvider } from './infrastructure/providers/bot-reconciliation-cron.provider';
 
 // Use cases
 import { ProcessReservationUseCase } from './application/use-cases/process-reservation.use-case';
@@ -118,6 +138,11 @@ import { ReserveNotificationsModule } from '../reserve-notifications/reserve-not
     AdminSemesterPlanController,
     AdminMetricGoalController,
     AdminBotConfigProposalController,
+    AdminAttributionSettingsController,
+    BotEventIngestionController,
+    AdminWhatsAppFunnelController,
+    AdminWhatsAppContactController,
+    AdminBotIntegrationConfigController,
     AdminContentPostController,
     AdminActivityLogController,
   ],
@@ -150,6 +175,21 @@ import { ReserveNotificationsModule } from '../reserve-notifications/reserve-not
     SemesterPlanService,
     MetricGoalService,
     BotConfigProposalService,
+    AttributionSettingsService,
+    AttributionService,
+    BotKeyProvider,
+    BotEventKeyGuard,
+    BotEventIngestionService,
+    BotEventProcessorService,
+    FunnelService,
+    BotChannelHealthService,
+    BotConversationService,
+    FunnelMetricsService,
+    BotRetentionService,
+    BotRetentionPurgeCronProvider,
+    BotIntegrationConfigService,
+    BotStageWebhookProvider,
+    BotReconciliationCronProvider,
 
     // Use cases
     ProcessReservationUseCase,

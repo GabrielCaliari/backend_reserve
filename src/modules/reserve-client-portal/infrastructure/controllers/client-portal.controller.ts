@@ -12,6 +12,10 @@ import { Response } from 'express';
 import { DashboardService } from '../../application/services/dashboard.service';
 import { OverviewService } from '../../application/services/overview.service';
 import { LeadsOverviewService } from '../../application/services/leads-overview.service';
+import { BotChannelHealthService } from '../../application/services/bot-channel-health.service';
+import { BotConversationService } from '../../application/services/bot-conversation.service';
+import { ListConversationsQueryDto } from '../../application/dtos/list-conversations-query.dto';
+import { FunnelMetricsService } from '../../application/services/funnel-metrics.service';
 import { HotelClientService } from '../../application/services/hotel-client.service';
 import { RoiAnalysisService } from '../../application/services/roi-analysis.service';
 import { SemesterPlanService } from '../../application/services/semester-plan.service';
@@ -35,6 +39,9 @@ export class ClientPortalController {
     private readonly dashboardService: DashboardService,
     private readonly overviewService: OverviewService,
     private readonly leadsOverviewService: LeadsOverviewService,
+    private readonly botChannelHealthService: BotChannelHealthService,
+    private readonly botConversationService: BotConversationService,
+    private readonly funnelMetricsService: FunnelMetricsService,
     private readonly hotelClientService: HotelClientService,
     private readonly roiAnalysisService: RoiAnalysisService,
     private readonly semesterPlanService: SemesterPlanService,
@@ -102,6 +109,43 @@ export class ClientPortalController {
   async getBotConfigProposals(@Param('clientId') clientId: string, @Res() res: Response) {
     const result = await this.botConfigProposalService.findByClientId(clientId);
     return res.status(result.status).json(result.data);
+  }
+
+  @Get(':clientId/whatsapp/channels')
+  async getWhatsAppChannels(@Param('clientId') clientId: string) {
+    return this.botChannelHealthService.getChannels(clientId);
+  }
+
+  @Get(':clientId/whatsapp/conversations')
+  async listWhatsAppConversations(
+    @Param('clientId') clientId: string,
+    @Query() query: ListConversationsQueryDto,
+  ) {
+    return this.botConversationService.list(clientId, query);
+  }
+
+  @Get(':clientId/whatsapp/conversations/:numeroContato')
+  async getWhatsAppConversationDetail(
+    @Param('clientId') clientId: string,
+    @Param('numeroContato') numeroContato: string,
+  ) {
+    return this.botConversationService.detail(clientId, numeroContato);
+  }
+
+  @Get(':clientId/whatsapp/funnel')
+  async getWhatsAppFunnelBoard(@Param('clientId') clientId: string) {
+    return this.funnelMetricsService.getBoard(clientId);
+  }
+
+  @Get(':clientId/whatsapp/funnel/metrics')
+  async getWhatsAppFunnelMetrics(
+    @Param('clientId') clientId: string,
+    @Query('from') from: string,
+    @Query('to') to: string,
+  ) {
+    const fromDate = from ? new Date(from) : this.defaultFrom();
+    const toDate = to ? new Date(to) : new Date();
+    return this.funnelMetricsService.getMetrics(clientId, fromDate, toDate);
   }
 
   @Get('my-clients')
