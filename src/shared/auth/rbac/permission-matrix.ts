@@ -147,6 +147,15 @@ export const PERMISSIONS = [
   'hotel-portal.reports.publish',
   'hotel-portal.whatsapp.manage',
   'hotel-portal.whatsapp-links.manage',
+  // Fase 5 (Painel Reserve — narrativa, direção e retenção)
+  'hotel-portal.digests.manage',
+  // Anomalia preservada (mesmo padrão de hotel-portal.reports.publish): publicar
+  // exige owner, exclui manager.
+  'hotel-portal.digests.publish',
+  'hotel-portal.milestones.manage',
+  'hotel-portal.semester-plan.manage',
+  'hotel-portal.goals.manage',
+  'hotel-portal.bot-config-proposals.manage',
 
   // Painel Reserve (docs/superpowers/plans/2026-08-04-plano-painel-reserve-backend.md)
   'hotel-portal.attribution.manage',
@@ -261,6 +270,11 @@ const MANAGER: readonly PermissionName[] = [
   'hotel-portal.reports.manage',
   'hotel-portal.whatsapp.manage',
   'hotel-portal.whatsapp-links.manage',
+  'hotel-portal.digests.manage',
+  'hotel-portal.milestones.manage',
+  'hotel-portal.semester-plan.manage',
+  'hotel-portal.goals.manage',
+  'hotel-portal.bot-config-proposals.manage',
   'hotel-portal.attribution.manage',
   'hotel-portal.activity-log.manage',
   'settings.manage',
@@ -270,6 +284,7 @@ const OWNER: readonly PermissionName[] = [
   ...MANAGER,
   'cms.blog.manage-key',
   'hotel-portal.reports.publish',
+  'hotel-portal.digests.publish',
   'hotel-portal.bot-integration.manage',
 ];
 

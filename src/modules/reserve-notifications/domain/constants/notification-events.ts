@@ -2,6 +2,7 @@ export const NOTIFICATION_EVENTS = {
   LEAD_CREATED:          'lead.created',
   SUBSCRIPTION_EXPIRING: 'subscription.expiring',
   SUBSCRIPTION_EXPIRED:  'subscription.expired',
+  DIGEST_PUBLISHED:      'digest.published',
 } as const;
 
 export type NotificationEventKey = typeof NOTIFICATION_EVENTS[keyof typeof NOTIFICATION_EVENTS];

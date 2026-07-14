@@ -1,7 +1,9 @@
 import {
+  Body,
   Controller,
   Get,
   Param,
+  Post,
   Query,
   Res,
   UseGuards,
@@ -15,6 +17,10 @@ import { BotConversationService } from '../../application/services/bot-conversat
 import { ListConversationsQueryDto } from '../../application/dtos/list-conversations-query.dto';
 import { FunnelMetricsService } from '../../application/services/funnel-metrics.service';
 import { HotelClientService } from '../../application/services/hotel-client.service';
+import { RoiAnalysisService } from '../../application/services/roi-analysis.service';
+import { SemesterPlanService } from '../../application/services/semester-plan.service';
+import { BotConfigProposalService } from '../../application/services/bot-config-proposal.service';
+import { CreateBotConfigProposalDto } from '../../application/dtos/bot-config-proposal.dto';
 import { InstagramOverviewService } from '../../application/services/instagram-overview.service';
 import { ContentPostService } from '../../application/services/content-post.service';
 import { ActivityLogService } from '../../application/services/activity-log.service';
@@ -37,6 +43,9 @@ export class ClientPortalController {
     private readonly botConversationService: BotConversationService,
     private readonly funnelMetricsService: FunnelMetricsService,
     private readonly hotelClientService: HotelClientService,
+    private readonly roiAnalysisService: RoiAnalysisService,
+    private readonly semesterPlanService: SemesterPlanService,
+    private readonly botConfigProposalService: BotConfigProposalService,
     private readonly instagramOverviewService: InstagramOverviewService,
     private readonly contentPostService: ContentPostService,
     private readonly activityLogService: ActivityLogService,
@@ -64,6 +73,42 @@ export class ClientPortalController {
     const fromDate = from ? new Date(from) : this.defaultFrom();
     const toDate = to ? new Date(to) : new Date();
     return this.leadsOverviewService.getOverview(clientId, fromDate, toDate);
+  }
+
+  @Get(':clientId/roi')
+  async getRoi(
+    @Param('clientId') clientId: string,
+    @Query('from') from: string,
+    @Query('to') to: string,
+    @Res() res: Response,
+  ) {
+    const fromDate = from ? new Date(from) : this.defaultFrom();
+    const toDate = to ? new Date(to) : new Date();
+    const result = await this.roiAnalysisService.getRoi(clientId, fromDate, toDate);
+    return res.status(result.status).json(result.data);
+  }
+
+  @Get(':clientId/semester-plan')
+  async getSemesterPlan(@Param('clientId') clientId: string, @Res() res: Response) {
+    const result = await this.semesterPlanService.findByClientId(clientId);
+    return res.status(result.status).json(result.data);
+  }
+
+  @Post(':clientId/bot-config-proposals')
+  async submitBotConfigProposal(
+    @Param('clientId') clientId: string,
+    @Body() dto: CreateBotConfigProposalDto,
+    @CurrentAdmin() admin: CurrentAdminPayload,
+    @Res() res: Response,
+  ) {
+    const result = await this.botConfigProposalService.submitByClientId(clientId, admin.admin_id, dto);
+    return res.status(result.status).json(result.data);
+  }
+
+  @Get(':clientId/bot-config-proposals')
+  async getBotConfigProposals(@Param('clientId') clientId: string, @Res() res: Response) {
+    const result = await this.botConfigProposalService.findByClientId(clientId);
+    return res.status(result.status).json(result.data);
   }
 
   @Get(':clientId/whatsapp/channels')

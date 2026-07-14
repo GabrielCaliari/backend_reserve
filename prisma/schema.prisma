@@ -2189,7 +2189,131 @@ model HotelReservation {
 }
 
 // ============================================================
-// PAINEL RESERVE — Fase 4: Instagram + Conteúdo
+// Fase 5 — Narrativa, direção e retenção
+// ============================================================
+// (ConversationAttribution/AttributionSettings/FunnelEvent/BotIntegrationConfig
+// used to be shimmed here pending Fase 2/3's merge; Fase 3 landed on main with
+// the canonical versions above, so the duplicate block was removed.)
+
+enum EDigestStatus {
+  DRAFT
+  PUBLISHED
+}
+
+model DigestReport {
+  id                String        @id @default(cuid()) @db.VarChar(25)
+  tenant_id         String        @db.VarChar(25)
+  period_start      DateTime      @db.Date
+  period_end        DateTime      @db.Date
+  status            EDigestStatus @default(DRAFT)
+  executive_summary String?       @db.Text
+  highlights        Json?
+  next_steps        Json?
+  admin_comment     String?       @db.Text
+  metrics_payload   Json
+  published_at      DateTime?
+  notification_sent Boolean       @default(false)
+  created_at        DateTime      @default(now())
+  updated_at        DateTime      @updatedAt
+  Runs              DigestRun[]
+
+  @@unique([tenant_id, period_start])
+  @@map("digest_reports")
+}
+
+model DigestRun {
+  id              String        @id @default(cuid()) @db.VarChar(25)
+  tenant_id       String        @db.VarChar(25)
+  period_start    DateTime      @db.Date
+  period_end      DateTime      @db.Date
+  status          String        @default("gerado") @db.VarChar(15) // gerado | publicado
+  metrics_payload Json
+  report_id       String?       @db.VarChar(25)
+  generated_at    DateTime      @default(now())
+  published_at    DateTime?
+  DigestReport    DigestReport? @relation(fields: [report_id], references: [id])
+
+  @@index([tenant_id, period_start])
+  @@map("digest_runs")
+}
+
+model Milestone {
+  id         String   @id @default(cuid()) @db.VarChar(25)
+  tenant_id  String   @db.VarChar(25)
+  date       DateTime
+  title      String   @db.VarChar(200)
+  type       String   @db.VarChar(20) // marco_zero|seguidor|campanha|bot|recorde|custom
+  created_at DateTime @default(now())
+
+  @@index([tenant_id, date])
+  @@map("milestones")
+}
+
+model SemesterPlan {
+  id         String                 @id @default(cuid()) @db.VarChar(25)
+  tenant_id  String                 @db.VarChar(25)
+  semestre   String                 @db.VarChar(10) // e.g. "2026-2"
+  titulo     String                 @db.VarChar(150)
+  eixos      Json
+  criado_por String                 @db.VarChar(25)
+  criado_em  DateTime               @default(now())
+  Deliveries SemesterPlanDelivery[]
+
+  @@unique([tenant_id, semestre])
+  @@map("plano_semestral")
+}
+
+model SemesterPlanDelivery {
+  id           String       @id @default(cuid()) @db.VarChar(25)
+  plano_id     String       @db.VarChar(25)
+  mes          Int          @db.SmallInt // 1-6, ordinal within the semester
+  titulo       String       @db.VarChar(150)
+  descricao    String?      @db.Text
+  status       String       @default("planejado") @db.VarChar(15) // planejado|em_andamento|concluido
+  milestone_id String?      @db.VarChar(25)
+  ordem        Int          @default(0)
+  Plan         SemesterPlan @relation(fields: [plano_id], references: [id], onDelete: Cascade)
+
+  @@index([plano_id])
+  @@map("plano_entregas")
+}
+
+model MetricGoal {
+  id            String   @id @default(cuid()) @db.VarChar(25)
+  tenant_id     String   @db.VarChar(25)
+  metric_key    String   @db.VarChar(50)
+  period        String   @db.VarChar(10) // biweekly|monthly
+  target_value  Float    @default(0)
+  show_goal     Boolean  @default(false)
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  @@unique([tenant_id, metric_key, period])
+  @@map("metric_goals")
+}
+
+model BotConfigProposal {
+  id             String   @id @default(cuid()) @db.VarChar(25)
+  tenant_id      String   @db.VarChar(25)
+  campo          String   @db.VarChar(100)
+  categoria      String   @db.VarChar(20) // pricing | policies | packages | hours
+  valor_atual    Json?
+  valor_proposto Json
+  status         String   @default("PENDENTE") @db.VarChar(10) // PENDENTE|APROVADA|REJEITADA
+  autor_id       String   @db.VarChar(25)
+  revisor_id     String?  @db.VarChar(25)
+  justificativa  String?  @db.Text
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  @@index([tenant_id, status])
+  @@map("bot_config_propostas")
+}
+
+// ============================================================
+// PAINEL RESERVE — Fase 4: Instagram + Conteúdo (merged from main; this
+// branch's own shims of ActivityLog/IgDailySnapshot were removed in favor of
+// these canonical versions once Fase 4 landed on main).
 // ============================================================
 
 /**

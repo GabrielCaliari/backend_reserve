@@ -15,6 +15,7 @@ import {
 import { Request, Response } from 'express';
 import { HotelClientService } from '../../application/services/hotel-client.service';
 import { OtaDirectService } from '../../application/services/ota-direct.service';
+import { ImportHistoricalBaselineUseCase } from '../../application/use-cases/import-historical-baseline.use-case';
 import { CreateClientDto } from '../../application/dtos/create-client.dto';
 import { UpdateClientDto } from '../../application/dtos/update-client.dto';
 import { InsertOtaDataDto } from '../../application/dtos/insert-ota-data.dto';
@@ -30,6 +31,7 @@ export class AdminHotelClientController {
   constructor(
     private readonly hotelClientService: HotelClientService,
     private readonly otaDirectService: OtaDirectService,
+    private readonly importHistoricalBaselineUseCase: ImportHistoricalBaselineUseCase,
   ) {}
 
   @Post()
@@ -102,6 +104,12 @@ export class AdminHotelClientController {
       admin.admin_id,
     );
     return res.status(result.status).json(result.data);
+  }
+
+  @Post(':id/import-baseline')
+  async importBaseline(@Param('id') clientId: string, @Res() res: Response) {
+    const result = await this.importHistoricalBaselineUseCase.execute(clientId);
+    return res.status(200).json(result);
   }
 
   @Get(':id/ota-data')

@@ -18,15 +18,21 @@ export class Ga4Provider {
   private readonly logger = new Logger(Ga4Provider.name);
 
   /**
-   * Fetches site metrics from the GA4 Data API for the last 30 days.
+   * Fetches site metrics from the GA4 Data API. Defaults to the last 30 days;
+   * pass `range` for a wider window (Fase 5 Task 5's historical baseline
+   * import uses up to 37 months back).
    * In production, replace with actual googleapis/analyticsdata SDK calls.
    */
-  async fetchSiteMetrics(accessToken: string, clientId: string): Promise<IGa4SiteMetric[]> {
+  async fetchSiteMetrics(
+    accessToken: string,
+    clientId: string,
+    range?: { from: Date; to: Date },
+  ): Promise<IGa4SiteMetric[]> {
     this.logger.log(`Fetching GA4 metrics for client ${clientId}`);
 
-    const to = new Date();
-    const from = new Date();
-    from.setDate(from.getDate() - 30);
+    const to = range?.to ?? new Date();
+    const from = range?.from ?? new Date();
+    if (!range?.from) from.setDate(from.getDate() - 30);
 
     // TODO: Replace with actual GA4 Data API v1beta call:
     // POST https://analyticsdata.googleapis.com/v1beta/{property}:runReport

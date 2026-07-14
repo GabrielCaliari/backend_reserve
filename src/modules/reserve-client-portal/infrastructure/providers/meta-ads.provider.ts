@@ -17,13 +17,17 @@ export class MetaAdsProvider {
   private readonly logger = new Logger(MetaAdsProvider.name);
 
   /**
-   * Fetches campaign insights from the Meta Marketing API for the last 30 days.
+   * Fetches campaign insights from the Meta Marketing API. Defaults to the
+   * last 30 days; pass `range` for a wider window (Fase 5 Task 5's historical
+   * baseline import uses up to 37 months back).
    * In production, replace with actual Meta Graph API calls.
    */
   async fetchCampaignMetrics(
     accessToken: string,
     clientId: string,
+    range?: { from: Date; to: Date },
   ): Promise<IMetaAdsCampaignMetric[]> {
+    void range; // stub — real implementation will pass this through to date_preset/time_range
     this.logger.log(`Fetching Meta Ads metrics for client ${clientId}`);
 
     // TODO: Replace with actual Meta Marketing API call:

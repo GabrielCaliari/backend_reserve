@@ -11,6 +11,11 @@ import { WhatsAppTrackingController } from './infrastructure/controllers/whatsap
 import { WhatsAppRedirectController } from './infrastructure/controllers/whatsapp-redirect.controller';
 import { BookingWebhookController } from './infrastructure/controllers/booking-webhook.controller';
 import { AdminReservationsController } from './infrastructure/controllers/admin-reservations.controller';
+import { AdminDigestController } from './infrastructure/controllers/admin-digest.controller';
+import { AdminMilestoneController } from './infrastructure/controllers/admin-milestone.controller';
+import { AdminSemesterPlanController } from './infrastructure/controllers/admin-semester-plan.controller';
+import { AdminMetricGoalController } from './infrastructure/controllers/admin-metric-goal.controller';
+import { AdminBotConfigProposalController } from './infrastructure/controllers/admin-bot-config-proposal.controller';
 import { AdminAttributionSettingsController } from './infrastructure/controllers/admin-attribution-settings.controller';
 import { BotEventIngestionController } from './infrastructure/controllers/bot-event-ingestion.controller';
 import { AdminWhatsAppFunnelController } from './infrastructure/controllers/admin-whatsapp-funnel.controller';
@@ -25,7 +30,6 @@ import { OverviewService } from './application/services/overview.service';
 import { LeadsOverviewService } from './application/services/leads-overview.service';
 import { InstagramOverviewService } from './application/services/instagram-overview.service';
 import { ContentPostService } from './application/services/content-post.service';
-import { ActivityLogService } from './application/services/activity-log.service';
 import { PeriodComparisonService } from '../../shared/analytics/period-comparison.service';
 import { CampaignService } from './application/services/campaign.service';
 import { SiteAnalyticsService } from './application/services/site-analytics.service';
@@ -39,6 +43,13 @@ import { MarketingBudgetService } from './application/services/marketing-budget.
 import { GuestCrmService } from './application/services/guest-crm.service';
 import { WhatsAppService } from './application/services/whatsapp.service';
 import { WhatsAppTrackingService } from './application/services/whatsapp-tracking.service';
+import { RoiAnalysisService } from './application/services/roi-analysis.service';
+import { DigestService } from './application/services/digest.service';
+import { ActivityLogService } from './application/services/activity-log.service';
+import { MilestoneService } from './application/services/milestone.service';
+import { SemesterPlanService } from './application/services/semester-plan.service';
+import { MetricGoalService } from './application/services/metric-goal.service';
+import { BotConfigProposalService } from './application/services/bot-config-proposal.service';
 import { AttributionSettingsService } from './application/services/attribution-settings.service';
 import { AttributionService } from './application/services/attribution.service';
 import { BotKeyProvider } from './infrastructure/providers/bot-key.provider';
@@ -65,6 +76,7 @@ import { SyncGoogleAdsDataUseCase } from './application/use-cases/sync-google-ad
 import { SyncInstagramDataUseCase } from './application/use-cases/sync-instagram-data.use-case';
 import { InsertOtaDataUseCase } from './application/use-cases/insert-ota-data.use-case';
 import { PublishMonthlyReportUseCase } from './application/use-cases/publish-monthly-report.use-case';
+import { ImportHistoricalBaselineUseCase } from './application/use-cases/import-historical-baseline.use-case';
 
 // Infrastructure repositories
 import { PrismaHotelClientRepository } from './infrastructure/repositories/prisma-hotel-client.repository';
@@ -90,6 +102,7 @@ import { MetaAdsProvider } from './infrastructure/providers/meta-ads.provider';
 import { GoogleAdsProvider } from './infrastructure/providers/google-ads.provider';
 import { InstagramProvider } from './infrastructure/providers/instagram.provider';
 import { CronSyncProvider } from './infrastructure/providers/cron-sync.provider';
+import { DigestGenerationCronProvider } from './infrastructure/providers/digest-generation-cron.provider';
 import { AesEncryptionProvider } from './infrastructure/providers/aes-encryption.provider';
 import { WhatsAppProvider } from './infrastructure/providers/whatsapp.provider';
 import { GeolocationProvider } from '../../shared/providers/geolocation.provider';
@@ -99,6 +112,7 @@ import { HashProvider } from '../../shared/providers/hash.provider';
 import { AdminJwtGuard } from '../../shared/auth/guards/admin-jwt.guard';
 import { RolesGuard } from '../../shared/auth/guards/roles.guard';
 import { ReserveAuthModule } from '../reserve-auth/reserve-auth.module';
+import { ReserveNotificationsModule } from '../reserve-notifications/reserve-notifications.module';
 
 /**
  * Reserve Client Portal Module
@@ -107,7 +121,7 @@ import { ReserveAuthModule } from '../reserve-auth/reserve-auth.module';
  * Portal routes:  /api/hotel-portal/...
  */
 @Module({
-  imports: [ReserveAuthModule],
+  imports: [ReserveAuthModule, ReserveNotificationsModule],
   controllers: [
     AdminHotelClientController,
     ClientPortalController,
@@ -119,6 +133,11 @@ import { ReserveAuthModule } from '../reserve-auth/reserve-auth.module';
     WhatsAppRedirectController,
     BookingWebhookController,
     AdminReservationsController,
+    AdminDigestController,
+    AdminMilestoneController,
+    AdminSemesterPlanController,
+    AdminMetricGoalController,
+    AdminBotConfigProposalController,
     AdminAttributionSettingsController,
     BotEventIngestionController,
     AdminWhatsAppFunnelController,
@@ -150,6 +169,12 @@ import { ReserveAuthModule } from '../reserve-auth/reserve-auth.module';
     GuestCrmService,
     WhatsAppService,
     WhatsAppTrackingService,
+    RoiAnalysisService,
+    DigestService,
+    MilestoneService,
+    SemesterPlanService,
+    MetricGoalService,
+    BotConfigProposalService,
     AttributionSettingsService,
     AttributionService,
     BotKeyProvider,
@@ -174,6 +199,7 @@ import { ReserveAuthModule } from '../reserve-auth/reserve-auth.module';
     SyncInstagramDataUseCase,
     InsertOtaDataUseCase,
     PublishMonthlyReportUseCase,
+    ImportHistoricalBaselineUseCase,
 
     // Booking engine providers
     BookingEngineFactory,
@@ -189,6 +215,7 @@ import { ReserveAuthModule } from '../reserve-auth/reserve-auth.module';
     InstagramProvider,
     AesEncryptionProvider,
     CronSyncProvider,
+    DigestGenerationCronProvider,
     WhatsAppProvider,
     GeolocationProvider,
     HashProvider,
