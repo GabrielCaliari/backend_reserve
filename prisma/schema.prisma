@@ -1770,6 +1770,12 @@ model HotelApiCredential {
   // INSTAGRAM only). Nullable because it's meaningless for GA4/META_ADS/GOOGLE_ADS
   // credentials — reusing HotelApiCredential per §3.4 needed one additive field.
   ig_user_id       String?            @db.VarChar(50)
+  // Google Ads customer (account) ID the GAQL query is scoped to (platform:
+  // GOOGLE_ADS only). Nullable for the same reason ig_user_id is — meaningless
+  // for the other platforms. Fase 6 Task 4: closing the pre-existing stub
+  // required this field since the google-ads-api SDK needs a customer_id, not
+  // just a token, to run a report query.
+  google_ads_customer_id String?      @db.VarChar(20)
   created_at       DateTime           @default(now())
   updated_at       DateTime           @updatedAt
   HotelClient      HotelClient        @relation(fields: [client_id], references: [id])
