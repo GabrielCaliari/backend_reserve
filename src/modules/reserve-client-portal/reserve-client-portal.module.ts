@@ -21,6 +21,7 @@ import { BotEventIngestionController } from './infrastructure/controllers/bot-ev
 import { AdminWhatsAppFunnelController } from './infrastructure/controllers/admin-whatsapp-funnel.controller';
 import { AdminContentPostController } from './infrastructure/controllers/admin-content-post.controller';
 import { AdminActivityLogController } from './infrastructure/controllers/admin-activity-log.controller';
+import { PdfExportController } from './infrastructure/controllers/pdf-export.controller';
 
 // Application services
 import { HotelClientService } from './application/services/hotel-client.service';
@@ -105,6 +106,7 @@ import { CronSyncProvider } from './infrastructure/providers/cron-sync.provider'
 import { DigestGenerationCronProvider } from './infrastructure/providers/digest-generation-cron.provider';
 import { AesEncryptionProvider } from './infrastructure/providers/aes-encryption.provider';
 import { WhatsAppProvider } from './infrastructure/providers/whatsapp.provider';
+import { PdfExportProvider } from './infrastructure/providers/pdf-export.provider';
 import { GeolocationProvider } from '../../shared/providers/geolocation.provider';
 import { HashProvider } from '../../shared/providers/hash.provider';
 
@@ -145,6 +147,7 @@ import { ReserveNotificationsModule } from '../reserve-notifications/reserve-not
     AdminBotIntegrationConfigController,
     AdminContentPostController,
     AdminActivityLogController,
+    PdfExportController,
   ],
   providers: [
     // Application services
@@ -217,6 +220,7 @@ import { ReserveNotificationsModule } from '../reserve-notifications/reserve-not
     CronSyncProvider,
     DigestGenerationCronProvider,
     WhatsAppProvider,
+    PdfExportProvider,
     GeolocationProvider,
     HashProvider,
 
