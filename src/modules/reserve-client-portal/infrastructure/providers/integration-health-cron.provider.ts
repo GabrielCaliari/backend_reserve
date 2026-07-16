@@ -4,12 +4,16 @@ import { PrismaService } from '../../../../shared/database/prisma.service';
 import { EIntegrationStatus } from '../../domain/enums/integration-status.enum';
 
 const TOKEN_EXPIRY_WARNING_WINDOW_MS = 48 * 60 * 60 * 1000; // 48h, per the plan
+// Same threshold BotChannelHealthService (Fase 3 Task 8) uses for
+// heartbeatStale — reused verbatim rather than re-derived.
+const HEARTBEAT_STALE_MINUTES = 90;
 
-export type IntegrationHealthFindingReason = 'SYNC_ERROR' | 'TOKEN_EXPIRING';
+export type IntegrationHealthFindingReason = 'SYNC_ERROR' | 'TOKEN_EXPIRING' | 'BOT_HEARTBEAT_STALE';
 
 export interface IIntegrationHealthFinding {
   reason: IntegrationHealthFindingReason;
-  client_id: string;
+  tenant_id: string | null;
+  client_id: string | null;
   hotel_name: string;
   platform: string;
   detail: string;
@@ -18,17 +22,14 @@ export interface IIntegrationHealthFinding {
 /**
  * Hourly integration health scan (Fase 6 Task 6).
  *
- * Covers `HotelApiCredential` (sync_status ERROR, or token_expires_at within
- * 48h) — fully buildable today against data already on `main`.
- *
- * Deliberately NOT covered here: `BotIntegrationConfig` heartbeat staleness
- * (Fase 3 Task 8's 90-minute threshold the plan asks this task to reuse).
- * `BotIntegrationConfig` doesn't exist on `main` yet (Fase 3 is still
- * mid-merge) — adding a Prisma call against a model that isn't generated
- * would break the build, not degrade gracefully. Once Fase 3 lands, the
- * mechanical follow-up is: add a `this.prisma.botIntegrationConfig.findMany`
- * scan mirroring `scanCredentials()` below and push its findings through the
- * same `alert()` call — see the shape already established here.
+ * Covers:
+ *  - `HotelApiCredential`: sync_status ERROR, or token_expires_at within 48h.
+ *  - `BotIntegrationConfig`: active integrations whose `last_heartbeat_at`
+ *    is null or older than 90 minutes (same threshold
+ *    `BotChannelHealthService.HEARTBEAT_STALE_MINUTES` uses, Fase 3 Task 8).
+ *    Buildable now that Fase 3 has merged into `main` — earlier drafts of
+ *    this task shipped without this scan because `BotIntegrationConfig`
+ *    didn't exist yet; re-checked mid-implementation once Fase 3 landed.
  *
  * Alert delivery: `NotificationService`'s only broadcast concept
  * (`ENotificationScope.broadcast`) fans out to *every active tenant*
@@ -51,7 +52,11 @@ export class IntegrationHealthCronProvider {
 
   @Cron(CronExpression.EVERY_HOUR)
   async checkHealth(): Promise<IIntegrationHealthFinding[]> {
-    const findings = await this.scanCredentials();
+    const [credentialFindings, botFindings] = await Promise.all([
+      this.scanCredentials(),
+      this.scanBotHeartbeats(),
+    ]);
+    const findings = [...credentialFindings, ...botFindings];
 
     for (const finding of findings) {
       this.alert(finding);
@@ -81,7 +86,7 @@ export class IntegrationHealthCronProvider {
         sync_status: true,
         token_expires_at: true,
         error_message: true,
-        HotelClient: { select: { hotel_name: true } },
+        HotelClient: { select: { hotel_name: true, tenant_id: true } },
       },
     });
 
@@ -91,6 +96,7 @@ export class IntegrationHealthCronProvider {
       if (cred.sync_status === EIntegrationStatus.ERROR) {
         findings.push({
           reason: 'SYNC_ERROR',
+          tenant_id: cred.HotelClient.tenant_id,
           client_id: cred.client_id,
           hotel_name: cred.HotelClient.hotel_name,
           platform: cred.platform,
@@ -100,6 +106,7 @@ export class IntegrationHealthCronProvider {
       if (cred.token_expires_at && cred.token_expires_at < expiryThreshold) {
         findings.push({
           reason: 'TOKEN_EXPIRING',
+          tenant_id: cred.HotelClient.tenant_id,
           client_id: cred.client_id,
           hotel_name: cred.HotelClient.hotel_name,
           platform: cred.platform,
@@ -111,9 +118,51 @@ export class IntegrationHealthCronProvider {
     return findings;
   }
 
+  private async scanBotHeartbeats(): Promise<IIntegrationHealthFinding[]> {
+    const staleThreshold = new Date(Date.now() - HEARTBEAT_STALE_MINUTES * 60 * 1000);
+
+    const configs = await this.prisma.botIntegrationConfig.findMany({
+      where: {
+        active: true,
+        OR: [{ last_heartbeat_at: null }, { last_heartbeat_at: { lt: staleThreshold } }],
+      },
+      select: { tenant_id: true, last_heartbeat_at: true },
+    });
+
+    if (configs.length === 0) return [];
+
+    const tenantIds = configs.map((c) => c.tenant_id);
+    const hotelClients = await this.prisma.hotelClient.findMany({
+      where: { tenant_id: { in: tenantIds }, is_active: true },
+      select: { tenant_id: true, hotel_name: true },
+    });
+    const hotelNameByTenant = new Map(hotelClients.map((h) => [h.tenant_id, h.hotel_name]));
+
+    const findings: IIntegrationHealthFinding[] = [];
+    for (const config of configs) {
+      // Only alert for tenants with an active hotel client — a bot config
+      // for a deactivated/offboarded client isn't an ops emergency.
+      const hotelName = hotelNameByTenant.get(config.tenant_id);
+      if (!hotelName) continue;
+
+      findings.push({
+        reason: 'BOT_HEARTBEAT_STALE',
+        tenant_id: config.tenant_id,
+        client_id: null,
+        hotel_name: hotelName,
+        platform: 'WHATSAPP_BOT',
+        detail: config.last_heartbeat_at
+          ? `Last heartbeat at ${config.last_heartbeat_at.toISOString()}.`
+          : 'No heartbeat received yet.',
+      });
+    }
+
+    return findings;
+  }
+
   private alert(finding: IIntegrationHealthFinding): void {
     this.logger.error(
-      `[integration-health] ${finding.reason} — ${finding.hotel_name} (${finding.client_id}) / ${finding.platform}: ${finding.detail}`,
+      `[integration-health] ${finding.reason} — ${finding.hotel_name} (${finding.tenant_id ?? finding.client_id}) / ${finding.platform}: ${finding.detail}`,
     );
   }
 }
