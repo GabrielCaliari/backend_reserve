@@ -107,6 +107,7 @@ import { DigestGenerationCronProvider } from './infrastructure/providers/digest-
 import { AesEncryptionProvider } from './infrastructure/providers/aes-encryption.provider';
 import { WhatsAppProvider } from './infrastructure/providers/whatsapp.provider';
 import { PdfExportProvider } from './infrastructure/providers/pdf-export.provider';
+import { IntegrationHealthCronProvider } from './infrastructure/providers/integration-health-cron.provider';
 import { GeolocationProvider } from '../../shared/providers/geolocation.provider';
 import { HashProvider } from '../../shared/providers/hash.provider';
 
@@ -221,6 +222,7 @@ import { ReserveNotificationsModule } from '../reserve-notifications/reserve-not
     DigestGenerationCronProvider,
     WhatsAppProvider,
     PdfExportProvider,
+    IntegrationHealthCronProvider,
     GeolocationProvider,
     HashProvider,
 
