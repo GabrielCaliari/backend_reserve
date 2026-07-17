@@ -2416,3 +2416,26 @@ model ActivityLog {
   @@index([tenant_id, created_at])
   @@map("activity_log")
 }
+
+// ============================================================
+// PAINEL RESERVE — Fase 6: Benchmark agregado da agência
+// ============================================================
+
+/**
+ * Cross-tenant cohort statistics, never per-tenant identifiable data
+ * (Decisao 16). Computed weekly regardless of eligibility ("coleta comeca
+ * ja", Sec7) — eligibility (BenchmarkEligibilityService.isPubliclyUsable)
+ * only gates the *read* endpoint, not collection.
+ */
+model BenchmarkAggregate {
+  id                  String   @id @default(cuid()) @db.VarChar(25)
+  cohort_metric       String   @db.VarChar(50)
+  tenant_count        Int
+  min_contract_months Int
+  period_label        String   @db.VarChar(50)
+  value_json          Json
+  computed_at         DateTime @default(now())
+
+  @@index([cohort_metric, computed_at])
+  @@map("benchmark_agregado")
+}
