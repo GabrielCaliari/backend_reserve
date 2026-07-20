@@ -1614,6 +1614,12 @@ model TenantNotificationSettings {
   tenant_id      String   @unique @db.VarChar(25)
   email_enabled  Boolean  @default(true)
   inapp_enabled  Boolean  @default(true)
+  // Fase 6 Task 3: WhatsApp digest notifications are opt-in and default off
+  // (unlike email_enabled/inapp_enabled) because they require a destination
+  // number the tenant must supply — there's no existing per-tenant WhatsApp
+  // contact field anywhere else in the schema to reuse.
+  whatsapp_enabled Boolean  @default(false)
+  whatsapp_phone   String?  @db.VarChar(20)
   event_settings Json     @default("{}")
   cron_settings  Json     @default("{}")
   created_at     DateTime @default(now())

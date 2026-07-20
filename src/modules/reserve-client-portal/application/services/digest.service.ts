@@ -6,8 +6,10 @@ import { ActivityLogService } from './activity-log.service';
 import { EActivityLogType } from '../../domain/enums/activity-log-type.enum';
 import { EActivityLogCategory } from '../../domain/enums/activity-log-category.enum';
 import { NotificationEventService } from '../../../reserve-notifications/application/services/notification-event.service';
+import { NotificationSettingsService } from '../../../reserve-notifications/application/services/notification-settings.service';
 import { NOTIFICATION_EVENTS } from '../../../reserve-notifications/domain/constants/notification-events';
 import { PublishDigestDto } from '../dtos/digest.dto';
+import { WhatsAppCloudApiProvider } from '../../infrastructure/providers/whatsapp-cloud-api.provider';
 
 /**
  * Resumo quinzenal (§3.7.1). `DigestReport` is deliberately decoupled from
@@ -22,6 +24,8 @@ export class DigestService {
     private readonly roiAnalysisService: RoiAnalysisService,
     private readonly activityLogService: ActivityLogService,
     private readonly notificationEventService: NotificationEventService,
+    private readonly notificationSettingsService: NotificationSettingsService,
+    private readonly whatsAppCloudApiProvider: WhatsAppCloudApiProvider,
   ) {}
 
   /**
@@ -155,6 +159,13 @@ export class DigestService {
         },
       );
 
+      // Fase 6 Task 3: WhatsApp send alongside the existing email dispatch,
+      // gated on the tenant's own opt-in (default off — see
+      // TenantNotificationSettings.whatsapp_enabled). Fire-and-forget: a
+      // failed WhatsApp send must never fail the publish action itself
+      // (the email notification above is the notification of record).
+      await this.sendWhatsAppDigestNotification(digest.tenant_id, metrics);
+
       return successResponse(updated);
     } catch (error) {
       return errorResponse('500:DIGEST_NOT_PUBLISHED', 500, error);
@@ -179,5 +190,36 @@ export class DigestService {
       conversas: payload?.nivel1?.conversas?.value,
       costPerConversation: payload?.nivel1?.costPerConversation?.value,
     };
+  }
+
+  /**
+   * Fire-and-forget WhatsApp digest send. Never throws — a failed/absent
+   * WhatsApp configuration must not fail `publish()`, matching Fase 3 Task
+   * 7's reverse-webhook precedent (the email dispatch above is already the
+   * notification of record; this is a secondary, opt-in channel).
+   */
+  private async sendWhatsAppDigestNotification(
+    tenantId: string,
+    metrics: { spend?: number; conversas?: number; costPerConversation?: number },
+  ): Promise<void> {
+    try {
+      const { enabled, phone } =
+        await this.notificationSettingsService.getWhatsAppNotificationSettings(tenantId);
+      if (!enabled || !phone) return;
+
+      const money = (cents?: number) =>
+        cents != null ? (cents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-';
+
+      await this.whatsAppCloudApiProvider.sendDigestNotification(phone, [
+        money(metrics.spend),
+        String(metrics.conversas ?? '-'),
+        money(metrics.costPerConversation),
+      ]);
+    } catch {
+      // sendDigestNotification/sendTemplate already return a result object
+      // rather than throwing, but this catch is documented defense-in-depth
+      // for the same reason whatsapp-tracking.service.ts's own fire-and-
+      // forget call sites keep one.
+    }
   }
 }
