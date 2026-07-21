@@ -73,4 +73,20 @@ export class NotificationSettingsService {
     const settings = await this.getSettings(tenantId);
     return settings.email_enabled !== false;
   }
+
+  /**
+   * WhatsApp digest notifications (Fase 6 Task 3) are opt-in and default
+   * OFF — unlike email/in-app, which default on — since sending one
+   * requires a destination number the tenant must explicitly provide.
+   */
+  async getWhatsAppNotificationSettings(
+    tenantId: string,
+  ): Promise<{ enabled: boolean; phone: string | null }> {
+    const settings = await this.getSettings(tenantId);
+    const record = settings as unknown as { whatsapp_enabled?: boolean; whatsapp_phone?: string | null };
+    return {
+      enabled: record.whatsapp_enabled === true,
+      phone: record.whatsapp_phone ?? null,
+    };
+  }
 }

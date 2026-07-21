@@ -168,6 +168,9 @@ export const PERMISSIONS = [
   // Painel Reserve — Fase 4 (docs/superpowers/plans/2026-08-04-plano-painel-reserve-backend.md)
   'hotel-portal.content.manage',
   'hotel-portal.activity-log.manage',
+  // Painel Reserve — Fase 6 Task 5. super_admin-only by design, never
+  // exposed to clients (§7) — deliberately absent from every role grant.
+  'hotel-portal.benchmark.read',
 
   // settings (Fase 3, não-gateable)
   'settings.read',

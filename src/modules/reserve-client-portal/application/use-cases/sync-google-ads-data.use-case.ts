@@ -32,9 +32,30 @@ export class SyncGoogleAdsDataUseCase {
       return;
     }
 
+    if (!credential.google_ads_customer_id) {
+      this.logger.warn(
+        `Google Ads credential for client ${clientId} has no google_ads_customer_id configured — skipping sync.`,
+      );
+      await this.prisma.hotelApiCredential.update({
+        where: { id: credential.id },
+        data: {
+          sync_status: EIntegrationStatus.ERROR,
+          error_message: 'google_ads_customer_id is not configured for this credential.',
+        },
+      });
+      return;
+    }
+
     try {
-      const accessToken = this.aesEncryption.decrypt(credential.encrypted_token);
-      const campaigns = await this.googleAdsProvider.fetchCampaignMetrics(accessToken, clientId);
+      // `encrypted_token` stores the long-lived OAuth refresh token — a raw
+      // access token would expire long before this credential is used again
+      // by the next 6-hour cron tick, so the SDK's refresh_token param is
+      // what this field has always had to mean in practice.
+      const refreshToken = this.aesEncryption.decrypt(credential.encrypted_token);
+      const campaigns = await this.googleAdsProvider.fetchCampaignMetrics(
+        refreshToken,
+        credential.google_ads_customer_id,
+      );
 
       for (const campaign of campaigns) {
         await this.campaignService.upsertMetric({

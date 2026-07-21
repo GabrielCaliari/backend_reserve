@@ -21,6 +21,8 @@ import { BotEventIngestionController } from './infrastructure/controllers/bot-ev
 import { AdminWhatsAppFunnelController } from './infrastructure/controllers/admin-whatsapp-funnel.controller';
 import { AdminContentPostController } from './infrastructure/controllers/admin-content-post.controller';
 import { AdminActivityLogController } from './infrastructure/controllers/admin-activity-log.controller';
+import { PdfExportController } from './infrastructure/controllers/pdf-export.controller';
+import { AdminBenchmarkController } from './infrastructure/controllers/admin-benchmark.controller';
 
 // Application services
 import { HotelClientService } from './application/services/hotel-client.service';
@@ -67,6 +69,8 @@ import { BotIntegrationConfigService } from './application/services/bot-integrat
 import { AdminBotIntegrationConfigController } from './infrastructure/controllers/admin-bot-integration-config.controller';
 import { BotStageWebhookProvider } from './infrastructure/providers/bot-stage-webhook.provider';
 import { BotReconciliationCronProvider } from './infrastructure/providers/bot-reconciliation-cron.provider';
+import { BenchmarkEligibilityService } from './application/services/benchmark-eligibility.service';
+import { BenchmarkAggregationCronProvider } from './infrastructure/providers/benchmark-aggregation-cron.provider';
 
 // Use cases
 import { ProcessReservationUseCase } from './application/use-cases/process-reservation.use-case';
@@ -105,6 +109,9 @@ import { CronSyncProvider } from './infrastructure/providers/cron-sync.provider'
 import { DigestGenerationCronProvider } from './infrastructure/providers/digest-generation-cron.provider';
 import { AesEncryptionProvider } from './infrastructure/providers/aes-encryption.provider';
 import { WhatsAppProvider } from './infrastructure/providers/whatsapp.provider';
+import { WhatsAppCloudApiProvider } from './infrastructure/providers/whatsapp-cloud-api.provider';
+import { PdfExportProvider } from './infrastructure/providers/pdf-export.provider';
+import { IntegrationHealthCronProvider } from './infrastructure/providers/integration-health-cron.provider';
 import { GeolocationProvider } from '../../shared/providers/geolocation.provider';
 import { HashProvider } from '../../shared/providers/hash.provider';
 
@@ -145,6 +152,8 @@ import { ReserveNotificationsModule } from '../reserve-notifications/reserve-not
     AdminBotIntegrationConfigController,
     AdminContentPostController,
     AdminActivityLogController,
+    PdfExportController,
+    AdminBenchmarkController,
   ],
   providers: [
     // Application services
@@ -190,6 +199,8 @@ import { ReserveNotificationsModule } from '../reserve-notifications/reserve-not
     BotIntegrationConfigService,
     BotStageWebhookProvider,
     BotReconciliationCronProvider,
+    BenchmarkEligibilityService,
+    BenchmarkAggregationCronProvider,
 
     // Use cases
     ProcessReservationUseCase,
@@ -217,6 +228,9 @@ import { ReserveNotificationsModule } from '../reserve-notifications/reserve-not
     CronSyncProvider,
     DigestGenerationCronProvider,
     WhatsAppProvider,
+    WhatsAppCloudApiProvider,
+    PdfExportProvider,
+    IntegrationHealthCronProvider,
     GeolocationProvider,
     HashProvider,
 
