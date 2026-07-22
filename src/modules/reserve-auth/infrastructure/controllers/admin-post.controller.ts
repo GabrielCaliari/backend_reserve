@@ -5,6 +5,7 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiBearerAuth } from '@nes
 import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
 import { PermissionsGuard } from '../../../../shared/auth/guards/permissions.guard';
 import { RequirePermissions } from '../../../../shared/auth/decorators/require-permissions.decorator';
+import GenerateImageDTO from '../../application/dtos/generate-image.dto';
 
 @ApiTags('Admin Post')
 @ApiBearerAuth()
@@ -17,15 +18,14 @@ export class PostController {
         private readonly postService: PostService
     ) { }
 
-    // TODO: add body validation
     @Post('/generate-image/image-fx')
     @ApiOperation({ summary: 'Generate an ImageFX image from a prompt' })
-    @ApiBody({ schema: { type: 'object', properties: { prompt: { type: 'string', example: 'A futuristic city skyline at sunset' } }, required: ['prompt'] } })
+    @ApiBody({ type: GenerateImageDTO })
     @ApiResponse({ status: 200, description: 'Image generated successfully' })
     @ApiResponse({ status: 500, description: 'Image generation failed' })
     async generateFXImage(
         @Res() res: Response,
-        @Body() data: { prompt: string }
+        @Body() data: GenerateImageDTO
     ) {
         const result = await this.postService.generateFXImage(data.prompt);
         return res.status(result.status).json(result.data)
