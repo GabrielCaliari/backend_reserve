@@ -33,20 +33,24 @@ export class AttributionService {
     const settings = await this.attributionSettingsService.getOrDefault(tenantId);
     const fonte = this.resolveFonte(input, settings.source_priority);
 
-    const priorCount = await this.prisma.conversationAttribution.count({
-      where: { tenant_id: tenantId, numero_contato: input.numeroContato },
-    });
+    // priorCount is read and acted on inside the same transaction (not before
+    // it) so two concurrent conversa.iniciada events for a brand-new contact
+    // can't both observe count===0 and both write primeiro_toque:true.
+    await this.prisma.$transaction(async (tx) => {
+      const priorCount = await tx.conversationAttribution.count({
+        where: { tenant_id: tenantId, numero_contato: input.numeroContato },
+      });
 
-    await this.prisma.$transaction([
-      this.prisma.conversationAttribution.updateMany({
+      await tx.conversationAttribution.updateMany({
         where: {
           tenant_id: tenantId,
           numero_contato: input.numeroContato,
           ultimo_toque: true,
         },
         data: { ultimo_toque: false },
-      }),
-      this.prisma.conversationAttribution.create({
+      });
+
+      await tx.conversationAttribution.create({
         data: {
           tenant_id: tenantId,
           numero_contato: input.numeroContato,
@@ -65,8 +69,8 @@ export class AttributionService {
           primeiro_toque: priorCount === 0,
           ultimo_toque: true,
         },
-      }),
-    ]);
+      });
+    });
   }
 
   /**
