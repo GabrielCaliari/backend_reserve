@@ -19,9 +19,19 @@ export class BotStageWebhookProvider {
   constructor(private readonly prisma: PrismaService) {}
 
   async dispatch(tenantId: string, funnelEventId: string): Promise<void> {
-    const dispatchRow = await this.prisma.botStageWebhookDispatch.create({
-      data: { tenant_id: tenantId, funnel_event_id: funnelEventId, status: 'PENDING' },
-    });
+    let dispatchRow: { id: string };
+    try {
+      dispatchRow = await this.prisma.botStageWebhookDispatch.create({
+        data: { tenant_id: tenantId, funnel_event_id: funnelEventId, status: 'PENDING' },
+      });
+    } catch (error) {
+      // Never throw: the human's stage-move request must succeed regardless
+      // of whether we could even record the dispatch attempt.
+      this.logger.warn(
+        `Failed to create stage webhook dispatch row (tenant=${tenantId}, funnelEvent=${funnelEventId}): ${error}`,
+      );
+      return;
+    }
 
     await this.attempt(dispatchRow.id, tenantId, funnelEventId);
   }
