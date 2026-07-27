@@ -115,7 +115,14 @@ export class InstagramProvider {
       });
       return data;
     } catch (error) {
-      this.logger.error(`Instagram Graph API call failed for ${url}:`, error);
+      // access_token travels in the query string (Graph API requirement), so
+      // never log the raw error/axios config here — it embeds the token.
+      const message = axios.isAxiosError(error)
+        ? (error.response?.data ?? error.message)
+        : error instanceof Error
+          ? error.message
+          : String(error);
+      this.logger.error(`Instagram Graph API call failed for ${url}: ${JSON.stringify(message)}`);
       throw new Error(
         `Instagram Graph API request failed: ${
           error instanceof Error ? error.message : String(error)
