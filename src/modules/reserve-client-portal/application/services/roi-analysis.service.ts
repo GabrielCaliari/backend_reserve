@@ -8,13 +8,8 @@ import { errorResponse, successResponse } from '../../../../shared/helpers';
  * outputs (CampaignMetric, ConversationAttribution, FunnelEvent,
  * BotIntegrationConfig) through PeriodComparisonService.
  *
- * NOTE (integration): ConversationAttribution/FunnelEvent/BotIntegrationConfig
- * are declared in this branch's Fase 5 shim (see schema.prisma's "Fase 5 shim"
- * block) because Fase 2/3 are not merged into main yet. Nível 2 is gated on
- * `BotIntegrationConfig.active`, so on a tenant with no bot integration
- * provisioned this always resolves to Nível 1 only — exactly the same
- * behavior it will have once Fase 3's real ingestion pipeline starts writing
- * real rows into these tables.
+ * Nível 2 is gated on `BotIntegrationConfig.active`, so on a tenant with no
+ * bot integration provisioned this always resolves to Nível 1 only.
  */
 @Injectable()
 export class RoiAnalysisService {

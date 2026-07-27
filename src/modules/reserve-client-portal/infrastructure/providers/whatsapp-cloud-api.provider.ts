@@ -28,14 +28,10 @@ export interface ISendTemplateResult {
  * `sendDigestNotification` reads it from the environment so the code ships
  * correctly regardless of when the template gets approved.
  *
- * NOT wired into the digest publish flow: `digest.service.ts` doesn't
- * exist on `main` yet (Fase 5 — `DigestReport`/`DigestRun` — is still
- * mid-merge). Once it lands, the wiring point is `DigestService.publish()`
- * (alongside the existing email `notificationEventService.dispatch` call),
- * gated on a per-tenant opt-in flag read from `TenantNotificationSettings`
- * (that model already exists on `main`; check
- * `notification-settings.service.ts`'s existing read/write pattern for its
- * `event_settings` JSON shape before adding a new key to it).
+ * Wired into `DigestService.publish()` alongside the existing email
+ * `notificationEventService.dispatch` call, gated on the per-tenant
+ * `whatsapp_enabled` opt-in flag on `TenantNotificationSettings` (see
+ * `notification-settings.service.ts`).
  */
 @Injectable()
 export class WhatsAppCloudApiProvider {
