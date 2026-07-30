@@ -17,8 +17,10 @@ import {
 } from '@nestjs/swagger';
 import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
 import { TenantGuard } from '../../../../shared/auth/guards/tenant.guard';
+import { ModuleAccessGuard } from '../../../../shared/auth/guards/module-access.guard';
 import { PermissionsGuard } from '../../../../shared/auth/guards/permissions.guard';
 import { RequirePermissions } from '../../../../shared/auth/decorators/require-permissions.decorator';
+import { RequiresModule } from '../../../../shared/auth/decorators/requires-module.decorator';
 import { GetTenantId } from '../../../../shared/decorators/get-tenant-id.decorator';
 import { EAdminRole } from '../../../reserve-auth/domain/enums/admin-role.enum';
 import { UpsertScheduleConfigUseCase } from '../../application/use-cases/upsert-schedule-config.use-case';
@@ -31,7 +33,8 @@ import { successResponse } from '../../../../shared/helpers/response.helper';
 @ApiTags('Admin - Appointment Schedule Configuration')
 @ApiBearerAuth()
 @Controller('admin/appointments/schedule-config')
-@UseGuards(AdminJwtGuard, TenantGuard, PermissionsGuard)
+@UseGuards(AdminJwtGuard, TenantGuard, ModuleAccessGuard, PermissionsGuard)
+@RequiresModule('leads')
 export class AdminAppointmentScheduleConfigController {
   constructor(
     private readonly upsertScheduleConfigUseCase: UpsertScheduleConfigUseCase,

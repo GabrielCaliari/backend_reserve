@@ -7,7 +7,9 @@ import { AttachmentDto } from '../../application/dtos/attachment.dto';
 import { ELeadStatus } from '../../domain/entities/lead.entity';
 import { AdminJwtGuard } from '../../../../shared/auth/guards';
 import { PermissionsGuard } from '../../../../shared/auth/guards/permissions.guard';
+import { ModuleAccessGuard } from '../../../../shared/auth/guards/module-access.guard';
 import { RequirePermissions } from '../../../../shared/auth/decorators/require-permissions.decorator';
+import { RequiresModule } from '../../../../shared/auth/decorators/requires-module.decorator';
 import { EAdminRole } from '../../../reserve-auth/domain/enums/admin-role.enum';
 import { CreateLeadWithAttachmentsUseCase } from '../../application/use-cases/create-lead-with-attachments.use-case';
 import { AttachFileToLeadUseCase } from '../../application/use-cases/attach-file-to-lead.use-case';
@@ -48,7 +50,8 @@ export class LeadController {
   // --- Admin-only endpoints (authentication required) ---
 
   @Get('/')
-  @UseGuards(AdminJwtGuard, TenantGuard, PermissionsGuard)
+  @UseGuards(AdminJwtGuard, TenantGuard, ModuleAccessGuard, PermissionsGuard)
+  @RequiresModule('leads')
   @RequirePermissions('leads.read')
   @ApiBearerAuth()
   @ApiOperation({
@@ -65,7 +68,8 @@ export class LeadController {
   }
 
   @Get('/:id')
-  @UseGuards(AdminJwtGuard, TenantGuard, PermissionsGuard)
+  @UseGuards(AdminJwtGuard, TenantGuard, ModuleAccessGuard, PermissionsGuard)
+  @RequiresModule('leads')
   @RequirePermissions('leads.read')
   @ApiBearerAuth()
   @ApiOperation({
@@ -81,7 +85,8 @@ export class LeadController {
   }
 
   @Get('/:id/attachments')
-  @UseGuards(AdminJwtGuard, TenantGuard, PermissionsGuard)
+  @UseGuards(AdminJwtGuard, TenantGuard, ModuleAccessGuard, PermissionsGuard)
+  @RequiresModule('leads')
   @RequirePermissions('leads.read')
   @ApiBearerAuth()
   @ApiOperation({
@@ -99,7 +104,8 @@ export class LeadController {
   }
 
   @Post('/:id/attachments')
-  @UseGuards(AdminJwtGuard, TenantGuard, PermissionsGuard)
+  @UseGuards(AdminJwtGuard, TenantGuard, ModuleAccessGuard, PermissionsGuard)
+  @RequiresModule('leads')
   @RequirePermissions('leads.attachment.create')
   @ApiBearerAuth()
   @HttpCode(HttpStatus.CREATED)
@@ -122,7 +128,8 @@ export class LeadController {
   }
 
   @Delete('/:id/attachments/:attachmentId')
-  @UseGuards(AdminJwtGuard, TenantGuard, PermissionsGuard)
+  @UseGuards(AdminJwtGuard, TenantGuard, ModuleAccessGuard, PermissionsGuard)
+  @RequiresModule('leads')
   @RequirePermissions('leads.attachment.delete')
   @ApiBearerAuth()
   @ApiOperation({
@@ -145,7 +152,8 @@ export class LeadController {
   }
 
   @Patch('/:id')
-  @UseGuards(AdminJwtGuard, TenantGuard, PermissionsGuard)
+  @UseGuards(AdminJwtGuard, TenantGuard, ModuleAccessGuard, PermissionsGuard)
+  @RequiresModule('leads')
   @RequirePermissions('leads.update')
   @ApiBearerAuth()
   @ApiOperation({
@@ -165,7 +173,8 @@ export class LeadController {
   }
 
   @Put('/:id/status')
-  @UseGuards(AdminJwtGuard, TenantGuard, PermissionsGuard)
+  @UseGuards(AdminJwtGuard, TenantGuard, ModuleAccessGuard, PermissionsGuard)
+  @RequiresModule('leads')
   @RequirePermissions('leads.update')
   @ApiBearerAuth()
   @ApiOperation({
@@ -185,7 +194,8 @@ export class LeadController {
   }
 
   @Delete('/:id')
-  @UseGuards(AdminJwtGuard, TenantGuard, PermissionsGuard)
+  @UseGuards(AdminJwtGuard, TenantGuard, ModuleAccessGuard, PermissionsGuard)
+  @RequiresModule('leads')
   @RequirePermissions('leads.delete')
   @ApiBearerAuth()
   @ApiOperation({
