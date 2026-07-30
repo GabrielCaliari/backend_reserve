@@ -19,8 +19,10 @@ import {
 } from '@nestjs/swagger';
 import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
 import { TenantGuard } from '../../../../shared/auth/guards/tenant.guard';
+import { ModuleAccessGuard } from '../../../../shared/auth/guards/module-access.guard';
 import { PermissionsGuard } from '../../../../shared/auth/guards/permissions.guard';
 import { RequirePermissions } from '../../../../shared/auth/decorators/require-permissions.decorator';
+import { RequiresModule } from '../../../../shared/auth/decorators/requires-module.decorator';
 import { EAdminRole } from '../../../reserve-auth/domain/enums/admin-role.enum';
 import { CurrentAdmin, CurrentAdminPayload } from '../../../../shared/auth/decorators/current-admin.decorator';
 import { MediaRelationService } from '../../application/services/media-relation.service';
@@ -42,7 +44,8 @@ import { MediaAssetPresenter } from '../presenters/media-asset.presenter';
 @ApiTags('CMS - Media Relations')
 @ApiBearerAuth()
 @Controller('relations')
-@UseGuards(AdminJwtGuard, TenantGuard, PermissionsGuard)
+@UseGuards(AdminJwtGuard, TenantGuard, ModuleAccessGuard, PermissionsGuard)
+@RequiresModule('cms')
 export class MediaRelationController {
   constructor(private readonly relationService: MediaRelationService) {}
 
