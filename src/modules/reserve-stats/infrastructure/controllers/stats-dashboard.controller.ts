@@ -25,8 +25,10 @@ import {
 } from '../../application/dtos/stats.dto';
 import { AvailableIntegrationDto } from '../../application/dtos/stats-integration.dto';
 import { AdminJwtGuard, TenantGuard } from '../../../../shared/auth/guards';
+import { ModuleAccessGuard } from '../../../../shared/auth/guards/module-access.guard';
 import { PermissionsGuard } from '../../../../shared/auth/guards/permissions.guard';
 import { RequirePermissions } from '../../../../shared/auth/decorators/require-permissions.decorator';
+import { RequiresModule } from '../../../../shared/auth/decorators/requires-module.decorator';
 import { DateRange } from '../../domain/interfaces/metric-provider.interface';
 import { ParseCuidPipe } from '../../../../shared/pipes/parse-cuid.pipe';
 
@@ -37,7 +39,8 @@ export class StatsDashboardController {
   constructor(private readonly statsService: StatsService) {}
 
   @Get('/dashboard')
-  @UseGuards(AdminJwtGuard, TenantGuard, PermissionsGuard)
+  @UseGuards(AdminJwtGuard, TenantGuard, ModuleAccessGuard, PermissionsGuard)
+  @RequiresModule('stats')
   @RequirePermissions('metrics.dashboard.read')
   @ApiHeader({ name: 'x-tenant-id', required: true, description: 'Tenant ID' })
   @ApiOperation({
@@ -66,7 +69,8 @@ export class StatsDashboardController {
   }
 
   @Get('/dashboard/tenants/:tenantId')
-  @UseGuards(AdminJwtGuard, TenantGuard, PermissionsGuard)
+  @UseGuards(AdminJwtGuard, TenantGuard, ModuleAccessGuard, PermissionsGuard)
+  @RequiresModule('stats')
   @RequirePermissions('metrics.dashboard.read')
   @ApiOperation({
     summary: 'Get stats dashboard for a tenant',
@@ -121,7 +125,8 @@ export class StatsDashboardController {
   }
 
   @Get('/module/:moduleKey')
-  @UseGuards(AdminJwtGuard, TenantGuard, PermissionsGuard)
+  @UseGuards(AdminJwtGuard, TenantGuard, ModuleAccessGuard, PermissionsGuard)
+  @RequiresModule('stats')
   @RequirePermissions('metrics.dashboard.read')
   @ApiHeader({ name: 'x-tenant-id', required: true, description: 'Tenant ID' })
   @ApiOperation({
@@ -155,7 +160,8 @@ export class StatsDashboardController {
   }
 
   @Get('/timeseries')
-  @UseGuards(AdminJwtGuard, TenantGuard, PermissionsGuard)
+  @UseGuards(AdminJwtGuard, TenantGuard, ModuleAccessGuard, PermissionsGuard)
+  @RequiresModule('stats')
   @RequirePermissions('metrics.dashboard.read')
   @ApiHeader({ name: 'x-tenant-id', required: true, description: 'Tenant ID' })
   @ApiOperation({

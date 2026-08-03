@@ -27,13 +27,16 @@ import {
   AvailableIntegrationDto,
 } from '../../application/dtos/stats-integration.dto';
 import { AdminJwtGuard, TenantGuard } from '../../../../shared/auth/guards';
+import { ModuleAccessGuard } from '../../../../shared/auth/guards/module-access.guard';
 import { PermissionsGuard } from '../../../../shared/auth/guards/permissions.guard';
 import { RequirePermissions } from '../../../../shared/auth/decorators/require-permissions.decorator';
+import { RequiresModule } from '../../../../shared/auth/decorators/requires-module.decorator';
 
 @ApiTags('Stats - Integrations')
 @ApiBearerAuth()
 @ApiHeader({ name: 'x-tenant-id', required: true, description: 'Tenant ID' })
-@UseGuards(AdminJwtGuard, TenantGuard, PermissionsGuard)
+@UseGuards(AdminJwtGuard, TenantGuard, ModuleAccessGuard, PermissionsGuard)
+@RequiresModule('stats')
 @Controller('/integrations')
 export class StatsIntegrationController {
   constructor(private readonly integrationService: StatsIntegrationService) {}
