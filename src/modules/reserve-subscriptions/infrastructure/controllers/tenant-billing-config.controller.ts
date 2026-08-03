@@ -25,13 +25,16 @@ import {
   TenantBillingConfigResponseDTO,
 } from '../../application/dtos/tenant-billing-config.dto';
 import { AdminJwtGuard, TenantGuard } from '../../../../shared/auth/guards';
+import { ModuleAccessGuard } from '../../../../shared/auth/guards/module-access.guard';
 import { PermissionsGuard } from '../../../../shared/auth/guards/permissions.guard';
 import { RequirePermissions } from '../../../../shared/auth/decorators/require-permissions.decorator';
+import { RequiresModule } from '../../../../shared/auth/decorators/requires-module.decorator';
 
 @ApiTags('Payments - Billing Config')
 @ApiBearerAuth()
 @ApiHeader({ name: 'x-tenant-id', required: true, description: 'Tenant ID' })
-@UseGuards(AdminJwtGuard, TenantGuard, PermissionsGuard)
+@UseGuards(AdminJwtGuard, TenantGuard, ModuleAccessGuard, PermissionsGuard)
+@RequiresModule('payments')
 @Controller('payments/billing-config')
 export class TenantBillingConfigController {
   constructor(
