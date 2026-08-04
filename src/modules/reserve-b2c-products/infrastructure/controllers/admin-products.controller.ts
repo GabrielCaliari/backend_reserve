@@ -1,8 +1,10 @@
 ﻿import { Controller, Get, Post, Body, Param, UseGuards, Req } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiHeader, ApiParam } from '@nestjs/swagger';
 import { AdminJwtGuard, TenantGuard } from '../../../../shared/auth/guards';
+import { ModuleAccessGuard } from '../../../../shared/auth/guards/module-access.guard';
 import { PermissionsGuard } from '../../../../shared/auth/guards/permissions.guard';
 import { RequirePermissions } from '../../../../shared/auth/decorators/require-permissions.decorator';
+import { RequiresModule } from '../../../../shared/auth/decorators/requires-module.decorator';
 import { AdminListProductsUseCase } from '../../application/use-cases/admin-list-products.use-case';
 import { CreateB2CProductUseCase } from '../../application/use-cases/create-b2c-product.use-case';
 import { CalculateOrderCostUseCase } from '../../application/use-cases/calculate-order-cost.use-case';
@@ -11,7 +13,8 @@ import { OrderCostBreakdownResponseDTO } from '../../application/dtos/fee-config
 
 @ApiTags('Admin B2C Products')
 @Controller('b2c/products')
-@UseGuards(AdminJwtGuard, TenantGuard, PermissionsGuard)
+@UseGuards(AdminJwtGuard, TenantGuard, ModuleAccessGuard, PermissionsGuard)
+@RequiresModule('products')
 @ApiBearerAuth()
 @ApiHeader({ name: 'x-tenant-id', required: true, description: 'Tenant ID' })
 export class AdminProductsController {

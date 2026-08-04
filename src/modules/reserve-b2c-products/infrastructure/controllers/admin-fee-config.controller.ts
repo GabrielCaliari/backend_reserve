@@ -21,8 +21,10 @@ import {
   ApiParam,
 } from '@nestjs/swagger';
 import { AdminJwtGuard, TenantGuard } from '../../../../shared/auth/guards';
+import { ModuleAccessGuard } from '../../../../shared/auth/guards/module-access.guard';
 import { PermissionsGuard } from '../../../../shared/auth/guards/permissions.guard';
 import { RequirePermissions } from '../../../../shared/auth/decorators/require-permissions.decorator';
+import { RequiresModule } from '../../../../shared/auth/decorators/requires-module.decorator';
 import { ManageFeeConfigUseCase } from '../../application/use-cases/manage-fee-config.use-case';
 import {
   UpsertFeeConfigDTO,
@@ -33,7 +35,8 @@ import {
 
 @ApiTags('Admin B2C Fee Config')
 @Controller('b2c/fees')
-@UseGuards(AdminJwtGuard, TenantGuard, PermissionsGuard)
+@UseGuards(AdminJwtGuard, TenantGuard, ModuleAccessGuard, PermissionsGuard)
+@RequiresModule('products')
 @ApiBearerAuth()
 @ApiHeader({ name: 'x-tenant-id', required: true, description: 'Tenant ID' })
 export class AdminFeeConfigController {
