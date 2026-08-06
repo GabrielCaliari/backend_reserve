@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "./src",
+    // Precisa ficar dentro de dist: o nest-cli usa deleteOutDir, e um buildinfo
+    // fora de dist sobrevive à limpeza, fazendo o tsc pular o emit.
+    "tsBuildInfoFile": "./dist/tsconfig.build.tsbuildinfo"
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "test", "dist", "**/*spec.ts"]
+}
