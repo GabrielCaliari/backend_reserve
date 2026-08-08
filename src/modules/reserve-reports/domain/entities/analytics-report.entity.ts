@@ -1,5 +1,11 @@
 export class AnalyticsReport {
   id?: string;
+  /**
+   * Dono do vinculo. Opcional apenas para acomodar os registros legados
+   * gravados antes de a tabela ser escopada por tenant (migration
+   * 20260808000001) — toda escrita nova preenche.
+   */
+  tenantId?: string;
   phone: string;
   url: string;
   label?: string;
@@ -8,6 +14,7 @@ export class AnalyticsReport {
 
   constructor(data: AnalyticsReport) {
     this.id = data.id;
+    this.tenantId = data.tenantId;
     this.phone = data.phone;
     this.url = data.url;
     this.label = data.label;

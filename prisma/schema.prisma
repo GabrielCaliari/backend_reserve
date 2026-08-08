@@ -244,6 +244,7 @@ model Tenant {
   ConversationAttributions  ConversationAttribution[]
   AttributionSettings       AttributionSettings?
   BotIntegrationConfig      BotIntegrationConfig?
+  AnalyticsReports          AnalyticsReport[]
 
   @@index([stripe_customer_id])
   @@index([subscription_status])
@@ -1033,14 +1034,29 @@ model StatsIntegration {
   @@map("stats_integrations")
 }
 
+/// Vinculo telefone -> URL de relatorio.
+///
+/// `tenant_id` e nullable por decisao de migration, nao por modelagem: a tabela
+/// nasceu global e os registros anteriores a 20260808000001 nao tem tenant
+/// identificavel. Reatribui-los seria irreversivel, entao ficaram como legado
+/// sem dono — invisiveis para as rotas de admin, que sempre filtram por tenant.
+/// Toda escrita nova carrega tenant_id. Se o backfill for decidido, a coluna
+/// pode passar a NOT NULL numa migration posterior.
+///
+/// `phone` continua UNIQUE global (e nao unique por tenant) porque a rota
+/// publica `GET /api/reports/lookup?phone=` nao tem tenant na request: a
+/// resolucao telefone -> URL precisa ser deterministica em todo o sistema.
 model AnalyticsReport {
   id         String   @id @default(cuid()) @db.VarChar(25)
+  tenant_id  String?  @db.VarChar(25)
   phone      String   @unique @db.VarChar(20)
   url        String
   label      String?  @db.VarChar(150)
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
+  Tenant     Tenant?  @relation(fields: [tenant_id], references: [id])
 
+  @@index([tenant_id])
   @@map("analytics_reports")
 }
 
