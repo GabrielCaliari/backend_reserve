@@ -24,6 +24,13 @@ import { PermissionsGuard } from '../../../../shared/auth/guards/permissions.gua
 import { RequirePermissions } from '../../../../shared/auth/decorators/require-permissions.decorator';
 import { CurrentAdmin, CurrentAdminPayload } from '../../../../shared/auth/decorators/current-admin.decorator';
 
+/**
+ * GET /admin/hotel-portal/clients aceita `x-skip-tenant: true` para listar
+ * clientes de todos os tenants, e o dashboard remove o `x-tenant-id` em todas as
+ * chamadas deste controller. As demais rotas sao chaveadas por `:id` de
+ * HotelClient, nao por tenant. Sem tenant na request o TenantGuard responderia
+ * 400, entao este controller fica FORA do gate de client-portal.
+ */
 @Controller('admin/hotel-portal/clients')
 @UseGuards(AdminJwtGuard, PermissionsGuard)
 @RequirePermissions('hotel-portal.clients.manage')

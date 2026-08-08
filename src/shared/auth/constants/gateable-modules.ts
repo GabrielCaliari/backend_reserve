@@ -11,6 +11,13 @@
  * Public capture/checkout/redirect routes (public/*, collect, wa/:code, lookup)
  * and the B2C consumer surface are also out of scope: they have no admin tenant
  * context, so @RequiresModule cannot run on them.
+ *
+ * LACUNA CONHECIDA — 'reports': continua no catalogo (o superadmin liga/desliga
+ * o item de menu e /api/tenant-capabilities responde por ele), mas nenhuma rota
+ * pode ser gateada hoje: AnalyticsReport nao tem coluna tenant_id, os dados sao
+ * globais (telefone -> URL) e a unica rota de leitura e o `lookup` @Public().
+ * Gatear exige antes escopar a tabela por tenant. Travado em
+ * reserve-reports/infrastructure/controllers/reports-module-access-wiring.spec.ts.
  */
 export const GATEABLE_MODULES = [
   'cms',

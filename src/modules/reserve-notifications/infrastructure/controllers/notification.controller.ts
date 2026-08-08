@@ -10,6 +10,15 @@ import { NotificationService } from '../../application/services/notification.ser
 import { CreateNotificationDTO, UpdateNotificationDTO, ListNotificationsQueryDTO } from '../../application/dtos';
 import { NotificationResponseDto, PaginatedNotificationsResponseDto } from '../../application/dtos/notification-response.dto';
 
+/**
+ * Superficie de plataforma: rascunhos/publicacao de notificacoes pelo
+ * super_admin, sem tenant algum na request (o alvo e escolhido dentro do
+ * payload). Fica FORA do @RequiresModule('notifications') de proposito — nao ha
+ * tenant para o TenantGuard resolver, e o ModuleAccessGuard ja libera
+ * super_admin, entao o gate seria um no-op com um 400 de brinde.
+ * O gate real do modulo esta em NotificationTenantController e
+ * NotificationSettingsController.
+ */
 @ApiTags('Notifications (super_admin)')
 @ApiBearerAuth()
 @RequirePermissions('notifications.platform.manage')

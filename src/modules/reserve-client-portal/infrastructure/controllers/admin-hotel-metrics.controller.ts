@@ -24,6 +24,12 @@ import { InsertBookingWindowDto } from '../../application/dtos/insert-booking-wi
 import { InsertRateParityDto } from '../../application/dtos/insert-rate-parity.dto';
 import { InsertMarketingBudgetDto } from '../../application/dtos/insert-marketing-budget.dto';
 
+/**
+ * Rotas chaveadas por `:clientId` (id de HotelClient), e o dashboard chama todas
+ * com `x-skip-tenant: true` (o interceptor apaga o `x-tenant-id`). Sem tenant na
+ * request nao ha o que o ModuleAccessGuard resolva: FORA do gate de
+ * client-portal ate estas rotas passarem a carregar o tenant.
+ */
 @Controller('admin/hotel-portal/metrics')
 @UseGuards(AdminJwtGuard, PermissionsGuard)
 @RequirePermissions('hotel-portal.metrics.manage')

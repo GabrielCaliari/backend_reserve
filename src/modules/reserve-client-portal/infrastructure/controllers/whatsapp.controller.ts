@@ -15,6 +15,11 @@ import { RequirePermissions } from '../../../../shared/auth/decorators/require-p
 import { WhatsAppService } from '../../application/services/whatsapp.service';
 import { CreateWhatsAppTemplateDto, SendWhatsAppMessageDto } from '../../application/dtos/whatsapp.dto';
 
+/**
+ * Rotas chaveadas por `:clientId`, chamadas pelo dashboard com `x-skip-tenant:
+ * true` (sem `x-tenant-id`). Sem tenant na request o TenantGuard nao roda: FORA
+ * do gate de client-portal.
+ */
 @Controller('admin/hotel-portal/whatsapp')
 @UseGuards(AdminJwtGuard, PermissionsGuard)
 @RequirePermissions('hotel-portal.whatsapp.manage')

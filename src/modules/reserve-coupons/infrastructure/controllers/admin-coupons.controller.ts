@@ -21,6 +21,9 @@ import {
   ApiQuery,
 } from '@nestjs/swagger';
 import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
+import { TenantGuard } from '../../../../shared/auth/guards/tenant.guard';
+import { ModuleAccessGuard } from '../../../../shared/auth/guards/module-access.guard';
+import { RequiresModule } from '../../../../shared/auth/decorators/requires-module.decorator';
 import { CreateCouponUseCase } from '../../application/use-cases/create-coupon.use-case';
 import { UpdateCouponUseCase } from '../../application/use-cases/update-coupon.use-case';
 import { DeleteCouponUseCase } from '../../application/use-cases/delete-coupon.use-case';
@@ -32,7 +35,12 @@ import { UpdateCouponDTO } from '../../application/dtos/update-coupon.dto';
 
 @ApiTags('Admin Coupons')
 @Controller('admin/coupons')
-@UseGuards(AdminJwtGuard)
+// TenantGuard resolve o tenant do header x-tenant-id e o publica em
+// request.tenant_id — pre-requisito do ModuleAccessGuard, que sem ele nao
+// consegue resolver a politica do modulo. A rota publica de resgate fica em
+// PublicCouponsController e continua fora do gate.
+@UseGuards(AdminJwtGuard, TenantGuard, ModuleAccessGuard)
+@RequiresModule('coupons')
 @ApiBearerAuth()
 @ApiHeader({ name: 'x-tenant-id', required: true, description: 'Tenant ID' })
 export class AdminCouponsController {

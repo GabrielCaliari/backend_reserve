@@ -3,11 +3,18 @@ import { Response } from 'express';
 import { MetricGoalService } from '../../application/services/metric-goal.service';
 import { UpsertMetricGoalDto } from '../../application/dtos/metric-goal.dto';
 import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
+import { TenantGuard } from '../../../../shared/auth/guards/tenant.guard';
+import { ModuleAccessGuard } from '../../../../shared/auth/guards/module-access.guard';
 import { PermissionsGuard } from '../../../../shared/auth/guards/permissions.guard';
 import { RequirePermissions } from '../../../../shared/auth/decorators/require-permissions.decorator';
+import { RequiresModule } from '../../../../shared/auth/decorators/requires-module.decorator';
 
 @Controller('admin/hotel-portal/:tenantId/goals')
-@UseGuards(AdminJwtGuard, PermissionsGuard)
+// O tenant vem do proprio caminho (`:tenantId`), entao o TenantGuard o resolve
+// sem depender de header, valida que o admin pertence a ele e publica
+// request.tenant_id - pre-requisito do ModuleAccessGuard.
+@UseGuards(AdminJwtGuard, TenantGuard, ModuleAccessGuard, PermissionsGuard)
+@RequiresModule('client-portal')
 @RequirePermissions('hotel-portal.goals.manage')
 export class AdminMetricGoalController {
   constructor(private readonly metricGoalService: MetricGoalService) {}

@@ -20,6 +20,12 @@ import {
   UpdateWhatsAppTrackingLinkDto,
 } from '../../application/dtos/whatsapp-tracking-link.dto';
 
+/**
+ * Rotas chaveadas por `:clientId`/`:linkId`, chamadas pelo dashboard com
+ * `x-skip-tenant: true` (sem `x-tenant-id`). Sem tenant na request o TenantGuard
+ * nao roda: FORA do gate de client-portal. O redirect publico `wa/:code` fica
+ * fora por ser @Public().
+ */
 @Controller('admin/hotel-portal/whatsapp-links')
 @UseGuards(AdminJwtGuard, PermissionsGuard)
 @RequirePermissions('hotel-portal.whatsapp-links.manage')

@@ -1,13 +1,20 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
 import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
+import { TenantGuard } from '../../../../shared/auth/guards/tenant.guard';
+import { ModuleAccessGuard } from '../../../../shared/auth/guards/module-access.guard';
 import { PermissionsGuard } from '../../../../shared/auth/guards/permissions.guard';
 import { RequirePermissions } from '../../../../shared/auth/decorators/require-permissions.decorator';
+import { RequiresModule } from '../../../../shared/auth/decorators/requires-module.decorator';
 import { CurrentAdmin, CurrentAdminPayload } from '../../../../shared/auth/decorators/current-admin.decorator';
 import { ContentPostService } from '../../application/services/content-post.service';
 import { CreateContentPostDto, UpdateContentPostDto } from '../../application/dtos/content-post.dto';
 
 @Controller('admin/hotel-portal/:tenantId/content-posts')
-@UseGuards(AdminJwtGuard, PermissionsGuard)
+// O tenant vem do proprio caminho (`:tenantId`), entao o TenantGuard o resolve
+// sem depender de header, valida que o admin pertence a ele e publica
+// request.tenant_id - pre-requisito do ModuleAccessGuard.
+@UseGuards(AdminJwtGuard, TenantGuard, ModuleAccessGuard, PermissionsGuard)
+@RequiresModule('client-portal')
 @RequirePermissions('hotel-portal.content.manage')
 export class AdminContentPostController {
   constructor(private readonly contentPostService: ContentPostService) {}
