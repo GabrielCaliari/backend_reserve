@@ -7,6 +7,7 @@ import {
 import { errorResponse, successResponse } from '../../../../shared/helpers';
 import { PrismaService } from '../../../../shared/database/prisma.service';
 import { EFunnelStage } from '../../../../generated/prisma/enums';
+import { QUALIFIED_OR_BEYOND_STAGES } from '../../domain/enums/funnel-stage-groups';
 
 export interface ICampaignPerformanceRow {
   campaign_name: string;
@@ -19,11 +20,7 @@ export interface ICampaignPerformanceRow {
   qualificados: number;
 }
 
-const QUALIFIED_STAGES: EFunnelStage[] = [
-  EFunnelStage.QUALIFICADO,
-  EFunnelStage.PAGAMENTO,
-  EFunnelStage.FECHADO,
-];
+const QUALIFIED_STAGES: EFunnelStage[] = QUALIFIED_OR_BEYOND_STAGES;
 
 @Injectable()
 export class CampaignService {

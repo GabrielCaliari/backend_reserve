@@ -58,6 +58,10 @@ export class BotStageWebhookProvider {
           numero_contato: funnelEvent.numero_contato,
           para_estagio: funnelEvent.para_estagio,
           ocorrido_em: funnelEvent.ocorrido_em,
+          // Sem isto o N8N sabe que o lead foi perdido mas nunca por que, e o
+          // motivo passou a ser obrigatorio justamente para orientar a resposta
+          // ao hospede. Campo aditivo: fluxo que nao le motivo ignora.
+          motivo: funnelEvent.motivo,
         },
         { timeout: WEBHOOK_TIMEOUT_MS },
       );

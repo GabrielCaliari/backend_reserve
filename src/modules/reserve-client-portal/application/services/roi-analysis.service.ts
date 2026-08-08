@@ -132,6 +132,14 @@ export class RoiAnalysisService {
     conversas: number,
   ) {
     const [qualificados, prontosParaFechar, roiByCampaign] = await Promise.all([
+      // ATENCAO: "qualificados" aqui e o evento que entrou exatamente em
+      // QUALIFICADO, enquanto FunnelMetricsService.taxaQualificacao e
+      // CampaignService contam QUALIFICADO ou alem
+      // (QUALIFIED_OR_BEYOND_STAGES). A divergencia e anterior ao funil v2 e
+      // foi mantida de proposito: unificar mudaria os numeros ja reportados
+      // deste painel, o que e decisao do dono, nao consequencia do rename.
+      // Com 9 etapas o buraco fica maior (da para pular QUALIFICADO indo de
+      // PUBLICO_IDENTIFICADO direto para ACOMODACAO_APRESENTADA).
       this.prisma.funnelEvent.count({
         where: {
           tenant_id: tenantId,
