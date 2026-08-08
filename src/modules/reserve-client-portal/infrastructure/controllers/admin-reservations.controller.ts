@@ -12,13 +12,20 @@ import { Response } from 'express';
 import { ReservationService } from '../../application/services/reservation.service';
 import { CreateReservationDto } from '../../application/dtos/reservation.dto';
 import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
+import { TenantGuard } from '../../../../shared/auth/guards/tenant.guard';
+import { ModuleAccessGuard } from '../../../../shared/auth/guards/module-access.guard';
 import { PermissionsGuard } from '../../../../shared/auth/guards/permissions.guard';
 import { RequirePermissions } from '../../../../shared/auth/decorators/require-permissions.decorator';
+import { RequiresModule } from '../../../../shared/auth/decorators/requires-module.decorator';
 import { CurrentAdmin, CurrentAdminPayload } from '../../../../shared/auth/decorators/current-admin.decorator';
 import { EReservationSource, EReservationStatus } from '../../domain/enums/reservation.enum';
 
 @Controller('admin/hotel-portal/reservations')
-@UseGuards(AdminJwtGuard, PermissionsGuard)
+// O tenant vem do proprio caminho (`:tenantId`), entao o TenantGuard o resolve
+// sem depender de header, valida que o admin pertence a ele e publica
+// request.tenant_id - pre-requisito do ModuleAccessGuard.
+@UseGuards(AdminJwtGuard, TenantGuard, ModuleAccessGuard, PermissionsGuard)
+@RequiresModule('client-portal')
 @RequirePermissions('hotel-portal.reservations.manage')
 export class AdminReservationsController {
   constructor(private readonly reservationService: ReservationService) {}

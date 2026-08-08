@@ -6,6 +6,13 @@ import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
 import { PermissionsGuard } from '../../../../shared/auth/guards/permissions.guard';
 import { RequirePermissions } from '../../../../shared/auth/decorators/require-permissions.decorator';
 
+/**
+ * Rotas mistas: `:tenantId/digests` carrega o tenant no caminho, mas
+ * `digests/:id` (submit-review/publish) nao — e o dashboard nao envia
+ * `x-tenant-id` neste controller. Um TenantGuard em nivel de classe quebraria
+ * metade das rotas, entao fica FORA do gate de client-portal ate as rotas por
+ * `:id` serem reescritas com o tenant no caminho.
+ */
 @Controller('admin/hotel-portal')
 @UseGuards(AdminJwtGuard, PermissionsGuard)
 @RequirePermissions('hotel-portal.digests.manage')
