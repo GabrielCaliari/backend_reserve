@@ -244,6 +244,7 @@ model Tenant {
   ConversationAttributions  ConversationAttribution[]
   AttributionSettings       AttributionSettings?
   BotIntegrationConfig      BotIntegrationConfig?
+  AnalyticsReports          AnalyticsReport[]
 
   @@index([stripe_customer_id])
   @@index([subscription_status])
