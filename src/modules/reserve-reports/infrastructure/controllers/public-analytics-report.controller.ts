@@ -4,6 +4,15 @@ import { AnalyticsReportService } from '../../application/services/analytics-rep
 import { LookupReportDto } from '../../application/dtos/lookup-report.dto';
 import { Public } from '../../../../shared/auth/decorators/public.decorator';
 
+/**
+ * FORA do @RequiresModule('reports') por design, nao por lacuna: a rota e
+ * @Public() e nao tem tenant na request, entao o ModuleAccessGuard nao teria
+ * politica a consultar. Consta nominalmente na lista de rotas nao-gateaveis em
+ * shared/auth/constants/gateable-modules.ts.
+ *
+ * A resolucao telefone -> URL e global (o telefone e UNIQUE no sistema inteiro)
+ * e alcanca tambem os registros legados sem tenant_id.
+ */
 @ApiTags('Analytics Reports - Public')
 @Controller('lookup')
 @Public()

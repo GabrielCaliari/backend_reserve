@@ -12,11 +12,10 @@
  * and the B2C consumer surface are also out of scope: they have no admin tenant
  * context, so @RequiresModule cannot run on them.
  *
- * LACUNA CONHECIDA — 'reports': continua no catalogo (o superadmin liga/desliga
- * o item de menu e /api/tenant-capabilities responde por ele), mas nenhuma rota
- * pode ser gateada hoje: AnalyticsReport nao tem coluna tenant_id, os dados sao
- * globais (telefone -> URL) e a unica rota de leitura e o `lookup` @Public().
- * Gatear exige antes escopar a tabela por tenant. Travado em
+ * 'reports' foi gateado quando AnalyticsReport ganhou tenant_id (migration
+ * 20260808000001): a superficie de admin roda TenantGuard + ModuleAccessGuard e
+ * o repositorio filtra por tenant. O `lookup` @Public() segue de fora pela
+ * regra acima — sem tenant na request, nao ha politica a consultar. Travado em
  * reserve-reports/infrastructure/controllers/reports-module-access-wiring.spec.ts.
  */
 export const GATEABLE_MODULES = [
