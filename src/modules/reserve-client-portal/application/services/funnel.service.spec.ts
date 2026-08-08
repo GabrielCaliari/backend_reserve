@@ -190,6 +190,16 @@ describe('FunnelStageChangeDto', () => {
     expect(errors).toHaveLength(0);
   });
 
+  it('aceita motivo null explicito fora do PERDIDO (campo limpo no painel)', async () => {
+    const errors = await build({ para_estagio: EFunnelStage.OFERTA_FEITA, motivo: null });
+    expect(errors).toHaveLength(0);
+  });
+
+  it('recusa motivo null explicito quando para_estagio e PERDIDO', async () => {
+    const errors = await build({ para_estagio: EFunnelStage.PERDIDO, motivo: null });
+    expect(errorsFor(errors, 'motivo')).toHaveLength(1);
+  });
+
   it('ainda valida o formato do motivo quando ele vem preenchido fora do PERDIDO', async () => {
     const errors = await build({ para_estagio: EFunnelStage.OFERTA_FEITA, motivo: 'x'.repeat(256) });
     expect(errorsFor(errors, 'motivo')).toHaveLength(1);

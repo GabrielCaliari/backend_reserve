@@ -8,9 +8,15 @@ import {
   EBotMessageType,
   EFunnelStage,
 } from '../../../../generated/prisma/enums';
-import { FUNNEL_ENTRY_STAGE } from '../../domain/enums/funnel-stage-groups';
+import {
+  FUNNEL_ENTRY_STAGE,
+  FUNNEL_LOST_STAGE,
+  FUNNEL_WON_STAGE,
+} from '../../domain/enums/funnel-stage-groups';
 
 const CONTENT_PREVIEW_MAX_LENGTH = 280;
+/** Espelha o VarChar(255) de funil_eventos.motivo. */
+const MOTIVO_MAX_LENGTH = 255;
 
 /**
  * Nomes antigos das etapas (funil v1) aceitos na ingestao. O N8N e um sistema
@@ -58,7 +64,7 @@ export class BotEventProcessorService {
           String(payload.contato ?? ''),
           this.parseStage(payload.para),
           occurredAt,
-          payload.motivo as string | undefined,
+          this.parseMotivo(payload.motivo),
           this.parseAudience(payload.tipo_publico),
         );
       case 'lead.pronto_para_fechar':
@@ -71,10 +77,13 @@ export class BotEventProcessorService {
           occurredAt,
         );
       case 'lead.fechado':
+        // "fechado" aqui e ganho, nao "fechamento iniciado" -- por isso a
+        // constante de estagio ganho, e nao FECHAMENTO_INICIADO, que e o
+        // destino de 'pagamento.solicitado' logo acima.
         return this.moveStage(
           tenantId,
           String(payload.contato ?? ''),
-          EFunnelStage.RESERVA_CONFIRMADA,
+          FUNNEL_WON_STAGE,
           occurredAt,
         );
       case 'bot.pausado':
@@ -185,6 +194,19 @@ export class BotEventProcessorService {
     });
     const deEstagio = currentLead?.current_stage ?? FUNNEL_ENTRY_STAGE;
 
+    // Motivo obrigatorio no PERDIDO vale para a escrita humana (DTO +
+    // FunnelService, que rejeitam com 400). Aqui na ingestao a regra e so
+    // avisar: o contrato global do endpoint e acusar 202 e nunca reprocessar,
+    // entao recusar o evento perderia a transicao de vez -- ficar sem o motivo
+    // e menos ruim que ficar sem saber que o lead foi perdido. O aviso e o
+    // gancho para cobrar o motivo do N8N.
+    const motivoLimpo = motivo?.trim() || undefined;
+    if (paraEstagio === FUNNEL_LOST_STAGE && !motivoLimpo) {
+      this.logger.warn(
+        `Evento do bot moveu ${numeroContato} para ${FUNNEL_LOST_STAGE} sem motivo (tenant=${tenantId})`,
+      );
+    }
+
     // O subtipo de publico e atributo do contato, entao vive fora do log
     // append-only de estagios. So sobrescreve quando o bot manda um valor
     // valido -- evento sem tipo_publico nao apaga o que ja foi identificado.
@@ -203,7 +225,7 @@ export class BotEventProcessorService {
           de_estagio: deEstagio,
           para_estagio: paraEstagio,
           autor_tipo: 'bot',
-          motivo: motivo ?? null,
+          motivo: motivoLimpo ?? null,
           ocorrido_em: occurredAt,
         },
       }),
@@ -302,6 +324,17 @@ export class BotEventProcessorService {
     // confundir com um lead que de fato nao avancou.
     this.logger.warn(`Unknown funnel stage "${stage}" — usando ${FUNNEL_ENTRY_STAGE}`);
     return FUNNEL_ENTRY_STAGE;
+  }
+
+  /**
+   * O payload do N8N e Json solto: `motivo` pode chegar como numero ou objeto.
+   * Coage para string e corta no VarChar(255) da coluna -- um motivo maior
+   * estouraria no INSERT e derrubaria a transacao inteira do evento.
+   */
+  private parseMotivo(value: unknown): string | undefined {
+    if (value === null || value === undefined) return undefined;
+    const motivo = String(value).trim();
+    return motivo ? motivo.slice(0, MOTIVO_MAX_LENGTH) : undefined;
   }
 
   private parseAudience(value: unknown): EBotContactAudience | undefined {

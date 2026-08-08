@@ -33,16 +33,16 @@ model User {
 }
 
 model Plan {
-  id                        String           @id @default(cuid()) @db.VarChar(25)
-  name                      String           @db.VarChar(100)
-  slug                      String           @unique
+  id                        String         @id @default(cuid()) @db.VarChar(25)
+  name                      String         @db.VarChar(100)
+  slug                      String         @unique
   maximum_queries           Int
-  maximum_queries_to_export Int              @default(0)
-  maximum_brand_analysis    Int              @default(0)
+  maximum_queries_to_export Int            @default(0)
+  maximum_brand_analysis    Int            @default(0)
   month_price_id            String?
   annual_price_id           String?
-  created_at                DateTime         @default(now())
-  updated_at                DateTime         @default(now()) @updatedAt
+  created_at                DateTime       @default(now())
+  updated_at                DateTime       @default(now()) @updatedAt
   Subscription              Subscription[]
   User                      User[]
 }
@@ -376,19 +376,19 @@ model BotIngestionEvent {
 }
 
 model BotContact {
-  id                 String            @id @default(cuid()) @db.VarChar(25)
-  tenant_id          String            @db.VarChar(25)
-  numero_contato     String            @db.VarChar(20)
-  nome               String?           @db.VarChar(150)
-  origem             String?           @db.VarChar(20) // anuncio | organico
+  id                 String               @id @default(cuid()) @db.VarChar(25)
+  tenant_id          String               @db.VarChar(25)
+  numero_contato     String               @db.VarChar(20)
+  nome               String?              @db.VarChar(150)
+  origem             String?              @db.VarChar(20) // anuncio | organico
   tipo_publico       EBotContactAudience?
-  status_bot         EBotContactStatus @default(ATIVO)
-  motivo_pausa       String?           @db.VarChar(255)
+  status_bot         EBotContactStatus    @default(ATIVO)
+  motivo_pausa       String?              @db.VarChar(255)
   janela_expira      DateTime?
-  consentimento_lgpd Boolean           @default(false)
+  consentimento_lgpd Boolean              @default(false)
   last_message_at    DateTime?
-  created_at         DateTime          @default(now())
-  updated_at         DateTime          @updatedAt
+  created_at         DateTime             @default(now())
+  updated_at         DateTime             @updatedAt
 
   @@unique([tenant_id, numero_contato])
   @@map("bot_contacts")
@@ -1628,21 +1628,21 @@ model TenantNotificationReceipt {
 }
 
 model TenantNotificationSettings {
-  id             String   @id @default(cuid()) @db.VarChar(25)
-  tenant_id      String   @unique @db.VarChar(25)
-  email_enabled  Boolean  @default(true)
-  inapp_enabled  Boolean  @default(true)
+  id               String   @id @default(cuid()) @db.VarChar(25)
+  tenant_id        String   @unique @db.VarChar(25)
+  email_enabled    Boolean  @default(true)
+  inapp_enabled    Boolean  @default(true)
   // Fase 6 Task 3: WhatsApp digest notifications are opt-in and default off
   // (unlike email_enabled/inapp_enabled) because they require a destination
   // number the tenant must supply — there's no existing per-tenant WhatsApp
   // contact field anywhere else in the schema to reuse.
   whatsapp_enabled Boolean  @default(false)
   whatsapp_phone   String?  @db.VarChar(20)
-  event_settings Json     @default("{}")
-  cron_settings  Json     @default("{}")
-  created_at     DateTime @default(now())
-  updated_at     DateTime @updatedAt
-  Tenant         Tenant   @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  event_settings   Json     @default("{}")
+  cron_settings    Json     @default("{}")
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+  Tenant           Tenant   @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
 
   @@map("tenant_notification_settings")
 }
@@ -1744,65 +1744,65 @@ enum EReportStatus {
 }
 
 model HotelClient {
-  id                  String              @id @default(cuid()) @db.VarChar(25)
-  admin_id            String              @db.VarChar(25)
-  tenant_id           String?             @unique @db.VarChar(25)
-  booking_engine_type EBookingEngineType  @default(MANUAL)
-  webhook_secret      String?             @db.VarChar(100)
-  Tenant              Tenant?             @relation("HotelTenantConfig", fields: [tenant_id], references: [id])
-  hotel_name          String              @db.VarChar(255)
-  logo_url            String?             @db.VarChar(500)
-  country             String              @db.VarChar(100)
-  booking_engine      String?             @db.VarChar(100)
-  target_occupancy    Float               @default(0.7)
-  target_direct_pct   Float               @default(0.5)
-  contract_start      DateTime
-  is_active           Boolean             @default(true)
-  created_at          DateTime            @default(now())
-  updated_at          DateTime            @updatedAt
-  Admin               Admin               @relation(fields: [admin_id], references: [id])
-  ApiCredentials       HotelApiCredential[]
-  DashboardSnapshots   DashboardSnapshot[]
-  CampaignMetrics      CampaignMetric[]
-  SiteMetrics          SiteMetric[]
-  OtaMonthlyData       OtaMonthlyData[]
-  MonthlyReports       MonthlyReport[]
-  ReputationMetrics    HotelReputationMetric[]
-  MonthlyKpis          HotelMonthlyKpi[]
-  BookingWindowMetrics BookingWindowMetric[]
-  WhatsAppTemplates    WhatsAppTemplate[]
+  id                    String                  @id @default(cuid()) @db.VarChar(25)
+  admin_id              String                  @db.VarChar(25)
+  tenant_id             String?                 @unique @db.VarChar(25)
+  booking_engine_type   EBookingEngineType      @default(MANUAL)
+  webhook_secret        String?                 @db.VarChar(100)
+  Tenant                Tenant?                 @relation("HotelTenantConfig", fields: [tenant_id], references: [id])
+  hotel_name            String                  @db.VarChar(255)
+  logo_url              String?                 @db.VarChar(500)
+  country               String                  @db.VarChar(100)
+  booking_engine        String?                 @db.VarChar(100)
+  target_occupancy      Float                   @default(0.7)
+  target_direct_pct     Float                   @default(0.5)
+  contract_start        DateTime
+  is_active             Boolean                 @default(true)
+  created_at            DateTime                @default(now())
+  updated_at            DateTime                @updatedAt
+  Admin                 Admin                   @relation(fields: [admin_id], references: [id])
+  ApiCredentials        HotelApiCredential[]
+  DashboardSnapshots    DashboardSnapshot[]
+  CampaignMetrics       CampaignMetric[]
+  SiteMetrics           SiteMetric[]
+  OtaMonthlyData        OtaMonthlyData[]
+  MonthlyReports        MonthlyReport[]
+  ReputationMetrics     HotelReputationMetric[]
+  MonthlyKpis           HotelMonthlyKpi[]
+  BookingWindowMetrics  BookingWindowMetric[]
+  WhatsAppTemplates     WhatsAppTemplate[]
   WhatsAppTrackingLinks WhatsAppTrackingLink[]
-  RateParityChecks     RateParityCheck[]
-  MarketingBudgets     MarketingBudget[]
-  Guests               HotelGuest[]
+  RateParityChecks      RateParityCheck[]
+  MarketingBudgets      MarketingBudget[]
+  Guests                HotelGuest[]
 
   @@index([admin_id, is_active])
   @@map("hotel_clients")
 }
 
 model HotelApiCredential {
-  id               String             @id @default(cuid()) @db.VarChar(25)
-  client_id        String             @db.VarChar(25)
-  platform         EPlatform
-  encrypted_token  String             @db.Text
-  refresh_token    String?            @db.Text
-  token_expires_at DateTime?
-  last_sync_at     DateTime?
-  sync_status      EIntegrationStatus @default(PENDING)
-  error_message    String?            @db.Text
+  id                     String             @id @default(cuid()) @db.VarChar(25)
+  client_id              String             @db.VarChar(25)
+  platform               EPlatform
+  encrypted_token        String             @db.Text
+  refresh_token          String?            @db.Text
+  token_expires_at       DateTime?
+  last_sync_at           DateTime?
+  sync_status            EIntegrationStatus @default(PENDING)
+  error_message          String?            @db.Text
   // IG Business Account ID the Graph API calls resolve against (platform:
   // INSTAGRAM only). Nullable because it's meaningless for GA4/META_ADS/GOOGLE_ADS
   // credentials — reusing HotelApiCredential per §3.4 needed one additive field.
-  ig_user_id       String?            @db.VarChar(50)
+  ig_user_id             String?            @db.VarChar(50)
   // Google Ads customer (account) ID the GAQL query is scoped to (platform:
   // GOOGLE_ADS only). Nullable for the same reason ig_user_id is — meaningless
   // for the other platforms. Fase 6 Task 4: closing the pre-existing stub
   // required this field since the google-ads-api SDK needs a customer_id, not
   // just a token, to run a report query.
-  google_ads_customer_id String?      @db.VarChar(20)
-  created_at       DateTime           @default(now())
-  updated_at       DateTime           @updatedAt
-  HotelClient      HotelClient        @relation(fields: [client_id], references: [id])
+  google_ads_customer_id String?            @db.VarChar(20)
+  created_at             DateTime           @default(now())
+  updated_at             DateTime           @updatedAt
+  HotelClient            HotelClient        @relation(fields: [client_id], references: [id])
 
   @@unique([client_id, platform])
   @@index([client_id, sync_status])
@@ -1852,21 +1852,21 @@ model CampaignMetric {
 }
 
 model SiteMetric {
-  id                    String      @id @default(cuid()) @db.VarChar(25)
-  client_id             String      @db.VarChar(25)
-  metric_date           DateTime
-  organic_visitors      Int         @default(0)
-  paid_visitors         Int         @default(0)
-  direct_visitors       Int         @default(0)
-  social_visitors       Int         @default(0)
-  package_page_views    Int         @default(0)
-  checkout_starts       Int         @default(0)
-  checkout_completes    Int         @default(0)
-  avg_time_on_package   Float       @default(0)
-  bounce_rate           Float       @default(0)
-  created_at            DateTime    @default(now())
-  updated_at            DateTime    @updatedAt
-  HotelClient           HotelClient @relation(fields: [client_id], references: [id])
+  id                  String      @id @default(cuid()) @db.VarChar(25)
+  client_id           String      @db.VarChar(25)
+  metric_date         DateTime
+  organic_visitors    Int         @default(0)
+  paid_visitors       Int         @default(0)
+  direct_visitors     Int         @default(0)
+  social_visitors     Int         @default(0)
+  package_page_views  Int         @default(0)
+  checkout_starts     Int         @default(0)
+  checkout_completes  Int         @default(0)
+  avg_time_on_package Float       @default(0)
+  bounce_rate         Float       @default(0)
+  created_at          DateTime    @default(now())
+  updated_at          DateTime    @updatedAt
+  HotelClient         HotelClient @relation(fields: [client_id], references: [id])
 
   @@unique([client_id, metric_date])
   @@index([client_id, metric_date])
@@ -2309,14 +2309,14 @@ model SemesterPlanDelivery {
 }
 
 model MetricGoal {
-  id            String   @id @default(cuid()) @db.VarChar(25)
-  tenant_id     String   @db.VarChar(25)
-  metric_key    String   @db.VarChar(50)
-  period        String   @db.VarChar(10) // biweekly|monthly
-  target_value  Float    @default(0)
-  show_goal     Boolean  @default(false)
-  created_at    DateTime @default(now())
-  updated_at    DateTime @updatedAt
+  id           String   @id @default(cuid()) @db.VarChar(25)
+  tenant_id    String   @db.VarChar(25)
+  metric_key   String   @db.VarChar(50)
+  period       String   @db.VarChar(10) // biweekly|monthly
+  target_value Float    @default(0)
+  show_goal    Boolean  @default(false)
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
 
   @@unique([tenant_id, metric_key, period])
   @@map("metric_goals")
@@ -2385,19 +2385,19 @@ enum EContentPostStatus {
  * fallback path by default.
  */
 model ContentPost {
-  id              String              @id @default(cuid()) @db.VarChar(25)
-  tenant_id       String              @db.VarChar(25)
+  id              String             @id @default(cuid()) @db.VarChar(25)
+  tenant_id       String             @db.VarChar(25)
   platform        EContentPlatform
   scheduled_for   DateTime?
   published_at    DateTime?
-  status          EContentPostStatus  @default(draft)
-  caption_preview String?             @db.VarChar(280)
-  thumbnail_url   String?             @db.VarChar(500)
-  external_id     String?             @db.VarChar(100)
-  permalink       String?             @db.VarChar(500)
-  created_by      String              @db.VarChar(25)
-  created_at      DateTime            @default(now())
-  updated_at      DateTime            @updatedAt
+  status          EContentPostStatus @default(draft)
+  caption_preview String?            @db.VarChar(280)
+  thumbnail_url   String?            @db.VarChar(500)
+  external_id     String?            @db.VarChar(100)
+  permalink       String?            @db.VarChar(500)
+  created_by      String             @db.VarChar(25)
+  created_at      DateTime           @default(now())
+  updated_at      DateTime           @updatedAt
 
   @@index([tenant_id, scheduled_for])
   @@index([tenant_id, published_at])

@@ -18,10 +18,16 @@ export class FunnelStageChangeDto {
    * A regra e repetida no FunnelService -- o DTO cobre a entrada HTTP, o
    * service cobre qualquer outra chamada -- e o banco segue aceitando NULL para
    * nao invalidar o historico migrado de FRIO.
+   *
+   * `motivo: null` explicito e tratado como ausente fora do PERDIDO (era o que
+   * o @IsOptional anterior fazia): o painel manda o campo limpo como null e
+   * quebrar isso seria regressao de contrato. Dentro do PERDIDO, null cai na
+   * primeira condicao e o @IsString recusa, que e o desejado.
    */
   @ValidateIf(
     (dto: FunnelStageChangeDto) =>
-      dto.para_estagio === FUNNEL_LOST_STAGE || dto.motivo !== undefined,
+      dto.para_estagio === FUNNEL_LOST_STAGE ||
+      (dto.motivo !== undefined && dto.motivo !== null),
   )
   @IsString()
   @Matches(/\S/, {
