@@ -311,12 +311,29 @@ enum EBotMessageType {
   imagem
 }
 
+/// Etapas do funil do bot, na ordem em que o lead avanca. A ordem de
+/// declaracao e a ordem do funil e o painel depende dela para montar o board.
 enum EFunnelStage {
-  NOVO
+  CONTATO_INICIADO
+  PUBLICO_IDENTIFICADO
   QUALIFICADO
-  PAGAMENTO
-  FECHADO
-  FRIO
+  ACOMODACAO_APRESENTADA
+  OFERTA_FEITA
+  FECHAMENTO_INICIADO
+  COMPROVANTE_RECEBIDO
+  RESERVA_CONFIRMADA
+  PERDIDO
+}
+
+/// Subtipo do publico identificado (etapa 2 do funil). E atributo do contato,
+/// nao do evento de estagio: o publico de um contato nao muda a cada
+/// transicao, e o mesmo contato mantem o subtipo se voltar de estagio.
+enum EBotContactAudience {
+  LEAD
+  HOSPEDE_EM_ESTADIA
+  MENSALISTA
+  MARINA
+  EQUIPE
 }
 
 enum EFunnelEventAuthor {
@@ -364,6 +381,7 @@ model BotContact {
   numero_contato     String            @db.VarChar(20)
   nome               String?           @db.VarChar(150)
   origem             String?           @db.VarChar(20) // anuncio | organico
+  tipo_publico       EBotContactAudience?
   status_bot         EBotContactStatus @default(ATIVO)
   motivo_pausa       String?           @db.VarChar(255)
   janela_expira      DateTime?
@@ -411,7 +429,7 @@ model BotLead {
   id                   String       @id @default(cuid()) @db.VarChar(25)
   tenant_id            String       @db.VarChar(25)
   numero_contato       String       @db.VarChar(20)
-  current_stage        EFunnelStage @default(NOVO)
+  current_stage        EFunnelStage @default(CONTATO_INICIADO)
   perfil               String?      @db.VarChar(100)
   acomodacao_interesse String?      @db.VarChar(255)
   datas_interesse      Json?

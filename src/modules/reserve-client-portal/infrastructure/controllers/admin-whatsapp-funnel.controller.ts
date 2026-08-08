@@ -19,6 +19,13 @@ export class AdminWhatsAppFunnelController {
     @Body() dto: FunnelStageChangeDto,
     @CurrentAdmin() admin: CurrentAdminPayload,
   ) {
-    return this.funnelService.moveStage(tenantId, contactId, dto.para_estagio, admin.admin_id, dto.motivo);
+    return this.funnelService.moveStage(
+      tenantId,
+      contactId,
+      dto.para_estagio,
+      admin.admin_id,
+      dto.motivo,
+      dto.tipo_publico,
+    );
   }
 }

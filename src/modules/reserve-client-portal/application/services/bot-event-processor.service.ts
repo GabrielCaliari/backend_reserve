@@ -3,12 +3,28 @@ import { PrismaService } from '../../../../shared/database/prisma.service';
 import { AttributionService } from './attribution.service';
 import { BotEventDto } from '../dtos/bot-event.dto';
 import {
+  EBotContactAudience,
   EBotContactStatus,
   EBotMessageType,
   EFunnelStage,
 } from '../../../../generated/prisma/enums';
+import { FUNNEL_ENTRY_STAGE } from '../../domain/enums/funnel-stage-groups';
 
 const CONTENT_PREVIEW_MAX_LENGTH = 280;
+
+/**
+ * Nomes antigos das etapas (funil v1) aceitos na ingestao. O N8N e um sistema
+ * externo e nao sobe junto com o backend: sem esses aliases, um evento com
+ * 'PAGAMENTO' cairia no fallback e jogaria o lead de volta para o inicio do
+ * funil -- um retrocesso silencioso, pior que um evento ignorado. Mesmo
+ * mapeamento da migration.
+ */
+const LEGACY_STAGE_ALIASES: Record<string, EFunnelStage> = {
+  NOVO: EFunnelStage.CONTATO_INICIADO,
+  PAGAMENTO: EFunnelStage.FECHAMENTO_INICIADO,
+  FECHADO: EFunnelStage.RESERVA_CONFIRMADA,
+  FRIO: EFunnelStage.PERDIDO,
+};
 
 /**
  * Fans out POST /api/ingest/bot-events into BotContact/BotMessage/
@@ -42,6 +58,8 @@ export class BotEventProcessorService {
           String(payload.contato ?? ''),
           this.parseStage(payload.para),
           occurredAt,
+          payload.motivo as string | undefined,
+          this.parseAudience(payload.tipo_publico),
         );
       case 'lead.pronto_para_fechar':
         return this.handleProntoParaFechar(tenantId, String(payload.contato ?? ''), occurredAt);
@@ -49,14 +67,14 @@ export class BotEventProcessorService {
         return this.moveStage(
           tenantId,
           String(payload.contato ?? ''),
-          EFunnelStage.PAGAMENTO,
+          EFunnelStage.FECHAMENTO_INICIADO,
           occurredAt,
         );
       case 'lead.fechado':
         return this.moveStage(
           tenantId,
           String(payload.contato ?? ''),
-          EFunnelStage.FECHADO,
+          EFunnelStage.RESERVA_CONFIRMADA,
           occurredAt,
         );
       case 'bot.pausado':
@@ -160,11 +178,22 @@ export class BotEventProcessorService {
     paraEstagio: EFunnelStage,
     occurredAt: Date,
     motivo?: string,
+    tipoPublico?: EBotContactAudience,
   ): Promise<void> {
     const currentLead = await this.prisma.botLead.findUnique({
       where: { tenant_id_numero_contato: { tenant_id: tenantId, numero_contato: numeroContato } },
     });
-    const deEstagio = currentLead?.current_stage ?? EFunnelStage.NOVO;
+    const deEstagio = currentLead?.current_stage ?? FUNNEL_ENTRY_STAGE;
+
+    // O subtipo de publico e atributo do contato, entao vive fora do log
+    // append-only de estagios. So sobrescreve quando o bot manda um valor
+    // valido -- evento sem tipo_publico nao apaga o que ja foi identificado.
+    if (tipoPublico) {
+      await this.prisma.botContact.updateMany({
+        where: { tenant_id: tenantId, numero_contato: numeroContato },
+        data: { tipo_publico: tipoPublico },
+      });
+    }
 
     await this.prisma.$transaction([
       this.prisma.funnelEvent.create({
@@ -188,13 +217,14 @@ export class BotEventProcessorService {
 
   /**
    * §5.6 lists lead.pronto_para_fechar as a distinct event from
-   * lead.estagio_alterado, but §5.4's stage list (NOVO/QUALIFICADO/PAGAMENTO/
-   * FECHADO/FRIO) has no "pronto para fechar" stage and §3.3 ties the concept
-   * to the [TRANSFERIR] tag instead. Treated here as a non-stage-changing
-   * annotation event (de_estagio: null, para_estagio: the lead's current
-   * stage unchanged) carrying motivo: 'TRANSFERIR', rather than inventing a
-   * sixth EFunnelStage value the master doc never lists. Flagged as a
-   * product decision in the plan's final report.
+   * lead.estagio_alterado, mas nenhuma das 9 etapas do funil v2 e "pronto para
+   * fechar" -- §3.3 amarra o conceito a tag [TRANSFERIR]. Continua tratado
+   * aqui como evento de anotacao que nao muda estagio (de_estagio: null,
+   * para_estagio: o estagio atual inalterado) carregando motivo:
+   * 'TRANSFERIR', em vez de inventar uma decima etapa.
+   *
+   * Nao confundir com FECHAMENTO_INICIADO: aquele e o estagio para onde
+   * 'pagamento.solicitado' move o lead; este e so um marcador de handoff.
    */
   private async handleProntoParaFechar(
     tenantId: string,
@@ -204,7 +234,7 @@ export class BotEventProcessorService {
     const currentLead = await this.prisma.botLead.findUnique({
       where: { tenant_id_numero_contato: { tenant_id: tenantId, numero_contato: numeroContato } },
     });
-    const currentStage = currentLead?.current_stage ?? EFunnelStage.NOVO;
+    const currentStage = currentLead?.current_stage ?? FUNNEL_ENTRY_STAGE;
 
     await this.prisma.funnelEvent.create({
       data: {
@@ -263,6 +293,20 @@ export class BotEventProcessorService {
 
   private parseStage(value: unknown): EFunnelStage {
     const stage = String(value ?? '').toUpperCase();
-    return (EFunnelStage as Record<string, EFunnelStage>)[stage] ?? EFunnelStage.NOVO;
+    const parsed =
+      (EFunnelStage as Record<string, EFunnelStage>)[stage] ?? LEGACY_STAGE_ALIASES[stage];
+    if (parsed) return parsed;
+
+    // Estagio desconhecido cai na entrada do funil (comportamento historico),
+    // mas agora com log: com 9 etapas um fallback silencioso e facil de
+    // confundir com um lead que de fato nao avancou.
+    this.logger.warn(`Unknown funnel stage "${stage}" — usando ${FUNNEL_ENTRY_STAGE}`);
+    return FUNNEL_ENTRY_STAGE;
+  }
+
+  private parseAudience(value: unknown): EBotContactAudience | undefined {
+    if (value === null || value === undefined) return undefined;
+    const audience = String(value).toUpperCase().replace(/[\s-]+/g, '_');
+    return (EBotContactAudience as Record<string, EBotContactAudience>)[audience] ?? undefined;
   }
 }

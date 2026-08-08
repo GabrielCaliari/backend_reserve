@@ -1,16 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../../shared/database/prisma.service';
 import { PeriodComparisonService } from '../../../../shared/analytics/period-comparison.service';
-import { EFunnelStage, EBotMessageType, EBotMessageRole } from '../../../../generated/prisma/enums';
+import { EBotMessageType, EBotMessageRole } from '../../../../generated/prisma/enums';
+import {
+  FUNNEL_ENTRY_STAGE,
+  FUNNEL_LOST_STAGE,
+  FUNNEL_STAGES_IN_ORDER,
+  QUALIFIED_OR_BEYOND_STAGES,
+} from '../../domain/enums/funnel-stage-groups';
 
 const LEADS_PER_STAGE_CAP = 50;
-const ALL_STAGES: EFunnelStage[] = [
-  EFunnelStage.NOVO,
-  EFunnelStage.QUALIFICADO,
-  EFunnelStage.PAGAMENTO,
-  EFunnelStage.FECHADO,
-  EFunnelStage.FRIO,
-];
+const ALL_STAGES = FUNNEL_STAGES_IN_ORDER;
 
 /** §5.7 Bloco Funil — board + full metrics suite, the direct payoff of the append-only funil_eventos log. */
 @Injectable()
@@ -50,17 +50,18 @@ export class FunnelMetricsService {
         const contacts = numeros.length
           ? await this.prisma.botContact.findMany({
               where: { tenant_id: tenantId, numero_contato: { in: numeros } },
-              select: { numero_contato: true, nome: true },
+              select: { numero_contato: true, nome: true, tipo_publico: true },
             })
           : [];
-        const nomeByContato = new Map(contacts.map((c) => [c.numero_contato, c.nome]));
+        const contatoByNumero = new Map(contacts.map((c) => [c.numero_contato, c]));
 
         return {
           stage,
           count: countByStage.get(stage) ?? 0,
           leads: leads.map((l) => ({
             numeroContato: l.numero_contato,
-            nome: nomeByContato.get(l.numero_contato) ?? null,
+            nome: contatoByNumero.get(l.numero_contato)?.nome ?? null,
+            tipoPublico: contatoByNumero.get(l.numero_contato)?.tipo_publico ?? null,
             acomodacaoInteresse: l.acomodacao_interesse,
             datasInteresse: l.datas_interesse,
           })),
@@ -112,7 +113,7 @@ export class FunnelMetricsService {
         where: {
           tenant_id: tenantId,
           ocorrido_em: { gte: from, lte: to },
-          para_estagio: { in: [EFunnelStage.QUALIFICADO, EFunnelStage.PAGAMENTO, EFunnelStage.FECHADO] },
+          para_estagio: { in: QUALIFIED_OR_BEYOND_STAGES },
         },
         select: { numero_contato: true },
         distinct: ['numero_contato'],
@@ -219,14 +220,13 @@ export class FunnelMetricsService {
       _count: { _all: true },
     });
     const byStage = new Map(rows.map((r) => [r.para_estagio, r._count._all]));
-    const novo = byStage.get(EFunnelStage.NOVO) ?? 0;
+    const entrada = byStage.get(FUNNEL_ENTRY_STAGE) ?? 0;
 
-    // Stage-to-stage funnel percentages relative to NOVO, the funnel's entry
-    // point — fronteira marked explicitly between PAGAMENTO -> FECHADO per
-    // the plan's own callout of that transition.
-    return ALL_STAGES.filter((s) => s !== EFunnelStage.FRIO).map((stage) => {
+    // Percentuais relativos a CONTATO_INICIADO, a entrada do funil. PERDIDO
+    // fica de fora porque e saida do funil, nao um degrau da escada.
+    return ALL_STAGES.filter((s) => s !== FUNNEL_LOST_STAGE).map((stage) => {
       const count = byStage.get(stage) ?? 0;
-      return { stage, count, rate: this.periodComparison.ratio(count, novo) };
+      return { stage, count, rate: this.periodComparison.ratio(count, entrada) };
     });
   }
 

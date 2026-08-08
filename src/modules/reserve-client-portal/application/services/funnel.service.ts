@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../../shared/database/prisma.service';
-import { EFunnelStage } from '../../../../generated/prisma/enums';
+import { EBotContactAudience, EFunnelStage } from '../../../../generated/prisma/enums';
+import { FUNNEL_ENTRY_STAGE, FUNNEL_LOST_STAGE } from '../../domain/enums/funnel-stage-groups';
 import { BotStageWebhookProvider } from '../../infrastructure/providers/bot-stage-webhook.provider';
 
 /**
@@ -23,17 +24,37 @@ export class FunnelService {
     paraEstagio: EFunnelStage,
     adminId: string,
     motivo?: string,
+    tipoPublico?: EBotContactAudience,
   ) {
     const currentLead = await this.prisma.botLead.findUnique({
       where: { tenant_id_numero_contato: { tenant_id: tenantId, numero_contato: numeroContato } },
     });
-    const currentStage = currentLead?.current_stage ?? EFunnelStage.NOVO;
+    const currentStage = currentLead?.current_stage ?? FUNNEL_ENTRY_STAGE;
+
+    // Motivo obrigatorio no PERDIDO. Duplicado em relacao ao
+    // FunnelStageChangeDto de proposito: o DTO so protege a entrada HTTP, e
+    // este service tambem e chamado fora do controller. O banco continua
+    // aceitando motivo NULL porque o historico migrado de FRIO nao tem como
+    // preencher esse campo retroativamente.
+    const motivoLimpo = motivo?.trim();
+    if (paraEstagio === FUNNEL_LOST_STAGE && !motivoLimpo) {
+      throw new BadRequestException('motivo e obrigatorio ao mover um lead para PERDIDO.');
+    }
 
     if (currentStage === paraEstagio) {
       // Moving to the same stage is a no-op the UI shouldn't allow — a
       // same-stage FunnelEvent would break "tempo médio por estágio"'s
       // assumption that consecutive events differ.
       throw new BadRequestException('Lead is already in this stage.');
+    }
+
+    // Atributo do contato, fora do log append-only de estagios. Sem valor
+    // novo, o subtipo ja identificado antes e preservado.
+    if (tipoPublico) {
+      await this.prisma.botContact.updateMany({
+        where: { tenant_id: tenantId, numero_contato: numeroContato },
+        data: { tipo_publico: tipoPublico },
+      });
     }
 
     const [funnelEvent] = await this.prisma.$transaction([
@@ -45,7 +66,7 @@ export class FunnelService {
           para_estagio: paraEstagio,
           autor_tipo: 'humano',
           autor_id: adminId,
-          motivo: motivo ?? null,
+          motivo: motivoLimpo ?? null,
           ocorrido_em: new Date(),
         },
       }),

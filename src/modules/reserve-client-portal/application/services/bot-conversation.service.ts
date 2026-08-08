@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../../shared/database/prisma.service';
 import { ListConversationsQueryDto } from '../dtos/list-conversations-query.dto';
 import { EFunnelStage } from '../../../../generated/prisma/enums';
+import { FUNNEL_ENTRY_STAGE } from '../../domain/enums/funnel-stage-groups';
 
 /** §5.3 Bloco Conversas — read-only list/search/detail, deep-linked into Chatwoot (Decisao 11). */
 @Injectable()
@@ -60,7 +61,8 @@ export class BotConversationService {
         statusBot: c.status_bot,
         lastMessageAt: c.last_message_at,
         consentimentoLgpd: c.consentimento_lgpd,
-        currentStage: leadByContact.get(c.numero_contato)?.current_stage ?? EFunnelStage.NOVO,
+        tipoPublico: c.tipo_publico,
+        currentStage: leadByContact.get(c.numero_contato)?.current_stage ?? FUNNEL_ENTRY_STAGE,
         chatwootDeepLink: this.buildChatwootDeepLink(chatwootBaseUrl, c.numero_contato),
       })),
     };
@@ -92,7 +94,8 @@ export class BotConversationService {
         nome: contact.nome,
         statusBot: contact.status_bot,
         consentimentoLgpd: contact.consentimento_lgpd,
-        currentStage: lead?.current_stage ?? EFunnelStage.NOVO,
+        tipoPublico: contact.tipo_publico,
+        currentStage: lead?.current_stage ?? FUNNEL_ENTRY_STAGE,
         chatwootDeepLink: this.buildChatwootDeepLink(chatwootBaseUrl, contact.numero_contato),
       },
       messages: messages.map((m) => ({
