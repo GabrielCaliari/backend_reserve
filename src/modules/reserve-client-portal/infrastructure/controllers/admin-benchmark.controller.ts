@@ -10,6 +10,10 @@ import { BenchmarkEligibilityService } from '../../application/services/benchmar
  * `hotel-portal.benchmark.read` has no role grant in permission-matrix.ts,
  * so only the PermissionsGuard's super_admin bypass reaches this route.
  * Never exposed to clients, per Sec7.
+ *
+ * Agregado cross-tenant (BenchmarkAggregate): nao ha um tenant unico a resolver
+ * e o ModuleAccessGuard ja libera super_admin, entao este controller fica FORA
+ * do gate de client-portal.
  */
 @Controller('admin/hotel-portal/benchmark')
 @UseGuards(AdminJwtGuard, PermissionsGuard)

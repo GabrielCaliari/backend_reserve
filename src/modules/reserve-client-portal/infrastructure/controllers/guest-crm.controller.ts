@@ -16,6 +16,11 @@ import { GuestCrmService } from '../../application/services/guest-crm.service';
 import { CreateGuestDto, CreateGuestStayDto } from '../../application/dtos/create-guest.dto';
 import { EGuestSegment } from '../../domain/enums/guest-segment.enum';
 
+/**
+ * Rotas chaveadas por `:clientId`/`:guestId`, chamadas pelo dashboard com
+ * `x-skip-tenant: true` (sem `x-tenant-id`). Sem tenant na request o TenantGuard
+ * nao roda: FORA do gate de client-portal.
+ */
 @Controller('admin/hotel-portal/guests')
 @UseGuards(AdminJwtGuard, PermissionsGuard)
 @RequirePermissions('hotel-portal.guests.manage')

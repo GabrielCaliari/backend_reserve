@@ -8,6 +8,10 @@ import { BotEventDto } from '../../application/dtos/bot-event.dto';
 /**
  * Public-by-tenant-key ingestion endpoint (Decisao 14), matching
  * BookingWebhookController's precedent for third-party-authenticated traffic.
+ *
+ * Autenticado por chave do bot (BotEventKeyGuard), nao por sessao de admin: nao
+ * existe tenant administrativo na request. FORA do gate de client-portal, mesma
+ * razao dos webhooks em gateable-modules.ts.
  */
 @Controller('ingest/bot-events')
 @SkipThrottle()

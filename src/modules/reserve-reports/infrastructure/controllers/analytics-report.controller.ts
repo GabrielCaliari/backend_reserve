@@ -20,6 +20,15 @@ import { AnalyticsReportService } from '../../application/services/analytics-rep
 import { CreateAnalyticsReportDto } from '../../application/dtos/create-analytics-report.dto';
 import { UpdateAnalyticsReportDto } from '../../application/dtos/update-analytics-report.dto';
 
+/**
+ * FORA do @RequiresModule('reports') por limitacao estrutural, nao por
+ * esquecimento: AnalyticsReport (prisma/schema.prisma) nao tem coluna
+ * `tenant_id` e o AnalyticsReportService nunca filtra por tenant — os vinculos
+ * telefone -> URL sao globais. Sem tenant a resolver, o TenantGuard nao tem o
+ * que publicar em request.tenant_id e o ModuleAccessGuard nao tem politica a
+ * consultar. Gatear exige antes escopar a tabela por tenant (migration +
+ * backfill + filtro no repositorio).
+ */
 @ApiTags('Analytics Reports')
 @ApiBearerAuth()
 @UseGuards(AdminJwtGuard, PermissionsGuard)

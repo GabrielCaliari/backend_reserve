@@ -25,15 +25,24 @@ import { InstagramOverviewService } from '../../application/services/instagram-o
 import { ContentPostService } from '../../application/services/content-post.service';
 import { ActivityLogService } from '../../application/services/activity-log.service';
 import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
+import { TenantGuard } from '../../../../shared/auth/guards/tenant.guard';
+import { ModuleAccessGuard } from '../../../../shared/auth/guards/module-access.guard';
+import { RequiresModule } from '../../../../shared/auth/decorators/requires-module.decorator';
 import { CurrentAdmin, CurrentAdminPayload } from '../../../../shared/auth/decorators/current-admin.decorator';
 
 /**
  * Client Portal Controller
  * Routes: /hotel-portal/...
  * Used by admin users to view hotel marketing dashboards.
+ *
+ * Estas rotas sao chamadas pelo dashboard SEM `x-skip-tenant`, ou seja, sempre
+ * com `x-tenant-id` — e o que permite o TenantGuard resolver request.tenant_id
+ * aqui (as rotas sao chaveadas por `:clientId`, id de HotelClient, nao por
+ * tenant) e o ModuleAccessGuard gatear o modulo client-portal de verdade.
  */
 @Controller('hotel-portal')
-@UseGuards(AdminJwtGuard)
+@UseGuards(AdminJwtGuard, TenantGuard, ModuleAccessGuard)
+@RequiresModule('client-portal')
 export class ClientPortalController {
   constructor(
     private readonly dashboardService: DashboardService,

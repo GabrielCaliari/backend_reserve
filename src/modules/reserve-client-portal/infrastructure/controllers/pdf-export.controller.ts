@@ -1,6 +1,9 @@
 import { Controller, Get, Param, Query, Res, UseGuards, BadRequestException } from '@nestjs/common';
 import { Response } from 'express';
 import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
+import { TenantGuard } from '../../../../shared/auth/guards/tenant.guard';
+import { ModuleAccessGuard } from '../../../../shared/auth/guards/module-access.guard';
+import { RequiresModule } from '../../../../shared/auth/decorators/requires-module.decorator';
 import { OverviewService } from '../../application/services/overview.service';
 import { HotelClientService } from '../../application/services/hotel-client.service';
 import { PdfExportProvider } from '../providers/pdf-export.provider';
@@ -16,11 +19,13 @@ const SUPPORTED_SECTIONS: ExportSection[] = ['overview'];
  * query path, only a different rendering target for the same payload.
  *
  * Route matches the client-portal convention: `hotel-portal/:clientId/...`
- * guarded only by `AdminJwtGuard` (read access, same as every other
- * `ClientPortalController` route).
+ * e por isso roda a mesma cadeia de guards do `ClientPortalController`:
+ * AdminJwtGuard -> TenantGuard (resolve o x-tenant-id que o dashboard sempre
+ * envia nessas rotas) -> ModuleAccessGuard, que gateia o modulo client-portal.
  */
 @Controller('hotel-portal')
-@UseGuards(AdminJwtGuard)
+@UseGuards(AdminJwtGuard, TenantGuard, ModuleAccessGuard)
+@RequiresModule('client-portal')
 export class PdfExportController {
   constructor(
     private readonly pdfExportProvider: PdfExportProvider,

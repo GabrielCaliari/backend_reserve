@@ -16,6 +16,11 @@ import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
 import { PermissionsGuard } from '../../../../shared/auth/guards/permissions.guard';
 import { RequirePermissions } from '../../../../shared/auth/decorators/require-permissions.decorator';
 
+/**
+ * Rotas chaveadas por `:clientId`/`:id` de relatorio, chamadas pelo dashboard com
+ * `x-skip-tenant: true` (sem `x-tenant-id`). Sem tenant na request o TenantGuard
+ * nao roda: FORA do gate de client-portal.
+ */
 @Controller('admin/hotel-portal/reports')
 @UseGuards(AdminJwtGuard, PermissionsGuard)
 @RequirePermissions('hotel-portal.reports.manage')
