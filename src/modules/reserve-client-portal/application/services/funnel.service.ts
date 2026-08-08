@@ -36,7 +36,11 @@ export class FunnelService {
     // este service tambem e chamado fora do controller. O banco continua
     // aceitando motivo NULL porque o historico migrado de FRIO nao tem como
     // preencher esse campo retroativamente.
-    const motivoLimpo = motivo?.trim();
+    // `|| undefined` e nao so `.trim()`: motivo so de espacos fora do PERDIDO
+    // seria gravado como string vazia (o `?? null` la embaixo nao pega ''),
+    // criando uma segunda representacao de "sem motivo" na coluna. Mesma
+    // normalizacao do caminho do bot em BotEventProcessorService.moveStage.
+    const motivoLimpo = motivo?.trim() || undefined;
     if (paraEstagio === FUNNEL_LOST_STAGE && !motivoLimpo) {
       throw new BadRequestException('motivo e obrigatorio ao mover um lead para PERDIDO.');
     }

@@ -96,6 +96,26 @@ describe('FunnelService.moveStage', () => {
       );
     });
 
+    it('normaliza motivo so de espacos para null fora do PERDIDO', async () => {
+      // Sem o `|| undefined`, o `?? null` deixaria passar string vazia e a
+      // coluna passaria a ter duas representacoes de "sem motivo" ('' e NULL),
+      // quebrando qualquer filtro por `motivo: null`. O caminho do bot
+      // (BotEventProcessorService.moveStage) ja normalizava assim.
+      currentStageIs(EFunnelStage.QUALIFICADO);
+
+      await service.moveStage(
+        tenantId,
+        numeroContato,
+        EFunnelStage.ACOMODACAO_APRESENTADA,
+        adminId,
+        '   ',
+      );
+
+      expect(prisma.funnelEvent.create).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ motivo: null }) }),
+      );
+    });
+
     it('valida o motivo antes do no-op de mesmo estagio', async () => {
       // Um lead ja PERDIDO que recebe PERDIDO sem motivo deve reclamar do
       // motivo, nao do "ja esta nesse estagio" -- a mensagem precisa apontar
