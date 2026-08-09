@@ -3,7 +3,24 @@
     "allow": [
       "Bash(grep -r \"payload\\\\\\\\.tenant\\\\|tenantId.*payload\\\\|payload.*tenantId\" \"/c/Users/gabri/Git/backend_api_reserve-admin/src/modules/reserve-auth\" --include=\"*.ts\")",
       "Bash(grep -E \"\\\\.\\(ts|js\\)$\")",
-      "Bash(npx prisma *)"
+      "Bash(npx prisma *)",
+      "Bash(ls .env*)",
+      "Bash(node -e \"require\\('dotenv'\\).config\\(\\); console.log\\('DATABASE_URL:', !!process.env.DATABASE_URL\\); console.log\\('ENCRYPT_PRIVATE_KEY:', !!process.env.ENCRYPT_PRIVATE_KEY\\)\")",
+      "Bash(node -e ' *)",
+      "Bash(node -e \"const p=require\\('./package.json'\\); console.log\\(JSON.stringify\\(p.scripts,null,1\\)\\)\")",
+      "Bash(npx tsc *)",
+      "Bash(echo \"EXIT: $?\")",
+      "Bash(npm run *)",
+      "Bash(npm test *)",
+      "Bash(git status *)",
+      "Bash(git worktree *)",
+      "Bash(git branch *)",
+      "Bash(git check-ignore *)",
+      "Bash(npm install *)",
+      "Bash(mkdir -p \"C:\\\\Users\\\\gabri\\\\OneDrive\\\\Documents\\\\GitHub\\\\backend_reserve\\\\.worktrees\\\\fase2-rbac\\\\.superpowers\\\\sdd\")",
+      "Bash(cat)",
+      "Bash(git add *)",
+      "Bash(git commit *)"
     ]
   }
 }
