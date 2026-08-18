@@ -239,6 +239,95 @@ describe('ChannelInboundService.process — reserva existente (idempotencia e ca
   });
 });
 
+describe('ChannelInboundService — evento reserva.confirmada_ota ao bot (WF9)', () => {
+  const existing = {
+    id: 'r_ex',
+    tenant_id: tenantId,
+    room_type_id: 'rt_1',
+    unit_id: 'u_1',
+    checkin: utcDate('2026-09-05'),
+    checkout: utcDate('2026-09-07'),
+    status: 'CONFIRMADA',
+    external_id: '987',
+  };
+
+  it('reserva nova confirmada despacha reserva.confirmada_ota com o payload do WF9', async () => {
+    const { botEvents, service } = buildDeps();
+    await service.process(tenantId, 'segredo_1', basePayload as any);
+    expect(botEvents.dispatch).toHaveBeenCalledWith(tenantId, 'reserva.confirmada_ota', {
+      reservation_id: 'r_1',
+      external_id: '987',
+      origem: 'OTA_BOOKING',
+      checkin: '2026-09-05',
+      checkout: '2026-09-07',
+      hospede_nome: 'Ana Silva',
+    });
+  });
+
+  it('cancelamento NAO despacha reserva.confirmada_ota', async () => {
+    const { prisma, botEvents, service } = buildDeps();
+    prisma.motorReservation.findFirst.mockResolvedValue(existing);
+    const payload = {
+      booking: { ...basePayload.booking, status: 'cancelled', modifiedTime: '2026-08-18T12:00:00Z' },
+    };
+    await service.process(tenantId, 'segredo_1', payload as any);
+    expect(botEvents.dispatch).not.toHaveBeenCalledWith(
+      tenantId,
+      'reserva.confirmada_ota',
+      expect.anything(),
+    );
+  });
+
+  it('update ignorado pela idempotencia NAO despacha', async () => {
+    const { prisma, botEvents, service } = buildDeps();
+    prisma.motorReservation.findFirst.mockResolvedValue(existing);
+    prisma.motorReservationEvent.findFirst.mockResolvedValue({
+      payload: { modified_time: basePayload.booking.modifiedTime },
+    });
+    await service.process(tenantId, 'segredo_1', basePayload as any);
+    expect(botEvents.dispatch).not.toHaveBeenCalled();
+  });
+
+  it('overbooking (HOLD) NAO despacha confirmada_ota — so o alerta canal.overbooking', async () => {
+    const { availability, botEvents, service } = buildDeps();
+    availability.freeUnitIds.mockResolvedValue([]);
+    await service.process(tenantId, 'segredo_1', basePayload as any);
+    expect(botEvents.dispatch).not.toHaveBeenCalledWith(
+      tenantId,
+      'reserva.confirmada_ota',
+      expect.anything(),
+    );
+    expect(botEvents.dispatch).toHaveBeenCalledWith(
+      tenantId,
+      'canal.overbooking',
+      expect.any(Object),
+    );
+  });
+
+  it('update aplicado (datas remarcadas na OTA) despacha com as novas datas', async () => {
+    const { prisma, botEvents, service } = buildDeps();
+    prisma.motorReservation.findFirst.mockResolvedValue(existing);
+    const payload = {
+      booking: {
+        ...basePayload.booking,
+        arrival: '2026-09-10',
+        departure: '2026-09-12',
+        modifiedTime: '2026-08-18T12:00:00Z',
+      },
+    };
+    await service.process(tenantId, 'segredo_1', payload as any);
+    expect(botEvents.dispatch).toHaveBeenCalledWith(
+      tenantId,
+      'reserva.confirmada_ota',
+      expect.objectContaining({
+        reservation_id: 'r_ex',
+        checkin: '2026-09-10',
+        checkout: '2026-09-12',
+      }),
+    );
+  });
+});
+
 describe('Beds24WebhookController — wiring', () => {
   it('e @Public e fica fora do gate de modulo (segredo por tenant e a autenticacao)', () => {
     expect(Reflect.getMetadata(IS_PUBLIC_KEY, Beds24WebhookController)).toBe(true);

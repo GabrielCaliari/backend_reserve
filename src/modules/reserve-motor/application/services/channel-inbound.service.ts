@@ -221,6 +221,7 @@ export class ChannelInboundService {
           payload: { modified_time: booking.modified_time, detalhe: 'update da OTA sem mudanca de datas' },
         },
       });
+      await this.notifyConfirmadaOta(tenantId, existing.id, booking);
       return { received: true, reservation_id: existing.id, status: existing.status };
     }
 
@@ -289,6 +290,7 @@ export class ChannelInboundService {
       existing.checkout,
     );
     void this.channelPush.enqueue(tenantId, existing.room_type_id, novoCheckin, novoCheckout);
+    await this.notifyConfirmadaOta(tenantId, existing.id, booking);
     return { received: true, reservation_id: existing.id, status: existing.status };
   }
 
@@ -360,6 +362,13 @@ export class ChannelInboundService {
     if (outcome.reservation) {
       void this.channelPush.enqueue(tenantId, roomTypeId, checkin, checkout);
     }
+    if (outcome.reservation && !outcome.overbooked) {
+      // WF9 do N8N (spec §6): reserva da OTA confirmada avisa o bot.
+      // Overbooking NAO dispara (a reserva entrou como HOLD e ja gerou o
+      // alerta prioritario canal.overbooking); cancelamento e update
+      // ignorado tambem nao.
+      await this.notifyConfirmadaOta(tenantId, outcome.reservation.id, booking);
+    }
     return {
       received: true,
       reservation_id: outcome.reservation?.id ?? null,
@@ -419,6 +428,26 @@ export class ChannelInboundService {
   }
 
   // ── apoio ────────────────────────────────────────────────────────────────
+
+  /**
+   * Evento reserva.confirmada_ota ao bot (WF9, spec §6): reserva OTA nova
+   * confirmada ou update aplicado (nunca cancelamento nem update ignorado).
+   * O provider e fire-and-forget internamente — nao quebra o inbound.
+   */
+  private async notifyConfirmadaOta(
+    tenantId: string,
+    reservationId: string,
+    booking: InboundBooking,
+  ): Promise<void> {
+    await this.botEvents.dispatch(tenantId, 'reserva.confirmada_ota', {
+      reservation_id: reservationId,
+      external_id: booking.external_id,
+      origem: booking.origem,
+      checkin: booking.arrival,
+      checkout: booking.departure,
+      hospede_nome: booking.hospede_nome,
+    });
+  }
 
   private async markDivergente(
     tenantId: string,
