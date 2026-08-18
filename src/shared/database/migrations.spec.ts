@@ -179,3 +179,29 @@ describe('20260818000001_add_motor_tables', () => {
     expect(sql).toContain('ALTER TABLE "bot_integration_configs" ADD COLUMN "n8n_motor_webhook_url"');
   });
 });
+
+describe('20260818000002_add_channel_sync_tables', () => {
+  const sql = readMigration('20260818000002_add_channel_sync_tables');
+
+  it('creates the two channel sync tables (beds24, fase 2)', () => {
+    expect(sql).toContain('CREATE TABLE "motor_channel_sync_states"');
+    expect(sql).toContain('CREATE TABLE "motor_channel_push_queue"');
+  });
+
+  it('keeps one sync state per tenant (unique de tenant_id)', () => {
+    expect(sql).toContain(
+      'CREATE UNIQUE INDEX "motor_channel_sync_states_tenant_id_key" ON "motor_channel_sync_states"("tenant_id")',
+    );
+  });
+
+  it('indexes the queue drain path by [status, not_before]', () => {
+    expect(sql).toContain(
+      'CREATE INDEX "motor_channel_push_queue_status_not_before_idx" ON "motor_channel_push_queue"("status", "not_before")',
+    );
+  });
+
+  it('cascades on tenant delete', () => {
+    expect(sql).toMatch(/motor_channel_sync_states_tenant_id_fkey[\s\S]*?ON DELETE CASCADE/);
+    expect(sql).toMatch(/motor_channel_push_queue_tenant_id_fkey[\s\S]*?ON DELETE CASCADE/);
+  });
+});

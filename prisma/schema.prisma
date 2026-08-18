@@ -256,6 +256,8 @@ model Tenant {
   motor_holds                 MotorHold[]
   motor_blocks                MotorBlock[]
   motor_payment_exceptions    MotorPaymentException[]
+  motor_channel_sync_state    MotorChannelSyncState?
+  motor_channel_push_queue    MotorChannelPushQueue[]
 
   @@index([stripe_customer_id])
   @@index([subscription_status])
@@ -2821,4 +2823,55 @@ model MotorPaymentException {
 
   @@index([tenant_id, status])
   @@map("motor_payment_exceptions")
+}
+
+// Estado da sincronizacao com o Beds24 (Fase 2, spec §3). Uma linha por
+// tenant conectado. refresh_token_encrypted e AES-256-GCM via
+// AesEncryptionProvider — NUNCA logado, NUNCA devolvido em resposta de API.
+// beds24_room_id_map: { room_type_id: beds24RoomId } preenchido manualmente
+// pelo admin na tela de canais (mapeamento Booking.com nao e via API).
+model MotorChannelSyncState {
+  id                      String    @id @default(cuid()) @db.VarChar(25)
+  tenant_id               String    @unique @db.VarChar(25)
+  beds24_property_id      String?   @db.VarChar(40)
+  beds24_room_id_map      Json?
+  refresh_token_encrypted String?
+  webhook_secret          String?   @db.VarChar(120)
+  last_push_at            DateTime?
+  last_webhook_at         DateTime?
+  last_reconcile_at       DateTime?
+  // OK | DIVERGENTE | ERRO | DESCONECTADO — DIVERGENTE fica ate resolucao
+  // humana (webhook perdido nao pode virar overbooking silencioso).
+  status                  String    @default("OK") @db.VarChar(20)
+  // Modo reforcado do cutover: reconciliacao tambem as 15h30 (Fase 2 Task 5).
+  reconcile_2x            Boolean   @default(false)
+  created_at              DateTime  @default(now())
+  updated_at              DateTime  @updatedAt
+
+  tenant Tenant @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+
+  @@map("motor_channel_sync_states")
+}
+
+// Fila de push ao Beds24 com debounce de 30s (spec §3/§11): item PENDENTE do
+// mesmo tenant/room_type e coalescido (o range so expande) — varias mudancas
+// viram UM push em lote. not_before implementa o backoff em 429.
+model MotorChannelPushQueue {
+  id           String    @id @default(cuid()) @db.VarChar(25)
+  tenant_id    String    @db.VarChar(25)
+  room_type_id String    @db.VarChar(25)
+  range_inicio DateTime  @db.Date
+  range_fim    DateTime  @db.Date
+  // PENDENTE | ENVIADO | ERRO (apos 5 tentativas com backoff).
+  status       String    @default("PENDENTE") @db.VarChar(20)
+  attempts     Int       @default(0)
+  not_before   DateTime?
+  created_at   DateTime  @default(now())
+  updated_at   DateTime  @updatedAt
+
+  tenant Tenant @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+
+  @@index([status, not_before])
+  @@index([tenant_id, room_type_id, status])
+  @@map("motor_channel_push_queue")
 }
