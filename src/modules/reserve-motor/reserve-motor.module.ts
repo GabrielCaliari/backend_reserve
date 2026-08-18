@@ -6,8 +6,11 @@ import { ModuleAccessGuard } from '../../shared/auth/guards/module-access.guard'
 import { PermissionsGuard } from '../../shared/auth/guards/permissions.guard';
 import { RoomTypeService } from './application/services/room-type.service';
 import { UnitService } from './application/services/unit.service';
+import { DailyInventoryService } from './application/services/daily-inventory.service';
 import { MotorRoomTypeController } from './infrastructure/controllers/motor-room-type.controller';
 import { MotorUnitController } from './infrastructure/controllers/motor-unit.controller';
+import { MotorDailyInventoryController } from './infrastructure/controllers/motor-daily-inventory.controller';
+import { InventoryMaterializeCronProvider } from './infrastructure/providers/inventory-materialize-cron.provider';
 
 /**
  * Motor de Reservas (docs/MOTOR_RESERVAS_RESERVE_MASTER.md).
@@ -17,7 +20,7 @@ import { MotorUnitController } from './infrastructure/controllers/motor-unit.con
  */
 @Module({
   imports: [ReserveAuthModule],
-  controllers: [MotorRoomTypeController, MotorUnitController],
+  controllers: [MotorRoomTypeController, MotorUnitController, MotorDailyInventoryController],
   providers: [
     AdminJwtGuard,
     TenantGuard,
@@ -25,6 +28,8 @@ import { MotorUnitController } from './infrastructure/controllers/motor-unit.con
     PermissionsGuard,
     RoomTypeService,
     UnitService,
+    DailyInventoryService,
+    InventoryMaterializeCronProvider,
   ],
 })
 export class ReserveMotorModule {}
