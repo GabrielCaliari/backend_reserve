@@ -7,7 +7,7 @@ import {
   MotorTipoEsgotadoError,
 } from '../../domain/errors/motor.errors';
 import { MotorBotEventsProvider } from '../../infrastructure/providers/motor-bot-events.provider';
-import { CreateHoldDto } from '../dtos/hold.dto';
+import { ConfirmHoldDto, CreateHoldDto } from '../dtos/hold.dto';
 import { AvailabilityService } from './availability.service';
 
 /** Violacao de constraint de exclusao do Postgres (23P01). */
@@ -108,6 +108,111 @@ export class HoldService {
     if (!hold) throw new MotorNotFoundError('hold nao encontrado');
     if (hold.status === 'CONVERTIDO') throw new MotorHoldNotActiveError('hold ja convertido em reserva');
     return this.prisma.motorHold.update({ where: { id: holdId }, data: { status: 'CANCELADO' } });
+  }
+
+  /**
+   * Chamado pelo fluxo N8N quando o Asaas confirma o pagamento (spec §2).
+   * Idempotente por asaas_payment_id. Hold EXPIRADO = pagamento tardio:
+   * tenta recriar nas mesmas datas/tipo; sem vaga vira pending exception
+   * com alerta PRIORITARIO (dinheiro recebido sem reserva).
+   */
+  async confirm(tenantId: string, holdId: string, dto: ConfirmHoldDto) {
+    if (dto.asaas_payment_id) {
+      const existing = await this.prisma.motorReservation.findFirst({
+        where: { tenant_id: tenantId, asaas_payment_id: dto.asaas_payment_id },
+      });
+      if (existing) return { reservation_id: existing.id, status: existing.status };
+    }
+    const hold = await this.prisma.motorHold.findFirst({
+      where: { id: holdId, tenant_id: tenantId },
+    });
+    if (!hold) throw new MotorNotFoundError('hold nao encontrado');
+    if (hold.status === 'CONVERTIDO') {
+      const reservation = await this.prisma.motorReservation.findFirst({
+        where: { tenant_id: tenantId, room_type_id: hold.room_type_id, unit_id: hold.unit_id, checkin: hold.checkin },
+      });
+      return { reservation_id: reservation?.id ?? null, status: 'CONFIRMADA' };
+    }
+    if (hold.status === 'CANCELADO') throw new MotorHoldNotActiveError('hold cancelado');
+
+    const isLate = hold.status === 'EXPIRADO' || hold.expires_at < new Date();
+    const valorPago = dto.valor_pago ?? Number(hold.valor_antecipado);
+    const formaPagamento = hold.forma_pagamento === 'CARTAO' ? 'CARTAO_100' : 'PIX_50';
+
+    try {
+      const reservation = await this.prisma.$transaction(async (tx: any) => {
+        await tx.$queryRaw`
+          SELECT id FROM "motor_units"
+          WHERE tenant_id = ${tenantId} AND room_type_id = ${hold.room_type_id} AND ativo = true
+          FOR UPDATE
+        `;
+        // Hold ATIVO ainda segura a propria unit; no tardio qualquer unit
+        // livre do tipo serve (hospede nem percebe a troca).
+        const freeIds = isLate
+          ? await this.availability.freeUnitIds(tx, tenantId, hold.room_type_id, hold.checkin, hold.checkout)
+          : [hold.unit_id];
+        for (const unitId of freeIds) {
+          try {
+            const created = await tx.motorReservation.create({
+              data: {
+                tenant_id: tenantId,
+                room_type_id: hold.room_type_id,
+                unit_id: unitId,
+                checkin: hold.checkin,
+                checkout: hold.checkout,
+                status: 'CONFIRMADA',
+                origem: 'BOT_WHATSAPP',
+                hospede_nome: dto.hospede_nome ?? hold.contato_whatsapp,
+                hospede_telefone: hold.contato_whatsapp,
+                hospede_email: dto.hospede_email ?? null,
+                hospede_doc: dto.hospede_doc ?? null,
+                adultos: hold.adultos,
+                criancas: hold.criancas,
+                pets: hold.pets,
+                valor_total: hold.valor_total,
+                valor_pago: valorPago,
+                saldo_checkin: Math.round((Number(hold.valor_total) - valorPago) * 100) / 100,
+                forma_pagamento: formaPagamento,
+                asaas_payment_id: dto.asaas_payment_id ?? hold.asaas_payment_id,
+                atribuicao: (dto.atribuicao as any) ?? null,
+              },
+            });
+            await tx.motorReservationEvent.createMany({
+              data: [
+                { reservation_id: created.id, tipo: 'CRIADA', autor: 'motor', payload: { hold_id: hold.id } },
+                { reservation_id: created.id, tipo: 'CONFIRMADA', autor: 'motor', payload: { asaas_payment_id: dto.asaas_payment_id ?? null, valor_pago: valorPago } },
+              ],
+            });
+            await tx.motorHold.update({ where: { id: hold.id }, data: { status: 'CONVERTIDO' } });
+            return created;
+          } catch (error) {
+            if (isExclusionViolation(error)) continue;
+            throw error;
+          }
+        }
+        throw new MotorTipoEsgotadoError();
+      });
+      return { reservation_id: reservation.id, status: 'CONFIRMADA' };
+    } catch (error) {
+      if (error instanceof MotorTipoEsgotadoError) {
+        // Dinheiro recebido sem reserva: excecao PENDENTE + alerta ao bot
+        // para fluxo de excecao com transferencia imediata (spec §2).
+        await this.prisma.motorPaymentException.create({
+          data: {
+            tenant_id: tenantId,
+            hold_id: hold.id,
+            asaas_payment_id: dto.asaas_payment_id ?? hold.asaas_payment_id,
+            valor_pago: valorPago,
+          },
+        });
+        await this.botEvents.dispatch(tenantId, 'pagamento.tardio.exception', {
+          hold_id: hold.id,
+          contato_whatsapp: hold.contato_whatsapp,
+          valor_pago: valorPago,
+        });
+      }
+      throw error;
+    }
   }
 
   /** Job por minuto: holds ATIVO vencidos -> EXPIRADO + evento ao bot. */

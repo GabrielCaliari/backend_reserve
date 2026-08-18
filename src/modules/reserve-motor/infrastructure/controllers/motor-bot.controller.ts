@@ -3,7 +3,7 @@ import { SkipThrottle } from '@nestjs/throttler';
 import { BotEventKeyGuard } from '../../../reserve-client-portal/infrastructure/guards/bot-event-key.guard';
 import { AvailabilityQueryDto } from '../../application/dtos/availability.dto';
 import { AvailabilityService } from '../../application/services/availability.service';
-import { CreateHoldDto } from '../../application/dtos/hold.dto';
+import { ConfirmHoldDto, CreateHoldDto } from '../../application/dtos/hold.dto';
 import { HoldService } from '../../application/services/hold.service';
 
 /**
@@ -37,5 +37,11 @@ export class MotorBotController {
   async releaseHold(@Req() req: any, @Param('id') id: string) {
     const hold = await this.holdService.release(req.tenant_id, id);
     return { hold_id: hold.id, status: hold.status };
+  }
+
+  @Post('holds/:id/confirm')
+  @HttpCode(200)
+  async confirmHold(@Req() req: any, @Param('id') id: string, @Body() dto: ConfirmHoldDto) {
+    return this.holdService.confirm(req.tenant_id, id, dto);
   }
 }
