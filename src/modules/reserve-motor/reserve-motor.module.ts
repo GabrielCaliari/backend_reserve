@@ -6,6 +6,7 @@ import { ModuleAccessGuard } from '../../shared/auth/guards/module-access.guard'
 import { PermissionsGuard } from '../../shared/auth/guards/permissions.guard';
 import { BotEventKeyGuard } from '../reserve-client-portal/infrastructure/guards/bot-event-key.guard';
 import { BotKeyProvider } from '../reserve-client-portal/infrastructure/providers/bot-key.provider';
+import { AesEncryptionProvider } from '../reserve-client-portal/infrastructure/providers/aes-encryption.provider';
 import { RoomTypeService } from './application/services/room-type.service';
 import { UnitService } from './application/services/unit.service';
 import { DailyInventoryService } from './application/services/daily-inventory.service';
@@ -26,6 +27,7 @@ import { MotorCalendarController } from './infrastructure/controllers/motor-cale
 import { InventoryMaterializeCronProvider } from './infrastructure/providers/inventory-materialize-cron.provider';
 import { HoldExpiryCronProvider } from './infrastructure/providers/hold-expiry-cron.provider';
 import { MotorBotEventsProvider } from './infrastructure/providers/motor-bot-events.provider';
+import { Beds24ApiProvider } from './infrastructure/providers/beds24-api.provider';
 
 /**
  * Motor de Reservas (docs/MOTOR_RESERVAS_RESERVE_MASTER.md).
@@ -64,6 +66,8 @@ import { MotorBotEventsProvider } from './infrastructure/providers/motor-bot-eve
     CalendarService,
     HoldExpiryCronProvider,
     MotorBotEventsProvider,
+    AesEncryptionProvider,
+    Beds24ApiProvider,
   ],
 })
 export class ReserveMotorModule {}

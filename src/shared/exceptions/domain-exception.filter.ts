@@ -17,6 +17,7 @@ import {
   MotorTipoEsgotadoError,
   MotorValidationError,
 } from '../../modules/reserve-motor/domain/errors/motor.errors';
+import { MotorChannelNotConnectedError } from '../../modules/reserve-motor/domain/errors/channel.errors';
 
 /**
  * Maps domain errors and repository exceptions to proper HTTP responses.
@@ -53,6 +54,8 @@ export class DomainExceptionFilter implements ExceptionFilter {
     } else if (exception instanceof MotorTipoEsgotadoError) {
       status = HttpStatus.CONFLICT;
     } else if (exception instanceof MotorHoldNotActiveError) {
+      status = HttpStatus.CONFLICT;
+    } else if (exception instanceof MotorChannelNotConnectedError) {
       status = HttpStatus.CONFLICT;
     } else if (exception instanceof MotorDomainError) {
       status = HttpStatus.BAD_REQUEST;
