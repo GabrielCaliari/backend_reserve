@@ -141,6 +141,75 @@ export class AvailabilityService {
     return units.filter((u: any) => !busy.has(u.id)).map((u: any) => u.id);
   }
 
+  /**
+   * Units livres POR NOITE do periodo — MESMA regra do busyUnitIds
+   * (reservation ativa, hold ATIVO nao vencido, block), computada em bloco
+   * para o numAvail do push de canais (Fase 2): 4 queries no total, nunca
+   * uma chamada por dia de calendario (pool max 3 + rate limit Beds24).
+   * Chave do mapa: isoDate da noite.
+   */
+  async freeCountByNight(
+    tenantId: string,
+    roomTypeId: string,
+    checkin: Date,
+    checkout: Date,
+  ): Promise<Map<string, number>> {
+    const units = await this.prisma.motorUnit.findMany({
+      where: { tenant_id: tenantId, room_type_id: roomTypeId, ativo: true },
+      select: { id: true },
+    });
+    const unitIds = new Set(units.map((u: any) => u.id));
+    const now = new Date();
+    const reservations = await this.prisma.motorReservation.findMany({
+      where: {
+        tenant_id: tenantId,
+        room_type_id: roomTypeId,
+        status: { in: ['HOLD', 'CONFIRMADA', 'CHECKIN_FEITO'] },
+        checkin: { lt: checkout },
+        checkout: { gt: checkin },
+      },
+      select: { unit_id: true, checkin: true, checkout: true },
+    });
+    const holds = await this.prisma.motorHold.findMany({
+      where: {
+        tenant_id: tenantId,
+        room_type_id: roomTypeId,
+        status: 'ATIVO',
+        expires_at: { gt: now },
+        checkin: { lt: checkout },
+        checkout: { gt: checkin },
+      },
+      select: { unit_id: true, checkin: true, checkout: true },
+    });
+    const blocks = await this.prisma.motorBlock.findMany({
+      where: {
+        tenant_id: tenantId,
+        unit_id: { in: [...unitIds] },
+        data_inicio: { lt: checkout },
+        OR: [{ data_fim: null }, { data_fim: { gt: checkin } }],
+      },
+      select: { unit_id: true, data_inicio: true, data_fim: true },
+    });
+
+    const intervals = [
+      ...reservations.map((r: any) => ({ unit_id: r.unit_id, from: r.checkin, to: r.checkout })),
+      ...holds.map((h: any) => ({ unit_id: h.unit_id, from: h.checkin, to: h.checkout })),
+      // data_fim null = bloqueio permanente: ocupa ate o fim do periodo.
+      ...blocks.map((b: any) => ({ unit_id: b.unit_id, from: b.data_inicio, to: b.data_fim ?? checkout })),
+    ].filter((i) => unitIds.has(i.unit_id));
+
+    const result = new Map<string, number>();
+    for (let night = checkin; night < checkout; night = new Date(night.getTime() + 24 * 60 * 60 * 1000)) {
+      const nightEnd = new Date(night.getTime() + 24 * 60 * 60 * 1000);
+      const busy = new Set<string>();
+      for (const i of intervals) {
+        if (i.from < nightEnd && i.to > night) busy.add(i.unit_id);
+      }
+      result.set(isoDate(night), unitIds.size - busy.size);
+    }
+    return result;
+  }
+
   /** Units ocupadas por reservation ativa, hold ATIVO nao vencido ou block. */
   private async busyUnitIds(
     db: Db,

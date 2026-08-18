@@ -9,6 +9,7 @@ import {
 import { MotorBotEventsProvider } from '../../infrastructure/providers/motor-bot-events.provider';
 import { ConfirmHoldDto, CreateHoldDto } from '../dtos/hold.dto';
 import { AvailabilityService } from './availability.service';
+import { ChannelPushService } from './channel-push.service';
 
 /** Violacao de constraint de exclusao do Postgres (23P01). */
 export function isExclusionViolation(error: unknown): boolean {
@@ -24,6 +25,8 @@ export class HoldService {
     private readonly prisma: PrismaService,
     private readonly availability: AvailabilityService,
     private readonly botEvents: MotorBotEventsProvider,
+    // Opcional para nao quebrar instancias antigas; enqueue nunca lanca.
+    private readonly channelPush?: ChannelPushService,
   ) {}
 
   /**
@@ -91,6 +94,9 @@ export class HoldService {
       throw new MotorTipoEsgotadoError();
     });
 
+    // Hold ativo decrementa o numAvail nas OTAs (gatilho de push, spec §3.3).
+    void this.channelPush?.enqueue(tenantId, dto.room_type_id, checkin, checkout);
+
     return {
       hold_id: hold.id,
       unit_id: hold.unit_id,
@@ -107,7 +113,12 @@ export class HoldService {
     });
     if (!hold) throw new MotorNotFoundError('hold nao encontrado');
     if (hold.status === 'CONVERTIDO') throw new MotorHoldNotActiveError('hold ja convertido em reserva');
-    return this.prisma.motorHold.update({ where: { id: holdId }, data: { status: 'CANCELADO' } });
+    const released = await this.prisma.motorHold.update({
+      where: { id: holdId },
+      data: { status: 'CANCELADO' },
+    });
+    void this.channelPush?.enqueue(tenantId, hold.room_type_id, hold.checkin, hold.checkout);
+    return released;
   }
 
   /**
@@ -192,6 +203,7 @@ export class HoldService {
         }
         throw new MotorTipoEsgotadoError();
       });
+      void this.channelPush?.enqueue(tenantId, hold.room_type_id, hold.checkin, hold.checkout);
       return { reservation_id: reservation.id, status: 'CONFIRMADA' };
     } catch (error) {
       if (error instanceof MotorTipoEsgotadoError) {
@@ -219,7 +231,14 @@ export class HoldService {
   async expireDue(): Promise<number> {
     const due = await this.prisma.motorHold.findMany({
       where: { status: 'ATIVO', expires_at: { lt: new Date() } },
-      select: { id: true, tenant_id: true, contato_whatsapp: true, checkin: true, checkout: true },
+      select: {
+        id: true,
+        tenant_id: true,
+        room_type_id: true,
+        contato_whatsapp: true,
+        checkin: true,
+        checkout: true,
+      },
     });
     if (due.length === 0) return 0;
     const result = await this.prisma.motorHold.updateMany({
@@ -227,6 +246,10 @@ export class HoldService {
       data: { status: 'EXPIRADO' },
     });
     for (const hold of due) {
+      // Hold expirado devolve o numAvail nas OTAs (gatilho de push, spec §3.3).
+      if (hold.checkin && hold.checkout) {
+        void this.channelPush?.enqueue(hold.tenant_id, hold.room_type_id, hold.checkin, hold.checkout);
+      }
       await this.botEvents.dispatch(hold.tenant_id, 'hold.expirado', {
         hold_id: hold.id,
         contato_whatsapp: hold.contato_whatsapp,

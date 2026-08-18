@@ -1,12 +1,23 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../../../shared/database/prisma.service';
-import { utcDate } from '../../domain/constants/motor.constants';
+import {
+  MATERIALIZE_HORIZON_DAYS,
+  addDaysUtc,
+  utcDate,
+} from '../../domain/constants/motor.constants';
 import { MotorNotFoundError, MotorValidationError } from '../../domain/errors/motor.errors';
 import { CreateBlockDto } from '../dtos/block.dto';
+import { ChannelPushService } from './channel-push.service';
 
 @Injectable()
 export class BlockService {
-  constructor(private readonly prisma: PrismaService) {}
+  private readonly logger = new Logger(BlockService.name);
+
+  constructor(
+    private readonly prisma: PrismaService,
+    // Opcional para nao quebrar instancias antigas; enqueue nunca lanca.
+    private readonly channelPush?: ChannelPushService,
+  ) {}
 
   async list(tenantId: string, filters: { unit_id?: string; from?: string; to?: string }) {
     return this.prisma.motorBlock.findMany({
@@ -51,7 +62,7 @@ export class BlockService {
         'ha reserva ativa no periodo — resolva a reserva antes de bloquear',
       );
     }
-    return this.prisma.motorBlock.create({
+    const block = await this.prisma.motorBlock.create({
       data: {
         tenant_id: tenantId,
         unit_id: dto.unit_id,
@@ -62,11 +73,45 @@ export class BlockService {
         criado_por: autor,
       },
     });
+    // Block decrementa o numAvail nas OTAs (gatilho de push, spec §3.3).
+    void this.enqueuePush(tenantId, unit.room_type_id, inicio, fim);
+    return block;
   }
 
   async remove(tenantId: string, id: string) {
     const block = await this.prisma.motorBlock.findFirst({ where: { id, tenant_id: tenantId } });
     if (!block) throw new MotorNotFoundError('block nao encontrado');
-    return this.prisma.motorBlock.delete({ where: { id } });
+    const removed = await this.prisma.motorBlock.delete({ where: { id } });
+    void this.enqueuePushForUnit(tenantId, block.unit_id, block.data_inicio, block.data_fim);
+    return removed;
+  }
+
+  /** data_fim null (permanente): empurra ate o horizonte materializado. */
+  private async enqueuePush(
+    tenantId: string,
+    roomTypeId: string,
+    inicio: Date,
+    fim: Date | null,
+  ): Promise<void> {
+    if (!this.channelPush) return;
+    const rangeFim = fim ?? addDaysUtc(inicio, MATERIALIZE_HORIZON_DAYS);
+    await this.channelPush.enqueue(tenantId, roomTypeId, inicio, rangeFim);
+  }
+
+  /** No remove so temos unit_id — resolve o room_type fora do fluxo principal. */
+  private async enqueuePushForUnit(
+    tenantId: string,
+    unitId: string,
+    inicio: Date,
+    fim: Date | null,
+  ): Promise<void> {
+    if (!this.channelPush) return;
+    try {
+      const unit = await this.prisma.motorUnit.findFirst({ where: { id: unitId } });
+      if (!unit) return;
+      await this.enqueuePush(tenantId, unit.room_type_id, inicio, fim);
+    } catch (error) {
+      this.logger.error(`Falha ao enfileirar push do block removido (tenant ${tenantId})`, error as any);
+    }
   }
 }

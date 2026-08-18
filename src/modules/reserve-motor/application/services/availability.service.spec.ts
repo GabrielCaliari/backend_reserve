@@ -134,3 +134,63 @@ describe('AvailabilityService.search', () => {
     expect(quote.valor_total).toBeCloseTo(678 * 0.9, 2);
   });
 });
+
+describe('AvailabilityService.freeCountByNight (numAvail do push de canais)', () => {
+  function buildNightPrisma(overrides: Partial<Record<string, any>> = {}) {
+    return {
+      motorUnit: {
+        findMany: jest.fn().mockResolvedValue([{ id: 'u_1' }, { id: 'u_2' }]),
+      },
+      motorReservation: { findMany: jest.fn().mockResolvedValue([]) },
+      motorHold: { findMany: jest.fn().mockResolvedValue([]) },
+      motorBlock: { findMany: jest.fn().mockResolvedValue([]) },
+      ...overrides,
+    };
+  }
+
+  it('conta livres por noite com a mesma regra do busyUnitIds (reserva, hold ativo, block)', async () => {
+    const prisma = buildNightPrisma({
+      motorReservation: {
+        findMany: jest.fn().mockResolvedValue([
+          // u_1 ocupada so na noite de 05
+          { unit_id: 'u_1', checkin: utcDate('2026-09-05'), checkout: utcDate('2026-09-06') },
+        ]),
+      },
+      motorHold: {
+        findMany: jest.fn().mockResolvedValue([
+          // hold ATIVO ocupa u_2 na noite de 06 (numAvail considera holds, spec §3)
+          { unit_id: 'u_2', checkin: utcDate('2026-09-06'), checkout: utcDate('2026-09-07') },
+        ]),
+      },
+    });
+    const service = new AvailabilityService(prisma as any);
+    const result = await service.freeCountByNight(
+      tenantId,
+      'rt_1',
+      utcDate('2026-09-05'),
+      utcDate('2026-09-08'),
+    );
+    expect(result.get('2026-09-05')).toBe(1); // u_1 reservada
+    expect(result.get('2026-09-06')).toBe(1); // u_2 em hold
+    expect(result.get('2026-09-07')).toBe(2); // todas livres
+  });
+
+  it('block permanente (data_fim null) ocupa a unit em todas as noites', async () => {
+    const prisma = buildNightPrisma({
+      motorBlock: {
+        findMany: jest.fn().mockResolvedValue([
+          { unit_id: 'u_2', data_inicio: utcDate('2026-09-01'), data_fim: null },
+        ]),
+      },
+    });
+    const service = new AvailabilityService(prisma as any);
+    const result = await service.freeCountByNight(
+      tenantId,
+      'rt_1',
+      utcDate('2026-09-05'),
+      utcDate('2026-09-07'),
+    );
+    expect(result.get('2026-09-05')).toBe(1);
+    expect(result.get('2026-09-06')).toBe(1);
+  });
+});

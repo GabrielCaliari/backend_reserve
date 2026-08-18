@@ -13,6 +13,7 @@ import {
   RescheduleDto,
 } from '../dtos/reservation.dto';
 import { AvailabilityService } from './availability.service';
+import { ChannelPushService } from './channel-push.service';
 import { isExclusionViolation } from './hold.service';
 
 @Injectable()
@@ -20,6 +21,8 @@ export class ReservationService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly availability: AvailabilityService,
+    // Opcional para nao quebrar instancias antigas; enqueue nunca lanca.
+    private readonly channelPush?: ChannelPushService,
   ) {}
 
   async list(tenantId: string, query: ListReservationsQueryDto) {
@@ -70,7 +73,7 @@ export class ReservationService {
     }
     const valorPago = dto.valor_pago ?? 0;
 
-    return this.prisma.$transaction(async (tx: any) => {
+    const created = await this.prisma.$transaction(async (tx: any) => {
       await tx.$queryRaw`
         SELECT id FROM "motor_units"
         WHERE tenant_id = ${tenantId} AND room_type_id = ${dto.room_type_id} AND ativo = true
@@ -125,6 +128,9 @@ export class ReservationService {
       }
       throw new MotorTipoEsgotadoError();
     });
+    // Reserva manual decrementa o numAvail nas OTAs (gatilho de push, spec §3.3).
+    void this.channelPush?.enqueue(tenantId, dto.room_type_id, checkin, checkout);
+    return created;
   }
 
   /**
@@ -151,7 +157,7 @@ export class ReservationService {
       cliente_marina: false,
     });
 
-    return this.prisma.$transaction(async (tx: any) => {
+    const rescheduled = await this.prisma.$transaction(async (tx: any) => {
       await tx.$queryRaw`
         SELECT id FROM "motor_units"
         WHERE tenant_id = ${tenantId} AND room_type_id = ${reservation.room_type_id} AND ativo = true
@@ -206,6 +212,15 @@ export class ReservationService {
       }
       throw new MotorTipoEsgotadoError('sem unidade livre nas novas datas');
     });
+    // Remarcacao muda dois ranges: o antigo libera, o novo ocupa (spec §3.3).
+    void this.channelPush?.enqueue(
+      tenantId,
+      reservation.room_type_id,
+      reservation.checkin,
+      reservation.checkout,
+    );
+    void this.channelPush?.enqueue(tenantId, reservation.room_type_id, novoCheckin, novoCheckout);
+    return rescheduled;
   }
 
   /**
@@ -243,6 +258,13 @@ export class ReservationService {
         },
       },
     });
+    // Cancelamento libera as datas nas OTAs (gatilho de push, spec §3.3).
+    void this.channelPush?.enqueue(
+      tenantId,
+      reservation.room_type_id,
+      reservation.checkin,
+      reservation.checkout,
+    );
     return { ...updated, credito_remarcacao: creditoRemarcacao };
   }
 

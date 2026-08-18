@@ -8,6 +8,7 @@ import {
 } from '../../domain/constants/motor.constants';
 import { MotorNotFoundError, MotorValidationError } from '../../domain/errors/motor.errors';
 import { UpsertDailyInventoryDto } from '../dtos/daily-inventory.dto';
+import { ChannelPushService } from './channel-push.service';
 
 interface SeasonLite {
   id: string;
@@ -29,7 +30,11 @@ interface PriceRuleLite {
 export class DailyInventoryService {
   private readonly logger = new Logger(DailyInventoryService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    // Opcional para nao quebrar instancias antigas; enqueue nunca lanca.
+    private readonly channelPush?: ChannelPushService,
+  ) {}
 
   /**
    * Materializa o calendario diario a partir das price_rules (spec §1:
@@ -76,6 +81,10 @@ export class DailyInventoryService {
       this.prisma.motorDailyInventory.createMany({ data: rows, skipDuplicates: true }),
     ]);
     this.logger.log(`Materializado calendario do tenant ${tenantId}: ${rows.length} linhas`);
+    // Precos/regras novos precisam refletir nas OTAs (gatilho de push, §3.3).
+    for (const roomTypeId of byType.keys()) {
+      void this.channelPush?.enqueue(tenantId, roomTypeId, start, end);
+    }
     return rows.length;
   }
 
@@ -118,20 +127,28 @@ export class DailyInventoryService {
       ...(dto.stop_sell != null ? { stop_sell: dto.stop_sell } : {}),
       override: true,
     };
+    let result;
     if (existing) {
-      return this.prisma.motorDailyInventory.update({ where: { id: existing.id }, data: fields });
+      result = await this.prisma.motorDailyInventory.update({
+        where: { id: existing.id },
+        data: fields,
+      });
+    } else {
+      // Aqui dto.preco e garantido pelo guard acima (cria override exige preco).
+      result = await this.prisma.motorDailyInventory.create({
+        data: {
+          tenant_id: tenantId,
+          room_type_id: dto.room_type_id,
+          data,
+          min_stay: 1,
+          ...fields,
+          preco: dto.preco as number,
+        },
+      });
     }
-    // Aqui dto.preco e garantido pelo guard acima (cria override exige preco).
-    return this.prisma.motorDailyInventory.create({
-      data: {
-        tenant_id: tenantId,
-        room_type_id: dto.room_type_id,
-        data,
-        min_stay: 1,
-        ...fields,
-        preco: dto.preco as number,
-      },
-    });
+    // Override de preco/regra do dia reflete nas OTAs (gatilho de push, §3.3).
+    void this.channelPush?.enqueue(tenantId, dto.room_type_id, data, addDaysUtc(data, 1));
+    return result;
   }
 
   async listRange(tenantId: string, roomTypeId: string, from: string, to: string) {
