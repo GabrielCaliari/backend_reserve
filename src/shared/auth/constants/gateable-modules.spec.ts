@@ -6,7 +6,7 @@ import {
 } from './gateable-modules';
 
 describe('GATEABLE_MODULES', () => {
-  it('lists exactly the ten gateable Reserve bounded contexts', () => {
+  it('lists exactly the eleven gateable Reserve bounded contexts', () => {
     expect([...GATEABLE_MODULES]).toEqual([
       'cms',
       'leads',
@@ -18,6 +18,7 @@ describe('GATEABLE_MODULES', () => {
       'payments',
       'products',
       'client-portal',
+      'motor',
     ]);
   });
 

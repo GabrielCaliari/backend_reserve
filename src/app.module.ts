@@ -28,6 +28,7 @@ import { ReserveCouponsModule } from './modules/reserve-coupons/reserve-coupons.
 import { ReserveNotificationsModule } from './modules/reserve-notifications/reserve-notifications.module';
 import { ReserveClientPortalModule } from './modules/reserve-client-portal/reserve-client-portal.module';
 import { ReserveSettingsModule } from './modules/reserve-settings/reserve-settings.module';
+import { ReserveMotorModule } from './modules/reserve-motor/reserve-motor.module';
 
 // Shared pipes
 import { ToLowercaseQueryParamsPipe, ToLowercaseBodyRequestPipe } from './shared/pipes';
@@ -59,6 +60,7 @@ import { ToLowercaseQueryParamsPipe, ToLowercaseBodyRequestPipe } from './shared
     ReserveNotificationsModule,
     ReserveClientPortalModule,
     ReserveSettingsModule,
+    ReserveMotorModule,
 
     // Route prefixes per bounded context
     RouterModule.register([

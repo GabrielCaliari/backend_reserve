@@ -29,6 +29,7 @@ export const GATEABLE_MODULES = [
   'payments',
   'products',
   'client-portal',
+  'motor',
 ] as const;
 
 export type GateableModule = (typeof GATEABLE_MODULES)[number];

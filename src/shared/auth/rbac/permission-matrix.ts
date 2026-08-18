@@ -172,6 +172,13 @@ export const PERMISSIONS = [
   // exposed to clients (§7) — deliberately absent from every role grant.
   'hotel-portal.benchmark.read',
 
+  // Motor de reservas (spec §5: admin/owner full, manager opera
+  // reservas/bloqueios, "funcionary" = viewer le)
+  'motor.read',
+  'motor.reservations.manage',
+  'motor.blocks.manage',
+  'motor.settings.manage',
+
   // settings (Fase 3, não-gateable)
   'settings.read',
   'settings.manage',
@@ -202,6 +209,7 @@ const VIEWER: readonly PermissionName[] = [
   'billing-config.read',
   'b2c-products.read',
   'b2c-fees.read',
+  'motor.read',
   'settings.read',
   'settings.modules.read',
 ];
@@ -280,6 +288,8 @@ const MANAGER: readonly PermissionName[] = [
   'hotel-portal.bot-config-proposals.manage',
   'hotel-portal.attribution.manage',
   'hotel-portal.activity-log.manage',
+  'motor.reservations.manage',
+  'motor.blocks.manage',
   'settings.manage',
 ];
 
@@ -289,6 +299,7 @@ const OWNER: readonly PermissionName[] = [
   'hotel-portal.reports.publish',
   'hotel-portal.digests.publish',
   'hotel-portal.bot-integration.manage',
+  'motor.settings.manage',
 ];
 
 export const ROLE_GRANTS: Partial<Record<EAdminRole, readonly PermissionName[]>> = {
