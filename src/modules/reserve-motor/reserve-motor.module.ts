@@ -5,7 +5,10 @@ import { TenantGuard } from '../../shared/auth/guards/tenant.guard';
 import { BotEventKeyGuard } from '../reserve-client-portal/infrastructure/guards/bot-event-key.guard';
 import { BotKeyProvider } from '../reserve-client-portal/infrastructure/providers/bot-key.provider';
 import { AvailabilityService } from './application/services/availability.service';
+import { HoldService } from './application/services/hold.service';
 import { MotorBotController } from './infrastructure/controllers/motor-bot.controller';
+import { HoldExpiryCronProvider } from './infrastructure/providers/hold-expiry-cron.provider';
+import { MotorBotEventsProvider } from './infrastructure/providers/motor-bot-events.provider';
 
 /**
  * Motor de Reservas (docs/MOTOR_RESERVAS_RESERVE_MASTER.md).
@@ -16,6 +19,15 @@ import { MotorBotController } from './infrastructure/controllers/motor-bot.contr
 @Module({
   imports: [ReserveAuthModule],
   controllers: [MotorBotController],
-  providers: [AdminJwtGuard, TenantGuard, AvailabilityService, BotEventKeyGuard, BotKeyProvider],
+  providers: [
+    AdminJwtGuard,
+    TenantGuard,
+    AvailabilityService,
+    BotEventKeyGuard,
+    BotKeyProvider,
+    HoldService,
+    HoldExpiryCronProvider,
+    MotorBotEventsProvider,
+  ],
 })
 export class ReserveMotorModule {}

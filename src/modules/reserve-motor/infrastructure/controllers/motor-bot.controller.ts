@@ -1,8 +1,10 @@
-import { Controller, Get, Query, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Param, Post, Query, Req, UseGuards } from '@nestjs/common';
 import { SkipThrottle } from '@nestjs/throttler';
 import { BotEventKeyGuard } from '../../../reserve-client-portal/infrastructure/guards/bot-event-key.guard';
 import { AvailabilityQueryDto } from '../../application/dtos/availability.dto';
 import { AvailabilityService } from '../../application/services/availability.service';
+import { CreateHoldDto } from '../../application/dtos/hold.dto';
+import { HoldService } from '../../application/services/hold.service';
 
 /**
  * API de maquina do motor, consumida pelo bot via N8N (spec §2).
@@ -15,10 +17,25 @@ import { AvailabilityService } from '../../application/services/availability.ser
 @SkipThrottle()
 @UseGuards(BotEventKeyGuard)
 export class MotorBotController {
-  constructor(private readonly availabilityService: AvailabilityService) {}
+  constructor(
+    private readonly availabilityService: AvailabilityService,
+    private readonly holdService: HoldService,
+  ) {}
 
   @Get('availability')
   async availability(@Req() req: any, @Query() query: AvailabilityQueryDto) {
     return this.availabilityService.search(req.tenant_id, query);
+  }
+
+  @Post('holds')
+  async createHold(@Req() req: any, @Body() dto: CreateHoldDto) {
+    return this.holdService.create(req.tenant_id, dto);
+  }
+
+  @Post('holds/:id/release')
+  @HttpCode(200)
+  async releaseHold(@Req() req: any, @Param('id') id: string) {
+    const hold = await this.holdService.release(req.tenant_id, id);
+    return { hold_id: hold.id, status: hold.status };
   }
 }
