@@ -10,8 +10,15 @@ import {
 } from '@nestjs/common';
 import { Response } from 'express';
 import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
+import { TenantGuard } from '../../../../shared/auth/guards/tenant.guard';
+import { ModuleAccessGuard } from '../../../../shared/auth/guards/module-access.guard';
 import { PermissionsGuard } from '../../../../shared/auth/guards/permissions.guard';
 import { RequirePermissions } from '../../../../shared/auth/decorators/require-permissions.decorator';
+import { RequiresModule } from '../../../../shared/auth/decorators/requires-module.decorator';
+import {
+  ScopedToTenantResource,
+  TenantResourceScopeGuard,
+} from '../guards/tenant-resource-scope.guard';
 import { CurrentAdmin, CurrentAdminPayload } from '../../../../shared/auth/decorators/current-admin.decorator';
 import { ReputationService } from '../../application/services/reputation.service';
 import { HotelKpiService } from '../../application/services/hotel-kpi.service';
@@ -25,13 +32,23 @@ import { InsertRateParityDto } from '../../application/dtos/insert-rate-parity.d
 import { InsertMarketingBudgetDto } from '../../application/dtos/insert-marketing-budget.dto';
 
 /**
- * Rotas chaveadas por `:clientId` (id de HotelClient), e o dashboard chama todas
- * com `x-skip-tenant: true` (o interceptor apaga o `x-tenant-id`). Sem tenant na
- * request nao ha o que o ModuleAccessGuard resolva: FORA do gate de
- * client-portal ate estas rotas passarem a carregar o tenant.
+ * Rotas chaveadas por `:clientId` (id de HotelClient). O tenant nao esta no
+ * caminho: vem do header `x-tenant-id` que o dashboard passou a enviar (o
+ * `x-skip-tenant` foi removido destas chamadas). O TenantGuard resolve e valida
+ * o tenant da sessao, o ModuleAccessGuard gateia o modulo e o
+ * TenantResourceScopeGuard confere que o `:clientId` pedido pertence a esse
+ * mesmo tenant — sem ele, qualquer admin lia as metricas de outro cliente.
  */
 @Controller('admin/hotel-portal/metrics')
-@UseGuards(AdminJwtGuard, PermissionsGuard)
+@UseGuards(
+  AdminJwtGuard,
+  TenantGuard,
+  ModuleAccessGuard,
+  TenantResourceScopeGuard,
+  PermissionsGuard,
+)
+@RequiresModule('client-portal')
+@ScopedToTenantResource({ kind: 'hotelClient', key: 'clientId' })
 @RequirePermissions('hotel-portal.metrics.manage')
 export class AdminHotelMetricsController {
   constructor(

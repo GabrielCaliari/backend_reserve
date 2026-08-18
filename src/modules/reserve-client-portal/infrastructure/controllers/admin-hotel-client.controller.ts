@@ -20,19 +20,54 @@ import { CreateClientDto } from '../../application/dtos/create-client.dto';
 import { UpdateClientDto } from '../../application/dtos/update-client.dto';
 import { InsertOtaDataDto } from '../../application/dtos/insert-ota-data.dto';
 import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
+import { TenantGuard } from '../../../../shared/auth/guards/tenant.guard';
+import { ModuleAccessGuard } from '../../../../shared/auth/guards/module-access.guard';
 import { PermissionsGuard } from '../../../../shared/auth/guards/permissions.guard';
 import { RequirePermissions } from '../../../../shared/auth/decorators/require-permissions.decorator';
+import { RequiresModule } from '../../../../shared/auth/decorators/requires-module.decorator';
+import {
+  ScopedToTenantResource,
+  TenantResourceScopeGuard,
+} from '../guards/tenant-resource-scope.guard';
 import { CurrentAdmin, CurrentAdminPayload } from '../../../../shared/auth/decorators/current-admin.decorator';
 
 /**
- * GET /admin/hotel-portal/clients aceita `x-skip-tenant: true` para listar
- * clientes de todos os tenants, e o dashboard remove o `x-tenant-id` em todas as
- * chamadas deste controller. As demais rotas sao chaveadas por `:id` de
- * HotelClient, nao por tenant. Sem tenant na request o TenantGuard responderia
- * 400, entao este controller fica FORA do gate de client-portal.
+ * Cadeia tenant-scoped das rotas chaveadas por recurso. Declarada por metodo, e
+ * nao na classe, porque `GET /clients` e a unica rota do controller que roda
+ * deliberadamente sem tenant (listagem cross-tenant via `x-skip-tenant`) e um
+ * TenantGuard de classe a quebraria com 400.
+ *
+ * A ordem e contrato: TenantGuard publica `request.tenant_id`, que
+ * ModuleAccessGuard e TenantResourceScopeGuard leem; PermissionsGuard vem por
+ * ultimo para enxergar o papel do admin DENTRO do tenant, e nao o global.
+ */
+const TENANT_SCOPED_CHAIN = [
+  AdminJwtGuard,
+  TenantGuard,
+  ModuleAccessGuard,
+  TenantResourceScopeGuard,
+  PermissionsGuard,
+] as const;
+
+/**
+ * Rotas por `:id` de HotelClient (e o POST de criacao, chaveado pelo `tenant_id`
+ * do corpo) rodam tenant-scoped: sem isso qualquer admin com
+ * `hotel-portal.clients.manage` passava o `:id` de outro cliente e lia, editava
+ * ou desativava os dados dele.
+ *
+ * `GET /clients` continua fora da cadeia: e a listagem global do super admin
+ * ("Portal de Clientes"), que o dashboard chama com `x-skip-tenant: true` e sem
+ * `x-tenant-id`. Ela nao expoe recurso escolhido pelo chamador — mas tambem nao
+ * filtra por tenant para admins comuns, o que segue como buraco conhecido: a
+ * correcao exige decidir o que a tela deve mostrar a um manager, nao so mover
+ * guards.
  */
 @Controller('admin/hotel-portal/clients')
-@UseGuards(AdminJwtGuard, PermissionsGuard)
+@RequiresModule('client-portal')
+@ScopedToTenantResource(
+  { kind: 'hotelClient', key: 'id' },
+  { kind: 'tenant', key: 'tenant_id', source: 'body' },
+)
 @RequirePermissions('hotel-portal.clients.manage')
 export class AdminHotelClientController {
   constructor(
@@ -42,6 +77,7 @@ export class AdminHotelClientController {
   ) {}
 
   @Post()
+  @UseGuards(...TENANT_SCOPED_CHAIN)
   async create(
     @Body() dto: CreateClientDto,
     @CurrentAdmin() admin: CurrentAdminPayload,
@@ -51,7 +87,9 @@ export class AdminHotelClientController {
     return res.status(result.status).json(result.data);
   }
 
+  // Unica rota fora da cadeia tenant-scoped — ver o comentario da classe.
   @Get()
+  @UseGuards(AdminJwtGuard, PermissionsGuard)
   async findAll(
     @Headers('x-skip-tenant') skipTenant: string,
     @Headers('x-tenant-id') tenantIdHeader: string,
@@ -77,12 +115,14 @@ export class AdminHotelClientController {
   }
 
   @Get(':id')
+  @UseGuards(...TENANT_SCOPED_CHAIN)
   async findById(@Param('id') id: string, @Res() res: Response) {
     const result = await this.hotelClientService.findById(id);
     return res.status(result.status).json(result.data);
   }
 
   @Patch(':id')
+  @UseGuards(...TENANT_SCOPED_CHAIN)
   async update(
     @Param('id') id: string,
     @Body() dto: UpdateClientDto,
@@ -93,6 +133,7 @@ export class AdminHotelClientController {
   }
 
   @Delete(':id')
+  @UseGuards(...TENANT_SCOPED_CHAIN)
   @RequirePermissions('hotel-portal.clients.deactivate')
   async deactivate(@Param('id') id: string, @Res() res: Response) {
     const result = await this.hotelClientService.deactivate(id);
@@ -100,6 +141,7 @@ export class AdminHotelClientController {
   }
 
   @Post(':id/ota-data')
+  @UseGuards(...TENANT_SCOPED_CHAIN)
   async insertOtaData(
     @Param('id') clientId: string,
     @Body() dto: InsertOtaDataDto,
@@ -114,12 +156,14 @@ export class AdminHotelClientController {
   }
 
   @Post(':id/import-baseline')
+  @UseGuards(...TENANT_SCOPED_CHAIN)
   async importBaseline(@Param('id') clientId: string, @Res() res: Response) {
     const result = await this.importHistoricalBaselineUseCase.execute(clientId);
     return res.status(200).json(result);
   }
 
   @Get(':id/ota-data')
+  @UseGuards(...TENANT_SCOPED_CHAIN)
   async getOtaData(
     @Param('id') clientId: string,
     @Query('from') from: string,

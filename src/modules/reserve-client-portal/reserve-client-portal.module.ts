@@ -118,6 +118,7 @@ import { HashProvider } from '../../shared/providers/hash.provider';
 // Auth guards (re-exported from ReserveAuthModule via shared/auth)
 import { AdminJwtGuard } from '../../shared/auth/guards/admin-jwt.guard';
 import { RolesGuard } from '../../shared/auth/guards/roles.guard';
+import { TenantResourceScopeGuard } from './infrastructure/guards/tenant-resource-scope.guard';
 import { ReserveAuthModule } from '../reserve-auth/reserve-auth.module';
 import { ReserveNotificationsModule } from '../reserve-notifications/reserve-notifications.module';
 
@@ -248,6 +249,10 @@ import { ReserveNotificationsModule } from '../reserve-notifications/reserve-not
     // Guards (needed because AdminJwtGuard requires ADMIN_TOKEN_VALIDATOR injected from ReserveAuthModule)
     AdminJwtGuard,
     RolesGuard,
+    // Valida posse do recurso nas rotas admin chaveadas por id de recurso
+    // (`:clientId`, `:guestId`, `:id`) em vez de por `:tenantId`. Injeta
+    // Reflector + PrismaService (DatabaseModule e @Global).
+    TenantResourceScopeGuard,
   ],
   exports: [
     HotelClientService,

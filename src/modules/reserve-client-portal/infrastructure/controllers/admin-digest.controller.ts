@@ -3,18 +3,35 @@ import { Response } from 'express';
 import { DigestService } from '../../application/services/digest.service';
 import { PublishDigestDto } from '../../application/dtos/digest.dto';
 import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
+import { TenantGuard } from '../../../../shared/auth/guards/tenant.guard';
+import { ModuleAccessGuard } from '../../../../shared/auth/guards/module-access.guard';
 import { PermissionsGuard } from '../../../../shared/auth/guards/permissions.guard';
 import { RequirePermissions } from '../../../../shared/auth/decorators/require-permissions.decorator';
+import { RequiresModule } from '../../../../shared/auth/decorators/requires-module.decorator';
+import {
+  ScopedToTenantResource,
+  TenantResourceScopeGuard,
+} from '../guards/tenant-resource-scope.guard';
 
 /**
- * Rotas mistas: `:tenantId/digests` carrega o tenant no caminho, mas
- * `digests/:id` (submit-review/publish) nao — e o dashboard nao envia
- * `x-tenant-id` neste controller. Um TenantGuard em nivel de classe quebraria
- * metade das rotas, entao fica FORA do gate de client-portal ate as rotas por
- * `:id` serem reescritas com o tenant no caminho.
+ * Rotas mistas: `:tenantId/digests` carrega o tenant no caminho e
+ * `digests/:id` (submit-review/publish) nao. As duas convergem no TenantGuard,
+ * que resolve o tenant do param quando ele existe e do header `x-tenant-id`
+ * quando nao — o mesmo header que o dashboard ja envia por padrao. Para as
+ * rotas por `:id` o TenantResourceScopeGuard confere que o DigestReport e do
+ * tenant da sessao; em `:tenantId/digests` a chave `id` nao existe e a
+ * referencia e ignorada (o proprio TenantGuard ja validou o param).
  */
 @Controller('admin/hotel-portal')
-@UseGuards(AdminJwtGuard, PermissionsGuard)
+@UseGuards(
+  AdminJwtGuard,
+  TenantGuard,
+  ModuleAccessGuard,
+  TenantResourceScopeGuard,
+  PermissionsGuard,
+)
+@RequiresModule('client-portal')
+@ScopedToTenantResource({ kind: 'digestReport', key: 'id' })
 @RequirePermissions('hotel-portal.digests.manage')
 export class AdminDigestController {
   constructor(private readonly digestService: DigestService) {}

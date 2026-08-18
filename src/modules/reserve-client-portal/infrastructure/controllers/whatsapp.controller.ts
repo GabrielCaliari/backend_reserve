@@ -10,18 +10,35 @@ import {
 } from '@nestjs/common';
 import { Response } from 'express';
 import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
+import { TenantGuard } from '../../../../shared/auth/guards/tenant.guard';
+import { ModuleAccessGuard } from '../../../../shared/auth/guards/module-access.guard';
 import { PermissionsGuard } from '../../../../shared/auth/guards/permissions.guard';
 import { RequirePermissions } from '../../../../shared/auth/decorators/require-permissions.decorator';
+import { RequiresModule } from '../../../../shared/auth/decorators/requires-module.decorator';
+import {
+  ScopedToTenantResource,
+  TenantResourceScopeGuard,
+} from '../guards/tenant-resource-scope.guard';
 import { WhatsAppService } from '../../application/services/whatsapp.service';
 import { CreateWhatsAppTemplateDto, SendWhatsAppMessageDto } from '../../application/dtos/whatsapp.dto';
 
 /**
- * Rotas chaveadas por `:clientId`, chamadas pelo dashboard com `x-skip-tenant:
- * true` (sem `x-tenant-id`). Sem tenant na request o TenantGuard nao roda: FORA
- * do gate de client-portal.
+ * Rotas chaveadas por `:clientId`. O tenant vem do header `x-tenant-id` (o
+ * dashboard nao manda mais `x-skip-tenant` aqui): o TenantGuard o resolve, o
+ * ModuleAccessGuard gateia o modulo e o TenantResourceScopeGuard confere que o
+ * cliente pedido e do tenant da sessao — senao um admin dispararia mensagens
+ * de WhatsApp em nome de outro cliente.
  */
 @Controller('admin/hotel-portal/whatsapp')
-@UseGuards(AdminJwtGuard, PermissionsGuard)
+@UseGuards(
+  AdminJwtGuard,
+  TenantGuard,
+  ModuleAccessGuard,
+  TenantResourceScopeGuard,
+  PermissionsGuard,
+)
+@RequiresModule('client-portal')
+@ScopedToTenantResource({ kind: 'hotelClient', key: 'clientId' })
 @RequirePermissions('hotel-portal.whatsapp.manage')
 export class WhatsAppController {
   constructor(private readonly whatsappService: WhatsAppService) {}

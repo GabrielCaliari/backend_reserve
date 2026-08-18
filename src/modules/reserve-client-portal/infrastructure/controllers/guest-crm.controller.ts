@@ -10,19 +10,38 @@ import {
 } from '@nestjs/common';
 import { Response } from 'express';
 import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
+import { TenantGuard } from '../../../../shared/auth/guards/tenant.guard';
+import { ModuleAccessGuard } from '../../../../shared/auth/guards/module-access.guard';
 import { PermissionsGuard } from '../../../../shared/auth/guards/permissions.guard';
 import { RequirePermissions } from '../../../../shared/auth/decorators/require-permissions.decorator';
+import { RequiresModule } from '../../../../shared/auth/decorators/requires-module.decorator';
+import {
+  ScopedToTenantResource,
+  TenantResourceScopeGuard,
+} from '../guards/tenant-resource-scope.guard';
 import { GuestCrmService } from '../../application/services/guest-crm.service';
 import { CreateGuestDto, CreateGuestStayDto } from '../../application/dtos/create-guest.dto';
 import { EGuestSegment } from '../../domain/enums/guest-segment.enum';
 
 /**
- * Rotas chaveadas por `:clientId`/`:guestId`, chamadas pelo dashboard com
- * `x-skip-tenant: true` (sem `x-tenant-id`). Sem tenant na request o TenantGuard
- * nao roda: FORA do gate de client-portal.
+ * Rotas heterogeneas: umas chaveadas por `:clientId`, outras por `guest/:guestId`.
+ * O decorator declara as duas chaves e o guard ignora a que nao existir na rota,
+ * entao um unico decorator de classe cobre as duas familias. Dados de hospede
+ * sao PII: sem esta checagem qualquer admin lia o CRM de outro cliente.
  */
 @Controller('admin/hotel-portal/guests')
-@UseGuards(AdminJwtGuard, PermissionsGuard)
+@UseGuards(
+  AdminJwtGuard,
+  TenantGuard,
+  ModuleAccessGuard,
+  TenantResourceScopeGuard,
+  PermissionsGuard,
+)
+@RequiresModule('client-portal')
+@ScopedToTenantResource(
+  { kind: 'hotelClient', key: 'clientId' },
+  { kind: 'hotelGuest', key: 'guestId' },
+)
 @RequirePermissions('hotel-portal.guests.manage')
 export class GuestCrmController {
   constructor(private readonly guestCrmService: GuestCrmService) {}

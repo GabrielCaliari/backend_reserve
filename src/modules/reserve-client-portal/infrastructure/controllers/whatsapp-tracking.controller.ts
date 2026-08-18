@@ -12,8 +12,15 @@ import {
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
+import { TenantGuard } from '../../../../shared/auth/guards/tenant.guard';
+import { ModuleAccessGuard } from '../../../../shared/auth/guards/module-access.guard';
 import { PermissionsGuard } from '../../../../shared/auth/guards/permissions.guard';
 import { RequirePermissions } from '../../../../shared/auth/decorators/require-permissions.decorator';
+import { RequiresModule } from '../../../../shared/auth/decorators/requires-module.decorator';
+import {
+  ScopedToTenantResource,
+  TenantResourceScopeGuard,
+} from '../guards/tenant-resource-scope.guard';
 import { WhatsAppTrackingService } from '../../application/services/whatsapp-tracking.service';
 import {
   CreateWhatsAppTrackingLinkDto,
@@ -21,13 +28,27 @@ import {
 } from '../../application/dtos/whatsapp-tracking-link.dto';
 
 /**
- * Rotas chaveadas por `:clientId`/`:linkId`, chamadas pelo dashboard com
- * `x-skip-tenant: true` (sem `x-tenant-id`). Sem tenant na request o TenantGuard
- * nao roda: FORA do gate de client-portal. O redirect publico `wa/:code` fica
- * fora por ser @Public().
+ * Rotas chaveadas por `:clientId`/`:linkId`. O tenant vem do header
+ * `x-tenant-id` (o `x-skip-tenant` saiu destas chamadas no dashboard), e as duas
+ * chaves sao conferidas: `:clientId` contra HotelClient e `:linkId` contra o
+ * proprio link — o service so cruza os dois em `getLinkStats`, entao sem o guard
+ * um `:linkId` de outro tenant passava em `update`/`delete`.
+ *
+ * O redirect publico `wa/:code` continua fora: e @Public() e nao tem sessao.
  */
 @Controller('admin/hotel-portal/whatsapp-links')
-@UseGuards(AdminJwtGuard, PermissionsGuard)
+@UseGuards(
+  AdminJwtGuard,
+  TenantGuard,
+  ModuleAccessGuard,
+  TenantResourceScopeGuard,
+  PermissionsGuard,
+)
+@RequiresModule('client-portal')
+@ScopedToTenantResource(
+  { kind: 'hotelClient', key: 'clientId' },
+  { kind: 'whatsAppTrackingLink', key: 'linkId' },
+)
 @RequirePermissions('hotel-portal.whatsapp-links.manage')
 export class WhatsAppTrackingController {
   constructor(private readonly trackingService: WhatsAppTrackingService) {}
