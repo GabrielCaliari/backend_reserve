@@ -18,6 +18,7 @@ import { BlockService } from './application/services/block.service';
 import { CalendarService } from './application/services/calendar.service';
 import { ChannelPushService } from './application/services/channel-push.service';
 import { ChannelInboundService } from './application/services/channel-inbound.service';
+import { ChannelReconcileService } from './application/services/channel-reconcile.service';
 import { MotorRoomTypeController } from './infrastructure/controllers/motor-room-type.controller';
 import { MotorUnitController } from './infrastructure/controllers/motor-unit.controller';
 import { MotorDailyInventoryController } from './infrastructure/controllers/motor-daily-inventory.controller';
@@ -32,6 +33,7 @@ import { HoldExpiryCronProvider } from './infrastructure/providers/hold-expiry-c
 import { MotorBotEventsProvider } from './infrastructure/providers/motor-bot-events.provider';
 import { Beds24ApiProvider } from './infrastructure/providers/beds24-api.provider';
 import { ChannelPushCronProvider } from './infrastructure/providers/channel-push-cron.provider';
+import { ChannelReconcileCronProvider } from './infrastructure/providers/channel-reconcile-cron.provider';
 
 /**
  * Motor de Reservas (docs/MOTOR_RESERVAS_RESERVE_MASTER.md).
@@ -76,6 +78,8 @@ import { ChannelPushCronProvider } from './infrastructure/providers/channel-push
     ChannelPushService,
     ChannelPushCronProvider,
     ChannelInboundService,
+    ChannelReconcileService,
+    ChannelReconcileCronProvider,
   ],
 })
 export class ReserveMotorModule {}

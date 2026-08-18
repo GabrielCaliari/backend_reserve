@@ -8,7 +8,7 @@ import { ChannelPushService } from './channel-push.service';
 import { isExclusionViolation } from './hold.service';
 
 /** Reserva do Beds24 normalizada (o webhook manda o JSON completo). */
-interface InboundBooking {
+export interface InboundBooking {
   external_id: string;
   beds24_room_id: number | null;
   arrival: string;
@@ -64,34 +64,49 @@ export class ChannelInboundService {
       throw new UnauthorizedException('segredo do webhook invalido');
     }
 
-    const booking = this.normalize(payload);
+    const booking = this.normalizeBooking(payload);
     if (!booking) {
       this.logger.warn(`Webhook beds24 sem reserva reconhecivel (tenant ${tenantId})`);
       await this.touch(tenantId);
       return { received: true, ignored: true };
     }
 
+    const result = await this.applyBooking(tenantId, sync, booking);
+    await this.touch(tenantId);
+    return result;
+  }
+
+  /**
+   * Aplica uma reserva normalizada da OTA. Rotina UNICA de processamento,
+   * compartilhada entre o webhook e a reconciliacao diaria (que injeta este
+   * service — a logica nao e duplicada). `forcar: true` pula a idempotencia
+   * por modified_time: a reconciliacao corrige divergencia local mesmo
+   * quando o modified_time da OTA ja foi aplicado antes.
+   */
+  async applyBooking(
+    tenantId: string,
+    sync: any,
+    booking: InboundBooking,
+    opts: { forcar?: boolean } = {},
+  ): Promise<InboundResult> {
     const existing = await this.prisma.motorReservation.findFirst({
       where: { tenant_id: tenantId, external_id: booking.external_id },
     });
 
-    let result: InboundResult;
     if (existing) {
-      result = await this.applyUpdate(tenantId, existing, booking);
-    } else if (booking.cancelled) {
-      // Cancelamento de reserva que nunca entrou: nada a fazer.
-      result = { received: true, ignored: true };
-    } else {
-      result = await this.createFromOta(tenantId, sync, booking);
+      return this.applyUpdate(tenantId, existing, booking, opts.forcar === true);
     }
-    await this.touch(tenantId);
-    return result;
+    if (booking.cancelled) {
+      // Cancelamento de reserva que nunca entrou: nada a fazer.
+      return { received: true, ignored: true };
+    }
+    return this.createFromOta(tenantId, sync, booking);
   }
 
   // ── normalizacao ─────────────────────────────────────────────────────────
 
   /** Aceita o booking no corpo raiz ou em payload.booking (formato Beds24). */
-  private normalize(payload: Record<string, unknown>): InboundBooking | null {
+  normalizeBooking(payload: Record<string, unknown>): InboundBooking | null {
     const raw = ((payload as any)?.booking ?? payload) as Record<string, any>;
     const id = raw?.id ?? raw?.bookId;
     const arrival = raw?.arrival;
@@ -137,10 +152,13 @@ export class ChannelInboundService {
     tenantId: string,
     existing: any,
     booking: InboundBooking,
+    forcar = false,
   ): Promise<InboundResult> {
     // Idempotencia por external_id + updated_at da OTA: redelivery do mesmo
     // update (ou update mais antigo fora de ordem) nao reaplica nada.
-    if (booking.modified_time) {
+    // A reconciliacao passa forcar=true: divergencia detectada precisa ser
+    // corrigida mesmo com modified_time ja visto.
+    if (!forcar && booking.modified_time) {
       const lastApplied = await this.prisma.motorReservationEvent.findFirst({
         where: { reservation_id: existing.id, autor: 'beds24' },
         orderBy: { created_at: 'desc' },
