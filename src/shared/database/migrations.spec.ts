@@ -134,3 +134,48 @@ describe('20260804000002_add_bot_automation_tables', () => {
     expect(sql).not.toMatch(/CREATE UNIQUE INDEX "funil_eventos[^"]*"/);
   });
 });
+
+describe('20260818000001_add_motor_tables', () => {
+  const sql = readMigration('20260818000001_add_motor_tables');
+
+  it('creates the twelve motor tables', () => {
+    for (const table of [
+      'motor_room_types',
+      'motor_units',
+      'motor_cancellation_policies',
+      'motor_rate_plans',
+      'motor_seasons',
+      'motor_price_rules',
+      'motor_daily_inventory',
+      'motor_reservations',
+      'motor_reservation_events',
+      'motor_holds',
+      'motor_blocks',
+      'motor_payment_exceptions',
+    ]) {
+      expect(sql).toContain(`CREATE TABLE "${table}"`);
+    }
+  });
+
+  it('enables btree_gist and adds both exclusion constraints (guarda anti-overbooking, spec §1.2)', () => {
+    expect(sql).toContain('CREATE EXTENSION IF NOT EXISTS btree_gist');
+    expect(sql).toContain('"motor_holds_no_overlap"');
+    expect(sql).toContain('"motor_reservations_no_overlap"');
+    expect(sql).toMatch(/EXCLUDE USING gist[\s\S]*?daterange\(checkin, checkout, '\[\)'\)/);
+  });
+
+  it('materializes one calendar row per tenant/room_type/date', () => {
+    expect(sql).toContain(
+      'CREATE UNIQUE INDEX "motor_daily_inventory_tenant_id_room_type_id_data_key"',
+    );
+  });
+
+  it('cascades on tenant delete', () => {
+    expect(sql).toMatch(/motor_room_types_tenant_id_fkey[\s\S]*?ON DELETE CASCADE/);
+    expect(sql).toMatch(/motor_reservations_tenant_id_fkey[\s\S]*?ON DELETE CASCADE/);
+  });
+
+  it('adds the motor webhook url to bot_integration_configs', () => {
+    expect(sql).toContain('ALTER TABLE "bot_integration_configs" ADD COLUMN "n8n_motor_webhook_url"');
+  });
+});

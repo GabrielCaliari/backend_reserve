@@ -245,6 +245,17 @@ model Tenant {
   AttributionSettings       AttributionSettings?
   BotIntegrationConfig      BotIntegrationConfig?
   AnalyticsReports          AnalyticsReport[]
+  motor_room_types            MotorRoomType[]
+  motor_units                 MotorUnit[]
+  motor_cancellation_policies MotorCancellationPolicy[]
+  motor_rate_plans            MotorRatePlan[]
+  motor_seasons               MotorSeason[]
+  motor_price_rules           MotorPriceRule[]
+  motor_daily_inventory       MotorDailyInventory[]
+  motor_reservations          MotorReservation[]
+  motor_holds                 MotorHold[]
+  motor_blocks                MotorBlock[]
+  motor_payment_exceptions    MotorPaymentException[]
 
   @@index([stripe_customer_id])
   @@index([subscription_status])
@@ -349,6 +360,9 @@ model BotIntegrationConfig {
   tenant_key_salt                String
   active                         Boolean   @default(true)
   n8n_stage_webhook_url          String?   @db.VarChar(500)
+  // Webhook de eventos do motor de reservas (WF9: hold.expirado,
+  // pagamento.tardio.exception). Fase 1: dispatch fire-and-forget.
+  n8n_motor_webhook_url          String?   @db.VarChar(500)
   n8n_config_publish_webhook_url String?   @db.VarChar(500)
   chatwoot_base_url              String?   @db.VarChar(500)
   last_heartbeat_at              DateTime?
@@ -2478,4 +2492,333 @@ model BenchmarkAggregate {
 
   @@index([cohort_metric, computed_at])
   @@map("benchmark_agregado")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Motor de Reservas (docs/MOTOR_RESERVAS_RESERVE_MASTER.md §1)
+// Hierarquia: room_type (o que o bot vende) -> unit (o que o calendario
+// controla) -> rate_plan -> daily_inventory (preco/regras por dia) ->
+// reservation/hold/block.
+// Dinheiro em Decimal(12,2) — decisao registrada: o legado usa Float, mas o
+// motor cobra de verdade e nao pode acumular erro de centavos.
+// As constraints EXCLUDE (anti-overbooking) vivem so no SQL da migration —
+// Prisma nao as modela.
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum EMotorHoldStatus {
+  ATIVO
+  CONVERTIDO
+  EXPIRADO
+  CANCELADO
+}
+
+enum EMotorReservationStatus {
+  HOLD
+  CONFIRMADA
+  CHECKIN_FEITO
+  CONCLUIDA
+  CANCELADA
+  NOSHOW
+}
+
+enum EMotorReservationOrigem {
+  BOT_WHATSAPP
+  OTA_BOOKING
+  OTA_AIRBNB
+  OTA_DECOLAR
+  SITE_HSYSTEM
+  MANUAL
+}
+
+enum EMotorFormaPagamento {
+  PIX_50
+  CARTAO_100
+  OTA
+}
+
+enum EMotorHoldFormaPagamento {
+  PIX_LINK
+  CARTAO
+  PIX_MANUAL
+}
+
+enum EMotorBlockMotivo {
+  MANUTENCAO
+  USO_PROPRIO
+  MENSALISTA
+  OUTRO
+}
+
+enum EMotorReservationEventTipo {
+  CRIADA
+  PAGAMENTO_PARCIAL
+  CONFIRMADA
+  REMARCADA
+  CANCELADA
+  CHECKIN
+  CHECKOUT
+  NOSHOW
+}
+
+model MotorRoomType {
+  id                     String   @id @default(cuid()) @db.VarChar(25)
+  tenant_id              String   @db.VarChar(25)
+  nome                   String   @db.VarChar(120)
+  descricao_curta        String?  @db.VarChar(500)
+  capacidade_base        Int
+  capacidade_max         Int
+  valor_pessoa_adicional Decimal  @default(0) @db.Decimal(12, 2)
+  aceita_pets            Boolean  @default(false)
+  taxa_pet_dia           Decimal  @default(0) @db.Decimal(12, 2)
+  ordem                  Int      @default(0)
+  ativo                  Boolean  @default(true)
+  created_at             DateTime @default(now())
+  updated_at             DateTime @updatedAt
+
+  tenant          Tenant                @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  units           MotorUnit[]
+  rate_plans      MotorRatePlan[]
+  price_rules     MotorPriceRule[]
+  daily_inventory MotorDailyInventory[]
+  reservations    MotorReservation[]
+  holds           MotorHold[]
+
+  @@index([tenant_id, ativo])
+  @@map("motor_room_types")
+}
+
+model MotorUnit {
+  id            String   @id @default(cuid()) @db.VarChar(25)
+  tenant_id     String   @db.VarChar(25)
+  room_type_id  String   @db.VarChar(25)
+  identificador String   @db.VarChar(80)
+  ativo         Boolean  @default(true)
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  tenant       Tenant             @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  room_type    MotorRoomType      @relation(fields: [room_type_id], references: [id], onDelete: Cascade)
+  reservations MotorReservation[]
+  holds        MotorHold[]
+  blocks       MotorBlock[]
+
+  @@index([tenant_id, room_type_id])
+  @@map("motor_units")
+}
+
+model MotorCancellationPolicy {
+  id                           String   @id @default(cuid()) @db.VarChar(25)
+  tenant_id                    String   @db.VarChar(25)
+  nome                         String   @db.VarChar(120)
+  dias_antecedencia_remarcacao Int      @default(7)
+  reembolso_apos_prazo         Boolean  @default(false)
+  taxa_noshow_percent          Decimal  @default(100) @db.Decimal(5, 2)
+  created_at                   DateTime @default(now())
+  updated_at                   DateTime @updatedAt
+
+  tenant     Tenant          @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  rate_plans MotorRatePlan[]
+
+  @@index([tenant_id])
+  @@map("motor_cancellation_policies")
+}
+
+model MotorRatePlan {
+  id                     String   @id @default(cuid()) @db.VarChar(25)
+  tenant_id              String   @db.VarChar(25)
+  room_type_id           String   @db.VarChar(25)
+  nome                   String   @db.VarChar(120)
+  cancellation_policy_id String?  @db.VarChar(25)
+  derivado_de            String?  @db.VarChar(25)
+  percentual_ajuste      Decimal? @db.Decimal(5, 2)
+  ativo                  Boolean  @default(true)
+  created_at             DateTime @default(now())
+  updated_at             DateTime @updatedAt
+
+  tenant              Tenant                   @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  room_type           MotorRoomType            @relation(fields: [room_type_id], references: [id], onDelete: Cascade)
+  cancellation_policy MotorCancellationPolicy? @relation(fields: [cancellation_policy_id], references: [id])
+  price_rules         MotorPriceRule[]
+
+  @@index([tenant_id, room_type_id])
+  @@map("motor_rate_plans")
+}
+
+model MotorSeason {
+  id          String   @id @default(cuid()) @db.VarChar(25)
+  tenant_id   String   @db.VarChar(25)
+  nome        String   @db.VarChar(120)
+  data_inicio DateTime @db.Date
+  data_fim    DateTime @db.Date
+  prioridade  Int      @default(0)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  tenant      Tenant           @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  price_rules MotorPriceRule[]
+
+  @@index([tenant_id, data_inicio, data_fim])
+  @@map("motor_seasons")
+}
+
+model MotorPriceRule {
+  id           String   @id @default(cuid()) @db.VarChar(25)
+  tenant_id    String   @db.VarChar(25)
+  room_type_id String   @db.VarChar(25)
+  rate_plan_id String?  @db.VarChar(25)
+  season_id    String?  @db.VarChar(25)
+  dow_mask     Int      @default(127)
+  preco_noite  Decimal  @db.Decimal(12, 2)
+  min_stay     Int      @default(1)
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+
+  tenant    Tenant         @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  room_type MotorRoomType  @relation(fields: [room_type_id], references: [id], onDelete: Cascade)
+  rate_plan MotorRatePlan? @relation(fields: [rate_plan_id], references: [id])
+  season    MotorSeason?   @relation(fields: [season_id], references: [id], onDelete: Cascade)
+
+  @@index([tenant_id, room_type_id])
+  @@map("motor_price_rules")
+}
+
+model MotorDailyInventory {
+  id               String   @id @default(cuid()) @db.VarChar(25)
+  tenant_id        String   @db.VarChar(25)
+  room_type_id     String   @db.VarChar(25)
+  data             DateTime @db.Date
+  preco            Decimal  @db.Decimal(12, 2)
+  min_stay         Int      @default(1)
+  closed_arrival   Boolean  @default(false)
+  closed_departure Boolean  @default(false)
+  stop_sell        Boolean  @default(false)
+  // Edicao manual no admin grava override=true e o job de materializacao
+  // nunca sobrescreve a linha (spec §1, daily_inventory).
+  override         Boolean  @default(false)
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+
+  tenant    Tenant        @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  room_type MotorRoomType @relation(fields: [room_type_id], references: [id], onDelete: Cascade)
+
+  @@unique([tenant_id, room_type_id, data])
+  @@map("motor_daily_inventory")
+}
+
+model MotorReservation {
+  id               String                  @id @default(cuid()) @db.VarChar(25)
+  tenant_id        String                  @db.VarChar(25)
+  room_type_id     String                  @db.VarChar(25)
+  unit_id          String                  @db.VarChar(25)
+  checkin          DateTime                @db.Date
+  checkout         DateTime                @db.Date
+  status           EMotorReservationStatus @default(CONFIRMADA)
+  origem           EMotorReservationOrigem
+  external_id      String?                 @db.VarChar(120)
+  hospede_nome     String                  @db.VarChar(200)
+  hospede_telefone String?                 @db.VarChar(40)
+  hospede_email    String?                 @db.VarChar(200)
+  hospede_doc      String?                 @db.VarChar(40)
+  adultos          Int                     @default(2)
+  criancas         Int                     @default(0)
+  pets             Int                     @default(0)
+  valor_total      Decimal                 @db.Decimal(12, 2)
+  valor_pago       Decimal                 @default(0) @db.Decimal(12, 2)
+  saldo_checkin    Decimal                 @default(0) @db.Decimal(12, 2)
+  forma_pagamento  EMotorFormaPagamento?
+  asaas_payment_id String?                 @db.VarChar(120)
+  observacoes      String?
+  atribuicao       Json?
+  created_at       DateTime                @default(now())
+  updated_at       DateTime                @updatedAt
+
+  tenant    Tenant                  @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  room_type MotorRoomType           @relation(fields: [room_type_id], references: [id], onDelete: Cascade)
+  unit      MotorUnit               @relation(fields: [unit_id], references: [id], onDelete: Cascade)
+  events    MotorReservationEvent[]
+
+  @@index([tenant_id, status, checkin])
+  @@index([tenant_id, asaas_payment_id])
+  @@map("motor_reservations")
+}
+
+model MotorReservationEvent {
+  id             String                     @id @default(cuid()) @db.VarChar(25)
+  reservation_id String                     @db.VarChar(25)
+  tipo           EMotorReservationEventTipo
+  payload        Json?
+  autor          String?                    @db.VarChar(120)
+  created_at     DateTime                   @default(now())
+
+  reservation MotorReservation @relation(fields: [reservation_id], references: [id], onDelete: Cascade)
+
+  @@index([reservation_id, created_at])
+  @@map("motor_reservation_events")
+}
+
+model MotorHold {
+  id               String                   @id @default(cuid()) @db.VarChar(25)
+  tenant_id        String                   @db.VarChar(25)
+  room_type_id     String                   @db.VarChar(25)
+  unit_id          String                   @db.VarChar(25)
+  checkin          DateTime                 @db.Date
+  checkout         DateTime                 @db.Date
+  adultos          Int                      @default(2)
+  criancas         Int                      @default(0)
+  pets             Int                      @default(0)
+  contato_whatsapp String                   @db.VarChar(40)
+  forma_pagamento  EMotorHoldFormaPagamento
+  cliente_marina   Boolean                  @default(false)
+  valor_total      Decimal                  @db.Decimal(12, 2)
+  valor_antecipado Decimal                  @db.Decimal(12, 2)
+  asaas_payment_id String?                  @db.VarChar(120)
+  expires_at       DateTime
+  status           EMotorHoldStatus         @default(ATIVO)
+  created_at       DateTime                 @default(now())
+  updated_at       DateTime                 @updatedAt
+
+  tenant    Tenant        @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  room_type MotorRoomType @relation(fields: [room_type_id], references: [id], onDelete: Cascade)
+  unit      MotorUnit     @relation(fields: [unit_id], references: [id], onDelete: Cascade)
+
+  @@index([tenant_id, status, expires_at])
+  @@map("motor_holds")
+}
+
+model MotorBlock {
+  id          String            @id @default(cuid()) @db.VarChar(25)
+  tenant_id   String            @db.VarChar(25)
+  unit_id     String            @db.VarChar(25)
+  data_inicio DateTime          @db.Date
+  // data_fim null = bloqueio permanente (caso MENSALISTA, spec §1 regra v5).
+  data_fim    DateTime?         @db.Date
+  motivo      EMotorBlockMotivo
+  nota        String?           @db.VarChar(500)
+  criado_por  String?           @db.VarChar(120)
+  created_at  DateTime          @default(now())
+
+  tenant Tenant    @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  unit   MotorUnit @relation(fields: [unit_id], references: [id], onDelete: Cascade)
+
+  @@index([tenant_id, unit_id, data_inicio])
+  @@map("motor_blocks")
+}
+
+model MotorPaymentException {
+  id               String   @id @default(cuid()) @db.VarChar(25)
+  tenant_id        String   @db.VarChar(25)
+  hold_id          String   @db.VarChar(25)
+  asaas_payment_id String?  @db.VarChar(120)
+  valor_pago       Decimal  @db.Decimal(12, 2)
+  // PENDENTE | RESOLVIDA — dinheiro recebido sem reserva (pagamento tardio,
+  // spec §2). Resolucao humana: remarcar ou estornar pelo painel.
+  status           String   @default("PENDENTE") @db.VarChar(20)
+  resolucao        String?  @db.VarChar(500)
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+
+  @@index([tenant_id, status])
+  @@map("motor_payment_exceptions")
 }
