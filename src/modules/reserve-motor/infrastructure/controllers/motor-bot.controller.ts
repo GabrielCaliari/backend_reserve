@@ -5,6 +5,8 @@ import { AvailabilityQueryDto } from '../../application/dtos/availability.dto';
 import { AvailabilityService } from '../../application/services/availability.service';
 import { ConfirmHoldDto, CreateHoldDto } from '../../application/dtos/hold.dto';
 import { HoldService } from '../../application/services/hold.service';
+import { CancelDto, RescheduleDto } from '../../application/dtos/reservation.dto';
+import { ReservationService } from '../../application/services/reservation.service';
 
 /**
  * API de maquina do motor, consumida pelo bot via N8N (spec §2).
@@ -20,6 +22,7 @@ export class MotorBotController {
   constructor(
     private readonly availabilityService: AvailabilityService,
     private readonly holdService: HoldService,
+    private readonly reservationService: ReservationService,
   ) {}
 
   @Get('availability')
@@ -43,5 +46,17 @@ export class MotorBotController {
   @HttpCode(200)
   async confirmHold(@Req() req: any, @Param('id') id: string, @Body() dto: ConfirmHoldDto) {
     return this.holdService.confirm(req.tenant_id, id, dto);
+  }
+
+  @Post('reservations/:id/reschedule')
+  @HttpCode(200)
+  async reschedule(@Req() req: any, @Param('id') id: string, @Body() dto: RescheduleDto) {
+    return this.reservationService.reschedule(req.tenant_id, id, dto, 'bot');
+  }
+
+  @Post('reservations/:id/cancel')
+  @HttpCode(200)
+  async cancel(@Req() req: any, @Param('id') id: string, @Body() dto: CancelDto) {
+    return this.reservationService.cancel(req.tenant_id, id, dto, 'bot');
   }
 }
