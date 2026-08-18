@@ -121,8 +121,16 @@ export class DailyInventoryService {
     if (existing) {
       return this.prisma.motorDailyInventory.update({ where: { id: existing.id }, data: fields });
     }
+    // Aqui dto.preco e garantido pelo guard acima (cria override exige preco).
     return this.prisma.motorDailyInventory.create({
-      data: { tenant_id: tenantId, room_type_id: dto.room_type_id, data, min_stay: 1, ...fields },
+      data: {
+        tenant_id: tenantId,
+        room_type_id: dto.room_type_id,
+        data,
+        min_stay: 1,
+        ...fields,
+        preco: dto.preco as number,
+      },
     });
   }
 
