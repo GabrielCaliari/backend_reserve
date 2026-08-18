@@ -37,6 +37,7 @@ import { MotorBotEventsProvider } from './infrastructure/providers/motor-bot-eve
 import { Beds24ApiProvider } from './infrastructure/providers/beds24-api.provider';
 import { ChannelPushCronProvider } from './infrastructure/providers/channel-push-cron.provider';
 import { ChannelReconcileCronProvider } from './infrastructure/providers/channel-reconcile-cron.provider';
+import { SiteCoexistenceCronProvider } from './infrastructure/providers/site-coexistence-cron.provider';
 
 /**
  * Motor de Reservas (docs/MOTOR_RESERVAS_RESERVE_MASTER.md).
@@ -85,6 +86,7 @@ import { ChannelReconcileCronProvider } from './infrastructure/providers/channel
     ChannelInboundService,
     ChannelReconcileService,
     ChannelReconcileCronProvider,
+    SiteCoexistenceCronProvider,
     ChannelAdminService,
     // A porta CHANNEL_RECONCILE liga a reconciliacao sob demanda da API
     // admin ao service da Task 5 (assinaturas conferidas no merge).
