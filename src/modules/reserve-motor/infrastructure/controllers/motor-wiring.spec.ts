@@ -12,6 +12,8 @@ import { MotorReservationController } from './motor-reservation.controller';
 import { MotorBlockController } from './motor-block.controller';
 import { MotorCalendarController } from './motor-calendar.controller';
 import { MotorBotController } from './motor-bot.controller';
+import { MotorChannelController } from './motor-channel.controller';
+import { Beds24WebhookController } from './beds24-webhook.controller';
 
 const ADMIN_CONTROLLERS = [
   MotorRoomTypeController,
@@ -21,6 +23,7 @@ const ADMIN_CONTROLLERS = [
   MotorReservationController,
   MotorBlockController,
   MotorCalendarController,
+  MotorChannelController,
 ];
 
 function classGuards(target: unknown): unknown[] {
@@ -47,5 +50,11 @@ describe('reserve-motor: wiring dos guards', () => {
 
   it('MotorBotController (API por chave do bot) fica fora do gate de modulo', () => {
     expect(Reflect.getMetadata(REQUIRES_MODULE_KEY, MotorBotController)).toBeUndefined();
+  });
+
+  // Rota publica por design: o Beds24 nao autentica por JWT — o gate real e o
+  // x-webhook-secret por tenant, comparado timing-safe no ChannelInboundService.
+  it('Beds24WebhookController (inbound das OTAs) fica fora do gate de modulo', () => {
+    expect(Reflect.getMetadata(REQUIRES_MODULE_KEY, Beds24WebhookController)).toBeUndefined();
   });
 });

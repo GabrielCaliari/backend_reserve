@@ -18,6 +18,7 @@ import { BlockService } from './application/services/block.service';
 import { CalendarService } from './application/services/calendar.service';
 import { ChannelPushService } from './application/services/channel-push.service';
 import { ChannelInboundService } from './application/services/channel-inbound.service';
+import { ChannelAdminService } from './application/services/channel-admin.service';
 import { MotorRoomTypeController } from './infrastructure/controllers/motor-room-type.controller';
 import { MotorUnitController } from './infrastructure/controllers/motor-unit.controller';
 import { MotorDailyInventoryController } from './infrastructure/controllers/motor-daily-inventory.controller';
@@ -27,6 +28,7 @@ import { MotorReservationController } from './infrastructure/controllers/motor-r
 import { MotorBlockController } from './infrastructure/controllers/motor-block.controller';
 import { MotorCalendarController } from './infrastructure/controllers/motor-calendar.controller';
 import { Beds24WebhookController } from './infrastructure/controllers/beds24-webhook.controller';
+import { MotorChannelController } from './infrastructure/controllers/motor-channel.controller';
 import { InventoryMaterializeCronProvider } from './infrastructure/providers/inventory-materialize-cron.provider';
 import { HoldExpiryCronProvider } from './infrastructure/providers/hold-expiry-cron.provider';
 import { MotorBotEventsProvider } from './infrastructure/providers/motor-bot-events.provider';
@@ -51,6 +53,7 @@ import { ChannelPushCronProvider } from './infrastructure/providers/channel-push
     MotorCalendarController,
     MotorBotController,
     Beds24WebhookController,
+    MotorChannelController,
   ],
   providers: [
     AdminJwtGuard,
@@ -76,6 +79,10 @@ import { ChannelPushCronProvider } from './infrastructure/providers/channel-push
     ChannelPushService,
     ChannelPushCronProvider,
     ChannelInboundService,
+    // ChannelAdminService injeta a porta CHANNEL_RECONCILE como @Optional():
+    // a Task 5 (ChannelReconcileService) registra o token no merge com
+    // { provide: CHANNEL_RECONCILE, useExisting: ChannelReconcileService }.
+    ChannelAdminService,
   ],
 })
 export class ReserveMotorModule {}
