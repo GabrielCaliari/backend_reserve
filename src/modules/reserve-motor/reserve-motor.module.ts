@@ -14,6 +14,7 @@ import { TarifaService } from './application/services/tarifa.service';
 import { AvailabilityService } from './application/services/availability.service';
 import { HoldService } from './application/services/hold.service';
 import { ReservationService } from './application/services/reservation.service';
+import { ReservationImportService } from './application/services/reservation-import.service';
 import { BlockService } from './application/services/block.service';
 import { CalendarService } from './application/services/calendar.service';
 import { ChannelPushService } from './application/services/channel-push.service';
@@ -72,6 +73,7 @@ import { ChannelReconcileCronProvider } from './infrastructure/providers/channel
     AvailabilityService,
     HoldService,
     ReservationService,
+    ReservationImportService,
     BlockService,
     CalendarService,
     HoldExpiryCronProvider,

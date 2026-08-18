@@ -12,7 +12,9 @@ import {
   ListReservationsQueryDto,
   RescheduleDto,
 } from '../../application/dtos/reservation.dto';
+import { ImportReservationsDto } from '../../application/dtos/reservation-import.dto';
 import { AvailabilityService } from '../../application/services/availability.service';
+import { ReservationImportService } from '../../application/services/reservation-import.service';
 import { ReservationService } from '../../application/services/reservation.service';
 
 @Controller('motor/:tenantId')
@@ -22,6 +24,7 @@ export class MotorReservationController {
   constructor(
     private readonly reservationService: ReservationService,
     private readonly availabilityService: AvailabilityService,
+    private readonly reservationImportService: ReservationImportService,
   ) {}
 
   @Get('availability')
@@ -50,6 +53,17 @@ export class MotorReservationController {
     @Req() req: any,
   ) {
     return this.reservationService.createManual(tenantId, dto, req.admin_id ?? 'admin');
+  }
+
+  /** Importador do cutover (Fase 3, DEV-1): dry-run por padrao, commit: true grava. */
+  @Post('reservations/import')
+  @RequirePermissions('motor.reservations.manage')
+  async import(
+    @Param('tenantId') tenantId: string,
+    @Body() dto: ImportReservationsDto,
+    @Req() req: any,
+  ) {
+    return this.reservationImportService.import(tenantId, dto, req.admin_id ?? 'admin');
   }
 
   @Post('reservations/:id/reschedule')
