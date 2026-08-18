@@ -13,12 +13,14 @@ import { TarifaService } from './application/services/tarifa.service';
 import { AvailabilityService } from './application/services/availability.service';
 import { HoldService } from './application/services/hold.service';
 import { ReservationService } from './application/services/reservation.service';
+import { BlockService } from './application/services/block.service';
 import { MotorRoomTypeController } from './infrastructure/controllers/motor-room-type.controller';
 import { MotorUnitController } from './infrastructure/controllers/motor-unit.controller';
 import { MotorDailyInventoryController } from './infrastructure/controllers/motor-daily-inventory.controller';
 import { MotorTarifaController } from './infrastructure/controllers/motor-tarifa.controller';
 import { MotorBotController } from './infrastructure/controllers/motor-bot.controller';
 import { MotorReservationController } from './infrastructure/controllers/motor-reservation.controller';
+import { MotorBlockController } from './infrastructure/controllers/motor-block.controller';
 import { InventoryMaterializeCronProvider } from './infrastructure/providers/inventory-materialize-cron.provider';
 import { HoldExpiryCronProvider } from './infrastructure/providers/hold-expiry-cron.provider';
 import { MotorBotEventsProvider } from './infrastructure/providers/motor-bot-events.provider';
@@ -37,6 +39,7 @@ import { MotorBotEventsProvider } from './infrastructure/providers/motor-bot-eve
     MotorDailyInventoryController,
     MotorTarifaController,
     MotorReservationController,
+    MotorBlockController,
     MotorBotController,
   ],
   providers: [
@@ -54,6 +57,7 @@ import { MotorBotEventsProvider } from './infrastructure/providers/motor-bot-eve
     AvailabilityService,
     HoldService,
     ReservationService,
+    BlockService,
     HoldExpiryCronProvider,
     MotorBotEventsProvider,
   ],
