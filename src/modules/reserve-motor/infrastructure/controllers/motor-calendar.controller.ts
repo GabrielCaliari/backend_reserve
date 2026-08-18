@@ -1,0 +1,21 @@
+import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
+import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
+import { TenantGuard } from '../../../../shared/auth/guards/tenant.guard';
+import { ModuleAccessGuard } from '../../../../shared/auth/guards/module-access.guard';
+import { PermissionsGuard } from '../../../../shared/auth/guards/permissions.guard';
+import { RequirePermissions } from '../../../../shared/auth/decorators/require-permissions.decorator';
+import { RequiresModule } from '../../../../shared/auth/decorators/requires-module.decorator';
+import { CalendarService } from '../../application/services/calendar.service';
+
+@Controller('motor/:tenantId/calendar')
+@UseGuards(AdminJwtGuard, TenantGuard, ModuleAccessGuard, PermissionsGuard)
+@RequiresModule('motor')
+export class MotorCalendarController {
+  constructor(private readonly calendarService: CalendarService) {}
+
+  @Get()
+  @RequirePermissions('motor.read')
+  async month(@Param('tenantId') tenantId: string, @Query('mes') mes: string) {
+    return this.calendarService.month(tenantId, mes);
+  }
+}
