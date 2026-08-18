@@ -17,6 +17,7 @@ import { ReservationService } from './application/services/reservation.service';
 import { BlockService } from './application/services/block.service';
 import { CalendarService } from './application/services/calendar.service';
 import { ChannelPushService } from './application/services/channel-push.service';
+import { ChannelInboundService } from './application/services/channel-inbound.service';
 import { MotorRoomTypeController } from './infrastructure/controllers/motor-room-type.controller';
 import { MotorUnitController } from './infrastructure/controllers/motor-unit.controller';
 import { MotorDailyInventoryController } from './infrastructure/controllers/motor-daily-inventory.controller';
@@ -25,6 +26,7 @@ import { MotorBotController } from './infrastructure/controllers/motor-bot.contr
 import { MotorReservationController } from './infrastructure/controllers/motor-reservation.controller';
 import { MotorBlockController } from './infrastructure/controllers/motor-block.controller';
 import { MotorCalendarController } from './infrastructure/controllers/motor-calendar.controller';
+import { Beds24WebhookController } from './infrastructure/controllers/beds24-webhook.controller';
 import { InventoryMaterializeCronProvider } from './infrastructure/providers/inventory-materialize-cron.provider';
 import { HoldExpiryCronProvider } from './infrastructure/providers/hold-expiry-cron.provider';
 import { MotorBotEventsProvider } from './infrastructure/providers/motor-bot-events.provider';
@@ -48,6 +50,7 @@ import { ChannelPushCronProvider } from './infrastructure/providers/channel-push
     MotorBlockController,
     MotorCalendarController,
     MotorBotController,
+    Beds24WebhookController,
   ],
   providers: [
     AdminJwtGuard,
@@ -72,6 +75,7 @@ import { ChannelPushCronProvider } from './infrastructure/providers/channel-push
     Beds24ApiProvider,
     ChannelPushService,
     ChannelPushCronProvider,
+    ChannelInboundService,
   ],
 })
 export class ReserveMotorModule {}

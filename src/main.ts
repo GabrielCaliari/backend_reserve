@@ -23,6 +23,8 @@ async function bootstrap() {
   // (inofensivo para webhooks: só eleva o teto, não força espera).
   const LARGE_BODY_ROUTES: RegExp[] = [
     /^\/api\/cms\//,
+    // Cobre TODOS os webhooks, incluindo /api/webhooks/beds24/:tenantId
+    // (o Beds24 manda o JSON completo da reserva no corpo, spec Fase 2).
     /^\/api\/webhooks\//,
   ];
 
