@@ -2,6 +2,12 @@ import { Module } from '@nestjs/common';
 import { ReserveAuthModule } from '../reserve-auth/reserve-auth.module';
 import { AdminJwtGuard } from '../../shared/auth/guards/admin-jwt.guard';
 import { TenantGuard } from '../../shared/auth/guards/tenant.guard';
+import { ModuleAccessGuard } from '../../shared/auth/guards/module-access.guard';
+import { PermissionsGuard } from '../../shared/auth/guards/permissions.guard';
+import { RoomTypeService } from './application/services/room-type.service';
+import { UnitService } from './application/services/unit.service';
+import { MotorRoomTypeController } from './infrastructure/controllers/motor-room-type.controller';
+import { MotorUnitController } from './infrastructure/controllers/motor-unit.controller';
 
 /**
  * Motor de Reservas (docs/MOTOR_RESERVAS_RESERVE_MASTER.md).
@@ -11,7 +17,14 @@ import { TenantGuard } from '../../shared/auth/guards/tenant.guard';
  */
 @Module({
   imports: [ReserveAuthModule],
-  controllers: [],
-  providers: [AdminJwtGuard, TenantGuard],
+  controllers: [MotorRoomTypeController, MotorUnitController],
+  providers: [
+    AdminJwtGuard,
+    TenantGuard,
+    ModuleAccessGuard,
+    PermissionsGuard,
+    RoomTypeService,
+    UnitService,
+  ],
 })
 export class ReserveMotorModule {}
