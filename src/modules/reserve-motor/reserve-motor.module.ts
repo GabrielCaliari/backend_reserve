@@ -17,6 +17,7 @@ import { ReservationService } from './application/services/reservation.service';
 import { ReservationImportService } from './application/services/reservation-import.service';
 import { BlockService } from './application/services/block.service';
 import { CalendarService } from './application/services/calendar.service';
+import { RateGridService } from './application/services/rate-grid.service';
 import { ChannelPushService } from './application/services/channel-push.service';
 import { ChannelInboundService } from './application/services/channel-inbound.service';
 import { ChannelReconcileService } from './application/services/channel-reconcile.service';
@@ -78,6 +79,7 @@ import { SiteCoexistenceCronProvider } from './infrastructure/providers/site-coe
     ReservationImportService,
     BlockService,
     CalendarService,
+    RateGridService,
     HoldExpiryCronProvider,
     MotorBotEventsProvider,
     AesEncryptionProvider,

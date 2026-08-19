@@ -6,12 +6,16 @@ import { PermissionsGuard } from '../../../../shared/auth/guards/permissions.gua
 import { RequirePermissions } from '../../../../shared/auth/decorators/require-permissions.decorator';
 import { RequiresModule } from '../../../../shared/auth/decorators/requires-module.decorator';
 import { CalendarService } from '../../application/services/calendar.service';
+import { RateGridService } from '../../application/services/rate-grid.service';
 
 @Controller('motor/:tenantId/calendar')
 @UseGuards(AdminJwtGuard, TenantGuard, ModuleAccessGuard, PermissionsGuard)
 @RequiresModule('motor')
 export class MotorCalendarController {
-  constructor(private readonly calendarService: CalendarService) {}
+  constructor(
+    private readonly calendarService: CalendarService,
+    private readonly rateGridService: RateGridService,
+  ) {}
 
   @Get('range')
   @RequirePermissions('motor.read')
@@ -21,6 +25,16 @@ export class MotorCalendarController {
     @Query('to') to: string,
   ) {
     return this.calendarService.range(tenantId, from, to);
+  }
+
+  @Get('grade')
+  @RequirePermissions('motor.read')
+  grade(
+    @Param('tenantId') tenantId: string,
+    @Query('from') from: string,
+    @Query('to') to: string,
+  ) {
+    return this.rateGridService.grade(tenantId, from, to);
   }
 
   @Get()
