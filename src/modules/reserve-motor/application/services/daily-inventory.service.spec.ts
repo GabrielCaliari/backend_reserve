@@ -62,7 +62,8 @@ describe('DailyInventoryService.materializeTenant', () => {
     };
     const service = new DailyInventoryService(prisma as any);
     const rows = await service.materializeTenant(tenantId, 3);
-    expect(rows).toBe(3);
+    // days + 1: a materializacao inclui D-1 (fuso BR a noite ja e amanha em UTC).
+    expect(rows).toBe(4);
     expect(prisma.motorDailyInventory.deleteMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({ tenant_id: tenantId, override: false }),

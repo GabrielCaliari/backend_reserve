@@ -49,8 +49,11 @@ export class DailyInventoryService {
       this.prisma.motorSeason.findMany({ where: { tenant_id: tenantId } }),
     ]);
     const seasonsById = new Map<string, SeasonLite>(seasons.map((s: any) => [s.id, s]));
-    const start = utcDate(new Date().toISOString().slice(0, 10));
-    const end = addDaysUtc(start, days);
+    // Comeca em D-1 (UTC): a noite no Brasil (UTC-3) o "hoje" UTC ja e
+    // amanha, e o job deixaria o dia local corrente sem linha — quebrando
+    // reserva com checkin hoje. Um dia extra para tras e inocuo.
+    const start = addDaysUtc(utcDate(new Date().toISOString().slice(0, 10)), -1);
+    const end = addDaysUtc(start, days + 1);
 
     const byType = new Map<string, PriceRuleLite[]>();
     for (const r of rules as any as PriceRuleLite[]) {
