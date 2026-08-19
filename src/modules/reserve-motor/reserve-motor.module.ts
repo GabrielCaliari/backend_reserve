@@ -21,6 +21,7 @@ import { ChannelPushService } from './application/services/channel-push.service'
 import { ChannelInboundService } from './application/services/channel-inbound.service';
 import { ChannelReconcileService } from './application/services/channel-reconcile.service';
 import { CHANNEL_RECONCILE, ChannelAdminService } from './application/services/channel-admin.service';
+import { MotorMetricsService } from './application/services/motor-metrics.service';
 import { MotorRoomTypeController } from './infrastructure/controllers/motor-room-type.controller';
 import { MotorUnitController } from './infrastructure/controllers/motor-unit.controller';
 import { MotorDailyInventoryController } from './infrastructure/controllers/motor-daily-inventory.controller';
@@ -91,6 +92,8 @@ import { SiteCoexistenceCronProvider } from './infrastructure/providers/site-coe
     // A porta CHANNEL_RECONCILE liga a reconciliacao sob demanda da API
     // admin ao service da Task 5 (assinaturas conferidas no merge).
     { provide: CHANNEL_RECONCILE, useExisting: ChannelReconcileService },
+    MotorMetricsService,
   ],
+  exports: [MotorMetricsService],
 })
 export class ReserveMotorModule {}
