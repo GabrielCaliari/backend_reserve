@@ -1,5 +1,9 @@
 import { AvailabilityService } from './availability.service';
 import { utcDate } from '../../domain/constants/motor.constants';
+import {
+  MotorTipoEsgotadoError,
+  MotorValidationError,
+} from '../../domain/errors/motor.errors';
 
 const tenantId = 'tenant_1';
 
@@ -25,6 +29,7 @@ function buildPrisma(overrides: Partial<Record<string, any>> = {}) {
       findFirst: jest.fn(),
     },
     motorDailyInventory: {
+      count: jest.fn().mockResolvedValue(2),
       findMany: jest.fn().mockResolvedValue([
         { room_type_id: 'rt_1', data: utcDate('2026-09-05'), preco: 339, min_stay: 2, closed_arrival: false, closed_departure: false, stop_sell: false },
         { room_type_id: 'rt_1', data: utcDate('2026-09-06'), preco: 339, min_stay: 1, closed_arrival: false, closed_departure: false, stop_sell: false },
@@ -192,5 +197,46 @@ describe('AvailabilityService.freeCountByNight (numAvail do push de canais)', ()
     );
     expect(result.get('2026-09-05')).toBe(1);
     expect(result.get('2026-09-06')).toBe(1);
+  });
+});
+
+describe('AvailabilityService.quote — motivo do periodo invendavel', () => {
+  const params = {
+    room_type_id: 'rt_1',
+    checkin: utcDate('2026-09-05'),
+    checkout: utcDate('2026-09-07'),
+    adultos: 2,
+    criancas: 0,
+    pets: 0,
+    cliente_marina: false,
+  };
+
+  it('periodo sem tarifa no calendario e erro de configuracao (400), nao esgotado', async () => {
+    const prisma = buildPrisma({
+      motorDailyInventory: {
+        count: jest.fn().mockResolvedValue(0),
+        findMany: jest.fn().mockResolvedValue([]),
+      },
+    });
+    const service = new AvailabilityService(prisma as any);
+    await expect(service.quote(tenantId, params)).rejects.toThrow(
+      MotorValidationError,
+    );
+    await expect(service.quote(tenantId, params)).rejects.toThrow(/sem tarifa/);
+  });
+
+  it('periodo tarifado com todas as units ocupadas segue como tipo esgotado (409)', async () => {
+    const prisma = buildPrisma({
+      motorReservation: {
+        findMany: jest.fn().mockResolvedValue([
+          { unit_id: 'u_1', checkin: utcDate('2026-09-05'), checkout: utcDate('2026-09-07') },
+          { unit_id: 'u_2', checkin: utcDate('2026-09-05'), checkout: utcDate('2026-09-07') },
+        ]),
+      },
+    });
+    const service = new AvailabilityService(prisma as any);
+    await expect(service.quote(tenantId, params)).rejects.toThrow(
+      MotorTipoEsgotadoError,
+    );
   });
 });

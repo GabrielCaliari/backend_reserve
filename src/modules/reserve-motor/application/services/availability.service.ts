@@ -117,7 +117,26 @@ export class AvailabilityService {
       cliente_marina: params.cliente_marina,
     } as AvailabilityQueryDto);
     const match = found.find((r) => r.room_type_id === params.room_type_id);
-    if (!match) throw new MotorTipoEsgotadoError();
+    if (!match) {
+      // Distingue "sem tarifa" de "esgotado": sem linha no daily_inventory a
+      // data nao e vendavel por configuracao, nao por ocupacao — o admin
+      // precisa saber que o problema esta na tela Tarifas, e o bot nao deve
+      // tratar como corrida perdida.
+      const nights = nightsBetween(params.checkin, params.checkout);
+      const inventoryDays = await this.prisma.motorDailyInventory.count({
+        where: {
+          tenant_id: tenantId,
+          room_type_id: params.room_type_id,
+          data: { gte: params.checkin, lt: params.checkout },
+        },
+      });
+      if (inventoryDays < nights) {
+        throw new MotorValidationError(
+          'periodo sem tarifa no calendario — cadastre as regras de preco na tela Tarifas',
+        );
+      }
+      throw new MotorTipoEsgotadoError();
+    }
     return { valor_total: match.valor_total, min_stay: match.min_stay };
   }
 
