@@ -12,6 +12,27 @@ import {
 const LEADS_PER_STAGE_CAP = 50;
 const ALL_STAGES = FUNNEL_STAGES_IN_ORDER;
 
+function dataBr(iso: string): string {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso);
+  return m ? `${m[3]}/${m[2]}/${m[1]}` : iso;
+}
+
+/**
+ * datas_interesse e Json livre escrito pelo bot (string, {checkin, checkout}
+ * ou lixo). O board e contrato de apresentacao: sempre string | null, senao
+ * o Painel renderiza objeto cru e o React quebra.
+ */
+export function formatDatasInteresse(valor: unknown): string | null {
+  if (typeof valor === 'string') return valor.trim() || null;
+  if (valor && typeof valor === 'object' && !Array.isArray(valor)) {
+    const { checkin, checkout } = valor as Record<string, unknown>;
+    if (typeof checkin === 'string' && typeof checkout === 'string') {
+      return `${dataBr(checkin)} – ${dataBr(checkout)}`;
+    }
+  }
+  return null;
+}
+
 /** §5.7 Bloco Funil — board + full metrics suite, the direct payoff of the append-only funil_eventos log. */
 @Injectable()
 export class FunnelMetricsService {
@@ -63,7 +84,7 @@ export class FunnelMetricsService {
             nome: contatoByNumero.get(l.numero_contato)?.nome ?? null,
             tipoPublico: contatoByNumero.get(l.numero_contato)?.tipo_publico ?? null,
             acomodacaoInteresse: l.acomodacao_interesse,
-            datasInteresse: l.datas_interesse,
+            datasInteresse: formatDatasInteresse(l.datas_interesse),
           })),
         };
       }),
