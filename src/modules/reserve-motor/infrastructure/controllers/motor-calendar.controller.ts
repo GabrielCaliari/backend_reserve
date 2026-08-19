@@ -13,6 +13,16 @@ import { CalendarService } from '../../application/services/calendar.service';
 export class MotorCalendarController {
   constructor(private readonly calendarService: CalendarService) {}
 
+  @Get('range')
+  @RequirePermissions('motor.read')
+  range(
+    @Param('tenantId') tenantId: string,
+    @Query('from') from: string,
+    @Query('to') to: string,
+  ) {
+    return this.calendarService.range(tenantId, from, to);
+  }
+
   @Get()
   @RequirePermissions('motor.read')
   async month(@Param('tenantId') tenantId: string, @Query('mes') mes: string) {
