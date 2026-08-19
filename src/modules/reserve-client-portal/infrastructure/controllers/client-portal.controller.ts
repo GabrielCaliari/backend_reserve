@@ -16,6 +16,7 @@ import { BotChannelHealthService } from '../../application/services/bot-channel-
 import { BotConversationService } from '../../application/services/bot-conversation.service';
 import { ListConversationsQueryDto } from '../../application/dtos/list-conversations-query.dto';
 import { FunnelMetricsService } from '../../application/services/funnel-metrics.service';
+import { HomeService } from '../../application/services/home.service';
 import { HotelClientService } from '../../application/services/hotel-client.service';
 import { RoiAnalysisService } from '../../application/services/roi-analysis.service';
 import { SemesterPlanService } from '../../application/services/semester-plan.service';
@@ -51,6 +52,7 @@ export class ClientPortalController {
     private readonly botChannelHealthService: BotChannelHealthService,
     private readonly botConversationService: BotConversationService,
     private readonly funnelMetricsService: FunnelMetricsService,
+    private readonly homeService: HomeService,
     private readonly hotelClientService: HotelClientService,
     private readonly roiAnalysisService: RoiAnalysisService,
     private readonly semesterPlanService: SemesterPlanService,
@@ -82,6 +84,19 @@ export class ClientPortalController {
     const fromDate = from ? new Date(from) : this.defaultFrom();
     const toDate = to ? new Date(to) : new Date();
     return this.leadsOverviewService.getOverview(clientId, fromDate, toDate);
+  }
+
+  @Get(':clientId/home')
+  async getHome(
+    @Param('clientId') clientId: string,
+    @Query('from') from: string,
+    @Query('to') to: string,
+    @Res() res: Response,
+  ) {
+    const fromDate = from ? new Date(from) : this.defaultFrom();
+    const toDate = to ? new Date(to) : new Date();
+    const result = await this.homeService.getHome(clientId, fromDate, toDate);
+    return res.status(result.status).json(result.data);
   }
 
   @Get(':clientId/roi')

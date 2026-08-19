@@ -121,6 +121,10 @@ import { RolesGuard } from '../../shared/auth/guards/roles.guard';
 import { TenantResourceScopeGuard } from './infrastructure/guards/tenant-resource-scope.guard';
 import { ReserveAuthModule } from '../reserve-auth/reserve-auth.module';
 import { ReserveNotificationsModule } from '../reserve-notifications/reserve-notifications.module';
+import { ReserveMotorModule } from '../reserve-motor/reserve-motor.module';
+
+// Home aggregator
+import { HomeService } from './application/services/home.service';
 
 /**
  * Reserve Client Portal Module
@@ -129,7 +133,7 @@ import { ReserveNotificationsModule } from '../reserve-notifications/reserve-not
  * Portal routes:  /api/hotel-portal/...
  */
 @Module({
-  imports: [ReserveAuthModule, ReserveNotificationsModule],
+  imports: [ReserveAuthModule, ReserveNotificationsModule, ReserveMotorModule],
   controllers: [
     AdminHotelClientController,
     ClientPortalController,
@@ -195,6 +199,7 @@ import { ReserveNotificationsModule } from '../reserve-notifications/reserve-not
     BotChannelHealthService,
     BotConversationService,
     FunnelMetricsService,
+    HomeService,
     BotRetentionService,
     BotRetentionPurgeCronProvider,
     BotIntegrationConfigService,
