@@ -4,10 +4,12 @@ import {
   MATERIALIZE_HORIZON_DAYS,
   addDaysUtc,
   dowBit,
+  isoDate,
+  nightsBetween,
   utcDate,
 } from '../../domain/constants/motor.constants';
 import { MotorNotFoundError, MotorValidationError } from '../../domain/errors/motor.errors';
-import { UpsertDailyInventoryDto } from '../dtos/daily-inventory.dto';
+import { BulkDailyInventoryDto, UpsertDailyInventoryDto } from '../dtos/daily-inventory.dto';
 import { ChannelPushService } from './channel-push.service';
 
 interface SeasonLite {
@@ -152,6 +154,95 @@ export class DailyInventoryService {
     // Override de preco/regra do dia reflete nas OTAs (gatilho de push, §3.3).
     void this.channelPush?.enqueue(tenantId, dto.room_type_id, data, addDaysUtc(data, 1));
     return result;
+  }
+
+  /**
+   * Atualizacao em massa de preco/restricoes por room_type/periodo/dow_mask
+   * (spec Task 3). dry_run apenas retorna o resumo sem escrever. Escrita
+   * sempre grava override=true (o job de materializacao respeita a mesma
+   * invariante que upsertOverride).
+   */
+  async bulkOverride(tenantId: string, dto: BulkDailyInventoryDto) {
+    const temCampo =
+      dto.preco != null || dto.min_stay != null || dto.stop_sell != null ||
+      dto.closed_arrival != null || dto.closed_departure != null;
+    if (!temCampo) throw new MotorValidationError('informe ao menos um campo para aplicar');
+
+    const start = utcDate(dto.from);
+    const endExclusive = addDaysUtc(utcDate(dto.to), 1);
+    const span = nightsBetween(start, endExclusive);
+    if (span < 1) throw new MotorValidationError('to deve ser maior ou igual a from');
+    if (span > 366) throw new MotorValidationError('periodo maximo de 366 dias');
+
+    const owned = await this.prisma.motorRoomType.findMany({
+      where: { tenant_id: tenantId, id: { in: dto.room_type_ids } },
+      select: { id: true },
+    });
+    if (owned.length !== dto.room_type_ids.length) {
+      throw new MotorValidationError('room_type invalido para o tenant');
+    }
+
+    const datas: Date[] = [];
+    for (let d = start; d < endExclusive; d = addDaysUtc(d, 1)) {
+      if (dto.dow_mask & dowBit(d)) datas.push(d);
+    }
+
+    const existentes = await this.prisma.motorDailyInventory.findMany({
+      where: { tenant_id: tenantId, room_type_id: { in: dto.room_type_ids }, data: { in: datas } },
+      select: { room_type_id: true, data: true },
+    });
+    const existSet = new Set(existentes.map((r: any) => `${r.room_type_id}:${isoDate(r.data)}`));
+
+    const criar: { room_type_id: string; data: Date }[] = [];
+    let ignoradasSemPreco = 0;
+    for (const rt of dto.room_type_ids) {
+      for (const d of datas) {
+        if (existSet.has(`${rt}:${isoDate(d)}`)) continue;
+        if (dto.preco == null) { ignoradasSemPreco += 1; continue; }
+        criar.push({ room_type_id: rt, data: d });
+      }
+    }
+
+    const resumo = {
+      total_datas: datas.length * dto.room_type_ids.length,
+      atualizar: existSet.size,
+      criar: criar.length,
+      ignoradas_sem_preco: ignoradasSemPreco,
+      aplicado: false,
+    };
+    if (dto.dry_run) return resumo;
+
+    const campos = {
+      ...(dto.preco != null ? { preco: dto.preco } : {}),
+      ...(dto.min_stay != null ? { min_stay: dto.min_stay } : {}),
+      ...(dto.stop_sell != null ? { stop_sell: dto.stop_sell } : {}),
+      ...(dto.closed_arrival != null ? { closed_arrival: dto.closed_arrival } : {}),
+      ...(dto.closed_departure != null ? { closed_departure: dto.closed_departure } : {}),
+    };
+    const ops: any[] = [
+      this.prisma.motorDailyInventory.updateMany({
+        where: { tenant_id: tenantId, room_type_id: { in: dto.room_type_ids }, data: { in: datas } },
+        data: { ...campos, override: true },
+      }),
+    ];
+    if (criar.length) {
+      ops.push(this.prisma.motorDailyInventory.createMany({
+        data: criar.map((c) => ({
+          tenant_id: tenantId, room_type_id: c.room_type_id, data: c.data,
+          preco: dto.preco!, min_stay: dto.min_stay ?? 1,
+          stop_sell: dto.stop_sell ?? false,
+          closed_arrival: dto.closed_arrival ?? false,
+          closed_departure: dto.closed_departure ?? false,
+          override: true,
+        })),
+        skipDuplicates: true,
+      }));
+    }
+    await this.prisma.$transaction(ops);
+    for (const rt of dto.room_type_ids) {
+      void this.channelPush?.enqueue(tenantId, rt, start, endExclusive);
+    }
+    return { ...resumo, aplicado: true };
   }
 
   async listRange(tenantId: string, roomTypeId: string, from: string, to: string) {

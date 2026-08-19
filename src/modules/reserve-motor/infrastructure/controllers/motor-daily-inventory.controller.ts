@@ -5,7 +5,7 @@ import { ModuleAccessGuard } from '../../../../shared/auth/guards/module-access.
 import { PermissionsGuard } from '../../../../shared/auth/guards/permissions.guard';
 import { RequirePermissions } from '../../../../shared/auth/decorators/require-permissions.decorator';
 import { RequiresModule } from '../../../../shared/auth/decorators/requires-module.decorator';
-import { UpsertDailyInventoryDto } from '../../application/dtos/daily-inventory.dto';
+import { BulkDailyInventoryDto, UpsertDailyInventoryDto } from '../../application/dtos/daily-inventory.dto';
 import { DailyInventoryService } from '../../application/services/daily-inventory.service';
 
 @Controller('motor/:tenantId/daily-inventory')
@@ -29,6 +29,12 @@ export class MotorDailyInventoryController {
   @RequirePermissions('motor.settings.manage')
   async upsert(@Param('tenantId') tenantId: string, @Body() dto: UpsertDailyInventoryDto) {
     return this.dailyInventoryService.upsertOverride(tenantId, dto);
+  }
+
+  @Post('bulk')
+  @RequirePermissions('motor.settings.manage')
+  async bulk(@Param('tenantId') tenantId: string, @Body() dto: BulkDailyInventoryDto) {
+    return this.dailyInventoryService.bulkOverride(tenantId, dto);
   }
 
   @Post('materialize')

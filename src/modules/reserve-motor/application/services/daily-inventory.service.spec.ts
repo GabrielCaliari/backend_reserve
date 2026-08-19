@@ -1,7 +1,22 @@
 import { DailyInventoryService } from './daily-inventory.service';
 import { utcDate } from '../../domain/constants/motor.constants';
+import { MotorValidationError } from '../../domain/errors/motor.errors';
 
 const tenantId = 'tenant_1';
+
+const channelPush = { enqueue: jest.fn() };
+
+function buildPrismaBulk({ existentes }: { existentes: any[] }) {
+  return {
+    motorRoomType: { findMany: jest.fn().mockResolvedValue([{ id: 'rt1' }]) },
+    motorDailyInventory: {
+      findMany: jest.fn().mockResolvedValue(existentes),
+      updateMany: jest.fn().mockResolvedValue({ count: 0 }),
+      createMany: jest.fn().mockResolvedValue({ count: 0 }),
+    },
+    $transaction: jest.fn().mockImplementation((ops: any[]) => Promise.all(ops)),
+  };
+}
 
 function rule(partial: any) {
   return {
@@ -72,5 +87,47 @@ describe('DailyInventoryService.materializeTenant', () => {
     expect(prisma.motorDailyInventory.createMany).toHaveBeenCalledWith(
       expect.objectContaining({ skipDuplicates: true }),
     );
+  });
+});
+
+describe('DailyInventoryService.bulkOverride', () => {
+  beforeEach(() => {
+    channelPush.enqueue.mockClear();
+  });
+
+  const dtoBase = {
+    room_type_ids: ['rt1'], from: '2026-09-01', to: '2026-09-07',
+    dow_mask: 48, // sex(16) + sab(32) nesta convencao (seg=1...dom=64)
+    preco: 400,
+  };
+
+  it('dry_run retorna resumo sem escrever', async () => {
+    const prisma = buildPrismaBulk({ existentes: [{ room_type_id: 'rt1', data: utcDate('2026-09-04') }] });
+    const service = new DailyInventoryService(prisma as any, channelPush as any);
+    const resumo = await service.bulkOverride('tenant_1', { ...dtoBase, dry_run: true } as any);
+    expect(resumo.aplicado).toBe(false);
+    expect(prisma.$transaction).not.toHaveBeenCalled();
+    expect(channelPush.enqueue).not.toHaveBeenCalled();
+  });
+
+  it('aplica update + create com override true e enfileira push por room_type', async () => {
+    const prisma = buildPrismaBulk({ existentes: [{ room_type_id: 'rt1', data: utcDate('2026-09-04') }] });
+    const service = new DailyInventoryService(prisma as any, channelPush as any);
+    const resumo = await service.bulkOverride('tenant_1', dtoBase as any);
+    expect(resumo.aplicado).toBe(true);
+    expect(prisma.motorDailyInventory.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ override: true, preco: 400 }) }),
+    );
+    expect(prisma.motorDailyInventory.createMany).toHaveBeenCalledWith(
+      expect.objectContaining({ skipDuplicates: true }),
+    );
+    expect(channelPush.enqueue).toHaveBeenCalledTimes(1);
+  });
+
+  it('sem nenhum campo a aplicar lanca validacao', async () => {
+    const service = new DailyInventoryService(buildPrismaBulk({ existentes: [] }) as any, channelPush as any);
+    await expect(
+      service.bulkOverride('tenant_1', { room_type_ids: ['rt1'], from: '2026-09-01', to: '2026-09-02', dow_mask: 127 } as any),
+    ).rejects.toThrow(MotorValidationError);
   });
 });
