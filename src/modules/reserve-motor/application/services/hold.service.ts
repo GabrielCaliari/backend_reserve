@@ -30,6 +30,59 @@ export class HoldService {
   ) {}
 
   /**
+   * Estagios onde um hold novo NAO deve rebaixar o lead: ja esta fechando,
+   * ja pagou, ou foi dado como perdido pelo humano (o humano manda).
+   */
+  private static readonly NAO_REBAIXAR_EM_HOLD: string[] = [
+    'FECHAMENTO_INICIADO',
+    'COMPROVANTE_RECEBIDO',
+    'RESERVA_CONFIRMADA',
+    'PERDIDO',
+  ];
+
+  /**
+   * Move o lead do contato no funil do bot direto no banco (autor bot), no
+   * mesmo log append-only que o painel le. `quando` decide, a partir do
+   * estagio atual, se o movimento se aplica — o motor so empurra o funil
+   * quando o evento e informacao nova. Melhor esforco: nunca lanca.
+   */
+  private async syncFunnelStage(
+    tenantId: string,
+    numeroContato: string,
+    paraEstagio: string,
+    motivo: string,
+    quando: (estagioAtual: string) => boolean,
+  ): Promise<void> {
+    try {
+      const lead = await this.prisma.botLead.findUnique({
+        where: { tenant_id_numero_contato: { tenant_id: tenantId, numero_contato: numeroContato } },
+      });
+      const atual = lead?.current_stage ?? 'CONTATO_INICIADO';
+      if (atual === paraEstagio || !quando(atual)) return;
+      await this.prisma.$transaction([
+        this.prisma.funnelEvent.create({
+          data: {
+            tenant_id: tenantId,
+            numero_contato: numeroContato,
+            de_estagio: atual as any,
+            para_estagio: paraEstagio as any,
+            autor_tipo: 'bot',
+            motivo,
+            ocorrido_em: new Date(),
+          },
+        }),
+        this.prisma.botLead.upsert({
+          where: { tenant_id_numero_contato: { tenant_id: tenantId, numero_contato: numeroContato } },
+          create: { tenant_id: tenantId, numero_contato: numeroContato, current_stage: paraEstagio as any },
+          update: { current_stage: paraEstagio as any },
+        }),
+      ]);
+    } catch (error) {
+      this.logger.warn(`sync do funil (${motivo}) falhou: ${String((error as Error)?.message)}`);
+    }
+  }
+
+  /**
    * Fluxo da spec §1.2: quote -> transacao com FOR UPDATE nas units do tipo
    * -> tenta INSERT na melhor unit -> constraint estourou (outra transacao
    * ganhou) -> proxima unit -> nenhuma sobrou -> tipo esgotado (409).
@@ -96,6 +149,15 @@ export class HoldService {
 
     // Hold ativo decrementa o numAvail nas OTAs (gatilho de push, spec §3.3).
     void this.channelPush?.enqueue(tenantId, dto.room_type_id, checkin, checkout);
+
+    // Hold criado = fechamento iniciado no funil do painel, sem esperar o N8N.
+    void this.syncFunnelStage(
+      tenantId,
+      dto.contato_whatsapp,
+      'FECHAMENTO_INICIADO',
+      'HOLD_CRIADO',
+      (atual) => !HoldService.NAO_REBAIXAR_EM_HOLD.includes(atual),
+    );
 
     return {
       hold_id: hold.id,
@@ -241,42 +303,13 @@ export class HoldService {
     hold: { contato_whatsapp: string; checkin: Date; checkout: Date; room_type_id: string },
     reservationId: string,
   ): Promise<void> {
-    try {
-      const lead = await this.prisma.botLead.findUnique({
-        where: {
-          tenant_id_numero_contato: { tenant_id: tenantId, numero_contato: hold.contato_whatsapp },
-        },
-      });
-      const atual = lead?.current_stage ?? 'CONTATO_INICIADO';
-      if (atual !== 'RESERVA_CONFIRMADA') {
-        await this.prisma.$transaction([
-          this.prisma.funnelEvent.create({
-            data: {
-              tenant_id: tenantId,
-              numero_contato: hold.contato_whatsapp,
-              de_estagio: atual,
-              para_estagio: 'RESERVA_CONFIRMADA',
-              autor_tipo: 'bot',
-              motivo: 'pagamento confirmado no motor',
-              ocorrido_em: new Date(),
-            },
-          }),
-          this.prisma.botLead.upsert({
-            where: {
-              tenant_id_numero_contato: { tenant_id: tenantId, numero_contato: hold.contato_whatsapp },
-            },
-            create: {
-              tenant_id: tenantId,
-              numero_contato: hold.contato_whatsapp,
-              current_stage: 'RESERVA_CONFIRMADA',
-            },
-            update: { current_stage: 'RESERVA_CONFIRMADA' },
-          }),
-        ]);
-      }
-    } catch (error) {
-      this.logger.warn(`sync do funil pos-confirm falhou: ${String((error as Error)?.message)}`);
-    }
+    await this.syncFunnelStage(
+      tenantId,
+      hold.contato_whatsapp,
+      'RESERVA_CONFIRMADA',
+      'pagamento confirmado no motor',
+      () => true,
+    );
     try {
       await this.botEvents.dispatch(tenantId, 'reserva.confirmada', {
         reservation_id: reservationId,
@@ -313,6 +346,16 @@ export class HoldService {
       if (hold.checkin && hold.checkout) {
         void this.channelPush?.enqueue(hold.tenant_id, hold.room_type_id, hold.checkin, hold.checkout);
       }
+      // Hold expirado = oferta continua de pe, mas o fechamento caiu: volta
+      // para OFERTA_FEITA com etiqueta de recuperacao (so se ainda estava
+      // em FECHAMENTO_INICIADO — pagamento tardio ja pode ter confirmado).
+      await this.syncFunnelStage(
+        hold.tenant_id,
+        hold.contato_whatsapp,
+        'OFERTA_FEITA',
+        'HOLD_EXPIRADO',
+        (atual) => atual === 'FECHAMENTO_INICIADO',
+      );
       await this.botEvents.dispatch(hold.tenant_id, 'hold.expirado', {
         hold_id: hold.id,
         contato_whatsapp: hold.contato_whatsapp,

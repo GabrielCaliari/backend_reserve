@@ -14,7 +14,7 @@ const dto = {
   cliente_marina: false,
 };
 
-function buildDeps(freeUnits: string[]) {
+function buildDeps(freeUnits: string[], currentStage: string | null = 'OFERTA_FEITA') {
   const tx = {
     $queryRaw: jest.fn().mockResolvedValue([]),
     motorHold: {
@@ -22,13 +22,21 @@ function buildDeps(freeUnits: string[]) {
     },
   };
   const prisma = {
-    $transaction: jest.fn().mockImplementation((fn) => fn(tx)),
+    // create/confirm usam callback; o sync do funil usa ARRAY de ops
+    $transaction: jest
+      .fn()
+      .mockImplementation((arg) => (Array.isArray(arg) ? Promise.all(arg) : arg(tx))),
     motorHold: {
       findFirst: jest.fn(),
       update: jest.fn().mockResolvedValue({ id: 'h_1', status: 'CANCELADO' }),
       findMany: jest.fn().mockResolvedValue([]),
       updateMany: jest.fn().mockResolvedValue({ count: 0 }),
     },
+    botLead: {
+      findUnique: jest.fn().mockResolvedValue(currentStage ? { current_stage: currentStage } : null),
+      upsert: jest.fn().mockResolvedValue({}),
+    },
+    funnelEvent: { create: jest.fn().mockResolvedValue({ id: 'evt_1' }) },
   };
   const availability = {
     quote: jest.fn().mockResolvedValue({ valor_total: 678, min_stay: 2 }),
@@ -76,6 +84,46 @@ describe('HoldService.create', () => {
     const { prisma, availability, events } = buildDeps([]);
     const service = new HoldService(prisma as any, availability as any, events as any);
     await expect(service.create(tenantId, dto as any)).rejects.toBeInstanceOf(MotorTipoEsgotadoError);
+  });
+
+  it('hold criado move o funil do contato para FECHAMENTO_INICIADO (autor bot, motivo HOLD_CRIADO)', async () => {
+    const { prisma, availability, events } = buildDeps(['u_1'], 'OFERTA_FEITA');
+    const service = new HoldService(prisma as any, availability as any, events as any);
+    await service.create(tenantId, dto as any);
+    await new Promise((resolve) => setImmediate(resolve));
+    expect(prisma.funnelEvent.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          numero_contato: dto.contato_whatsapp,
+          de_estagio: 'OFERTA_FEITA',
+          para_estagio: 'FECHAMENTO_INICIADO',
+          autor_tipo: 'bot',
+          motivo: 'HOLD_CRIADO',
+        }),
+      }),
+    );
+    expect(prisma.botLead.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({ update: { current_stage: 'FECHAMENTO_INICIADO' } }),
+    );
+  });
+
+  it.each(['FECHAMENTO_INICIADO', 'COMPROVANTE_RECEBIDO', 'RESERVA_CONFIRMADA', 'PERDIDO'])(
+    'hold criado NAO rebaixa lead ja em %s',
+    async (stage) => {
+      const { prisma, availability, events } = buildDeps(['u_1'], stage);
+      const service = new HoldService(prisma as any, availability as any, events as any);
+      await service.create(tenantId, dto as any);
+      await new Promise((resolve) => setImmediate(resolve));
+      expect(prisma.funnelEvent.create).not.toHaveBeenCalled();
+    },
+  );
+
+  it('falha no sync do funil nao derruba a criacao do hold', async () => {
+    const { prisma, availability, events } = buildDeps(['u_1']);
+    prisma.botLead.findUnique.mockRejectedValue(new Error('db fora'));
+    const service = new HoldService(prisma as any, availability as any, events as any);
+    const result = await service.create(tenantId, dto as any);
+    expect(result.hold_id).toBe('h_1');
   });
 });
 
@@ -268,5 +316,35 @@ describe('HoldService.expireDue', () => {
       'hold.expirado',
       expect.objectContaining({ hold_id: 'h_9' }),
     );
+  });
+
+  it('hold expirado com lead em FECHAMENTO_INICIADO volta para OFERTA_FEITA com motivo HOLD_EXPIRADO', async () => {
+    const { prisma, availability, events } = buildDeps([], 'FECHAMENTO_INICIADO');
+    prisma.motorHold.findMany.mockResolvedValue([
+      { id: 'h_9', tenant_id: tenantId, contato_whatsapp: '5535999990000' },
+    ]);
+    prisma.motorHold.updateMany.mockResolvedValue({ count: 1 });
+    const service = new HoldService(prisma as any, availability as any, events as any);
+    await service.expireDue();
+    expect(prisma.funnelEvent.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          de_estagio: 'FECHAMENTO_INICIADO',
+          para_estagio: 'OFERTA_FEITA',
+          motivo: 'HOLD_EXPIRADO',
+        }),
+      }),
+    );
+  });
+
+  it('hold expirado com lead em outro estagio (ex.: RESERVA_CONFIRMADA por pagamento tardio) nao mexe no funil', async () => {
+    const { prisma, availability, events } = buildDeps([], 'RESERVA_CONFIRMADA');
+    prisma.motorHold.findMany.mockResolvedValue([
+      { id: 'h_9', tenant_id: tenantId, contato_whatsapp: '5535999990000' },
+    ]);
+    prisma.motorHold.updateMany.mockResolvedValue({ count: 1 });
+    const service = new HoldService(prisma as any, availability as any, events as any);
+    await service.expireDue();
+    expect(prisma.funnelEvent.create).not.toHaveBeenCalled();
   });
 });
