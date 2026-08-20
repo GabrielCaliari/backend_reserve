@@ -49,16 +49,65 @@ export class FunnelMetricsService {
     return client?.tenant_id ?? null;
   }
 
+  /** Reservas que contam como venda — mesmo conjunto do MotorMetricsService. */
+  private static readonly STATUS_VENDA = ['CONFIRMADA', 'CHECKIN_FEITO', 'CONCLUIDA'] as const;
+
   async getBoard(clientId: string) {
     const tenantId = await this.resolveTenantId(clientId);
     if (!tenantId) return [];
 
-    const counts = await this.prisma.botLead.groupBy({
-      by: ['current_stage'],
-      where: { tenant_id: tenantId },
-      _count: { _all: true },
-    });
+    const [counts, todosLeads, holds, reservas] = await Promise.all([
+      this.prisma.botLead.groupBy({
+        by: ['current_stage'],
+        where: { tenant_id: tenantId },
+        _count: { _all: true },
+      }),
+      // Totais de R$ por coluna precisam de TODOS os leads da coluna, nao
+      // so dos 50 exibidos — por isso uma leitura leve (numero + estagio).
+      this.prisma.botLead.findMany({
+        where: { tenant_id: tenantId },
+        select: { numero_contato: true, current_stage: true },
+      }),
+      // Do mais novo para o mais velho: o primeiro de cada contato e a
+      // cotacao vigente. CANCELADO e desistencia explicita: nao conta.
+      this.prisma.motorHold.findMany({
+        where: { tenant_id: tenantId, status: { in: ['ATIVO', 'EXPIRADO', 'CONVERTIDO'] } },
+        select: { contato_whatsapp: true, status: true, valor_total: true },
+        orderBy: { created_at: 'desc' },
+      }),
+      this.prisma.motorReservation.findMany({
+        where: {
+          tenant_id: tenantId,
+          origem: 'BOT_WHATSAPP',
+          status: { in: [...FunnelMetricsService.STATUS_VENDA] as any },
+        },
+        select: { hospede_telefone: true, valor_total: true },
+      }),
+    ]);
     const countByStage = new Map(counts.map((c) => [c.current_stage, c._count._all]));
+    const stageByNumero = new Map(todosLeads.map((l) => [l.numero_contato, l.current_stage]));
+
+    // Hold vigente por contato (primeiro na ordem desc).
+    const holdVigente = new Map<string, { status: string; valor: number }>();
+    for (const h of holds) {
+      if (!holdVigente.has(h.contato_whatsapp)) {
+        holdVigente.set(h.contato_whatsapp, { status: h.status, valor: Number(h.valor_total) });
+      }
+    }
+
+    const valorAbertoByStage = new Map<string, number>();
+    for (const [numero, hold] of holdVigente) {
+      const stage = stageByNumero.get(numero);
+      if (!stage || (hold.status !== 'ATIVO' && hold.status !== 'EXPIRADO')) continue;
+      valorAbertoByStage.set(stage, (valorAbertoByStage.get(stage) ?? 0) + hold.valor);
+    }
+    const valorConfirmadoByStage = new Map<string, number>();
+    for (const r of reservas) {
+      const stage = r.hospede_telefone ? stageByNumero.get(r.hospede_telefone) : undefined;
+      if (!stage) continue;
+      valorConfirmadoByStage.set(stage, (valorConfirmadoByStage.get(stage) ?? 0) + Number(r.valor_total));
+    }
+    const arredonda = (v: number) => Math.round(v * 100) / 100;
 
     const board = await Promise.all(
       ALL_STAGES.map(async (stage) => {
@@ -71,7 +120,13 @@ export class FunnelMetricsService {
         const contacts = numeros.length
           ? await this.prisma.botContact.findMany({
               where: { tenant_id: tenantId, numero_contato: { in: numeros } },
-              select: { numero_contato: true, nome: true, tipo_publico: true },
+              select: {
+                numero_contato: true,
+                nome: true,
+                tipo_publico: true,
+                status_bot: true,
+                last_message_at: true,
+              },
             })
           : [];
         const contatoByNumero = new Map(contacts.map((c) => [c.numero_contato, c]));
@@ -79,13 +134,23 @@ export class FunnelMetricsService {
         return {
           stage,
           count: countByStage.get(stage) ?? 0,
-          leads: leads.map((l) => ({
-            numeroContato: l.numero_contato,
-            nome: contatoByNumero.get(l.numero_contato)?.nome ?? null,
-            tipoPublico: contatoByNumero.get(l.numero_contato)?.tipo_publico ?? null,
-            acomodacaoInteresse: l.acomodacao_interesse,
-            datasInteresse: formatDatasInteresse(l.datas_interesse),
-          })),
+          valorAberto: arredonda(valorAbertoByStage.get(stage) ?? 0),
+          valorConfirmado: arredonda(valorConfirmadoByStage.get(stage) ?? 0),
+          leads: leads.map((l) => {
+            const contato = contatoByNumero.get(l.numero_contato);
+            const hold = holdVigente.get(l.numero_contato);
+            return {
+              numeroContato: l.numero_contato,
+              nome: contato?.nome ?? null,
+              tipoPublico: contato?.tipo_publico ?? null,
+              acomodacaoInteresse: l.acomodacao_interesse,
+              datasInteresse: formatDatasInteresse(l.datas_interesse),
+              statusBot: contato?.status_bot ?? 'ATIVO',
+              aguardandoDesde: contato?.last_message_at?.toISOString() ?? null,
+              valorCotacao: hold ? hold.valor : null,
+              etiqueta: hold?.status === 'EXPIRADO' ? ('RECUPERAR' as const) : null,
+            };
+          }),
         };
       }),
     );
