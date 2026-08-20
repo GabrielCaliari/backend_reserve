@@ -63,6 +63,7 @@ import { GuestStatusService } from './application/services/guest-status.service'
 import { BotChannelHealthService } from './application/services/bot-channel-health.service';
 import { BotConversationService } from './application/services/bot-conversation.service';
 import { FunnelMetricsService } from './application/services/funnel-metrics.service';
+import { HandoffSummaryService } from './application/services/handoff-summary.service';
 import { BotRetentionService } from './application/services/bot-retention.service';
 import { BotRetentionPurgeCronProvider } from './infrastructure/providers/bot-retention-purge-cron.provider';
 import { AdminWhatsAppContactController } from './infrastructure/controllers/admin-whatsapp-contact.controller';
@@ -202,6 +203,7 @@ import { HomeService } from './application/services/home.service';
     BotChannelHealthService,
     BotConversationService,
     FunnelMetricsService,
+    HandoffSummaryService,
     HomeService,
     BotRetentionService,
     BotRetentionPurgeCronProvider,
