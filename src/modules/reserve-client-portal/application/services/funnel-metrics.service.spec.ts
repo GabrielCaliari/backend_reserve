@@ -124,3 +124,71 @@ describe('FunnelMetricsService.getBoard', () => {
     });
   });
 });
+
+describe('FunnelMetricsService.getMetrics — handoff', () => {
+  const from = new Date('2026-08-01T00:00:00Z');
+  const to = new Date('2026-08-31T23:59:59Z');
+
+  function buildPrisma() {
+    const zero = jest.fn().mockResolvedValue(0);
+    const vazio = jest.fn().mockResolvedValue([]);
+    return {
+      hotelClient: { findUnique: jest.fn().mockResolvedValue({ tenant_id: 'tenant_1' }) },
+      botContact: {
+        // 1a: conversas atual (4); 2a: anterior; 3a: pausados
+        count: jest.fn().mockResolvedValueOnce(4).mockResolvedValueOnce(2).mockResolvedValue(1),
+        groupBy: vazio,
+        findMany: jest.fn().mockResolvedValue([
+          { numero_contato: 'a', created_at: new Date('2026-08-10T10:00:00Z') },
+          { numero_contato: 'b', created_at: new Date('2026-08-11T10:00:00Z') },
+        ]),
+      },
+      botMessage: { count: zero },
+      botLead: { groupBy: vazio },
+      funnelEvent: {
+        findMany: jest.fn().mockImplementation(({ where }: any) =>
+          Promise.resolve(
+            where?.motivo?.startsWith === 'HANDOFF:'
+              ? [
+                  { numero_contato: 'a', motivo: 'HANDOFF:pediu_humano', ocorrido_em: new Date('2026-08-10T10:10:00Z') },
+                  { numero_contato: 'b', motivo: 'HANDOFF:pediu_humano', ocorrido_em: new Date('2026-08-11T10:30:00Z') },
+                  { numero_contato: 'b', motivo: 'HANDOFF:nao_soube', ocorrido_em: new Date('2026-08-12T10:00:00Z') },
+                ]
+              : [],
+          ),
+        ),
+        count: zero,
+        groupBy: vazio,
+      },
+      followupAttempt: { groupBy: vazio },
+      $queryRaw: vazio,
+    } as any;
+  }
+  const periodComparison = {
+    previousPeriod: () => ({ prevFrom: from, prevTo: to }),
+    metric: (v: number) => ({ value: v, source: 'auto' }),
+    ratio: (a: number, b: number) => (b ? a / b : 0),
+    round2: (v: number) => Math.round(v * 100) / 100,
+  } as any;
+
+  it('agrega total, taxa, motivos e tempo medio com o bot', async () => {
+    const service = new FunnelMetricsService(buildPrisma(), periodComparison);
+    const m = await service.getMetrics('client_1', from, to);
+    expect(m.handoff.total).toBe(3);
+    expect(m.handoff.taxaHandover).toBe(0.75); // 3 / 4 conversas
+    expect(m.handoff.motivos).toEqual([
+      { motivo: 'pediu_humano', count: 2 },
+      { motivo: 'nao_soube', count: 1 },
+    ]);
+    // a: 10min; b: 30min (primeiro handoff de b) -> media 20min = 1200s
+    expect(m.handoff.tempoMedioComBotSegundos).toBe(1200);
+  });
+
+  it('sem handoffs devolve zeros e null', async () => {
+    const prisma = buildPrisma();
+    prisma.funnelEvent.findMany = jest.fn().mockResolvedValue([]);
+    const service = new FunnelMetricsService(prisma, periodComparison);
+    const m = await service.getMetrics('client_1', from, to);
+    expect(m.handoff).toEqual({ total: 0, taxaHandover: 0, motivos: [], tempoMedioComBotSegundos: null });
+  });
+});

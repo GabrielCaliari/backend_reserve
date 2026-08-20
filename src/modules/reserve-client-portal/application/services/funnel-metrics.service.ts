@@ -179,6 +179,7 @@ export class FunnelMetricsService {
       volumePorOrigem,
       contatosPausados,
       audiosTranscritos,
+      handoff,
     ] = await Promise.all([
       this.prisma.botContact.count({ where: { tenant_id: tenantId, created_at: { gte: from, lte: to } } }),
       this.prisma.botContact.count({ where: { tenant_id: tenantId, created_at: { gte: prevFrom, lte: prevTo } } }),
@@ -222,6 +223,7 @@ export class FunnelMetricsService {
       this.prisma.botMessage.count({
         where: { tenant_id: tenantId, tipo: EBotMessageType.audio, ocorrido_em: { gte: from, lte: to } },
       }),
+      this.handoffMetrics(tenantId, from, to),
     ]);
 
     return {
@@ -243,6 +245,10 @@ export class FunnelMetricsService {
       volumePorOrigem: volumePorOrigem.map((r) => ({ origem: r.origem ?? 'desconhecido', count: r._count._all })),
       contatosPausados,
       audiosTranscritos,
+      handoff: {
+        ...handoff,
+        taxaHandover: this.periodComparison.round2(this.periodComparison.ratio(handoff.total, conversasAtual)),
+      },
     };
   }
 
@@ -267,6 +273,56 @@ export class FunnelMetricsService {
     `;
     const value = rows[0]?.avg_seconds;
     return value === null || value === undefined ? null : Number(value);
+  }
+
+  /**
+   * Ciclo bot -> humano (benchmark P0-4c). Cada anotacao HANDOFF:<motivo> e
+   * uma escalacao; "tempo com o bot" = do inicio do contato ate a PRIMEIRA
+   * escalacao daquele numero (segunda escalacao do mesmo contato conta no
+   * total e nos motivos, mas nao distorce o tempo).
+   */
+  private async handoffMetrics(
+    tenantId: string,
+    from: Date,
+    to: Date,
+  ): Promise<{ total: number; motivos: { motivo: string; count: number }[]; tempoMedioComBotSegundos: number | null }> {
+    const eventos = await this.prisma.funnelEvent.findMany({
+      where: { tenant_id: tenantId, motivo: { startsWith: 'HANDOFF:' }, ocorrido_em: { gte: from, lte: to } },
+      select: { numero_contato: true, motivo: true, ocorrido_em: true },
+      orderBy: { ocorrido_em: 'asc' },
+    });
+    if (eventos.length === 0) return { total: 0, motivos: [], tempoMedioComBotSegundos: null };
+
+    const porMotivo = new Map<string, number>();
+    const primeiroHandoff = new Map<string, Date>();
+    for (const e of eventos) {
+      const motivo = (e.motivo ?? '').slice('HANDOFF:'.length) || 'nao_informado';
+      porMotivo.set(motivo, (porMotivo.get(motivo) ?? 0) + 1);
+      if (!primeiroHandoff.has(e.numero_contato)) primeiroHandoff.set(e.numero_contato, e.ocorrido_em);
+    }
+
+    const contatos = await this.prisma.botContact.findMany({
+      where: { tenant_id: tenantId, numero_contato: { in: [...primeiroHandoff.keys()] } },
+      select: { numero_contato: true, created_at: true },
+    });
+    const duracoes: number[] = [];
+    for (const c of contatos) {
+      const h = primeiroHandoff.get(c.numero_contato);
+      if (!h) continue;
+      const seg = (h.getTime() - c.created_at.getTime()) / 1000;
+      if (seg >= 0) duracoes.push(seg);
+    }
+    const media = duracoes.length
+      ? Math.round(duracoes.reduce((a, b) => a + b, 0) / duracoes.length)
+      : null;
+
+    return {
+      total: eventos.length,
+      motivos: [...porMotivo.entries()]
+        .map(([motivo, count]) => ({ motivo, count }))
+        .sort((a, b) => b.count - a.count),
+      tempoMedioComBotSegundos: media,
+    };
   }
 
   /**
@@ -330,6 +386,7 @@ export class FunnelMetricsService {
       volumePorOrigem: [],
       contatosPausados: 0,
       audiosTranscritos: 0,
+      handoff: { total: 0, taxaHandover: 0, motivos: [], tempoMedioComBotSegundos: null },
     };
   }
 }
