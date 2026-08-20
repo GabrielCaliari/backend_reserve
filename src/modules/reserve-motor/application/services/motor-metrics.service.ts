@@ -15,7 +15,7 @@ export class MotorMetricsService {
         status: { in: STATUS_VENDA as any },
         created_at: { gte: from, lte: to },
       },
-      select: { valor_total: true, checkin: true, checkout: true, origem: true },
+      select: { valor_total: true, checkin: true, checkout: true, origem: true, hospede_telefone: true, created_at: true },
     });
     const canceladasEventos = await this.prisma.motorReservationEvent.findMany({
       where: {
@@ -28,6 +28,28 @@ export class MotorMetricsService {
     const expirados = await this.prisma.motorHold.findMany({
       where: { tenant_id: tenantId, status: 'EXPIRADO', updated_at: { gte: from, lte: to } },
       select: { valor_total: true },
+    });
+
+    // Recuperacao (benchmark P0-1): venda do bot cujo telefone tinha um hold
+    // EXPIRADO criado ANTES da reserva = cotacao que caiu e depois fechou.
+    const telefonesVendidos = vendidas
+      .filter((r) => r.origem === 'BOT_WHATSAPP' && r.hospede_telefone)
+      .map((r) => r.hospede_telefone as string);
+    const expiradosAntigos = telefonesVendidos.length
+      ? await this.prisma.motorHold.findMany({
+          where: { tenant_id: tenantId, status: 'EXPIRADO', contato_whatsapp: { in: telefonesVendidos } },
+          select: { contato_whatsapp: true, created_at: true },
+        })
+      : [];
+    const primeiroExpiradoPorContato = new Map<string, Date>();
+    for (const h of expiradosAntigos) {
+      const atual = primeiroExpiradoPorContato.get(h.contato_whatsapp);
+      if (!atual || h.created_at < atual) primeiroExpiradoPorContato.set(h.contato_whatsapp, h.created_at);
+    }
+    const recuperadas = vendidas.filter((r) => {
+      if (r.origem !== 'BOT_WHATSAPP' || !r.hospede_telefone) return false;
+      const exp = primeiroExpiradoPorContato.get(r.hospede_telefone);
+      return !!exp && exp < r.created_at;
     });
 
     const soma = (valores: unknown[]) => valores.reduce<number>((acc, v) => acc + Number(v), 0);
@@ -52,6 +74,7 @@ export class MotorMetricsService {
         valor: soma(canceladasEventos.map((e) => e.reservation.valor_total)),
       },
       a_recuperar: { quantidade: expirados.length, valor: soma(expirados.map((h) => h.valor_total)) },
+      recuperadas: { quantidade: recuperadas.length, valor: soma(recuperadas.map((r) => r.valor_total)) },
       receita_bot: porOrigem.get('BOT_WHATSAPP')?.receita ?? 0,
       por_origem: [...porOrigem.entries()].map(([origem, v]) => ({ origem, ...v })),
     };
