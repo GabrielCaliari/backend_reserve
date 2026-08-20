@@ -219,4 +219,40 @@ describe('BotEventProcessorService — funil v2', () => {
       expect(prisma.botContact.updateMany).not.toHaveBeenCalled();
     });
   });
+
+  describe('bot.pausado (handoff)', () => {
+    it('pausa o contato e grava anotacao HANDOFF:<motivo> no log do funil', async () => {
+      currentStageIs(EFunnelStage.OFERTA_FEITA);
+      await service.process(
+        tenantId,
+        event('bot.pausado', { contato: numeroContato, motivo: 'pediu_humano' }),
+      );
+      expect(prisma.botContact.updateMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: { status_bot: 'PAUSADO', motivo_pausa: 'pediu_humano' },
+        }),
+      );
+      expect(prisma.funnelEvent.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          numero_contato: numeroContato,
+          de_estagio: null,
+          para_estagio: EFunnelStage.OFERTA_FEITA,
+          autor_tipo: 'bot',
+          motivo: 'HANDOFF:pediu_humano',
+          ocorrido_em: new Date('2026-08-07T12:00:00.000Z'),
+        }),
+      });
+    });
+
+    it('sem motivo no payload grava HANDOFF:nao_informado', async () => {
+      await service.process(tenantId, event('bot.pausado', { contato: numeroContato }));
+      expect(eventData().motivo).toBe('HANDOFF:nao_informado');
+      expect(eventData().para_estagio).toBe(EFunnelStage.CONTATO_INICIADO);
+    });
+
+    it('bot.reativado nao gera anotacao (a retomada humana ja tem o proprio evento)', async () => {
+      await service.process(tenantId, event('bot.reativado', { contato: numeroContato }));
+      expect(prisma.funnelEvent.create).not.toHaveBeenCalled();
+    });
+  });
 });

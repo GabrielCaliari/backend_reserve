@@ -87,9 +87,9 @@ export class BotEventProcessorService {
           occurredAt,
         );
       case 'bot.pausado':
-        return this.handleBotPause(tenantId, payload, true);
+        return this.handleBotPause(tenantId, payload, true, occurredAt);
       case 'bot.reativado':
-        return this.handleBotPause(tenantId, payload, false);
+        return this.handleBotPause(tenantId, payload, false, occurredAt);
       case 'sistema.heartbeat':
         return this.handleHeartbeat(tenantId, occurredAt);
       case 'followup.enviado':
@@ -271,17 +271,47 @@ export class BotEventProcessorService {
     });
   }
 
+  /** Prefixo do motivo de escalacao no log do funil; as metricas agregam por ele. */
+  static readonly HANDOFF_MOTIVO_PREFIX = 'HANDOFF:';
+
+  /**
+   * Pausa/retoma o contato. Na PAUSA tambem grava uma anotacao no log do
+   * funil (de_estagio: null, mesma convencao de handleProntoParaFechar)
+   * com o motivo da escalacao — e o "exit reason" do handoff, que o painel
+   * agrega (taxa de handover, motivos, tempo-com-bot). Reativar nao gera
+   * anotacao: a retomada humana pelo painel ja grava RETOMADA_HUMANA.
+   */
   private async handleBotPause(
     tenantId: string,
     payload: Record<string, unknown>,
     paused: boolean,
+    occurredAt: Date,
   ): Promise<void> {
     const numeroContato = String(payload.contato ?? '');
+    const motivo = typeof payload.motivo === 'string' && payload.motivo.trim() ? payload.motivo.trim() : null;
     await this.prisma.botContact.updateMany({
       where: { tenant_id: tenantId, numero_contato: numeroContato },
       data: {
         status_bot: paused ? EBotContactStatus.PAUSADO : EBotContactStatus.ATIVO,
-        motivo_pausa: paused ? ((payload.motivo as string) ?? null) : null,
+        motivo_pausa: paused ? motivo : null,
+      },
+    });
+    if (!paused) return;
+
+    const currentLead = await this.prisma.botLead.findUnique({
+      where: { tenant_id_numero_contato: { tenant_id: tenantId, numero_contato: numeroContato } },
+    });
+    const currentStage = currentLead?.current_stage ?? FUNNEL_ENTRY_STAGE;
+    await this.prisma.funnelEvent.create({
+      data: {
+        tenant_id: tenantId,
+        numero_contato: numeroContato,
+        de_estagio: null,
+        para_estagio: currentStage,
+        autor_tipo: 'bot',
+        // VarChar(255): motivo longo do bot e truncado para caber.
+        motivo: `${BotEventProcessorService.HANDOFF_MOTIVO_PREFIX}${motivo ?? 'nao_informado'}`.slice(0, 255),
+        ocorrido_em: occurredAt,
       },
     });
   }
