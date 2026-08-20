@@ -143,6 +143,76 @@ describe('HoldService.confirm', () => {
     );
   });
 
+  it('apos confirmar, move o funil do contato para RESERVA_CONFIRMADA e avisa o bot', async () => {
+    const { prisma, tx, availability, events } = buildConfirmDeps(baseHold);
+    const prismaComBot = {
+      ...prisma,
+      // syncBotAfterConfirm usa $transaction com ARRAY de ops; o confirm usa callback
+      $transaction: jest
+        .fn()
+        .mockImplementation((arg) => (Array.isArray(arg) ? Promise.all(arg) : arg(tx))),
+      botLead: {
+        findUnique: jest.fn().mockResolvedValue({ current_stage: 'FECHAMENTO_INICIADO' }),
+        upsert: jest.fn().mockResolvedValue({}),
+      },
+      funnelEvent: { create: jest.fn().mockResolvedValue({ id: 'evt_1' }) },
+    };
+    const service = new HoldService(prismaComBot as any, availability as any, events as any);
+
+    await service.confirm(tenantId, 'h_1', { asaas_payment_id: 'pay_9' } as any);
+    // o sync e fire-and-forget: espera as microtasks assentarem
+    await new Promise((resolve) => setImmediate(resolve));
+
+    expect(prismaComBot.funnelEvent.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          de_estagio: 'FECHAMENTO_INICIADO',
+          para_estagio: 'RESERVA_CONFIRMADA',
+          autor_tipo: 'bot',
+          numero_contato: baseHold.contato_whatsapp,
+        }),
+      }),
+    );
+    expect(prismaComBot.botLead.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({ update: { current_stage: 'RESERVA_CONFIRMADA' } }),
+    );
+    expect(events.dispatch).toHaveBeenCalledWith(
+      tenantId,
+      'reserva.confirmada',
+      expect.objectContaining({
+        contato_whatsapp: baseHold.contato_whatsapp,
+        checkin: '2026-09-05',
+        checkout: '2026-09-07',
+      }),
+    );
+  });
+
+  it('lead ja em RESERVA_CONFIRMADA nao gera evento duplicado, mas o bot e avisado', async () => {
+    const { prisma, tx, availability, events } = buildConfirmDeps(baseHold);
+    const prismaComBot = {
+      ...prisma,
+      $transaction: jest
+        .fn()
+        .mockImplementation((arg) => (Array.isArray(arg) ? Promise.all(arg) : arg(tx))),
+      botLead: {
+        findUnique: jest.fn().mockResolvedValue({ current_stage: 'RESERVA_CONFIRMADA' }),
+        upsert: jest.fn(),
+      },
+      funnelEvent: { create: jest.fn() },
+    };
+    const service = new HoldService(prismaComBot as any, availability as any, events as any);
+
+    await service.confirm(tenantId, 'h_1', { asaas_payment_id: 'pay_10' } as any);
+    await new Promise((resolve) => setImmediate(resolve));
+
+    expect(prismaComBot.funnelEvent.create).not.toHaveBeenCalled();
+    expect(events.dispatch).toHaveBeenCalledWith(
+      tenantId,
+      'reserva.confirmada',
+      expect.anything(),
+    );
+  });
+
   it('e idempotente por asaas_payment_id', async () => {
     const { prisma, availability, events } = buildConfirmDeps(baseHold);
     prisma.motorReservation.findFirst.mockResolvedValue({ id: 'r_ja', status: 'CONFIRMADA' });

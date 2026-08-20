@@ -1,5 +1,10 @@
 {
+  "skipDangerousModePermissionPrompt": true,
   "permissions": {
+    "defaultMode": "bypassPermissions",
+    "additionalDirectories": [
+      "C:\\Users\\gabri\\OneDrive\\Documents\\GitHub\\frontend_dashboard_reserve"
+    ],
     "allow": [
       "Bash(grep -r \"payload\\\\\\\\.tenant\\\\|tenantId.*payload\\\\|payload.*tenantId\" \"/c/Users/gabri/Git/backend_api_reserve-admin/src/modules/reserve-auth\" --include=\"*.ts\")",
       "Bash(grep -E \"\\\\.\\(ts|js\\)$\")",

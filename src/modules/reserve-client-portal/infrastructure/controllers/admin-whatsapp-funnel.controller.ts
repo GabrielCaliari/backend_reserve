@@ -1,4 +1,4 @@
-import { Body, Controller, Param, Patch, UseGuards } from '@nestjs/common';
+import { Body, Controller, Param, Patch, Post, UseGuards } from '@nestjs/common';
 import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
 import { TenantGuard } from '../../../../shared/auth/guards/tenant.guard';
 import { ModuleAccessGuard } from '../../../../shared/auth/guards/module-access.guard';
@@ -8,6 +8,7 @@ import { RequiresModule } from '../../../../shared/auth/decorators/requires-modu
 import { CurrentAdmin, CurrentAdminPayload } from '../../../../shared/auth/decorators/current-admin.decorator';
 import { FunnelService } from '../../application/services/funnel.service';
 import { FunnelStageChangeDto } from '../../application/dtos/funnel-stage-change.dto';
+import { ResumeConversationDto } from '../../application/dtos/resume-conversation.dto';
 
 @Controller('admin/hotel-portal/:tenantId/whatsapp/funnel')
 // O tenant vem do proprio caminho (`:tenantId`), entao o TenantGuard o resolve
@@ -18,6 +19,20 @@ import { FunnelStageChangeDto } from '../../application/dtos/funnel-stage-change
 @RequirePermissions('hotel-portal.whatsapp-funnel.manage')
 export class AdminWhatsAppFunnelController {
   constructor(private readonly funnelService: FunnelService) {}
+
+  /**
+   * Retomada humana: despausa o bot para o contato e (opcionalmente) devolve o
+   * lead a um estagio. Mesma permissao do mover-estagio: editor+.
+   */
+  @Post(':contactId/resume')
+  async resumeConversation(
+    @Param('tenantId') tenantId: string,
+    @Param('contactId') contactId: string,
+    @Body() dto: ResumeConversationDto,
+    @CurrentAdmin() admin: CurrentAdminPayload,
+  ) {
+    return this.funnelService.resumeConversation(tenantId, contactId, admin.admin_id, dto.estagio);
+  }
 
   @Patch(':contactId/stage')
   async moveStage(

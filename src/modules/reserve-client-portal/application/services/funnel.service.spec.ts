@@ -1,7 +1,8 @@
 import { BadRequestException } from '@nestjs/common';
 import { validate } from 'class-validator';
 import { plainToInstance } from 'class-transformer';
-import { FunnelService } from './funnel.service';
+import { NotFoundException } from '@nestjs/common';
+import { FunnelService, RETOMADA_HUMANA_MOTIVO } from './funnel.service';
 import { FunnelStageChangeDto } from '../dtos/funnel-stage-change.dto';
 import { EBotContactAudience, EFunnelStage } from '../../../../generated/prisma/enums';
 
@@ -175,6 +176,111 @@ describe('FunnelService.moveStage', () => {
 
       expect(prisma.botContact.updateMany).not.toHaveBeenCalled();
     });
+  });
+});
+
+describe('FunnelService.resumeConversation', () => {
+  let prisma: {
+    botLead: { findUnique: jest.Mock; upsert: jest.Mock };
+    botContact: { findUnique: jest.Mock; updateMany: jest.Mock };
+    funnelEvent: { create: jest.Mock };
+    $transaction: jest.Mock;
+  };
+  let webhook: { dispatch: jest.Mock };
+  let service: FunnelService;
+
+  const tenantId = 'tenant_123';
+  const numeroContato = '5511999999999';
+  const adminId = 'admin_1';
+
+  beforeEach(() => {
+    prisma = {
+      botLead: { findUnique: jest.fn(), upsert: jest.fn() },
+      botContact: {
+        findUnique: jest.fn().mockResolvedValue({ id: 'c_1', status_bot: 'PAUSADO' }),
+        updateMany: jest.fn().mockResolvedValue({ count: 1 }),
+      },
+      funnelEvent: { create: jest.fn() },
+      // resume le results[1] como o funnelEvent criado
+      $transaction: jest.fn().mockResolvedValue([{ count: 1 }, { id: 'evt_resume' }]),
+    };
+    webhook = { dispatch: jest.fn().mockResolvedValue(undefined) };
+    service = new FunnelService(prisma as any, webhook as any);
+  });
+
+  it('404 quando o contato nao existe', async () => {
+    prisma.botContact.findUnique.mockResolvedValue(null);
+
+    await expect(
+      service.resumeConversation(tenantId, numeroContato, adminId),
+    ).rejects.toBeInstanceOf(NotFoundException);
+    expect(prisma.$transaction).not.toHaveBeenCalled();
+  });
+
+  it('despausa, registra quem assumiu e avisa o N8N mesmo sem mudar de estagio', async () => {
+    prisma.botLead.findUnique.mockResolvedValue({ current_stage: EFunnelStage.OFERTA_FEITA });
+
+    const evt = await service.resumeConversation(tenantId, numeroContato, adminId);
+
+    expect(evt).toEqual({ id: 'evt_resume' });
+    expect(prisma.botContact.updateMany).toHaveBeenCalledWith({
+      where: { tenant_id: tenantId, numero_contato: numeroContato },
+      data: { status_bot: 'ATIVO', motivo_pausa: null },
+    });
+    expect(prisma.funnelEvent.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          de_estagio: EFunnelStage.OFERTA_FEITA,
+          para_estagio: EFunnelStage.OFERTA_FEITA,
+          autor_tipo: 'humano',
+          autor_id: adminId,
+          motivo: RETOMADA_HUMANA_MOTIVO,
+        }),
+      }),
+    );
+    // sem mudanca de estagio nao ha upsert do lead
+    expect(prisma.botLead.upsert).not.toHaveBeenCalled();
+    expect(webhook.dispatch).toHaveBeenCalledWith(tenantId, 'evt_resume');
+  });
+
+  it('com estagio de retorno move o lead junto', async () => {
+    prisma.botLead.findUnique.mockResolvedValue({ current_stage: EFunnelStage.OFERTA_FEITA });
+
+    await service.resumeConversation(
+      tenantId,
+      numeroContato,
+      adminId,
+      EFunnelStage.FECHAMENTO_INICIADO,
+    );
+
+    expect(prisma.funnelEvent.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          de_estagio: EFunnelStage.OFERTA_FEITA,
+          para_estagio: EFunnelStage.FECHAMENTO_INICIADO,
+        }),
+      }),
+    );
+    expect(prisma.botLead.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        update: { current_stage: EFunnelStage.FECHAMENTO_INICIADO },
+      }),
+    );
+  });
+
+  it('contato sem lead usa CONTATO_INICIADO como estagio atual', async () => {
+    prisma.botLead.findUnique.mockResolvedValue(null);
+
+    await service.resumeConversation(tenantId, numeroContato, adminId);
+
+    expect(prisma.funnelEvent.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          de_estagio: EFunnelStage.CONTATO_INICIADO,
+          para_estagio: EFunnelStage.CONTATO_INICIADO,
+        }),
+      }),
+    );
   });
 });
 

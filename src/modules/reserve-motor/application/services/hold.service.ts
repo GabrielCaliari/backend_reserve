@@ -204,6 +204,7 @@ export class HoldService {
         throw new MotorTipoEsgotadoError();
       });
       void this.channelPush?.enqueue(tenantId, hold.room_type_id, hold.checkin, hold.checkout);
+      void this.syncBotAfterConfirm(tenantId, hold, reservation.id);
       return { reservation_id: reservation.id, status: 'CONFIRMADA' };
     } catch (error) {
       if (error instanceof MotorTipoEsgotadoError) {
@@ -224,6 +225,68 @@ export class HoldService {
         });
       }
       throw error;
+    }
+  }
+
+  /**
+   * Reserva paga = funil sincronizado NA HORA: move o lead do contato para
+   * RESERVA_CONFIRMADA direto no banco (autor bot), sem depender da ida e
+   * volta do N8N — o funil do painel e o motor falam da mesma coisa. Depois
+   * avisa o bot (`reserva.confirmada`) com contato e datas, para o cerebro
+   * saber que aquele numero tem estadia marcada. Melhor esforco: a reserva ja
+   * esta confirmada e nada aqui pode desfaze-la.
+   */
+  private async syncBotAfterConfirm(
+    tenantId: string,
+    hold: { contato_whatsapp: string; checkin: Date; checkout: Date; room_type_id: string },
+    reservationId: string,
+  ): Promise<void> {
+    try {
+      const lead = await this.prisma.botLead.findUnique({
+        where: {
+          tenant_id_numero_contato: { tenant_id: tenantId, numero_contato: hold.contato_whatsapp },
+        },
+      });
+      const atual = lead?.current_stage ?? 'CONTATO_INICIADO';
+      if (atual !== 'RESERVA_CONFIRMADA') {
+        await this.prisma.$transaction([
+          this.prisma.funnelEvent.create({
+            data: {
+              tenant_id: tenantId,
+              numero_contato: hold.contato_whatsapp,
+              de_estagio: atual,
+              para_estagio: 'RESERVA_CONFIRMADA',
+              autor_tipo: 'bot',
+              motivo: 'pagamento confirmado no motor',
+              ocorrido_em: new Date(),
+            },
+          }),
+          this.prisma.botLead.upsert({
+            where: {
+              tenant_id_numero_contato: { tenant_id: tenantId, numero_contato: hold.contato_whatsapp },
+            },
+            create: {
+              tenant_id: tenantId,
+              numero_contato: hold.contato_whatsapp,
+              current_stage: 'RESERVA_CONFIRMADA',
+            },
+            update: { current_stage: 'RESERVA_CONFIRMADA' },
+          }),
+        ]);
+      }
+    } catch (error) {
+      this.logger.warn(`sync do funil pos-confirm falhou: ${String((error as Error)?.message)}`);
+    }
+    try {
+      await this.botEvents.dispatch(tenantId, 'reserva.confirmada', {
+        reservation_id: reservationId,
+        contato_whatsapp: hold.contato_whatsapp,
+        room_type_id: hold.room_type_id,
+        checkin: isoDate(hold.checkin),
+        checkout: isoDate(hold.checkout),
+      });
+    } catch {
+      // dispatch nunca lanca; defesa em profundidade
     }
   }
 

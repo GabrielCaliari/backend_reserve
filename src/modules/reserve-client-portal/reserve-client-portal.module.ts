@@ -59,6 +59,7 @@ import { BotEventKeyGuard } from './infrastructure/guards/bot-event-key.guard';
 import { BotEventIngestionService } from './application/services/bot-event-ingestion.service';
 import { BotEventProcessorService } from './application/services/bot-event-processor.service';
 import { FunnelService } from './application/services/funnel.service';
+import { GuestStatusService } from './application/services/guest-status.service';
 import { BotChannelHealthService } from './application/services/bot-channel-health.service';
 import { BotConversationService } from './application/services/bot-conversation.service';
 import { FunnelMetricsService } from './application/services/funnel-metrics.service';
@@ -68,6 +69,7 @@ import { AdminWhatsAppContactController } from './infrastructure/controllers/adm
 import { BotIntegrationConfigService } from './application/services/bot-integration-config.service';
 import { AdminBotIntegrationConfigController } from './infrastructure/controllers/admin-bot-integration-config.controller';
 import { BotStageWebhookProvider } from './infrastructure/providers/bot-stage-webhook.provider';
+import { GuestStatusCronProvider } from './infrastructure/providers/guest-status-cron.provider';
 import { BotReconciliationCronProvider } from './infrastructure/providers/bot-reconciliation-cron.provider';
 import { BenchmarkEligibilityService } from './application/services/benchmark-eligibility.service';
 import { BenchmarkAggregationCronProvider } from './infrastructure/providers/benchmark-aggregation-cron.provider';
@@ -196,6 +198,7 @@ import { HomeService } from './application/services/home.service';
     BotEventIngestionService,
     BotEventProcessorService,
     FunnelService,
+    GuestStatusService,
     BotChannelHealthService,
     BotConversationService,
     FunnelMetricsService,
@@ -204,6 +207,7 @@ import { HomeService } from './application/services/home.service';
     BotRetentionPurgeCronProvider,
     BotIntegrationConfigService,
     BotStageWebhookProvider,
+    GuestStatusCronProvider,
     BotReconciliationCronProvider,
     BenchmarkEligibilityService,
     BenchmarkAggregationCronProvider,
