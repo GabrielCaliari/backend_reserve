@@ -19,7 +19,7 @@ const ESTAGIO_LABEL: Record<string, string> = {
 
 const BRL_FORMATTER = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
 /** O Node as vezes formata com NBSP entre "R$" e o valor; normaliza p/ espaco comum. */
-const BRL = { format: (v: number) => BRL_FORMATTER.format(v).replace(/ /g, ' ') };
+const BRL = { format: (v: number) => BRL_FORMATTER.format(v).replace(/\u00a0/g, ' ') };
 
 function isoDate(d: Date): string {
   return d.toISOString().slice(0, 10);
