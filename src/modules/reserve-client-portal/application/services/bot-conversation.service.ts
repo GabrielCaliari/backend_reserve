@@ -4,7 +4,7 @@ import { ListConversationsQueryDto } from '../dtos/list-conversations-query.dto'
 import { EFunnelStage } from '../../../../generated/prisma/enums';
 import { FUNNEL_ENTRY_STAGE } from '../../domain/enums/funnel-stage-groups';
 
-/** §5.3 Bloco Conversas — read-only list/search/detail, deep-linked into Chatwoot (Decisao 11). */
+/** §5.3 Bloco Conversas — somente leitura; o atendimento humano acontece no WhatsApp Business da pousada (contrato v2 §1.1). */
 @Injectable()
 export class BotConversationService {
   constructor(private readonly prisma: PrismaService) {}
@@ -38,14 +38,11 @@ export class BotConversationService {
     });
 
     const numeros = contacts.map((c) => c.numero_contato);
-    const [leads, chatwootBaseUrl] = await Promise.all([
-      numeros.length
-        ? this.prisma.botLead.findMany({
-            where: { tenant_id: tenantId, numero_contato: { in: numeros } },
-          })
-        : Promise.resolve([]),
-      this.getChatwootBaseUrl(tenantId),
-    ]);
+    const leads = numeros.length
+      ? await this.prisma.botLead.findMany({
+          where: { tenant_id: tenantId, numero_contato: { in: numeros } },
+        })
+      : [];
     const leadByContact = new Map(leads.map((l) => [l.numero_contato, l]));
 
     const filtered = query.stage
@@ -63,7 +60,7 @@ export class BotConversationService {
         consentimentoLgpd: c.consentimento_lgpd,
         tipoPublico: c.tipo_publico,
         currentStage: leadByContact.get(c.numero_contato)?.current_stage ?? FUNNEL_ENTRY_STAGE,
-        chatwootDeepLink: this.buildChatwootDeepLink(chatwootBaseUrl, c.numero_contato),
+        whatsappWebLink: this.whatsappWebLink(c.numero_contato),
       })),
     };
   }
@@ -77,7 +74,7 @@ export class BotConversationService {
     });
     if (!contact) throw new NotFoundException('Conversation not found.');
 
-    const [messages, lead, chatwootBaseUrl] = await Promise.all([
+    const [messages, lead] = await Promise.all([
       this.prisma.botMessage.findMany({
         where: { tenant_id: tenantId, numero_contato: numeroContato },
         orderBy: { ocorrido_em: 'asc' },
@@ -85,7 +82,6 @@ export class BotConversationService {
       this.prisma.botLead.findUnique({
         where: { tenant_id_numero_contato: { tenant_id: tenantId, numero_contato: numeroContato } },
       }),
-      this.getChatwootBaseUrl(tenantId),
     ]);
 
     return {
@@ -93,10 +89,13 @@ export class BotConversationService {
         numeroContato: contact.numero_contato,
         nome: contact.nome,
         statusBot: contact.status_bot,
+        lastMessageAt: contact.last_message_at,
         consentimentoLgpd: contact.consentimento_lgpd,
         tipoPublico: contact.tipo_publico,
         currentStage: lead?.current_stage ?? FUNNEL_ENTRY_STAGE,
-        chatwootDeepLink: this.buildChatwootDeepLink(chatwootBaseUrl, contact.numero_contato),
+        whatsappWebLink: this.whatsappWebLink(contact.numero_contato),
+        ocasiao: contact.ocasiao ?? null,
+        hold: this.holdResumo(lead),
       },
       messages: messages.map((m) => ({
         role: m.role,
@@ -115,14 +114,29 @@ export class BotConversationService {
     return client?.tenant_id ?? null;
   }
 
-  private async getChatwootBaseUrl(tenantId: string): Promise<string | null> {
-    const config = await this.prisma.botIntegrationConfig.findUnique({ where: { tenant_id: tenantId } });
-    return config?.chatwoot_base_url ?? null;
+  /** Abre a conversa no WhatsApp Web da conta logada — a da pousada (contrato v2 §4.1). */
+  private whatsappWebLink(numeroContato: string): string {
+    return `https://web.whatsapp.com/send?phone=${numeroContato.replace(/\D/g, '')}`;
   }
 
-  /** Never a broken link: null when the tenant has no chatwoot_base_url configured. */
-  private buildChatwootDeepLink(baseUrl: string | null, numeroContato: string): string | null {
-    if (!baseUrl) return null;
-    return `${baseUrl.replace(/\/$/, '')}/conversations?q=${encodeURIComponent(numeroContato)}`;
+  private holdResumo(
+    lead: {
+      hold_codigo?: string | null;
+      hold_status?: string | null;
+      hold_valor_cents?: number | null;
+      acomodacao_interesse?: string | null;
+      datas_interesse?: unknown;
+    } | null,
+  ) {
+    if (!lead || (!lead.hold_codigo && !lead.hold_status)) return null;
+    const datas = (lead.datas_interesse ?? {}) as { checkin?: unknown; checkout?: unknown };
+    return {
+      codigo: lead.hold_codigo ?? null,
+      status: lead.hold_status ?? null,
+      acomodacao: lead.acomodacao_interesse ?? null,
+      checkIn: typeof datas.checkin === 'string' ? datas.checkin : null,
+      checkOut: typeof datas.checkout === 'string' ? datas.checkout : null,
+      valor: lead.hold_valor_cents == null ? null : lead.hold_valor_cents / 100,
+    };
   }
 }
