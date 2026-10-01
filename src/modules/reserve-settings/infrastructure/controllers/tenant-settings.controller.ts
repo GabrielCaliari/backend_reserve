@@ -29,7 +29,7 @@ const MODULE_SETTINGS_SCHEMA = {
   example: { emailEnabled: true, inappEnabled: true, contactEmail: '' },
 };
 
-@ApiTags('Settings')
+@ApiTags('Tenant Settings')
 @ApiBearerAuth()
 @ApiHeader({ name: 'x-tenant-id', required: true, description: 'Tenant ID' })
 @UseGuards(AdminJwtGuard, TenantGuard, PermissionsGuard)

@@ -18,7 +18,7 @@ const MODULE_FLAGS_SCHEMA = {
 };
 
 // Platform-level: superadmin addresses any tenant by route param — deliberately NO TenantGuard.
-@ApiTags('Settings')
+@ApiTags('Superadmin Modules')
 @ApiBearerAuth()
 @UseGuards(AdminJwtGuard, PermissionsGuard)
 @RequirePermissions('settings.modules.manage')

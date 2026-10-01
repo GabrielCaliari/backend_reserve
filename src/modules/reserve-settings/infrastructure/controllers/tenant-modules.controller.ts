@@ -17,7 +17,7 @@ const MODULE_FLAGS_SCHEMA = {
   example: Object.fromEntries(GATEABLE_MODULES.map((module, i) => [module, i % 2 === 0])),
 };
 
-@ApiTags('Settings')
+@ApiTags('Tenant Modules')
 @ApiBearerAuth()
 @ApiHeader({ name: 'x-tenant-id', required: true, description: 'Tenant ID' })
 @UseGuards(AdminJwtGuard, TenantGuard, PermissionsGuard)

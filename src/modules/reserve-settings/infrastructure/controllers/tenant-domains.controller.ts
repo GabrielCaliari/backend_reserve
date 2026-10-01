@@ -12,7 +12,7 @@ import {
 } from '../../application/dtos/tenant-domain.dto';
 
 // Platform-level: superadmin addresses any tenant by route param — deliberately NO TenantGuard.
-@ApiTags('Settings')
+@ApiTags('Tenant Domains')
 @ApiBearerAuth()
 @UseGuards(AdminJwtGuard, PermissionsGuard)
 @RequirePermissions('settings.domains.manage')
