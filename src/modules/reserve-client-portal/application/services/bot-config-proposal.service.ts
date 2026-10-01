@@ -101,7 +101,7 @@ export class BotConfigProposalService {
       // Contrato v2 §6 passo 3: a aprovacao aplica a chave no bot pelo Canal B.
       // A proposta aprovada e a verdade; se o bot estiver fora do ar, o cron
       // de reconciliacao reenvia o apply_config.
-      await this.panelActions.dispatch(tenantId, 'apply_config', {
+      const delivery = await this.panelActions.dispatch(tenantId, 'apply_config', {
         actorId: revisorId,
         payload: { key: updated.campo, value: updated.valor_proposto },
       });
@@ -112,7 +112,8 @@ export class BotConfigProposalService {
         title: `Proposta de configuração aprovada: ${updated.campo}`,
       });
 
-      return successResponse(updated);
+      // `ok: false` = aprovada e registrada, mas o bot nao foi avisado agora.
+      return successResponse({ ...updated, ok: delivery.ok, state: delivery.state });
     } catch (error) {
       return errorResponse('500:BOT_CONFIG_PROPOSAL_NOT_APPROVED', 500, error);
     }

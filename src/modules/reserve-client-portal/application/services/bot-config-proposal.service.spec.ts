@@ -27,6 +27,15 @@ describe('BotConfigProposalService (contrato v2 §6)', () => {
     });
   });
 
+  it('aprovar devolve ok/state do apply_config e ok:false quando o bot nao responde', async () => {
+    const okResult = await service.approve('tenant_1', 'p_1', 'revisor_1');
+    expect(okResult.data).toMatchObject({ id: 'p_1', status: 'APROVADA', ok: true });
+    actions.dispatch.mockResolvedValue({ ok: false, state: null });
+    const failed = await service.approve('tenant_1', 'p_1', 'revisor_1');
+    expect(failed.status).toBe(200);
+    expect(failed.data).toMatchObject({ status: 'APROVADA', ok: false, state: null });
+  });
+
   it('proposta que nao esta pendente nao e reaplicada', async () => {
     prisma.botConfigProposal.findFirst.mockResolvedValue({ id: 'p_1', status: 'APROVADA' });
     const result = await service.approve('tenant_1', 'p_1', 'revisor_1');

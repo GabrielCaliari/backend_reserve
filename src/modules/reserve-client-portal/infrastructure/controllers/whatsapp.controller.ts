@@ -9,7 +9,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { Response } from 'express';
-import { ApiBody, ApiExtraModels, getSchemaPath } from '@nestjs/swagger';
+import { ApiBody, ApiExtraModels, ApiOkResponse, ApiResponse, getSchemaPath } from '@nestjs/swagger';
 import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
 import { TenantGuard } from '../../../../shared/auth/guards/tenant.guard';
 import { ModuleAccessGuard } from '../../../../shared/auth/guards/module-access.guard';
@@ -21,7 +21,7 @@ import {
   TenantResourceScopeGuard,
 } from '../guards/tenant-resource-scope.guard';
 import { WhatsAppService } from '../../application/services/whatsapp.service';
-import { CreateWhatsAppTemplateDto, SendBotMessageDto, SendWhatsAppMessageDto } from '../../application/dtos/whatsapp.dto';
+import { CreateWhatsAppTemplateDto, SendBotMessageDto, SendBotMessageResponseDto, SendWhatsAppMessageDto } from '../../application/dtos/whatsapp.dto';
 import { CurrentAdmin, CurrentAdminPayload } from '../../../../shared/auth/decorators/current-admin.decorator';
 
 /**
@@ -72,6 +72,8 @@ export class WhatsAppController {
    * service; o oneOf abaixo e so a documentacao do contrato.
    */
   @Post(':clientId/send')
+  @ApiOkResponse({ type: SendBotMessageResponseDto, description: 'Bot aceitou a mensagem.' })
+  @ApiResponse({ status: 502, type: SendBotMessageResponseDto, description: 'Bot inalcancavel: mensagem NAO enviada e nao reenviada (ok=false).' })
   @ApiBody({
     schema: {
       oneOf: [{ $ref: getSchemaPath(SendBotMessageDto) }, { $ref: getSchemaPath(SendWhatsAppMessageDto) }],

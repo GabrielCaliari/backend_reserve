@@ -1,6 +1,8 @@
 import { Body, Controller, Get, Param, Patch, Query, Res, UseGuards } from '@nestjs/common';
+import { ApiOkResponse } from '@nestjs/swagger';
 import { Response } from 'express';
 import { BotConfigProposalService } from '../../application/services/bot-config-proposal.service';
+import { PanelActionResponseDto } from '../../application/dtos/funnel-action.dto';
 import { RejectBotConfigProposalDto } from '../../application/dtos/bot-config-proposal.dto';
 import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
 import { TenantGuard } from '../../../../shared/auth/guards/tenant.guard';
@@ -30,6 +32,7 @@ export class AdminBotConfigProposalController {
     return res.status(result.status).json(result.data);
   }
 
+  @ApiOkResponse({ type: PanelActionResponseDto, description: 'Proposta aprovada + ok/state do apply_config. ok=false: aprovada, bot nao avisado (reenvio automatico).' })
   @Patch(':id/approve')
   async approve(
     @Param('tenantId') tenantId: string,

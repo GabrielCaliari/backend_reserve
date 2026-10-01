@@ -4,6 +4,9 @@ import { EBotContactAudience, EFunnelStage } from '../../../../generated/prisma/
 import { FUNNEL_ENTRY_STAGE, FUNNEL_LOST_STAGE } from '../../domain/enums/funnel-stage-groups';
 import { BotPanelActionProvider, PanelActionResult } from '../../infrastructure/providers/bot-panel-action.provider';
 
+/** Evento do funil + resultado da entrega ao bot (`ok: false` = bot nao avisado). */
+export type FunnelEventActionResult = Record<string, unknown> & PanelActionResult;
+
 /** Motivos de perda do contrato v2 (§3.5, evento `perdido`). */
 export const MOTIVOS_PERDA = ['caro', 'data', 'pesquisando', 'sumiu', 'outro'] as const;
 
@@ -28,7 +31,7 @@ export class FunnelService {
     adminId: string,
     motivo?: string,
     tipoPublico?: EBotContactAudience,
-  ) {
+  ): Promise<FunnelEventActionResult> {
     const currentLead = await this.prisma.botLead.findUnique({
       where: { tenant_id_numero_contato: { tenant_id: tenantId, numero_contato: numeroContato } },
     });
@@ -95,19 +98,18 @@ export class FunnelService {
       }),
     ]);
 
-    // Fire-and-forget: a acao do humano ja valeu no painel. O provider grava
-    // a linha no outbox e o cron reconcilia se o bot estiver fora do ar.
-    const dispatch =
-      paraEstagio === FUNNEL_LOST_STAGE
-        ? this.panelActions.dispatch(tenantId, 'mark_lost', {
-            phone: numeroContato, actorId: adminId, payload: { reason: motivoLimpo },
-          })
-        : this.panelActions.dispatch(tenantId, 'move_stage', {
-            phone: numeroContato, actorId: adminId, payload: { stage: paraEstagio, reason: motivoLimpo ?? null },
-          });
-    dispatch.catch(() => undefined);
+    // A acao do humano ja valeu no painel. O provider grava a linha no outbox
+    // e o cron reconcilia se o bot estiver fora do ar; o resultado vai junto na
+    // resposta (`ok: false` = acao registrada, bot nao avisado agora).
+    const result = await (paraEstagio === FUNNEL_LOST_STAGE
+      ? this.panelActions.dispatch(tenantId, 'mark_lost', {
+          phone: numeroContato, actorId: adminId, payload: { reason: motivoLimpo },
+        })
+      : this.panelActions.dispatch(tenantId, 'move_stage', {
+          phone: numeroContato, actorId: adminId, payload: { stage: paraEstagio, reason: motivoLimpo ?? null },
+        }));
 
-    return funnelEvent;
+    return { ...funnelEvent, ok: result.ok, state: result.state };
   }
 
   /**
@@ -128,7 +130,7 @@ export class FunnelService {
     numeroContato: string,
     adminId: string,
     estagio?: EFunnelStage,
-  ) {
+  ): Promise<FunnelEventActionResult> {
     const contact = await this.prisma.botContact.findUnique({
       where: { tenant_id_numero_contato: { tenant_id: tenantId, numero_contato: numeroContato } },
     });
@@ -170,19 +172,18 @@ export class FunnelService {
     const results = await this.prisma.$transaction(ops);
     const funnelEvent = results[1];
 
-    this.panelActions
-      .dispatch(tenantId, 'return_to_bot', { phone: numeroContato, actorId: adminId })
-      .then(() =>
-        paraEstagio !== currentStage
-          ? this.panelActions.dispatch(tenantId, 'move_stage', {
-              phone: numeroContato, actorId: adminId,
-              payload: { stage: paraEstagio, reason: RETOMADA_HUMANA_MOTIVO },
-            })
-          : undefined,
-      )
-      .catch(() => undefined);
+    // Mesmo contrato das outras acoes humanas: `ok: false` quando o bot nao foi
+    // avisado (a acao fica no outbox e o cron reenvia).
+    let result = await this.panelActions.dispatch(tenantId, 'return_to_bot', { phone: numeroContato, actorId: adminId });
+    if (paraEstagio !== currentStage) {
+      const moved = await this.panelActions.dispatch(tenantId, 'move_stage', {
+        phone: numeroContato, actorId: adminId,
+        payload: { stage: paraEstagio, reason: RETOMADA_HUMANA_MOTIVO },
+      });
+      result = { ok: result.ok && moved.ok, state: moved.state ?? result.state };
+    }
 
-    return funnelEvent;
+    return { ...funnelEvent, ok: result.ok, state: result.state };
   }
 
   /**

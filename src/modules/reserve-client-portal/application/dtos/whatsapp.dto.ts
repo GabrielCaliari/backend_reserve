@@ -29,3 +29,14 @@ export class SendBotMessageDto {
   @IsString() @Length(1, 1000)
   body: string;
 }
+
+/** Resposta do envio de texto livre: 200 quando o bot aceitou, 502 (mesmo corpo, ok=false) quando nao. */
+export class SendBotMessageResponseDto {
+  @ApiProperty({ description: 'false = mensagem NAO enviada (HTTP 502); nao e reenviada automaticamente.' })
+  ok: boolean;
+
+  @ApiProperty({ nullable: true, type: String }) state: string | null;
+
+  @ApiProperty({ description: 'true se a ultima mensagem do cliente tem mais de 24h (a Meta pode recusar).' })
+  foraDaJanela: boolean;
+}

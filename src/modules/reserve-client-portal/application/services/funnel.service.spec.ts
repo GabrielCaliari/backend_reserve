@@ -222,7 +222,7 @@ describe('FunnelService.resumeConversation', () => {
 
     const evt = await service.resumeConversation(tenantId, numeroContato, adminId);
 
-    expect(evt).toEqual({ id: 'evt_resume' });
+    expect(evt).toEqual({ id: 'evt_resume', ok: true, state: 'ATIVO' });
     expect(prisma.botContact.updateMany).toHaveBeenCalledWith({
       where: { tenant_id: tenantId, numero_contato: numeroContato },
       data: { status_bot: 'ATIVO', motivo_pausa: null },
@@ -350,6 +350,18 @@ describe('FunnelService — canal reverso (contrato v2 §5)', () => {
   it('assumir conversa de contato inexistente da 404', async () => {
     prisma.botContact.findUnique.mockResolvedValue(null);
     await expect(service.pauseConversation(tenantId, numero, 'admin_1')).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it('bot fora do ar: mover/perder/retomar/pausar/estender devolvem ok:false sem lancar', async () => {
+    actions.dispatch.mockResolvedValue({ ok: false, state: null });
+    const moved = await service.moveStage(tenantId, numero, EFunnelStage.FECHAMENTO_INICIADO, 'admin_1');
+    expect(moved).toMatchObject({ ok: false, state: null });
+    const lost = await service.moveStage(tenantId, numero, EFunnelStage.PERDIDO, 'admin_1', 'caro');
+    expect(lost).toMatchObject({ ok: false, state: null });
+    const resumed = await service.resumeConversation(tenantId, numero, 'admin_1');
+    expect(resumed).toMatchObject({ ok: false, state: null });
+    expect(await service.pauseConversation(tenantId, numero, 'admin_1')).toEqual({ ok: false, state: null });
+    expect(await service.extendHold(tenantId, numero, 'admin_1')).toEqual({ ok: false, state: null });
   });
 
   it('estender prazo usa 60 minutos por padrao', async () => {
