@@ -1,36 +1,34 @@
-import { Body, Controller, Get, Headers, Param, Post, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Headers, HttpCode, Param, Post, Req, UseGuards } from '@nestjs/common';
 import { SkipThrottle } from '@nestjs/throttler';
-import { Response } from 'express';
 import { BotEventKeyGuard } from '../guards/bot-event-key.guard';
+import { BotIngestBearerGuard } from '../guards/bot-ingest-bearer.guard';
 import { BotEventIngestionService } from '../../application/services/bot-event-ingestion.service';
 import { HandoffSummaryService } from '../../application/services/handoff-summary.service';
-import { BotEventDto } from '../../application/dtos/bot-event.dto';
+import { BotEventBatchDto } from '../../application/dtos/bot-event.dto';
 
 /**
  * Public-by-tenant-key ingestion endpoint (Decisao 14), matching
  * BookingWebhookController's precedent for third-party-authenticated traffic.
  *
- * Autenticado por chave do bot (BotEventKeyGuard), nao por sessao de admin: nao
- * existe tenant administrativo na request. FORA do gate de client-portal, mesma
- * razao dos webhooks em gateable-modules.ts.
+ * Autenticado por chave do bot (BotIngestBearerGuard no POST, BotEventKeyGuard
+ * no GET de handoff), nao por sessao de admin: nao existe tenant administrativo
+ * na request. FORA do gate de client-portal, mesma razao dos webhooks em
+ * gateable-modules.ts.
  */
 @Controller('ingest/bot-events')
 @SkipThrottle()
-@UseGuards(BotEventKeyGuard)
 export class BotEventIngestionController {
   constructor(
     private readonly ingestionService: BotEventIngestionService,
     private readonly handoffSummary: HandoffSummaryService,
   ) {}
 
+  /** Canal A do contrato v2: lote de eventos, 202 com a contagem. */
   @Post()
-  async ingest(
-    @Headers('x-tenant-id') tenantId: string,
-    @Body() dto: BotEventDto,
-    @Res() res: Response,
-  ) {
-    const result = await this.ingestionService.ingest(tenantId, dto);
-    return res.status(result.status).send();
+  @HttpCode(202)
+  @UseGuards(BotIngestBearerGuard)
+  async ingest(@Req() request: { tenant_id: string }, @Body() dto: BotEventBatchDto) {
+    return this.ingestionService.ingestBatch(request.tenant_id, dto.events);
   }
 
   /**
@@ -39,6 +37,7 @@ export class BotEventIngestionController {
    * como nota privada no Chatwoot.
    */
   @Get('handoff-summary/:numeroContato')
+  @UseGuards(BotEventKeyGuard)
   async handoffSummaryFor(
     @Headers('x-tenant-id') tenantId: string,
     @Param('numeroContato') numeroContato: string,

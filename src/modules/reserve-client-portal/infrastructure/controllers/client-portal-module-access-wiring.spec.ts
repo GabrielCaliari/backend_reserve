@@ -116,7 +116,7 @@ describe('reserve-client-portal (client-portal): ModuleAccessGuard wiring', () =
   });
 
   it('BotEventIngestionController (ingestao por API key) fica fora do gate', () => {
-    // Autenticado por BotEventKeyGuard (chave do bot), nao por sessao de admin:
+    // Autenticado por BotIngestBearerGuard (chave Bearer do bot), nao por sessao de admin:
     // nao existe tenant administrativo na request para o ModuleAccessGuard ler.
     expect(Reflect.getMetadata(REQUIRES_MODULE_KEY, BotEventIngestionController)).toBeUndefined();
   });

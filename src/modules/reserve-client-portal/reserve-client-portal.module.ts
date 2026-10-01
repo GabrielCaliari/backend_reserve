@@ -56,6 +56,7 @@ import { AttributionSettingsService } from './application/services/attribution-s
 import { AttributionService } from './application/services/attribution.service';
 import { BotKeyProvider } from './infrastructure/providers/bot-key.provider';
 import { BotEventKeyGuard } from './infrastructure/guards/bot-event-key.guard';
+import { BotIngestBearerGuard } from './infrastructure/guards/bot-ingest-bearer.guard';
 import { BotEventIngestionService } from './application/services/bot-event-ingestion.service';
 import { BotEventProcessorService } from './application/services/bot-event-processor.service';
 import { FunnelService } from './application/services/funnel.service';
@@ -196,6 +197,7 @@ import { HomeService } from './application/services/home.service';
     AttributionService,
     BotKeyProvider,
     BotEventKeyGuard,
+    BotIngestBearerGuard,
     BotEventIngestionService,
     BotEventProcessorService,
     FunnelService,

@@ -26,6 +26,8 @@ async function bootstrap() {
     // Cobre TODOS os webhooks, incluindo /api/webhooks/beds24/:tenantId
     // (o Beds24 manda o JSON completo da reserva no corpo, spec Fase 2).
     /^\/api\/webhooks\//,
+    // Canal A do contrato bot-painel v2: lote de ate 250 eventos por chamada.
+    /^\/api\/ingest\//,
   ];
 
   // Preserva o corpo cru para a validação de assinatura do webhook do Stripe.
