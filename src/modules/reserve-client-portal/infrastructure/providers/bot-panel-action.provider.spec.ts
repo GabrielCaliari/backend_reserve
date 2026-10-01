@@ -52,7 +52,7 @@ describe('BotPanelActionProvider (contrato v2 §5)', () => {
     const [url, body, options] = mockedAxios.post.mock.calls[0] as [string, string, any];
     expect(url).toBe('https://n8n.example/webhook/painel');
     expect(JSON.parse(body)).toEqual({
-      action: 'move_stage', tenant_id: 'cli_dona_tereza', phone: '5535999',
+      action_id: 'act_1', action: 'move_stage', tenant_id: 'cli_dona_tereza', phone: '5535999',
       actor_id: 'usr_1', payload: { stage: 'OFERTA_FEITA', reason: null },
     });
     const esperado = crypto.createHmac('sha256', 'segredo-do-tenant').update(body).digest('hex');
@@ -88,6 +88,19 @@ describe('BotPanelActionProvider (contrato v2 §5)', () => {
     const result = await provider.dispatch('tenant_1', 'return_to_bot', { phone: '5535999' });
     expect(result.ok).toBe(false);
     expect(mockedAxios.post).not.toHaveBeenCalled();
+  });
+
+  it('em producao nao chama URL interna gravada no banco', async () => {
+    const env = process.env.NODE_ENV;
+    process.env.NODE_ENV = 'production';
+    try {
+      prisma.botIntegrationConfig.findUnique.mockResolvedValue({ ...config, n8n_panel_webhook_url: 'http://169.254.169.254/latest' });
+      const result = await provider.dispatch('tenant_1', 'return_to_bot', { phone: '5535999' });
+      expect(result.ok).toBe(false);
+      expect(mockedAxios.post).not.toHaveBeenCalled();
+    } finally {
+      process.env.NODE_ENV = env;
+    }
   });
 
   it('estado desconhecido na resposta nao e gravado no contato', async () => {

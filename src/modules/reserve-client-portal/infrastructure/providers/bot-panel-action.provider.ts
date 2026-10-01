@@ -4,6 +4,7 @@ import * as crypto from 'crypto';
 import { PrismaService } from '../../../../shared/database/prisma.service';
 import { AesEncryptionProvider } from './aes-encryption.provider';
 import { EBotContactStatus } from '../../../../generated/prisma/enums';
+import { motivoUrlPainelInvalida } from '../../application/services/panel-webhook-url';
 
 const WEBHOOK_TIMEOUT_MS = 5000;
 
@@ -84,9 +85,13 @@ export class BotPanelActionProvider {
       if (!config?.n8n_panel_webhook_url || !config.panel_webhook_secret_enc) {
         throw new Error('canal reverso nao configurado (url ou segredo ausente)');
       }
+      const urlInvalida = motivoUrlPainelInvalida(config.n8n_panel_webhook_url);
+      if (urlInvalida) throw new Error(urlInvalida);
 
       // O corpo e serializado UMA vez: a assinatura e do texto exato que trafega.
+      // action_id: o bot ignora repeticoes do mesmo id, entao o reenvio do cron nao duplica.
       const body = JSON.stringify({
+        action_id: actionId,
         action,
         tenant_id: config.bot_tenant_ref ?? tenantId,
         phone: input.phone ?? null,

@@ -1,8 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import * as crypto from 'crypto';
 import { PrismaService } from '../../../../shared/database/prisma.service';
 import { BotKeyProvider } from '../../infrastructure/providers/bot-key.provider';
 import { AesEncryptionProvider } from '../../infrastructure/providers/aes-encryption.provider';
+import { motivoUrlPainelInvalida } from './panel-webhook-url';
 import {
   CreateBotIntegrationConfigDto,
   UpdateBotIntegrationConfigDto,
@@ -82,6 +83,10 @@ export class BotIntegrationConfigService {
 
   /** Canal reverso (contrato v2 §5): o segredo e cifrado aqui e nunca sai do banco. */
   private panelChannelData(dto: CreateBotIntegrationConfigDto | UpdateBotIntegrationConfigDto) {
+    if (dto.n8n_panel_webhook_url) {
+      const motivo = motivoUrlPainelInvalida(dto.n8n_panel_webhook_url);
+      if (motivo) throw new BadRequestException(motivo);
+    }
     return {
       ...(dto.bot_tenant_ref !== undefined ? { bot_tenant_ref: dto.bot_tenant_ref || null } : {}),
       ...(dto.n8n_panel_webhook_url !== undefined ? { n8n_panel_webhook_url: dto.n8n_panel_webhook_url || null } : {}),
