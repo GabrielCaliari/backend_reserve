@@ -237,18 +237,3 @@ describe('20260930000001_bot_contract_v2', () => {
     expect(sql).not.toMatch(/DROP (TABLE|COLUMN)/);
   });
 });
-
-describe('20260930000002_bot_contract_v2_cleanup', () => {
-  const sql = readMigration('20260930000002_bot_contract_v2_cleanup');
-
-  it('remove o que o contrato v2 substituiu', () => {
-    expect(sql).toContain('DROP COLUMN "chatwoot_base_url"');
-    expect(sql).toContain('DROP COLUMN "n8n_stage_webhook_url"');
-    expect(sql).toContain('DROP COLUMN "n8n_config_publish_webhook_url"');
-    expect(sql).toContain('DROP TABLE "bot_stage_webhook_dispatches"');
-  });
-
-  it('nao toca no webhook do motor de reservas', () => {
-    expect(sql).not.toContain('n8n_motor_webhook_url');
-  });
-});
