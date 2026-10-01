@@ -33,8 +33,8 @@ export class BotEventIngestionController {
 
   /**
    * Resumo para nota interna no handoff (benchmark P0-4a). Mesma chave de
-   * bot do ingest: o N8N chama no momento de escalar e posta `resumoTexto`
-   * como nota privada no Chatwoot.
+   * bot do ingest: o N8N chama no momento de escalar e envia `resumoTexto`
+   * a equipe pelo WhatsApp.
    */
   @Get('handoff-summary/:numeroContato')
   @UseGuards(BotEventKeyGuard)

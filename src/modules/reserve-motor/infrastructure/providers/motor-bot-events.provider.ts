@@ -4,7 +4,7 @@ import { PrismaService } from '../../../../shared/database/prisma.service';
 /**
  * Eventos motor -> bot (WF9 do N8N: hold.expirado,
  * pagamento.tardio.exception). Fase 1: fire-and-forget com log de erro.
- * TODO(arquitetura): ledger com retry (padrao BotStageWebhookDispatch) na
+ * TODO(arquitetura): ledger com retry (padrao bot_panel_actions) na
  * Fase 2 — divida registrada no plano do motor.
  */
 @Injectable()

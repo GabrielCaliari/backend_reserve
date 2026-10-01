@@ -31,8 +31,6 @@ export class BotIntegrationConfigService {
         tenant_id: tenantId,
         tenant_key_hash: hash,
         tenant_key_salt: salt,
-        n8n_stage_webhook_url: dto.n8n_stage_webhook_url ?? null,
-        n8n_config_publish_webhook_url: dto.n8n_config_publish_webhook_url ?? null,
         ...this.panelChannelData(dto),
       },
     });
@@ -50,11 +48,6 @@ export class BotIntegrationConfigService {
     const config = await this.prisma.botIntegrationConfig.update({
       where: { tenant_id: tenantId },
       data: {
-        ...(dto.n8n_stage_webhook_url !== undefined ? { n8n_stage_webhook_url: dto.n8n_stage_webhook_url } : {}),
-        ...(dto.n8n_config_publish_webhook_url !== undefined
-          ? { n8n_config_publish_webhook_url: dto.n8n_config_publish_webhook_url }
-          : {}),
-        ...(dto.chatwoot_base_url !== undefined ? { chatwoot_base_url: dto.chatwoot_base_url } : {}),
         ...this.panelChannelData(dto),
       },
     });
@@ -108,9 +101,6 @@ export class BotIntegrationConfigService {
     id: string;
     tenant_id: string;
     active: boolean;
-    n8n_stage_webhook_url: string | null;
-    n8n_config_publish_webhook_url: string | null;
-    chatwoot_base_url: string | null;
     bot_tenant_ref: string | null;
     n8n_panel_webhook_url: string | null;
     panel_webhook_secret_enc: string | null;
@@ -122,9 +112,6 @@ export class BotIntegrationConfigService {
       id: config.id,
       tenant_id: config.tenant_id,
       active: config.active,
-      n8n_stage_webhook_url: config.n8n_stage_webhook_url,
-      n8n_config_publish_webhook_url: config.n8n_config_publish_webhook_url,
-      chatwoot_base_url: config.chatwoot_base_url,
       bot_tenant_ref: config.bot_tenant_ref,
       n8n_panel_webhook_url: config.n8n_panel_webhook_url,
       panel_webhook_secret_set: Boolean(config.panel_webhook_secret_enc),

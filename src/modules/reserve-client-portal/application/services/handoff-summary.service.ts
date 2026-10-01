@@ -32,8 +32,8 @@ function dataBr(d: Date): string {
 /**
  * Resumo da conversa para o humano que vai assumir (benchmark P0-4a: "bot
  * posta resumo + contexto como nota interna antes de escalar"). O N8N chama
- * no momento da escalacao e posta `resumoTexto` como nota privada no
- * Chatwoot. Le o que o painel ja sabe — lead, contato, hold vigente e as
+ * no momento da escalacao e envia `resumoTexto` a equipe pelo WhatsApp.
+ * Le o que o painel ja sabe — lead, contato, hold vigente e as
  * ultimas mensagens — sem escrever nada.
  */
 @Injectable()

@@ -2,14 +2,6 @@ import { IsOptional, IsString, IsUrl, MaxLength, MinLength } from 'class-validat
 
 export class CreateBotIntegrationConfigDto {
   @IsOptional()
-  @IsUrl({ require_tld: false })
-  n8n_stage_webhook_url?: string;
-
-  @IsOptional()
-  @IsUrl({ require_tld: false })
-  n8n_config_publish_webhook_url?: string;
-
-  @IsOptional()
   @IsString()
   @MaxLength(60)
   bot_tenant_ref?: string;
@@ -27,17 +19,6 @@ export class CreateBotIntegrationConfigDto {
 }
 
 export class UpdateBotIntegrationConfigDto {
-  @IsOptional()
-  @IsUrl({ require_tld: false })
-  n8n_stage_webhook_url?: string;
-
-  @IsOptional()
-  @IsUrl({ require_tld: false })
-  n8n_config_publish_webhook_url?: string;
-
-  @IsOptional()
-  chatwoot_base_url?: string;
-
   @IsOptional()
   @IsString()
   @MaxLength(60)

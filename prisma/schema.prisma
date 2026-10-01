@@ -372,12 +372,9 @@ model BotIntegrationConfig {
   tenant_key_hash                String
   tenant_key_salt                String
   active                         Boolean   @default(true)
-  n8n_stage_webhook_url          String?   @db.VarChar(500)
   // Webhook de eventos do motor de reservas (WF9: hold.expirado,
   // pagamento.tardio.exception). Fase 1: dispatch fire-and-forget.
   n8n_motor_webhook_url          String?   @db.VarChar(500)
-  n8n_config_publish_webhook_url String?   @db.VarChar(500)
-  chatwoot_base_url              String?   @db.VarChar(500)
   bot_tenant_ref                 String?   @unique @db.VarChar(60) // identificador do tenant no bot (ex.: cli_dona_tereza)
   n8n_panel_webhook_url          String?   @db.VarChar(500)
   panel_webhook_secret_enc       String?   @db.Text // segredo HMAC do canal reverso, cifrado (AES-256-GCM)
@@ -501,19 +498,6 @@ model FollowupAttempt {
 
   @@index([tenant_id, numero_contato])
   @@map("bot_followup_attempts")
-}
-
-model BotStageWebhookDispatch {
-  id              String    @id @default(cuid()) @db.VarChar(25)
-  tenant_id       String    @db.VarChar(25)
-  funnel_event_id String    @db.VarChar(25)
-  status          String    @default("PENDING") @db.VarChar(10) // PENDING | SENT | FAILED
-  attempts        Int       @default(0) @db.SmallInt
-  last_attempt_at DateTime?
-  created_at      DateTime  @default(now())
-
-  @@index([tenant_id, status])
-  @@map("bot_stage_webhook_dispatches")
 }
 
 /// Outbox do canal reverso (contrato v2 §5): a acao do humano e gravada ANTES
