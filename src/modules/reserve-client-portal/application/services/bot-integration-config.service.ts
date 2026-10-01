@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import * as crypto from 'crypto';
 import { PrismaService } from '../../../../shared/database/prisma.service';
 import { BotKeyProvider } from '../../infrastructure/providers/bot-key.provider';
+import { AesEncryptionProvider } from '../../infrastructure/providers/aes-encryption.provider';
 import {
   CreateBotIntegrationConfigDto,
   UpdateBotIntegrationConfigDto,
@@ -18,6 +19,7 @@ export class BotIntegrationConfigService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly botKeyProvider: BotKeyProvider,
+    private readonly aes: AesEncryptionProvider,
   ) {}
 
   async create(tenantId: string, dto: CreateBotIntegrationConfigDto) {
@@ -31,6 +33,7 @@ export class BotIntegrationConfigService {
         tenant_key_salt: salt,
         n8n_stage_webhook_url: dto.n8n_stage_webhook_url ?? null,
         n8n_config_publish_webhook_url: dto.n8n_config_publish_webhook_url ?? null,
+        ...this.panelChannelData(dto),
       },
     });
 
@@ -52,6 +55,7 @@ export class BotIntegrationConfigService {
           ? { n8n_config_publish_webhook_url: dto.n8n_config_publish_webhook_url }
           : {}),
         ...(dto.chatwoot_base_url !== undefined ? { chatwoot_base_url: dto.chatwoot_base_url } : {}),
+        ...this.panelChannelData(dto),
       },
     });
     return this.toSafeShape(config);
@@ -83,11 +87,23 @@ export class BotIntegrationConfigService {
     return this.toSafeShape(config);
   }
 
+  /** Canal reverso (contrato v2 §5): o segredo e cifrado aqui e nunca sai do banco. */
+  private panelChannelData(dto: CreateBotIntegrationConfigDto | UpdateBotIntegrationConfigDto) {
+    return {
+      ...(dto.bot_tenant_ref !== undefined ? { bot_tenant_ref: dto.bot_tenant_ref || null } : {}),
+      ...(dto.n8n_panel_webhook_url !== undefined ? { n8n_panel_webhook_url: dto.n8n_panel_webhook_url || null } : {}),
+      ...(dto.panel_webhook_secret ? { panel_webhook_secret_enc: this.aes.encrypt(dto.panel_webhook_secret) } : {}),
+    };
+  }
+
   private generateKey(): string {
     return crypto.randomBytes(32).toString('hex');
   }
 
-  /** Never includes tenant_key_hash/tenant_key_salt in any read response. */
+  /**
+   * Never includes tenant_key_hash/tenant_key_salt/panel_webhook_secret_enc in
+   * any read response; the secret is exposed only as panel_webhook_secret_set.
+   */
   private toSafeShape(config: {
     id: string;
     tenant_id: string;
@@ -95,6 +111,9 @@ export class BotIntegrationConfigService {
     n8n_stage_webhook_url: string | null;
     n8n_config_publish_webhook_url: string | null;
     chatwoot_base_url: string | null;
+    bot_tenant_ref: string | null;
+    n8n_panel_webhook_url: string | null;
+    panel_webhook_secret_enc: string | null;
     last_heartbeat_at: Date | null;
     created_at: Date;
     updated_at: Date;
@@ -106,6 +125,9 @@ export class BotIntegrationConfigService {
       n8n_stage_webhook_url: config.n8n_stage_webhook_url,
       n8n_config_publish_webhook_url: config.n8n_config_publish_webhook_url,
       chatwoot_base_url: config.chatwoot_base_url,
+      bot_tenant_ref: config.bot_tenant_ref,
+      n8n_panel_webhook_url: config.n8n_panel_webhook_url,
+      panel_webhook_secret_set: Boolean(config.panel_webhook_secret_enc),
       last_heartbeat_at: config.last_heartbeat_at,
       created_at: config.created_at,
       updated_at: config.updated_at,

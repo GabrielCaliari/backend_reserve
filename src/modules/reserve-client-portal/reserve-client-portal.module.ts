@@ -112,6 +112,7 @@ import { InstagramProvider } from './infrastructure/providers/instagram.provider
 import { CronSyncProvider } from './infrastructure/providers/cron-sync.provider';
 import { DigestGenerationCronProvider } from './infrastructure/providers/digest-generation-cron.provider';
 import { AesEncryptionProvider } from './infrastructure/providers/aes-encryption.provider';
+import { BotPanelActionProvider } from './infrastructure/providers/bot-panel-action.provider';
 import { WhatsAppProvider } from './infrastructure/providers/whatsapp.provider';
 import { WhatsAppCloudApiProvider } from './infrastructure/providers/whatsapp-cloud-api.provider';
 import { PdfExportProvider } from './infrastructure/providers/pdf-export.provider';
@@ -213,6 +214,7 @@ import { HomeService } from './application/services/home.service';
     BotStageWebhookProvider,
     GuestStatusCronProvider,
     BotReconciliationCronProvider,
+    BotPanelActionProvider,
     BenchmarkEligibilityService,
     BenchmarkAggregationCronProvider,
 
