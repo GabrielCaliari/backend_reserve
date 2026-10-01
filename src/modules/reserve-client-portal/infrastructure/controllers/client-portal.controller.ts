@@ -39,6 +39,7 @@ import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
 import { TenantGuard } from '../../../../shared/auth/guards/tenant.guard';
 import { ModuleAccessGuard } from '../../../../shared/auth/guards/module-access.guard';
 import { RequiresModule } from '../../../../shared/auth/decorators/requires-module.decorator';
+import { ScopedToTenantResource, TenantResourceScopeGuard } from '../guards/tenant-resource-scope.guard';
 import { CurrentAdmin, CurrentAdminPayload } from '../../../../shared/auth/decorators/current-admin.decorator';
 
 /**
@@ -52,8 +53,11 @@ import { CurrentAdmin, CurrentAdminPayload } from '../../../../shared/auth/decor
  * tenant) e o ModuleAccessGuard gatear o modulo client-portal de verdade.
  */
 @Controller('hotel-portal')
-@UseGuards(AdminJwtGuard, TenantGuard, ModuleAccessGuard)
+@UseGuards(AdminJwtGuard, TenantGuard, ModuleAccessGuard, TenantResourceScopeGuard)
 @RequiresModule('client-portal')
+// Sem isto, qualquer admin de um tenant lia conversas, funil e metricas de um
+// `:clientId` de OUTRO tenant. Rotas sem `:clientId` (my-clients) ignoram a ref.
+@ScopedToTenantResource({ kind: 'hotelClient', key: 'clientId' })
 export class ClientPortalController {
   constructor(
     private readonly dashboardService: DashboardService,

@@ -129,6 +129,15 @@ describe('reserve-client-portal (client-portal): ModuleAccessGuard wiring', () =
   });
 });
 
+describe('ClientPortalController: isolamento por tenant do :clientId', () => {
+  it('confere que o :clientId pertence ao tenant da sessao, depois do TenantGuard', () => {
+    const guards = classGuards(ClientPortalController);
+    expect(scopeRefs(ClientPortalController)).toEqual([{ kind: 'hotelClient', key: 'clientId' }]);
+    expect(guards).toContain(TenantResourceScopeGuard);
+    expect(guards.indexOf(TenantGuard)).toBeLessThan(guards.indexOf(TenantResourceScopeGuard));
+  });
+});
+
 describe('reserve-client-portal: TenantResourceScopeGuard wiring', () => {
   it.each(RESOURCE_KEYED_CONTROLLERS)('%p declara @ScopedToTenantResource', (Controller) => {
     expect(scopeRefs(Controller).length).toBeGreaterThan(0);
