@@ -110,12 +110,13 @@ describe('FunnelMetricsService.getMetrics — handoff', () => {
         count: jest.fn().mockResolvedValueOnce(4).mockResolvedValueOnce(2).mockResolvedValue(1),
         groupBy: vazio,
         findMany: jest.fn().mockResolvedValue([
-          { numero_contato: 'a', created_at: new Date('2026-08-10T10:00:00Z') },
-          { numero_contato: 'b', created_at: new Date('2026-08-11T10:00:00Z') },
+          { numero_contato: 'a', iniciado_em: new Date('2026-08-10T10:00:00Z'), created_at: new Date('2026-08-10T10:00:00Z') },
+          { numero_contato: 'b', iniciado_em: new Date('2026-08-11T10:00:00Z'), created_at: new Date('2026-08-11T10:00:00Z') },
         ]),
       },
-      botMessage: { count: zero },
-      botLead: { groupBy: vazio },
+      botMessage: { findMany: vazio },
+      botLead: { groupBy: vazio, count: zero },
+      botIngestionEvent: { count: zero },
       funnelEvent: {
         findMany: jest.fn().mockImplementation(({ where }: any) =>
           Promise.resolve(
@@ -161,5 +162,112 @@ describe('FunnelMetricsService.getMetrics — handoff', () => {
     const service = new FunnelMetricsService(prisma, periodComparison);
     const m = await service.getMetrics('client_1', from, to);
     expect(m.handoff).toEqual({ total: 0, taxaHandover: 0, motivos: [], tempoMedioComBotSegundos: null });
+  });
+});
+
+describe('FunnelMetricsService.getMetrics (contrato v2 §4.4)', () => {
+  const from = new Date('2026-10-01T00:00:00.000Z');
+  const to = new Date('2026-10-31T23:59:59.000Z');
+
+  function build() {
+    const prisma: any = {
+      hotelClient: { findUnique: jest.fn().mockResolvedValue({ tenant_id: 'tenant_1' }) },
+      botContact: {
+        count: jest.fn().mockImplementation(({ where }) => {
+          if (where.status_bot) return Promise.resolve(3);
+          return Promise.resolve(where.iniciado_em.gte.getTime() === from.getTime() ? 10 : 8);
+        }),
+        groupBy: jest.fn().mockImplementation(({ by }) =>
+          Promise.resolve(
+            by[0] === 'origem'
+              ? [{ origem: 'anuncio', _count: { _all: 6 } }, { origem: 'link', _count: { _all: 4 } }]
+              : [{ source_id: 'ad_123', _count: { _all: 5 } }],
+          ),
+        ),
+        findMany: jest.fn().mockResolvedValue([]),
+      },
+      botMessage: { findMany: jest.fn().mockResolvedValue([{ numero_contato: 'a' }, { numero_contato: 'b' }]) },
+      botLead: {
+        groupBy: jest.fn().mockResolvedValue([{ current_stage: 'QUALIFICADO', _count: { _all: 4 } }]),
+        count: jest.fn().mockResolvedValue(2),
+      },
+      funnelEvent: {
+        findMany: jest.fn().mockImplementation(({ where }) =>
+          Promise.resolve(where.motivo ? [] : [{ numero_contato: 'a' }, { numero_contato: 'b' }, { numero_contato: 'c' }]),
+        ),
+      },
+      followupAttempt: {
+        groupBy: jest.fn().mockResolvedValue([
+          { regua: 'anuncio', status: 'respondeu', _count: { _all: 3 } },
+          { regua: 'anuncio', status: 'sem_resposta', _count: { _all: 5 } },
+        ]),
+      },
+      botIngestionEvent: { count: jest.fn().mockResolvedValue(7) },
+      $queryRaw: jest.fn().mockResolvedValue([]),
+    };
+    const periodComparison = {
+      previousPeriod: () => ({ prevFrom: new Date('2026-09-01T00:00:00.000Z'), prevTo: new Date('2026-09-30T23:59:59.000Z') }),
+      metric: (value: number, previous: number, source: string) => ({ value, previous, delta: null, source }),
+      ratio: (a: number, b: number) => (b ? a / b : 0),
+      round2: (n: number) => Math.round(n * 100) / 100,
+    };
+    return { prisma, service: new FunnelMetricsService(prisma, periodComparison as any) };
+  }
+
+  it('conversas iniciadas contam pelo inicio do contato', async () => {
+    const { prisma, service } = build();
+    const m = await service.getMetrics('client_1', from, to);
+    expect(m.conversasIniciadas.value).toBe(10);
+    expect(prisma.botContact.count).toHaveBeenCalledWith({
+      where: { tenant_id: 'tenant_1', iniciado_em: { gte: from, lte: to } },
+    });
+  });
+
+  it('taxa de resposta e por contato, nao por mensagem', async () => {
+    const { service } = build();
+    const m = await service.getMetrics('client_1', from, to);
+    expect(m.taxaRespostaBot).toBe(0.2); // 2 contatos com resposta / 10 iniciadas
+  });
+
+  it('leads prontos sao os que estao em fechamento ou com comprovante', async () => {
+    const { prisma, service } = build();
+    const m = await service.getMetrics('client_1', from, to);
+    expect(m.leadsProntos).toBe(2);
+    expect(prisma.botLead.count).toHaveBeenCalledWith({
+      where: { tenant_id: 'tenant_1', current_stage: { in: ['FECHAMENTO_INICIADO', 'COMPROVANTE_RECEBIDO'] } },
+    });
+  });
+
+  it('follow-up sai por regua', async () => {
+    const { service } = build();
+    const m = await service.getMetrics('client_1', from, to);
+    expect(m.efetividadeFollowup).toEqual([
+      { regua: 'anuncio', status: 'respondeu', count: 3 },
+      { regua: 'anuncio', status: 'sem_resposta', count: 5 },
+    ]);
+  });
+
+  it('pausados incluem os que estao com a equipe', async () => {
+    const { prisma, service } = build();
+    const m = await service.getMetrics('client_1', from, to);
+    expect(m.contatosPausados).toBe(3);
+    expect(prisma.botContact.count).toHaveBeenCalledWith({
+      where: { tenant_id: 'tenant_1', status_bot: { in: ['PAUSADO', 'PAUSADO_HUMANO'] } },
+    });
+  });
+
+  it('audios transcritos vem dos eventos audio.transcrito', async () => {
+    const { prisma, service } = build();
+    const m = await service.getMetrics('client_1', from, to);
+    expect(m.audiosTranscritos).toBe(7);
+    expect(prisma.botIngestionEvent.count).toHaveBeenCalledWith({
+      where: { tenant_id: 'tenant_1', event_type: 'audio.transcrito', occurred_at: { gte: from, lte: to } },
+    });
+  });
+
+  it('conversas por anuncio agrupam pelo source_id', async () => {
+    const { service } = build();
+    const m = await service.getMetrics('client_1', from, to);
+    expect(m.conversasPorAnuncio).toEqual([{ sourceId: 'ad_123', count: 5 }]);
   });
 });

@@ -1,9 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../../shared/database/prisma.service';
 import { PeriodComparisonService } from '../../../../shared/analytics/period-comparison.service';
-import { EBotMessageType, EBotMessageRole } from '../../../../generated/prisma/enums';
+import { EBotMessageRole } from '../../../../generated/prisma/enums';
 import {
-  FUNNEL_ENTRY_STAGE,
   FUNNEL_LOST_STAGE,
   FUNNEL_STAGES_IN_ORDER,
   QUALIFIED_OR_BEYOND_STAGES,
@@ -123,77 +122,83 @@ export class FunnelMetricsService {
     return board;
   }
 
+  private static readonly ESTAGIOS_PRONTOS = ['FECHAMENTO_INICIADO', 'COMPROVANTE_RECEBIDO'];
+  private static readonly STATUS_COM_HUMANO = ['PAUSADO', 'PAUSADO_HUMANO'];
+
   async getMetrics(clientId: string, from: Date, to: Date) {
     const tenantId = await this.resolveTenantId(clientId);
     if (!tenantId) return this.emptyMetrics();
 
     const { prevFrom, prevTo } = this.periodComparison.previousPeriod(from, to);
+    const periodo = { gte: from, lte: to };
 
-    const [
-      conversasAtual,
-      conversasAnterior,
-      userMessages,
-      assistantMessages,
-      tempoPrimeiraResposta,
-      distribuicaoFunil,
-      tempoMedioPorEstagio,
-      qualificados,
-      leadsProntos,
-      conversaoPorEtapa,
-      followupRows,
-      volumePorOrigem,
-      contatosPausados,
-      audiosTranscritos,
-      handoff,
-    ] = await Promise.all([
-      this.prisma.botContact.count({ where: { tenant_id: tenantId, created_at: { gte: from, lte: to } } }),
-      this.prisma.botContact.count({ where: { tenant_id: tenantId, created_at: { gte: prevFrom, lte: prevTo } } }),
-      this.prisma.botMessage.count({
-        where: { tenant_id: tenantId, role: EBotMessageRole.user, ocorrido_em: { gte: from, lte: to } },
+    const [conversasAtual, conversasAnterior, contatosComResposta] = await Promise.all([
+      this.prisma.botContact.count({ where: { tenant_id: tenantId, iniciado_em: periodo } }),
+      this.prisma.botContact.count({
+        where: { tenant_id: tenantId, iniciado_em: { gte: prevFrom, lte: prevTo } },
       }),
-      this.prisma.botMessage.count({
-        where: { tenant_id: tenantId, role: EBotMessageRole.assistant, ocorrido_em: { gte: from, lte: to } },
+      this.prisma.botMessage.findMany({
+        where: { tenant_id: tenantId, role: EBotMessageRole.assistant, ocorrido_em: periodo },
+        select: { numero_contato: true },
+        distinct: ['numero_contato'],
       }),
+    ]);
+
+    const [tempoPrimeiraResposta, tempoMedioPorEstagio, conversaoPorEtapa] = await Promise.all([
       this.avgFirstResponseSeconds(tenantId, from, to),
+      this.avgTimePerStage(tenantId, from, to),
+      this.conversionByStage(tenantId, from, to, conversasAtual),
+    ]);
+
+    const [distribuicaoFunil, qualificados, leadsProntos] = await Promise.all([
       this.prisma.botLead.groupBy({
         by: ['current_stage'],
         where: { tenant_id: tenantId },
         _count: { _all: true },
       }),
-      this.avgTimePerStage(tenantId, from, to),
       this.prisma.funnelEvent.findMany({
-        where: {
-          tenant_id: tenantId,
-          ocorrido_em: { gte: from, lte: to },
-          para_estagio: { in: QUALIFIED_OR_BEYOND_STAGES },
-        },
+        where: { tenant_id: tenantId, ocorrido_em: periodo, para_estagio: { in: QUALIFIED_OR_BEYOND_STAGES } },
         select: { numero_contato: true },
         distinct: ['numero_contato'],
       }),
-      this.prisma.funnelEvent.count({
-        where: { tenant_id: tenantId, motivo: 'TRANSFERIR', ocorrido_em: { gte: from, lte: to } },
+      this.prisma.botLead.count({
+        where: { tenant_id: tenantId, current_stage: { in: FunnelMetricsService.ESTAGIOS_PRONTOS as any } },
       }),
-      this.conversionByStage(tenantId, from, to),
+    ]);
+
+    const [followupRows, volumePorOrigem, conversasPorAnuncio] = await Promise.all([
       this.prisma.followupAttempt.groupBy({
-        by: ['tipo_janela', 'status'],
-        where: { tenant_id: tenantId, ocorrido_em: { gte: from, lte: to } },
+        by: ['regua', 'status'],
+        where: { tenant_id: tenantId, ocorrido_em: periodo },
         _count: { _all: true },
       }),
       this.prisma.botContact.groupBy({
         by: ['origem'],
-        where: { tenant_id: tenantId, created_at: { gte: from, lte: to } },
+        where: { tenant_id: tenantId, iniciado_em: periodo },
         _count: { _all: true },
       }),
-      this.prisma.botContact.count({ where: { tenant_id: tenantId, status_bot: 'PAUSADO' } }),
-      this.prisma.botMessage.count({
-        where: { tenant_id: tenantId, tipo: EBotMessageType.audio, ocorrido_em: { gte: from, lte: to } },
+      this.prisma.botContact.groupBy({
+        by: ['source_id'],
+        where: { tenant_id: tenantId, iniciado_em: periodo, source_id: { not: null } },
+        _count: { _all: true },
+      }),
+    ]);
+
+    const [contatosPausados, audiosTranscritos, handoff] = await Promise.all([
+      this.prisma.botContact.count({
+        where: { tenant_id: tenantId, status_bot: { in: FunnelMetricsService.STATUS_COM_HUMANO as any } },
+      }),
+      this.prisma.botIngestionEvent.count({
+        where: { tenant_id: tenantId, event_type: 'audio.transcrito', occurred_at: periodo },
       }),
       this.handoffMetrics(tenantId, from, to),
     ]);
 
     return {
       conversasIniciadas: this.periodComparison.metric(conversasAtual, conversasAnterior, 'auto'),
-      taxaRespostaBot: this.periodComparison.round2(this.periodComparison.ratio(assistantMessages, userMessages)),
+      taxaRespostaBot: this.periodComparison.round2(
+        this.periodComparison.ratio(contatosComResposta.length, conversasAtual),
+      ),
       tempoMedioPrimeiraRespostaSegundos: tempoPrimeiraResposta,
       distribuicaoFunil: distribuicaoFunil.map((g) => ({ stage: g.current_stage, count: g._count._all })),
       tempoMedioPorEstagioSegundos: tempoMedioPorEstagio,
@@ -203,11 +208,15 @@ export class FunnelMetricsService {
       leadsProntos,
       taxaConversaoPorEtapa: conversaoPorEtapa,
       efetividadeFollowup: followupRows.map((r) => ({
-        tipoJanela: r.tipo_janela,
+        regua: r.regua ?? 'desconhecida',
         status: r.status,
         count: r._count._all,
       })),
       volumePorOrigem: volumePorOrigem.map((r) => ({ origem: r.origem ?? 'desconhecido', count: r._count._all })),
+      conversasPorAnuncio: conversasPorAnuncio
+        .map((r) => ({ sourceId: r.source_id as string, count: r._count._all }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 20),
       contatosPausados,
       audiosTranscritos,
       handoff: {
@@ -219,22 +228,18 @@ export class FunnelMetricsService {
 
   private async avgFirstResponseSeconds(tenantId: string, from: Date, to: Date): Promise<number | null> {
     const rows = await this.prisma.$queryRaw<{ avg_seconds: number | null }[]>`
-      WITH first_user AS (
-        SELECT numero_contato, MIN(ocorrido_em) AS first_user_at
-        FROM bot_messages
-        WHERE tenant_id = ${tenantId} AND role = 'user' AND ocorrido_em BETWEEN ${from} AND ${to}
-        GROUP BY numero_contato
-      ),
-      first_assistant AS (
+      WITH first_assistant AS (
         SELECT numero_contato, MIN(ocorrido_em) AS first_assistant_at
         FROM bot_messages
-        WHERE tenant_id = ${tenantId} AND role = 'assistant' AND ocorrido_em BETWEEN ${from} AND ${to}
+        WHERE tenant_id = ${tenantId} AND role = 'assistant'
         GROUP BY numero_contato
       )
-      SELECT AVG(EXTRACT(EPOCH FROM (fa.first_assistant_at - fu.first_user_at))) AS avg_seconds
-      FROM first_user fu
-      JOIN first_assistant fa ON fa.numero_contato = fu.numero_contato
-      WHERE fa.first_assistant_at > fu.first_user_at
+      SELECT AVG(EXTRACT(EPOCH FROM (fa.first_assistant_at - c.iniciado_em))) AS avg_seconds
+      FROM bot_contacts c
+      JOIN first_assistant fa ON fa.numero_contato = c.numero_contato
+      WHERE c.tenant_id = ${tenantId}
+        AND c.iniciado_em BETWEEN ${from} AND ${to}
+        AND fa.first_assistant_at >= c.iniciado_em
     `;
     const value = rows[0]?.avg_seconds;
     return value === null || value === undefined ? null : Number(value);
@@ -268,13 +273,14 @@ export class FunnelMetricsService {
 
     const contatos = await this.prisma.botContact.findMany({
       where: { tenant_id: tenantId, numero_contato: { in: [...primeiroHandoff.keys()] } },
-      select: { numero_contato: true, created_at: true },
+      select: { numero_contato: true, iniciado_em: true, created_at: true },
     });
     const duracoes: number[] = [];
     for (const c of contatos) {
       const h = primeiroHandoff.get(c.numero_contato);
       if (!h) continue;
-      const seg = (h.getTime() - c.created_at.getTime()) / 1000;
+      const inicio = c.iniciado_em ?? c.created_at;
+      const seg = (h.getTime() - inicio.getTime()) / 1000;
       if (seg >= 0) duracoes.push(seg);
     }
     const media = duracoes.length
@@ -320,20 +326,23 @@ export class FunnelMetricsService {
     tenantId: string,
     from: Date,
     to: Date,
+    conversasIniciadas: number,
   ): Promise<{ stage: string; count: number; rate: number }[]> {
-    const rows = await this.prisma.funnelEvent.groupBy({
-      by: ['para_estagio'],
-      where: { tenant_id: tenantId, ocorrido_em: { gte: from, lte: to } },
-      _count: { _all: true },
-    });
-    const byStage = new Map(rows.map((r) => [r.para_estagio, r._count._all]));
-    const entrada = byStage.get(FUNNEL_ENTRY_STAGE) ?? 0;
+    const rows = await this.prisma.$queryRaw<{ para_estagio: string; contatos: bigint }[]>`
+      SELECT para_estagio, COUNT(DISTINCT numero_contato) AS contatos
+      FROM funil_eventos
+      WHERE tenant_id = ${tenantId}
+        AND ocorrido_em BETWEEN ${from} AND ${to}
+        AND de_estagio IS DISTINCT FROM para_estagio
+        AND (motivo IS NULL OR motivo NOT LIKE 'HANDOFF:%')
+      GROUP BY para_estagio
+    `;
+    const byStage = new Map(rows.map((r) => [r.para_estagio, Number(r.contatos)]));
 
-    // Percentuais relativos a CONTATO_INICIADO, a entrada do funil. PERDIDO
-    // fica de fora porque e saida do funil, nao um degrau da escada.
+    // PERDIDO fica de fora: e saida do funil, nao um degrau da escada.
     return ALL_STAGES.filter((s) => s !== FUNNEL_LOST_STAGE).map((stage) => {
       const count = byStage.get(stage) ?? 0;
-      return { stage, count, rate: this.periodComparison.ratio(count, entrada) };
+      return { stage, count, rate: this.periodComparison.ratio(count, conversasIniciadas) };
     });
   }
 
@@ -349,6 +358,7 @@ export class FunnelMetricsService {
       taxaConversaoPorEtapa: [],
       efetividadeFollowup: [],
       volumePorOrigem: [],
+      conversasPorAnuncio: [],
       contatosPausados: 0,
       audiosTranscritos: 0,
       handoff: { total: 0, taxaHandover: 0, motivos: [], tempoMedioComBotSegundos: null },
