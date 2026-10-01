@@ -5,6 +5,10 @@ describe('LeadsOverviewService', () => {
   let prisma: {
     whatsAppLinkClick: { count: jest.Mock };
     $queryRaw: jest.Mock;
+    hotelClient: { findUnique: jest.Mock };
+    whatsAppTrackingLink: { findMany: jest.Mock };
+    botContact: { findMany: jest.Mock };
+    botLead: { count: jest.Mock };
   };
   let service: LeadsOverviewService;
 
@@ -16,6 +20,10 @@ describe('LeadsOverviewService', () => {
     prisma = {
       whatsAppLinkClick: { count: jest.fn() },
       $queryRaw: jest.fn(),
+      hotelClient: { findUnique: jest.fn().mockResolvedValue({ tenant_id: 'tenant_1' }) },
+      whatsAppTrackingLink: { findMany: jest.fn().mockResolvedValue([]) },
+      botContact: { findMany: jest.fn().mockResolvedValue([]) },
+      botLead: { count: jest.fn().mockResolvedValue(0) },
     };
     service = new LeadsOverviewService(
       prisma as any,
@@ -78,6 +86,21 @@ describe('LeadsOverviewService', () => {
       byDay: [],
       byDevice: [],
       byCity: [],
+      ciclo: { cliques: 0, conversas: 0, reservas: 0 },
+    });
+  });
+
+  it('ciclo: cliques -> conversas pelo link -> reservas', async () => {
+    prisma.whatsAppLinkClick.count.mockResolvedValue(40);
+    prisma.$queryRaw.mockResolvedValue([]);
+    prisma.whatsAppTrackingLink.findMany.mockResolvedValue([{ short_code: 'inv26' }]);
+    prisma.botContact.findMany.mockResolvedValue([{ numero_contato: 'a' }, { numero_contato: 'b' }]);
+    prisma.botLead.count.mockResolvedValue(1);
+    const overview = await service.getOverview('client_1', from, to);
+    expect(overview.ciclo).toEqual({ cliques: overview.clicks.value, conversas: 2, reservas: 1 });
+    expect(prisma.botContact.findMany).toHaveBeenCalledWith({
+      where: { tenant_id: 'tenant_1', link_code: { in: ['inv26'] }, iniciado_em: { gte: from, lte: to } },
+      select: { numero_contato: true },
     });
   });
 });
