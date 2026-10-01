@@ -1,3 +1,4 @@
+import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsEnum, IsOptional } from 'class-validator';
 import { EFunnelStage } from '../../../../generated/prisma/enums';
 
@@ -7,6 +8,7 @@ import { EFunnelStage } from '../../../../generated/prisma/enums';
  * onde esta e apenas o bot volta a responder.
  */
 export class ResumeConversationDto {
+  @ApiPropertyOptional({ description: 'Estagio ao qual devolver o lead ao retomar o bot.', enum: EFunnelStage })
   @IsOptional()
   @IsEnum(EFunnelStage)
   estagio?: EFunnelStage;

@@ -9,6 +9,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { Response } from 'express';
+import { ApiBody, ApiExtraModels, getSchemaPath } from '@nestjs/swagger';
 import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
 import { TenantGuard } from '../../../../shared/auth/guards/tenant.guard';
 import { ModuleAccessGuard } from '../../../../shared/auth/guards/module-access.guard';
@@ -30,6 +31,7 @@ import { CurrentAdmin, CurrentAdminPayload } from '../../../../shared/auth/decor
  * cliente pedido e do tenant da sessao — senao um admin dispararia mensagens
  * de WhatsApp em nome de outro cliente.
  */
+@ApiExtraModels(SendBotMessageDto, SendWhatsAppMessageDto)
 @Controller('admin/hotel-portal/whatsapp')
 @UseGuards(
   AdminJwtGuard,
@@ -63,7 +65,18 @@ export class WhatsAppController {
     return res.status(result.status).json(result.data);
   }
 
+  /**
+   * Aceita duas formas, escolhidas pelo corpo: `{ to_phone, to_name?, body }`
+   * (texto livre -> Canal B send_message) ou o envio legado por template. O
+   * parametro segue `Record` porque o roteamento e a validacao acontecem no
+   * service; o oneOf abaixo e so a documentacao do contrato.
+   */
   @Post(':clientId/send')
+  @ApiBody({
+    schema: {
+      oneOf: [{ $ref: getSchemaPath(SendBotMessageDto) }, { $ref: getSchemaPath(SendWhatsAppMessageDto) }],
+    },
+  })
   async sendMessage(
     @Param('clientId') clientId: string,
     @Body() body: Record<string, unknown>,

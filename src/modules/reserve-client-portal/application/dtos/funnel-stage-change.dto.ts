@@ -1,8 +1,10 @@
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsEnum, IsOptional, IsString, Matches, MaxLength, ValidateIf } from 'class-validator';
 import { EBotContactAudience, EFunnelStage } from '../../../../generated/prisma/enums';
 import { FUNNEL_LOST_STAGE } from '../../domain/enums/funnel-stage-groups';
 
 export class FunnelStageChangeDto {
+  @ApiProperty({ description: 'Estagio de destino do lead.', enum: EFunnelStage, example: 'PERDIDO' })
   @IsEnum(EFunnelStage)
   para_estagio: EFunnelStage;
 
@@ -24,6 +26,11 @@ export class FunnelStageChangeDto {
    * quebrar isso seria regressao de contrato. Dentro do PERDIDO, null cai na
    * primeira condicao e o @IsString recusa, que e o desejado.
    */
+  @ApiPropertyOptional({
+    description: 'Obrigatorio quando para_estagio = PERDIDO (motivo da perda).',
+    maxLength: 255,
+    example: 'Sem disponibilidade nas datas',
+  })
   @ValidateIf(
     (dto: FunnelStageChangeDto) =>
       dto.para_estagio === FUNNEL_LOST_STAGE ||
@@ -42,6 +49,7 @@ export class FunnelStageChangeDto {
    * so para o motivo do PERDIDO. Quando ausente, o subtipo ja identificado
    * antes e preservado.
    */
+  @ApiPropertyOptional({ description: 'Subtipo do publico, gravado no contato.', enum: EBotContactAudience })
   @IsOptional()
   @IsEnum(EBotContactAudience)
   tipo_publico?: EBotContactAudience;

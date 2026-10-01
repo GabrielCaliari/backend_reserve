@@ -9,6 +9,16 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { Response } from 'express';
+import { ApiOkResponse } from '@nestjs/swagger';
+import {
+  ChannelsResponseDto,
+  ConversationDetailResponseDto,
+  ConversationsListResponseDto,
+  FunnelColumnDto,
+  FunnelMetricsResponseDto,
+  HomeResponseDto,
+  LeadsOverviewResponseDto,
+} from '../../application/dtos/bot-panel-responses.dto';
 import { DashboardService } from '../../application/services/dashboard.service';
 import { OverviewService } from '../../application/services/overview.service';
 import { LeadsOverviewService } from '../../application/services/leads-overview.service';
@@ -76,6 +86,7 @@ export class ClientPortalController {
   }
 
   @Get(':clientId/leads-overview')
+  @ApiOkResponse({ type: LeadsOverviewResponseDto })
   async getLeadsOverview(
     @Param('clientId') clientId: string,
     @Query('from') from: string,
@@ -87,6 +98,7 @@ export class ClientPortalController {
   }
 
   @Get(':clientId/home')
+  @ApiOkResponse({ type: HomeResponseDto })
   async getHome(
     @Param('clientId') clientId: string,
     @Query('from') from: string,
@@ -136,11 +148,13 @@ export class ClientPortalController {
   }
 
   @Get(':clientId/whatsapp/channels')
+  @ApiOkResponse({ type: ChannelsResponseDto })
   async getWhatsAppChannels(@Param('clientId') clientId: string) {
     return this.botChannelHealthService.getChannels(clientId);
   }
 
   @Get(':clientId/whatsapp/conversations')
+  @ApiOkResponse({ type: ConversationsListResponseDto })
   async listWhatsAppConversations(
     @Param('clientId') clientId: string,
     @Query() query: ListConversationsQueryDto,
@@ -149,6 +163,7 @@ export class ClientPortalController {
   }
 
   @Get(':clientId/whatsapp/conversations/:numeroContato')
+  @ApiOkResponse({ type: ConversationDetailResponseDto })
   async getWhatsAppConversationDetail(
     @Param('clientId') clientId: string,
     @Param('numeroContato') numeroContato: string,
@@ -157,11 +172,13 @@ export class ClientPortalController {
   }
 
   @Get(':clientId/whatsapp/funnel')
+  @ApiOkResponse({ type: [FunnelColumnDto] })
   async getWhatsAppFunnelBoard(@Param('clientId') clientId: string) {
     return this.funnelMetricsService.getBoard(clientId);
   }
 
   @Get(':clientId/whatsapp/funnel/metrics')
+  @ApiOkResponse({ type: FunnelMetricsResponseDto })
   async getWhatsAppFunnelMetrics(
     @Param('clientId') clientId: string,
     @Query('from') from: string,

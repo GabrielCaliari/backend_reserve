@@ -1,6 +1,8 @@
 import { Body, Controller, Headers, Param, Post, Req, Res } from '@nestjs/common';
 import { SkipThrottle } from '@nestjs/throttler';
 import { Request, Response } from 'express';
+import { ApiBody } from '@nestjs/swagger';
+import { PmsBookingWebhookDto } from '../../application/dtos/pms-booking-webhook.dto';
 import { Public } from '../../../../shared/auth/decorators/public.decorator';
 import { PmsBookingWebhookService } from '../../application/services/pms-booking-webhook.service';
 
@@ -16,6 +18,7 @@ export class PmsBookingWebhookController {
   constructor(private readonly service: PmsBookingWebhookService) {}
 
   @Post(':clientId')
+  @ApiBody({ type: PmsBookingWebhookDto })
   async receive(
     @Param('clientId') clientId: string,
     @Headers('x-reserve-signature') signature: string | undefined,
