@@ -1,258 +1,237 @@
 import { BotEventProcessorService } from './bot-event-processor.service';
-import { BotEventDto } from '../dtos/bot-event.dto';
-import { EBotContactAudience, EFunnelStage } from '../../../../generated/prisma/enums';
 
-/**
- * Cobre o lado do bot da migracao para o funil v2: e o unico caminho de escrita
- * de estagio que nao passa pelo DTO, entao os aliases das etapas antigas e o
- * subtipo de publico so estao protegidos aqui.
- */
-describe('BotEventProcessorService — funil v2', () => {
-  let prisma: {
-    botLead: { findUnique: jest.Mock; upsert: jest.Mock };
-    botContact: { updateMany: jest.Mock };
-    funnelEvent: { create: jest.Mock };
-    $transaction: jest.Mock;
+const T = 'tenant_1';
+const PHONE = '553598067432';
+const AT = '2026-10-01T10:00:00.000Z';
+
+function contact(over: Record<string, unknown> = {}) {
+  return {
+    phone: PHONE, name: 'Gabriel Caliari', audience: 'LEAD', origin: 'anuncio',
+    ctwa_clid: null, source_id: 'ad_123', link_code: null, bot_status: 'ATIVO', occasion: 'romantica',
+    ...over,
   };
+}
+
+function evento(type: string, over: Record<string, unknown> = {}) {
+  return { event_id: 'e1', occurred_at: AT, type, contact: contact(), stage: null, hold: null, data: {}, ...over } as any;
+}
+
+describe('BotEventProcessorService (contrato v2)', () => {
+  let prisma: any;
+  let attribution: { record: jest.Mock };
   let service: BotEventProcessorService;
-  let warn: jest.SpyInstance;
-
-  const tenantId = 'tenant_123';
-  const numeroContato = '5511999999999';
-
-  const event = (eventType: string, payload: Record<string, unknown>): BotEventDto => ({
-    event_id: '00000000-0000-4000-8000-000000000000',
-    event_type: eventType,
-    occurred_at: '2026-08-07T12:00:00.000Z',
-    payload,
-  });
-
-  /** Le o `data` do unico funnelEvent.create empilhado no $transaction. */
-  const eventData = () => prisma.funnelEvent.create.mock.calls[0][0].data;
 
   beforeEach(() => {
     prisma = {
-      botLead: { findUnique: jest.fn().mockResolvedValue(null), upsert: jest.fn() },
-      botContact: { updateMany: jest.fn().mockResolvedValue({ count: 1 }) },
-      funnelEvent: { create: jest.fn() },
-      $transaction: jest.fn().mockResolvedValue([]),
+      botContact: { upsert: jest.fn().mockResolvedValue({}), updateMany: jest.fn().mockResolvedValue({ count: 1 }) },
+      botLead: {
+        findUnique: jest.fn().mockResolvedValue(null),
+        upsert: jest.fn().mockResolvedValue({}),
+        update: jest.fn().mockResolvedValue({}),
+      },
+      funnelEvent: { create: jest.fn().mockResolvedValue({}) },
+      botMessage: { create: jest.fn().mockResolvedValue({}) },
+      followupAttempt: { create: jest.fn().mockResolvedValue({}), updateMany: jest.fn().mockResolvedValue({ count: 0 }) },
+      botIntegrationConfig: { updateMany: jest.fn().mockResolvedValue({ count: 1 }) },
+      $transaction: jest.fn().mockImplementation((ops) => Promise.all(ops)),
     };
-    service = new BotEventProcessorService(prisma as any, { record: jest.fn() } as any);
-    warn = jest.spyOn((service as any).logger, 'warn').mockImplementation(() => undefined);
+    attribution = { record: jest.fn().mockResolvedValue(undefined) };
+    service = new BotEventProcessorService(prisma, attribution as any);
   });
 
-  afterEach(() => jest.restoreAllMocks());
-
-  const currentStageIs = (stage: EFunnelStage | null) =>
-    prisma.botLead.findUnique.mockResolvedValue(stage ? { current_stage: stage } : null);
-
-  describe('nomes das etapas', () => {
-    it.each(Object.values(EFunnelStage))('aceita a etapa v2 %s', async (stage) => {
-      await service.process(
-        tenantId,
-        event('lead.estagio_alterado', { contato: numeroContato, para: stage, motivo: 'x' }),
-      );
-
-      expect(eventData().para_estagio).toBe(stage);
-      expect(warn).not.toHaveBeenCalled();
-    });
-
-    // O N8N nao sobe junto com o backend: um evento com nome antigo tem que
-    // pousar na etapa equivalente, nunca voltar para a entrada do funil.
-    it.each([
-      ['NOVO', EFunnelStage.CONTATO_INICIADO],
-      ['QUALIFICADO', EFunnelStage.QUALIFICADO],
-      ['PAGAMENTO', EFunnelStage.FECHAMENTO_INICIADO],
-      ['FECHADO', EFunnelStage.RESERVA_CONFIRMADA],
-      ['FRIO', EFunnelStage.PERDIDO],
-    ])('traduz o nome antigo %s para %s', async (legacy, expected) => {
-      await service.process(
-        tenantId,
-        event('lead.estagio_alterado', { contato: numeroContato, para: legacy, motivo: 'x' }),
-      );
-
-      expect(eventData().para_estagio).toBe(expected);
-    });
-
-    it('cai na entrada do funil e avisa quando a etapa e desconhecida', async () => {
-      await service.process(
-        tenantId,
-        event('lead.estagio_alterado', { contato: numeroContato, para: 'INVENTADO' }),
-      );
-
-      expect(eventData().para_estagio).toBe(EFunnelStage.CONTATO_INICIADO);
-      expect(warn).toHaveBeenCalledWith(expect.stringMatching(/INVENTADO/));
-    });
-  });
-
-  describe('eventos dedicados', () => {
-    it('pagamento.solicitado vai para FECHAMENTO_INICIADO', async () => {
-      await service.process(tenantId, event('pagamento.solicitado', { contato: numeroContato }));
-      expect(eventData().para_estagio).toBe(EFunnelStage.FECHAMENTO_INICIADO);
-    });
-
-    it('lead.fechado vai para RESERVA_CONFIRMADA, nao para FECHAMENTO_INICIADO', async () => {
-      await service.process(tenantId, event('lead.fechado', { contato: numeroContato }));
-      expect(eventData().para_estagio).toBe(EFunnelStage.RESERVA_CONFIRMADA);
-    });
-
-    it('lead.pronto_para_fechar continua anotacao, sem mudar de estagio', async () => {
-      currentStageIs(EFunnelStage.OFERTA_FEITA);
-
-      await service.process(tenantId, event('lead.pronto_para_fechar', { contato: numeroContato }));
-
-      expect(eventData()).toMatchObject({
-        de_estagio: null,
-        para_estagio: EFunnelStage.OFERTA_FEITA,
-        motivo: 'TRANSFERIR',
-      });
-      expect(prisma.botLead.upsert).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('motivo do PERDIDO na ingestao', () => {
-    it('avisa mas nao recusa o evento quando o bot perde um lead sem motivo', async () => {
-      currentStageIs(EFunnelStage.OFERTA_FEITA);
-
-      await service.process(
-        tenantId,
-        event('lead.estagio_alterado', { contato: numeroContato, para: 'PERDIDO' }),
-      );
-
-      // Aceitar sem motivo e deliberado: o endpoint responde 202 e nunca
-      // reprocessa, entao recusar perderia a transicao de vez.
-      expect(prisma.$transaction).toHaveBeenCalled();
-      expect(eventData().motivo).toBeNull();
-      expect(warn).toHaveBeenCalledWith(expect.stringMatching(/PERDIDO/));
-    });
-
-    it('grava o motivo trimado quando o bot manda um', async () => {
-      await service.process(
-        tenantId,
-        event('lead.estagio_alterado', {
-          contato: numeroContato,
-          para: 'PERDIDO',
-          motivo: '  achou caro  ',
-        }),
-      );
-
-      expect(eventData().motivo).toBe('achou caro');
-      expect(warn).not.toHaveBeenCalled();
-    });
-
-    it('corta o motivo no limite da coluna em vez de estourar o INSERT', async () => {
-      await service.process(
-        tenantId,
-        event('lead.estagio_alterado', {
-          contato: numeroContato,
-          para: 'PERDIDO',
-          motivo: 'x'.repeat(300),
-        }),
-      );
-
-      expect(eventData().motivo).toHaveLength(255);
-    });
-
-    it('nao quebra quando o motivo chega com um tipo que nao e string', async () => {
-      await service.process(
-        tenantId,
-        event('lead.estagio_alterado', { contato: numeroContato, para: 'PERDIDO', motivo: 42 }),
-      );
-
-      expect(eventData().motivo).toBe('42');
-    });
-  });
-
-  describe('subtipo de publico', () => {
-    it('grava o subtipo no contato, fora do log de estagios', async () => {
-      await service.process(
-        tenantId,
-        event('lead.estagio_alterado', {
-          contato: numeroContato,
-          para: 'PUBLICO_IDENTIFICADO',
-          tipo_publico: 'hospede em estadia',
-        }),
-      );
-
+  describe('snapshot do contato', () => {
+    it('aplica os campos do snapshot so se o evento nao for mais antigo que o ja aplicado', async () => {
+      await service.process(T, evento('qualificado'));
       expect(prisma.botContact.updateMany).toHaveBeenCalledWith({
-        where: { tenant_id: tenantId, numero_contato: numeroContato },
-        data: { tipo_publico: EBotContactAudience.HOSPEDE_EM_ESTADIA },
+        where: {
+          tenant_id: T, numero_contato: PHONE,
+          OR: [{ snapshot_em: null }, { snapshot_em: { lte: new Date(AT) } }],
+        },
+        data: expect.objectContaining({
+          nome: 'Gabriel Caliari', tipo_publico: 'LEAD', origem: 'anuncio',
+          status_bot: 'ATIVO', ocasiao: 'romantica', snapshot_em: new Date(AT),
+        }),
       });
-      expect(eventData()).not.toHaveProperty('tipo_publico');
     });
 
-    it.each(Object.values(EBotContactAudience))('aceita o subtipo %s', async (audience) => {
-      await service.process(
-        tenantId,
-        event('lead.estagio_alterado', {
-          contato: numeroContato,
-          para: 'PUBLICO_IDENTIFICADO',
-          tipo_publico: audience,
-        }),
-      );
-
-      expect(prisma.botContact.updateMany).toHaveBeenCalledWith(
-        expect.objectContaining({ data: { tipo_publico: audience } }),
-      );
+    it('bot_status fora do enum e ignorado, nao derruba o evento', async () => {
+      await service.process(T, evento('qualificado', { contact: contact({ bot_status: 'INVENTADO' }) }));
+      const data = prisma.botContact.updateMany.mock.calls[0][0].data;
+      expect(data).not.toHaveProperty('status_bot');
     });
 
-    it('ignora subtipo fora do enum em vez de derrubar o evento', async () => {
-      await service.process(
-        tenantId,
-        event('lead.estagio_alterado', {
-          contato: numeroContato,
-          para: 'PUBLICO_IDENTIFICADO',
-          tipo_publico: 'PROPRIETARIO',
-        }),
-      );
-
-      expect(prisma.botContact.updateMany).not.toHaveBeenCalled();
-      expect(prisma.$transaction).toHaveBeenCalled();
+    it('evento sem contact (e que nao e heartbeat) so avisa', async () => {
+      const warn = jest.spyOn((service as any).logger, 'warn').mockImplementation(() => undefined);
+      await service.process(T, evento('qualificado', { contact: null }));
+      expect(warn).toHaveBeenCalled();
+      expect(prisma.botContact.upsert).not.toHaveBeenCalled();
     });
 
-    it('evento sem tipo_publico nao apaga o subtipo ja identificado', async () => {
-      await service.process(
-        tenantId,
-        event('lead.estagio_alterado', { contato: numeroContato, para: 'QUALIFICADO' }),
-      );
-
-      expect(prisma.botContact.updateMany).not.toHaveBeenCalled();
+    it('reserva vista no PMS (sem contato) fica so no ledger, sem aviso', async () => {
+      const warn = jest.spyOn((service as any).logger, 'warn').mockImplementation(() => undefined);
+      await service.process(T, evento('reserva.detectada_polling', { contact: null }));
+      expect(warn).not.toHaveBeenCalled();
+      expect(prisma.botContact.upsert).not.toHaveBeenCalled();
     });
   });
 
-  describe('bot.pausado (handoff)', () => {
-    it('pausa o contato e grava anotacao HANDOFF:<motivo> no log do funil', async () => {
-      currentStageIs(EFunnelStage.OFERTA_FEITA);
-      await service.process(
-        tenantId,
-        event('bot.pausado', { contato: numeroContato, motivo: 'pediu_humano' }),
-      );
-      expect(prisma.botContact.updateMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: { status_bot: 'PAUSADO', motivo_pausa: 'pediu_humano' },
-        }),
-      );
+  describe('estagio', () => {
+    it('muda de estagio gravando o log e a projecao na mesma transacao', async () => {
+      prisma.botLead.findUnique.mockResolvedValue({ current_stage: 'QUALIFICADO', stage_em: null });
+      await service.process(T, evento('acomodacao.apresentada', { stage: 'ACOMODACAO_APRESENTADA' }));
       expect(prisma.funnelEvent.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
-          numero_contato: numeroContato,
-          de_estagio: null,
-          para_estagio: EFunnelStage.OFERTA_FEITA,
-          autor_tipo: 'bot',
-          motivo: 'HANDOFF:pediu_humano',
-          ocorrido_em: new Date('2026-08-07T12:00:00.000Z'),
+          de_estagio: 'QUALIFICADO', para_estagio: 'ACOMODACAO_APRESENTADA',
+          autor_tipo: 'bot', ocorrido_em: new Date(AT),
+        }),
+      });
+      expect(prisma.botLead.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          update: expect.objectContaining({ current_stage: 'ACOMODACAO_APRESENTADA', stage_em: new Date(AT) }),
+        }),
+      );
+    });
+
+    it('eco de um estagio em que o lead ja esta nao duplica o log', async () => {
+      prisma.botLead.findUnique.mockResolvedValue({ current_stage: 'PERDIDO', stage_em: new Date('2026-10-01T09:59:00.000Z') });
+      await service.process(T, evento('painel.estagio', { stage: 'PERDIDO' }));
+      expect(prisma.funnelEvent.create).not.toHaveBeenCalled();
+      expect(prisma.botLead.update).toHaveBeenCalledWith(
+        expect.objectContaining({ data: { stage_em: new Date(AT) } }),
+      );
+    });
+
+    it('evento de estagio atrasado nao volta o lead no tempo', async () => {
+      prisma.botLead.findUnique.mockResolvedValue({
+        current_stage: 'RESERVA_CONFIRMADA', stage_em: new Date('2026-10-01T11:00:00.000Z'),
+      });
+      await service.process(T, evento('qualificado', { stage: 'QUALIFICADO' }));
+      expect(prisma.funnelEvent.create).not.toHaveBeenCalled();
+      expect(prisma.botLead.upsert).not.toHaveBeenCalled();
+    });
+
+    it('acao de humano entra no log como autor humano', async () => {
+      await service.process(T, evento('painel.estagio', {
+        stage: 'OFERTA_FEITA', actor: { type: 'human', id: 'usr_1' },
+      }));
+      expect(prisma.funnelEvent.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({ autor_tipo: 'humano', autor_id: 'usr_1' }),
+      });
+    });
+
+    it('estagio desconhecido e ignorado com aviso', async () => {
+      const warn = jest.spyOn((service as any).logger, 'warn').mockImplementation(() => undefined);
+      await service.process(T, evento('qualificado', { stage: 'INVENTADO' }));
+      expect(warn).toHaveBeenCalled();
+      expect(prisma.funnelEvent.create).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('hold', () => {
+    it('grava o hold no lead em centavos, com acomodacao e datas', async () => {
+      await service.process(T, evento('hold.criado', {
+        hold: {
+          code: 'M57', status: 'AGUARDANDO', accommodation: 'Suíte Master',
+          check_in: '2026-11-20', check_out: '2026-11-22', amount_cents: 104900, pms_reservation_id: 'r_30644146',
+        },
+      }));
+      expect(prisma.botLead.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          update: expect.objectContaining({
+            hold_codigo: 'M57', hold_status: 'AGUARDANDO', hold_valor_cents: 104900,
+            hold_pms_reservation_id: 'r_30644146', acomodacao_interesse: 'Suíte Master',
+            datas_interesse: { checkin: '2026-11-20', checkout: '2026-11-22' },
+            hold_em: new Date(AT),
+          }),
+        }),
+      );
+    });
+  });
+
+  describe('tipos', () => {
+    it('contato.iniciado marca o inicio e registra a atribuicao', async () => {
+      await service.process(T, evento('contato.iniciado', {
+        stage: 'CONTATO_INICIADO',
+        data: { origem: 'anuncio', ctwa_clid: 'clid_1', source_id: 'ad_123', link_code: null },
+      }));
+      expect(prisma.botContact.updateMany).toHaveBeenCalledWith({
+        where: { tenant_id: T, numero_contato: PHONE, iniciado_em: null },
+        data: { iniciado_em: new Date(AT) },
+      });
+      expect(attribution.record).toHaveBeenCalledWith(T, expect.objectContaining({
+        numeroContato: PHONE, ctwaClid: 'clid_1', sourceId: 'ad_123', sourceType: 'ad',
+      }));
+    });
+
+    it('mensagem do hospede corta o preview em 180 e marca follow-ups como respondidos', async () => {
+      await service.process(T, evento('mensagem', {
+        data: { role: 'user', kind: 'texto', content_preview: 'x'.repeat(400) },
+      }));
+      const msg = prisma.botMessage.create.mock.calls[0][0].data;
+      expect(msg.role).toBe('user');
+      expect(msg.content_preview).toHaveLength(180);
+      expect(prisma.followupAttempt.updateMany).toHaveBeenCalledWith({
+        where: { tenant_id: T, numero_contato: PHONE, status: 'sem_resposta', ocorrido_em: { lte: new Date(AT) } },
+        data: { status: 'respondeu' },
+      });
+    });
+
+    it('mensagem do bot nao mexe em follow-up', async () => {
+      await service.process(T, evento('mensagem', { data: { role: 'assistant', kind: 'botoes', content_preview: 'oi' } }));
+      expect(prisma.botMessage.create.mock.calls[0][0].data.tipo).toBe('botoes');
+      expect(prisma.followupAttempt.updateMany).not.toHaveBeenCalled();
+    });
+
+    it('transferencia vira anotacao HANDOFF com o motivo', async () => {
+      prisma.botLead.findUnique.mockResolvedValue({ current_stage: 'QUALIFICADO', stage_em: null });
+      await service.process(T, evento('transferencia', { data: { motivo: 'pediu_humano', tag: 'x' } }));
+      expect(prisma.funnelEvent.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          de_estagio: null, para_estagio: 'QUALIFICADO', motivo: 'HANDOFF:pediu_humano',
         }),
       });
     });
 
-    it('sem motivo no payload grava HANDOFF:nao_informado', async () => {
-      await service.process(tenantId, event('bot.pausado', { contato: numeroContato }));
-      expect(eventData().motivo).toBe('HANDOFF:nao_informado');
-      expect(eventData().para_estagio).toBe(EFunnelStage.CONTATO_INICIADO);
+    it('hold.expirado marca o lead para recuperar', async () => {
+      await service.process(T, evento('hold.expirado', { data: { codigo: 'M57' } }));
+      expect(prisma.botLead.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({ update: { recuperar: true } }),
+      );
     });
 
-    it('bot.reativado nao gera anotacao (a retomada humana ja tem o proprio evento)', async () => {
-      await service.process(tenantId, event('bot.reativado', { contato: numeroContato }));
-      expect(prisma.funnelEvent.create).not.toHaveBeenCalled();
+    it('reserva.confirmada grava o valor e tira a etiqueta de recuperar', async () => {
+      await service.process(T, evento('reserva.confirmada', {
+        stage: 'RESERVA_CONFIRMADA', data: { codigo: 'M57', valor_cents: 104900 },
+      }));
+      expect(prisma.botLead.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({ update: { valor_confirmado_cents: 104900, recuperar: false } }),
+      );
+    });
+
+    it('perdido guarda o motivo', async () => {
+      await service.process(T, evento('perdido', { stage: 'PERDIDO', data: { motivo: 'caro' } }));
+      expect(prisma.botLead.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({ update: { motivo_perda: 'caro' } }),
+      );
+    });
+
+    it('followup.enviado entra por regua, sem resposta ate o hospede falar', async () => {
+      await service.process(T, evento('followup.enviado', { data: { toque: 2, regua: 'pre_reserva' } }));
+      expect(prisma.followupAttempt.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          tentativa: 2, regua: 'pre_reserva', status: 'sem_resposta', ocorrido_em: new Date(AT),
+        }),
+      });
+    });
+
+    it('heartbeat guarda o instante e os dados, sem contato', async () => {
+      const data = { bot_enabled: true, mode: 'hospedin', ai_enabled: true, active_conversations: 4, paused_awaiting_human: 1 };
+      await service.process(T, evento('heartbeat', { contact: null, data }));
+      expect(prisma.botIntegrationConfig.updateMany).toHaveBeenCalledWith({
+        where: { tenant_id: T },
+        data: { last_heartbeat_at: new Date(AT), last_heartbeat_data: data },
+      });
+      expect(prisma.botContact.upsert).not.toHaveBeenCalled();
     });
   });
 });

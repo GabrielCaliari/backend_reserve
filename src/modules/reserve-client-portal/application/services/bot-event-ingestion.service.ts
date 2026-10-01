@@ -64,7 +64,7 @@ export class BotEventIngestionService {
 
       const where = { tenant_id_event_id: { tenant_id: tenantId, event_id: event.event_id } };
       try {
-        await this.processor.process(tenantId, event as any);
+        await this.processor.process(tenantId, event);
         await this.prisma.botIngestionEvent.update({
           where,
           data: { status: 'PROCESSED', processed_at: new Date() },

@@ -1,7 +1,7 @@
 import { Type } from 'class-transformer';
 import {
   ArrayMaxSize, ArrayMinSize, IsArray, IsISO8601, IsObject, IsOptional, IsString,
-  IsUUID, MaxLength, ValidateNested,
+  MaxLength, ValidateNested,
 } from 'class-validator';
 
 /** Contrato v2 §3.1: no maximo 50 eventos de funil + 200 mensagens + 1 heartbeat. */
@@ -50,19 +50,4 @@ export class BotEventBatchDto {
   @ValidateNested({ each: true })
   @Type(() => BotEventV2Dto)
   events: BotEventV2Dto[];
-}
-
-/** Contract shape, from §5.6 of the master doc. */
-export class BotEventDto {
-  @IsUUID()
-  event_id: string;
-
-  @IsString()
-  event_type: string;
-
-  @IsISO8601()
-  occurred_at: string;
-
-  @IsObject()
-  payload: Record<string, unknown>;
 }
