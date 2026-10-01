@@ -20,7 +20,8 @@ import {
   TenantResourceScopeGuard,
 } from '../guards/tenant-resource-scope.guard';
 import { WhatsAppService } from '../../application/services/whatsapp.service';
-import { CreateWhatsAppTemplateDto, SendWhatsAppMessageDto } from '../../application/dtos/whatsapp.dto';
+import { CreateWhatsAppTemplateDto, SendBotMessageDto, SendWhatsAppMessageDto } from '../../application/dtos/whatsapp.dto';
+import { CurrentAdmin, CurrentAdminPayload } from '../../../../shared/auth/decorators/current-admin.decorator';
 
 /**
  * Rotas chaveadas por `:clientId`. O tenant vem do header `x-tenant-id` (o
@@ -65,10 +66,16 @@ export class WhatsAppController {
   @Post(':clientId/send')
   async sendMessage(
     @Param('clientId') clientId: string,
-    @Body() dto: SendWhatsAppMessageDto,
+    @Body() body: Record<string, unknown>,
+    @CurrentAdmin() admin: CurrentAdminPayload,
     @Res() res: Response,
   ) {
-    const result = await this.whatsappService.sendMessage(clientId, dto);
+    // Texto livre (formulario do painel) vai ao bot pelo Canal B; o envio por
+    // template continua no fluxo antigo.
+    const result =
+      typeof body.body === 'string'
+        ? await this.whatsappService.sendBotMessage(clientId, admin.admin_id, body as unknown as SendBotMessageDto)
+        : await this.whatsappService.sendMessage(clientId, body as unknown as SendWhatsAppMessageDto);
     return res.status(result.status).json(result.data);
   }
 

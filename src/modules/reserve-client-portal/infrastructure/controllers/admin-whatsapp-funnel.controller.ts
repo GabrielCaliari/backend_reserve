@@ -9,6 +9,7 @@ import { CurrentAdmin, CurrentAdminPayload } from '../../../../shared/auth/decor
 import { FunnelService } from '../../application/services/funnel.service';
 import { FunnelStageChangeDto } from '../../application/dtos/funnel-stage-change.dto';
 import { ResumeConversationDto } from '../../application/dtos/resume-conversation.dto';
+import { ExtendHoldDto, PauseConversationDto } from '../../application/dtos/funnel-action.dto';
 
 @Controller('admin/hotel-portal/:tenantId/whatsapp/funnel')
 // O tenant vem do proprio caminho (`:tenantId`), entao o TenantGuard o resolve
@@ -49,5 +50,27 @@ export class AdminWhatsAppFunnelController {
       dto.motivo,
       dto.tipo_publico,
     );
+  }
+
+  /** "Assumir conversa": pausa o bot para o contato (contrato v2 §5.1, pause_bot). */
+  @Post(':contactId/pause')
+  async pauseConversation(
+    @Param('tenantId') tenantId: string,
+    @Param('contactId') contactId: string,
+    @Body() dto: PauseConversationDto,
+    @CurrentAdmin() admin: CurrentAdminPayload,
+  ) {
+    return this.funnelService.pauseConversation(tenantId, contactId, admin.admin_id, dto.motivo);
+  }
+
+  /** Estende o prazo do hold que esta aguardando pagamento (extend_hold). */
+  @Post(':contactId/extend-hold')
+  async extendHold(
+    @Param('tenantId') tenantId: string,
+    @Param('contactId') contactId: string,
+    @Body() dto: ExtendHoldDto,
+    @CurrentAdmin() admin: CurrentAdminPayload,
+  ) {
+    return this.funnelService.extendHold(tenantId, contactId, admin.admin_id, dto.minutos, dto.codigo);
   }
 }

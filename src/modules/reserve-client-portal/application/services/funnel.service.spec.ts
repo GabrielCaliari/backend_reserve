@@ -13,7 +13,7 @@ describe('FunnelService.moveStage', () => {
     funnelEvent: { create: jest.Mock };
     $transaction: jest.Mock;
   };
-  let webhook: { dispatch: jest.Mock };
+  let actions: { dispatch: jest.Mock };
   let service: FunnelService;
 
   const tenantId = 'tenant_123';
@@ -28,8 +28,8 @@ describe('FunnelService.moveStage', () => {
       // O service le o retorno como [funnelEvent]; devolve um evento fake.
       $transaction: jest.fn().mockResolvedValue([{ id: 'evt_1' }]),
     };
-    webhook = { dispatch: jest.fn().mockResolvedValue(undefined) };
-    service = new FunnelService(prisma as any, webhook as any);
+    actions = { dispatch: jest.fn().mockResolvedValue({ ok: true, state: 'ATIVO' }) };
+    service = new FunnelService(prisma as any, actions as any);
   });
 
   const currentStageIs = (stage: EFunnelStage | null) =>
@@ -44,7 +44,7 @@ describe('FunnelService.moveStage', () => {
       ).rejects.toBeInstanceOf(BadRequestException);
 
       expect(prisma.$transaction).not.toHaveBeenCalled();
-      expect(webhook.dispatch).not.toHaveBeenCalled();
+      expect(actions.dispatch).not.toHaveBeenCalled();
     });
 
     it('recusa motivo so com espacos em branco', async () => {
@@ -65,7 +65,7 @@ describe('FunnelService.moveStage', () => {
         numeroContato,
         EFunnelStage.PERDIDO,
         adminId,
-        '  achou caro  ',
+        '  caro  ',
       );
 
       expect(prisma.funnelEvent.create).toHaveBeenCalledWith(
@@ -73,7 +73,7 @@ describe('FunnelService.moveStage', () => {
           data: expect.objectContaining({
             de_estagio: EFunnelStage.OFERTA_FEITA,
             para_estagio: EFunnelStage.PERDIDO,
-            motivo: 'achou caro',
+            motivo: 'caro',
             autor_tipo: 'humano',
             autor_id: adminId,
           }),
@@ -186,7 +186,7 @@ describe('FunnelService.resumeConversation', () => {
     funnelEvent: { create: jest.Mock };
     $transaction: jest.Mock;
   };
-  let webhook: { dispatch: jest.Mock };
+  let actions: { dispatch: jest.Mock };
   let service: FunnelService;
 
   const tenantId = 'tenant_123';
@@ -204,8 +204,8 @@ describe('FunnelService.resumeConversation', () => {
       // resume le results[1] como o funnelEvent criado
       $transaction: jest.fn().mockResolvedValue([{ count: 1 }, { id: 'evt_resume' }]),
     };
-    webhook = { dispatch: jest.fn().mockResolvedValue(undefined) };
-    service = new FunnelService(prisma as any, webhook as any);
+    actions = { dispatch: jest.fn().mockResolvedValue({ ok: true, state: 'ATIVO' }) };
+    service = new FunnelService(prisma as any, actions as any);
   });
 
   it('404 quando o contato nao existe', async () => {
@@ -240,7 +240,7 @@ describe('FunnelService.resumeConversation', () => {
     );
     // sem mudanca de estagio nao ha upsert do lead
     expect(prisma.botLead.upsert).not.toHaveBeenCalled();
-    expect(webhook.dispatch).toHaveBeenCalledWith(tenantId, 'evt_resume');
+    expect(actions.dispatch).toHaveBeenCalledWith(tenantId, 'return_to_bot', { phone: numeroContato, actorId: adminId });
   });
 
   it('com estagio de retorno move o lead junto', async () => {
@@ -263,7 +263,7 @@ describe('FunnelService.resumeConversation', () => {
     );
     expect(prisma.botLead.upsert).toHaveBeenCalledWith(
       expect.objectContaining({
-        update: { current_stage: EFunnelStage.FECHAMENTO_INICIADO },
+        update: expect.objectContaining({ current_stage: EFunnelStage.FECHAMENTO_INICIADO }),
       }),
     );
   });
@@ -281,6 +281,82 @@ describe('FunnelService.resumeConversation', () => {
         }),
       }),
     );
+  });
+});
+
+describe('FunnelService — canal reverso (contrato v2 §5)', () => {
+  const tenantId = 'tenant_123';
+  const numero = '5511999999999';
+  let prisma: any;
+  let actions: { dispatch: jest.Mock };
+  let service: FunnelService;
+
+  beforeEach(() => {
+    prisma = {
+      botLead: { findUnique: jest.fn().mockResolvedValue({ current_stage: 'OFERTA_FEITA' }), upsert: jest.fn() },
+      botContact: {
+        findUnique: jest.fn().mockResolvedValue({ id: 'c_1', status_bot: 'ATIVO' }),
+        updateMany: jest.fn().mockResolvedValue({ count: 1 }),
+      },
+      funnelEvent: { create: jest.fn() },
+      $transaction: jest.fn().mockResolvedValue([{ id: 'evt_1' }, { id: 'evt_2' }]),
+    };
+    actions = { dispatch: jest.fn().mockResolvedValue({ ok: true, state: 'PAUSADO' }) };
+    service = new FunnelService(prisma, actions as any);
+  });
+
+  it('mover para outro estagio despacha move_stage', async () => {
+    await service.moveStage(tenantId, numero, EFunnelStage.FECHAMENTO_INICIADO, 'admin_1');
+    expect(actions.dispatch).toHaveBeenCalledWith(tenantId, 'move_stage', {
+      phone: numero, actorId: 'admin_1', payload: { stage: 'FECHAMENTO_INICIADO', reason: null },
+    });
+  });
+
+  it('mover para PERDIDO despacha mark_lost e guarda o motivo no lead', async () => {
+    await service.moveStage(tenantId, numero, EFunnelStage.PERDIDO, 'admin_1', 'caro');
+    expect(actions.dispatch).toHaveBeenCalledWith(tenantId, 'mark_lost', {
+      phone: numero, actorId: 'admin_1', payload: { reason: 'caro' },
+    });
+    expect(prisma.botLead.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({ update: expect.objectContaining({ current_stage: 'PERDIDO', motivo_perda: 'caro' }) }),
+    );
+  });
+
+  it('PERDIDO com motivo fora da lista e recusado', async () => {
+    await expect(
+      service.moveStage(tenantId, numero, EFunnelStage.PERDIDO, 'admin_1', 'nao gostou'),
+    ).rejects.toThrow(/motivo/i);
+    expect(actions.dispatch).not.toHaveBeenCalled();
+  });
+
+  it('retomar despacha return_to_bot', async () => {
+    prisma.$transaction.mockResolvedValue([{ count: 1 }, { id: 'evt_resume' }]);
+    await service.resumeConversation(tenantId, numero, 'admin_1');
+    expect(actions.dispatch).toHaveBeenCalledWith(tenantId, 'return_to_bot', { phone: numero, actorId: 'admin_1' });
+  });
+
+  it('assumir a conversa pausa localmente e despacha pause_bot', async () => {
+    const result = await service.pauseConversation(tenantId, numero, 'admin_1', 'cliente pediu desconto');
+    expect(prisma.botContact.updateMany).toHaveBeenCalledWith({
+      where: { tenant_id: tenantId, numero_contato: numero },
+      data: { status_bot: 'PAUSADO', motivo_pausa: 'cliente pediu desconto' },
+    });
+    expect(actions.dispatch).toHaveBeenCalledWith(tenantId, 'pause_bot', {
+      phone: numero, actorId: 'admin_1', payload: { reason: 'cliente pediu desconto' },
+    });
+    expect(result).toEqual({ ok: true, state: 'PAUSADO' });
+  });
+
+  it('assumir conversa de contato inexistente da 404', async () => {
+    prisma.botContact.findUnique.mockResolvedValue(null);
+    await expect(service.pauseConversation(tenantId, numero, 'admin_1')).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it('estender prazo usa 60 minutos por padrao', async () => {
+    await service.extendHold(tenantId, numero, 'admin_1');
+    expect(actions.dispatch).toHaveBeenCalledWith(tenantId, 'extend_hold', {
+      phone: numero, actorId: 'admin_1', payload: { minutes: 60 },
+    });
   });
 });
 

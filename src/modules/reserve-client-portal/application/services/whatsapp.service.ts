@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../../shared/database/prisma.service';
 import { errorResponse, successResponse } from '../../../../shared/helpers';
-import { CreateWhatsAppTemplateDto, SendWhatsAppMessageDto } from '../dtos/whatsapp.dto';
+import { CreateWhatsAppTemplateDto, SendBotMessageDto, SendWhatsAppMessageDto } from '../dtos/whatsapp.dto';
+import { BotPanelActionProvider } from '../../infrastructure/providers/bot-panel-action.provider';
 import { WhatsAppProvider } from '../../infrastructure/providers/whatsapp.provider';
 
 @Injectable()
@@ -9,6 +10,7 @@ export class WhatsAppService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly whatsappProvider: WhatsAppProvider,
+    private readonly panelActions: BotPanelActionProvider,
   ) {}
 
   async createTemplate(clientId: string, dto: CreateWhatsAppTemplateDto) {
@@ -107,5 +109,39 @@ export class WhatsAppService {
     } catch (error) {
       return errorResponse('500:WHATSAPP_HISTORY_ERROR', 500, error);
     }
+  }
+
+  /** Janela de atendimento da Meta: so e possivel mensagem livre ate 24h apos a ultima mensagem do hospede. */
+  private static readonly JANELA_META_MS = 24 * 60 * 60 * 1000;
+
+  async sendBotMessage(clientId: string, adminId: string, dto: SendBotMessageDto) {
+    if (
+      typeof dto?.to_phone !== 'string' || dto.to_phone.length < 8 || dto.to_phone.length > 20 ||
+      typeof dto.body !== 'string' || !dto.body.trim() || dto.body.length > 1000
+    ) {
+      return errorResponse('400:INVALID_MESSAGE', 400);
+    }
+
+    const client = await this.prisma.hotelClient.findUnique({
+      where: { id: clientId },
+      select: { tenant_id: true },
+    });
+    if (!client?.tenant_id) return errorResponse('400:HOTEL_CLIENT_WITHOUT_TENANT', 400);
+
+    const contato = await this.prisma.botContact.findUnique({
+      where: { tenant_id_numero_contato: { tenant_id: client.tenant_id, numero_contato: dto.to_phone } },
+      select: { last_user_message_at: true },
+    });
+    const ultima = contato?.last_user_message_at?.getTime() ?? 0;
+    // Fora da janela a Meta pode recusar; o bot responde 200 mesmo assim (§5.3),
+    // entao quem avisa o usuario e o painel.
+    const foraDaJanela = Date.now() - ultima > WhatsAppService.JANELA_META_MS;
+
+    const result = await this.panelActions.dispatch(client.tenant_id, 'send_message', {
+      phone: dto.to_phone,
+      actorId: adminId,
+      payload: { text: dto.body },
+    });
+    return successResponse({ ...result, foraDaJanela }, result.ok ? 200 : 502);
   }
 }

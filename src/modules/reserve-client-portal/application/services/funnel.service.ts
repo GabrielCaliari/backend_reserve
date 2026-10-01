@@ -2,7 +2,10 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { PrismaService } from '../../../../shared/database/prisma.service';
 import { EBotContactAudience, EFunnelStage } from '../../../../generated/prisma/enums';
 import { FUNNEL_ENTRY_STAGE, FUNNEL_LOST_STAGE } from '../../domain/enums/funnel-stage-groups';
-import { BotStageWebhookProvider } from '../../infrastructure/providers/bot-stage-webhook.provider';
+import { BotPanelActionProvider, PanelActionResult } from '../../infrastructure/providers/bot-panel-action.provider';
+
+/** Motivos de perda do contrato v2 (§3.5, evento `perdido`). */
+export const MOTIVOS_PERDA = ['caro', 'data', 'pesquisando', 'sumiu', 'outro'] as const;
 
 /**
  * Human-authored funnel stage moves (§5.4 "sincronização de volta"). Writes
@@ -15,7 +18,7 @@ import { BotStageWebhookProvider } from '../../infrastructure/providers/bot-stag
 export class FunnelService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly botStageWebhookProvider: BotStageWebhookProvider,
+    private readonly panelActions: BotPanelActionProvider,
   ) {}
 
   async moveStage(
@@ -43,6 +46,9 @@ export class FunnelService {
     const motivoLimpo = motivo?.trim() || undefined;
     if (paraEstagio === FUNNEL_LOST_STAGE && !motivoLimpo) {
       throw new BadRequestException('motivo e obrigatorio ao mover um lead para PERDIDO.');
+    }
+    if (paraEstagio === FUNNEL_LOST_STAGE && !(MOTIVOS_PERDA as readonly string[]).includes(motivoLimpo!)) {
+      throw new BadRequestException(`motivo de perda invalido: use um de ${MOTIVOS_PERDA.join(', ')}.`);
     }
 
     if (currentStage === paraEstagio) {
@@ -76,17 +82,30 @@ export class FunnelService {
       }),
       this.prisma.botLead.upsert({
         where: { tenant_id_numero_contato: { tenant_id: tenantId, numero_contato: numeroContato } },
-        create: { tenant_id: tenantId, numero_contato: numeroContato, current_stage: paraEstagio },
-        update: { current_stage: paraEstagio },
+        create: {
+          tenant_id: tenantId, numero_contato: numeroContato, current_stage: paraEstagio,
+          stage_em: new Date(),
+          ...(paraEstagio === FUNNEL_LOST_STAGE ? { motivo_perda: motivoLimpo } : {}),
+        },
+        update: {
+          current_stage: paraEstagio,
+          stage_em: new Date(),
+          ...(paraEstagio === FUNNEL_LOST_STAGE ? { motivo_perda: motivoLimpo } : {}),
+        },
       }),
     ]);
 
-    // Fire-and-forget: BotStageWebhookProvider never throws, but the .catch
-    // here is documented defense-in-depth, matching whatsapp-tracking.service
-    // .ts's own comment on the same pattern — a human just moved a lead in
-    // the painel and that action must succeed regardless of N8N's
-    // reachability.
-    this.botStageWebhookProvider.dispatch(tenantId, funnelEvent.id).catch(() => {});
+    // Fire-and-forget: a acao do humano ja valeu no painel. O provider grava
+    // a linha no outbox e o cron reconcilia se o bot estiver fora do ar.
+    const dispatch =
+      paraEstagio === FUNNEL_LOST_STAGE
+        ? this.panelActions.dispatch(tenantId, 'mark_lost', {
+            phone: numeroContato, actorId: adminId, payload: { reason: motivoLimpo },
+          })
+        : this.panelActions.dispatch(tenantId, 'move_stage', {
+            phone: numeroContato, actorId: adminId, payload: { stage: paraEstagio, reason: motivoLimpo ?? null },
+          });
+    dispatch.catch(() => undefined);
 
     return funnelEvent;
   }
@@ -143,17 +162,67 @@ export class FunnelService {
       ops.push(
         this.prisma.botLead.upsert({
           where: { tenant_id_numero_contato: { tenant_id: tenantId, numero_contato: numeroContato } },
-          create: { tenant_id: tenantId, numero_contato: numeroContato, current_stage: paraEstagio },
-          update: { current_stage: paraEstagio },
+          create: { tenant_id: tenantId, numero_contato: numeroContato, current_stage: paraEstagio, stage_em: new Date() },
+          update: { current_stage: paraEstagio, stage_em: new Date() },
         }),
       );
     }
     const results = await this.prisma.$transaction(ops);
     const funnelEvent = results[1];
 
-    this.botStageWebhookProvider.dispatch(tenantId, funnelEvent.id).catch(() => {});
+    this.panelActions
+      .dispatch(tenantId, 'return_to_bot', { phone: numeroContato, actorId: adminId })
+      .then(() =>
+        paraEstagio !== currentStage
+          ? this.panelActions.dispatch(tenantId, 'move_stage', {
+              phone: numeroContato, actorId: adminId,
+              payload: { stage: paraEstagio, reason: RETOMADA_HUMANA_MOTIVO },
+            })
+          : undefined,
+      )
+      .catch(() => undefined);
 
     return funnelEvent;
+  }
+
+  /**
+   * "Assumir conversa": o humano pausa o bot para aquele contato. Aqui a
+   * resposta do bot interessa a quem clicou, entao o dispatch e aguardado.
+   */
+  async pauseConversation(
+    tenantId: string,
+    numeroContato: string,
+    adminId: string,
+    motivo?: string,
+  ): Promise<PanelActionResult> {
+    const contact = await this.prisma.botContact.findUnique({
+      where: { tenant_id_numero_contato: { tenant_id: tenantId, numero_contato: numeroContato } },
+    });
+    if (!contact) throw new NotFoundException('contato nao encontrado.');
+
+    const motivoLimpo = motivo?.trim().slice(0, 255) || null;
+    await this.prisma.botContact.updateMany({
+      where: { tenant_id: tenantId, numero_contato: numeroContato },
+      data: { status_bot: 'PAUSADO', motivo_pausa: motivoLimpo },
+    });
+    return this.panelActions.dispatch(tenantId, 'pause_bot', {
+      phone: numeroContato, actorId: adminId, payload: { reason: motivoLimpo },
+    });
+  }
+
+  /** Soma minutos ao prazo do hold que esta AGUARDANDO (contrato v2 §5.1). */
+  async extendHold(
+    tenantId: string,
+    numeroContato: string,
+    adminId: string,
+    minutos = 60,
+    codigo?: string,
+  ): Promise<PanelActionResult> {
+    return this.panelActions.dispatch(tenantId, 'extend_hold', {
+      phone: numeroContato,
+      actorId: adminId,
+      payload: { minutes: minutos, ...(codigo ? { codigo } : {}) },
+    });
   }
 }
 
