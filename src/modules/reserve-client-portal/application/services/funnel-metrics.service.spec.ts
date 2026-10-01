@@ -24,106 +24,77 @@ describe('formatDatasInteresse', () => {
   });
 });
 
-describe('FunnelMetricsService.getBoard', () => {
-  function buildPrisma() {
-    return {
+describe('FunnelMetricsService.getBoard (contrato v2 §4.3)', () => {
+  function build(leadsPorEstagio: Record<string, any[]>) {
+    const prisma: any = {
       hotelClient: { findUnique: jest.fn().mockResolvedValue({ tenant_id: 'tenant_1' }) },
       botLead: {
-        groupBy: jest.fn().mockResolvedValue([{ current_stage: 'OFERTA_FEITA', _count: { _all: 2 } }]),
-        // 1a chamada: todos os leads (so numero + estagio) para os totais;
-        // demais: leads da coluna (cap 50)
-        findMany: jest.fn().mockImplementation(({ where }: any) =>
-          Promise.resolve(
-            where.current_stage === undefined
-              ? [
-                  { numero_contato: '+5511999', current_stage: 'OFERTA_FEITA' },
-                  { numero_contato: '+5511888', current_stage: 'OFERTA_FEITA' },
-                ]
-              : where.current_stage === 'OFERTA_FEITA'
-                ? [
-                    { numero_contato: '+5511999', acomodacao_interesse: null, datas_interesse: { checkin: '2026-09-12', checkout: '2026-09-15' } },
-                    { numero_contato: '+5511888', acomodacao_interesse: 'Chalé', datas_interesse: null },
-                  ]
-                : [],
-          ),
-        ),
+        groupBy: jest.fn().mockImplementation(({ where }) => {
+          if (where.hold_status) {
+            return Promise.resolve([{ current_stage: 'FECHAMENTO_INICIADO', _sum: { hold_valor_cents: 154900 } }]);
+          }
+          return Promise.resolve([
+            { current_stage: 'FECHAMENTO_INICIADO', _count: { _all: 2 }, _sum: { valor_confirmado_cents: 0 } },
+            { current_stage: 'RESERVA_CONFIRMADA', _count: { _all: 1 }, _sum: { valor_confirmado_cents: 104900 } },
+          ]);
+        }),
+        findMany: jest.fn().mockImplementation(({ where }) => Promise.resolve(leadsPorEstagio[where.current_stage] ?? [])),
       },
       botContact: {
         findMany: jest.fn().mockResolvedValue([
-          { numero_contato: '+5511999', nome: 'Ana', tipo_publico: null, status_bot: 'PAUSADO', last_message_at: new Date('2026-08-20T10:00:00Z') },
-          { numero_contato: '+5511888', nome: null, tipo_publico: 'LEAD', status_bot: 'ATIVO', last_message_at: null },
+          {
+            numero_contato: '5535999', nome: 'Ana', tipo_publico: 'LEAD', status_bot: 'AGUARDANDO_PAGAMENTO',
+            last_user_message_at: new Date('2026-10-01T10:00:00.000Z'),
+          },
         ]),
       },
-      motorHold: {
-        // ordenados por created_at desc: o primeiro de cada contato e o "mais recente"
-        findMany: jest.fn().mockResolvedValue([
-          { contato_whatsapp: '+5511999', status: 'EXPIRADO', valor_total: '500.00' },
-          { contato_whatsapp: '+5511999', status: 'CANCELADO', valor_total: '100.00' },
-          { contato_whatsapp: '+5511888', status: 'ATIVO', valor_total: '320.50' },
-        ]),
-      },
-      motorReservation: {
-        findMany: jest.fn().mockResolvedValue([
-          { hospede_telefone: '+5511888', valor_total: '320.50' },
-          { hospede_telefone: '+5500000', valor_total: '999.00' }, // contato sem lead: ignorado
-        ]),
-      },
-    } as any;
+    };
+    return { prisma, service: new FunnelMetricsService(prisma, {} as any) };
   }
 
-  it('normaliza datasInteresse para string | null', async () => {
-    const service = new FunnelMetricsService(buildPrisma(), {} as any);
+  const lead = {
+    numero_contato: '5535999', acomodacao_interesse: 'Suíte Master',
+    datas_interesse: { checkin: '2026-11-20', checkout: '2026-11-22' },
+    hold_codigo: 'M57', hold_status: 'EXPIRADA', hold_valor_cents: 104900,
+    recuperar: true, motivo_perda: null,
+  };
+
+  it('soma em aberto e confirmado por coluna, em reais, sem tocar no motor', async () => {
+    const { prisma, service } = build({ FECHAMENTO_INICIADO: [lead] });
     const board = await service.getBoard('client_1');
-    const coluna = board.find((c) => c.stage === 'OFERTA_FEITA')!;
-    expect(coluna.leads[0].datasInteresse).toBe('12/09/2026 – 15/09/2026');
+    const fechamento = board.find((c) => c.stage === 'FECHAMENTO_INICIADO')!;
+    const confirmada = board.find((c) => c.stage === 'RESERVA_CONFIRMADA')!;
+    expect(fechamento).toMatchObject({ count: 2, valorAberto: 1549, valorConfirmado: 0 });
+    expect(confirmada).toMatchObject({ count: 1, valorConfirmado: 1049 });
+    expect(prisma.motorHold).toBeUndefined();
+    expect(prisma.botLead.groupBy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { tenant_id: 'tenant_1', hold_status: { in: ['DISPONIVEL', 'AGUARDANDO', 'EXPIRADA'] } },
+      }),
+    );
   });
 
-  it('enriquece cada card com status do bot, espera, valor da cotacao e etiqueta de recuperacao', async () => {
-    const service = new FunnelMetricsService(buildPrisma(), {} as any);
+  it('card traz cotacao, etiqueta, hold e a espera contada da ultima mensagem do hospede', async () => {
+    const { service } = build({ FECHAMENTO_INICIADO: [lead] });
     const board = await service.getBoard('client_1');
-    const coluna = board.find((c) => c.stage === 'OFERTA_FEITA')!;
-    expect(coluna.leads[0]).toMatchObject({
-      numeroContato: '+5511999',
-      nome: 'Ana',
-      statusBot: 'PAUSADO',
-      aguardandoDesde: '2026-08-20T10:00:00.000Z',
-      valorCotacao: 500,
-      etiqueta: 'RECUPERAR',
+    expect(board.find((c) => c.stage === 'FECHAMENTO_INICIADO')!.leads[0]).toEqual({
+      numeroContato: '5535999', nome: 'Ana', tipoPublico: 'LEAD',
+      acomodacaoInteresse: 'Suíte Master', datasInteresse: '20/11/2026 – 22/11/2026',
+      statusBot: 'AGUARDANDO_PAGAMENTO', aguardandoDesde: '2026-10-01T10:00:00.000Z',
+      valorCotacao: 1049, etiqueta: 'RECUPERAR',
+      motivoPerda: null, holdStatus: 'EXPIRADA', holdCodigo: 'M57',
     });
-    expect(coluna.leads[1]).toMatchObject({
-      numeroContato: '+5511888',
-      statusBot: 'ATIVO',
-      aguardandoDesde: null,
-      valorCotacao: 320.5,
-      etiqueta: null,
-    });
   });
 
-  it('soma R$ aberto (holds ATIVO+EXPIRADO) e confirmado (reservas) por coluna', async () => {
-    const service = new FunnelMetricsService(buildPrisma(), {} as any);
+  it('lead perdido expoe o motivo', async () => {
+    const { service } = build({ PERDIDO: [{ ...lead, recuperar: false, hold_status: null, hold_valor_cents: null, motivo_perda: 'caro' }] });
     const board = await service.getBoard('client_1');
-    const coluna = board.find((c) => c.stage === 'OFERTA_FEITA')!;
-    expect(coluna.valorAberto).toBe(820.5);
-    expect(coluna.valorConfirmado).toBe(320.5);
-    const vazia = board.find((c) => c.stage === 'PERDIDO')!;
-    expect(vazia).toMatchObject({ count: 0, valorAberto: 0, valorConfirmado: 0 });
-  });
-
-  it('holds sao buscados do mais novo para o mais velho e so nos status que contam', () => {
-    const prisma = buildPrisma();
-    const service = new FunnelMetricsService(prisma, {} as any);
-    return service.getBoard('client_1').then(() => {
-      expect(prisma.motorHold.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({ orderBy: { created_at: 'desc' } }),
-      );
-      expect(prisma.motorReservation.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: expect.objectContaining({ origem: 'BOT_WHATSAPP' }),
-        }),
-      );
+    expect(board.find((c) => c.stage === 'PERDIDO')!.leads[0]).toMatchObject({
+      motivoPerda: 'caro', etiqueta: null, valorCotacao: null,
     });
   });
 });
+
 
 describe('FunnelMetricsService.getMetrics — handoff', () => {
   const from = new Date('2026-08-01T00:00:00Z');
