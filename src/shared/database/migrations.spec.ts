@@ -205,3 +205,35 @@ describe('20260818000002_add_channel_sync_tables', () => {
     expect(sql).toMatch(/motor_channel_push_queue_tenant_id_fkey[\s\S]*?ON DELETE CASCADE/);
   });
 });
+
+describe('20260930000001_bot_contract_v2', () => {
+  const sql = readMigration('20260930000001_bot_contract_v2');
+
+  it('amplia o status do contato para os 10 estados do contrato', () => {
+    for (const estado of [
+      'VERIFICANDO', 'AGUARDANDO_FICHA', 'AGUARDANDO_PAGAMENTO', 'EM_CONFIRMACAO',
+      'PAUSADO_HUMANO', 'FECHADO', 'EM_ESTADIA', 'FRIO',
+    ]) {
+      expect(sql).toContain(`ALTER TYPE "EBotContactStatus" ADD VALUE IF NOT EXISTS '${estado}'`);
+    }
+  });
+
+  it('cria o outbox de acoes do painel', () => {
+    expect(sql).toContain('CREATE TABLE "bot_panel_actions"');
+    expect(sql).toContain('CREATE INDEX "bot_panel_actions_tenant_id_status_idx"');
+  });
+
+  it('identificador do bot por tenant e unico', () => {
+    expect(sql).toContain('CREATE UNIQUE INDEX "bot_integration_configs_bot_tenant_ref_key"');
+  });
+
+  it('guarda hold e etiquetas no lead, em centavos', () => {
+    expect(sql).toContain('"hold_valor_cents" INTEGER');
+    expect(sql).toContain('"valor_confirmado_cents" INTEGER NOT NULL DEFAULT 0');
+    expect(sql).toContain('"recuperar" BOOLEAN NOT NULL DEFAULT false');
+  });
+
+  it('nao remove nada (a limpeza e outra migration)', () => {
+    expect(sql).not.toMatch(/DROP (TABLE|COLUMN)/);
+  });
+});

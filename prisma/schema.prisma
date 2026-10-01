@@ -193,58 +193,58 @@ model Admin {
 }
 
 model Tenant {
-  id                        String                      @id @default(cuid()) @db.VarChar(25)
-  name                      String                      @db.VarChar(100)
-  slug                      String                      @unique @db.VarChar(50)
+  id                          String                      @id @default(cuid()) @db.VarChar(25)
+  name                        String                      @db.VarChar(100)
+  slug                        String                      @unique @db.VarChar(50)
   /// @deprecated Fonte de verdade é TenantDomain (is_primary = true). Mantida
   /// por compatibilidade com o payload de tenant que o painel consome; será
   /// removida quando a última leitura sair do frontend.
-  domain                    String?                     @db.VarChar(255)
-  active                    Boolean                     @default(true)
-  created_at                DateTime                    @default(now())
-  updated_at                DateTime                    @updatedAt
-  archived_at               DateTime?
-  deletion_requested_at     DateTime?
-  deletion_scheduled_for_at DateTime?
-  deletion_requested_by     String?                     @db.VarChar(25)
-  deletion_reason           String?                     @db.VarChar(255)
-  stripe_customer_id        String?                     @db.VarChar(255)
-  subscription_status       String                      @default("none") @db.VarChar(50)
-  timezone                  String                      @default("America/Sao_Paulo") @db.VarChar(100)
-  tenant_type               ETenantType                 @default(COMMON)
-  AdminTenant               AdminTenant[]
-  Appointments              Appointment[]
-  AppointmentBlockedPeriods AppointmentBlockedPeriod[]
-  AppointmentScheduleConfig AppointmentScheduleConfig?
-  Author                    Author[]
-  Blog                      Blog[]
-  leads                     Lead[]
-  LeadCollection            LeadCollection[]
-  UserCollection            UserCollection[]
-  B2BFeeConfig              B2BFeeConfig?               @relation("B2BFeeConfig")
-  B2BProducts               B2BProduct[]
-  B2BPurchases              B2BPurchase[]
-  B2CCheckoutSessions       B2CCheckoutSession[]        @relation("B2CCheckoutSessions")
-  B2CFeeConfig              B2CFeeConfig?               @relation("B2CFeeConfig")
-  B2CProductCategories      ProductCategory[]           @relation("B2CProductCategories")
-  B2CProductPrices          ProductPrice[]              @relation("B2CProductPrices")
-  B2CProducts               Product[]
-  B2CUserProductAccess      UserProductAccess[]         @relation("B2CUserProductAccess")
-  discountCoupons           DiscountCoupon[]            @relation("DiscountCoupons")
-  StatsIntegration          StatsIntegration[]
-  StripeSubscription        StripeSubscription?
-  TenantBillingConfig       TenantBillingConfig?
-  NotificationReceipts      TenantNotificationReceipt[]
-  NotificationSettings      TenantNotificationSettings?
-  HotelConfig               HotelClient?                @relation("HotelTenantConfig")
-  HotelReservations         HotelReservation[]
-  AdminPermissionOverride   AdminPermissionOverride[]
-  TenantDomains             TenantDomain[]
-  TenantSettings            TenantSetting[]
-  ConversationAttributions  ConversationAttribution[]
-  AttributionSettings       AttributionSettings?
-  BotIntegrationConfig      BotIntegrationConfig?
-  AnalyticsReports          AnalyticsReport[]
+  domain                      String?                     @db.VarChar(255)
+  active                      Boolean                     @default(true)
+  created_at                  DateTime                    @default(now())
+  updated_at                  DateTime                    @updatedAt
+  archived_at                 DateTime?
+  deletion_requested_at       DateTime?
+  deletion_scheduled_for_at   DateTime?
+  deletion_requested_by       String?                     @db.VarChar(25)
+  deletion_reason             String?                     @db.VarChar(255)
+  stripe_customer_id          String?                     @db.VarChar(255)
+  subscription_status         String                      @default("none") @db.VarChar(50)
+  timezone                    String                      @default("America/Sao_Paulo") @db.VarChar(100)
+  tenant_type                 ETenantType                 @default(COMMON)
+  AdminTenant                 AdminTenant[]
+  Appointments                Appointment[]
+  AppointmentBlockedPeriods   AppointmentBlockedPeriod[]
+  AppointmentScheduleConfig   AppointmentScheduleConfig?
+  Author                      Author[]
+  Blog                        Blog[]
+  leads                       Lead[]
+  LeadCollection              LeadCollection[]
+  UserCollection              UserCollection[]
+  B2BFeeConfig                B2BFeeConfig?               @relation("B2BFeeConfig")
+  B2BProducts                 B2BProduct[]
+  B2BPurchases                B2BPurchase[]
+  B2CCheckoutSessions         B2CCheckoutSession[]        @relation("B2CCheckoutSessions")
+  B2CFeeConfig                B2CFeeConfig?               @relation("B2CFeeConfig")
+  B2CProductCategories        ProductCategory[]           @relation("B2CProductCategories")
+  B2CProductPrices            ProductPrice[]              @relation("B2CProductPrices")
+  B2CProducts                 Product[]
+  B2CUserProductAccess        UserProductAccess[]         @relation("B2CUserProductAccess")
+  discountCoupons             DiscountCoupon[]            @relation("DiscountCoupons")
+  StatsIntegration            StatsIntegration[]
+  StripeSubscription          StripeSubscription?
+  TenantBillingConfig         TenantBillingConfig?
+  NotificationReceipts        TenantNotificationReceipt[]
+  NotificationSettings        TenantNotificationSettings?
+  HotelConfig                 HotelClient?                @relation("HotelTenantConfig")
+  HotelReservations           HotelReservation[]
+  AdminPermissionOverride     AdminPermissionOverride[]
+  TenantDomains               TenantDomain[]
+  TenantSettings              TenantSetting[]
+  ConversationAttributions    ConversationAttribution[]
+  AttributionSettings         AttributionSettings?
+  BotIntegrationConfig        BotIntegrationConfig?
+  AnalyticsReports            AnalyticsReport[]
   motor_room_types            MotorRoomType[]
   motor_units                 MotorUnit[]
   motor_cancellation_policies MotorCancellationPolicy[]
@@ -310,7 +310,15 @@ model AttributionSettings {
 
 enum EBotContactStatus {
   ATIVO
+  VERIFICANDO
+  AGUARDANDO_FICHA
+  AGUARDANDO_PAGAMENTO
+  EM_CONFIRMACAO
   PAUSADO
+  PAUSADO_HUMANO
+  FECHADO
+  EM_ESTADIA
+  FRIO
 }
 
 enum EBotMessageRole {
@@ -323,6 +331,9 @@ enum EBotMessageType {
   texto
   audio
   imagem
+  botoes
+  template
+  sistema
 }
 
 /// Etapas do funil do bot, na ordem em que o lead avanca. A ordem de
@@ -367,6 +378,10 @@ model BotIntegrationConfig {
   n8n_motor_webhook_url          String?   @db.VarChar(500)
   n8n_config_publish_webhook_url String?   @db.VarChar(500)
   chatwoot_base_url              String?   @db.VarChar(500)
+  bot_tenant_ref                 String?   @unique @db.VarChar(60) // identificador do tenant no bot (ex.: cli_dona_tereza)
+  n8n_panel_webhook_url          String?   @db.VarChar(500)
+  panel_webhook_secret_enc       String?   @db.Text // segredo HMAC do canal reverso, cifrado (AES-256-GCM)
+  last_heartbeat_data            Json?
   last_heartbeat_at              DateTime?
   created_at                     DateTime  @default(now())
   updated_at                     DateTime  @updatedAt
@@ -393,21 +408,29 @@ model BotIngestionEvent {
 }
 
 model BotContact {
-  id                 String               @id @default(cuid()) @db.VarChar(25)
-  tenant_id          String               @db.VarChar(25)
-  numero_contato     String               @db.VarChar(20)
-  nome               String?              @db.VarChar(150)
-  origem             String?              @db.VarChar(20) // anuncio | organico
-  tipo_publico       EBotContactAudience?
-  status_bot         EBotContactStatus    @default(ATIVO)
-  motivo_pausa       String?              @db.VarChar(255)
-  janela_expira      DateTime?
-  consentimento_lgpd Boolean              @default(false)
-  last_message_at    DateTime?
-  created_at         DateTime             @default(now())
-  updated_at         DateTime             @updatedAt
+  id                   String               @id @default(cuid()) @db.VarChar(25)
+  tenant_id            String               @db.VarChar(25)
+  numero_contato       String               @db.VarChar(20)
+  nome                 String?              @db.VarChar(150)
+  origem               String?              @db.VarChar(20) // anuncio | organico
+  tipo_publico         EBotContactAudience?
+  status_bot           EBotContactStatus    @default(ATIVO)
+  motivo_pausa         String?              @db.VarChar(255)
+  janela_expira        DateTime?
+  consentimento_lgpd   Boolean              @default(true)
+  last_message_at      DateTime?
+  ocasiao              String?              @db.VarChar(20) // romantica | familia | grupo | descanso
+  source_id            String?              @db.VarChar(100)
+  link_code            String?              @db.VarChar(20)
+  ctwa_clid            String?              @db.VarChar(255)
+  iniciado_em          DateTime? // occurred_at do contato.iniciado
+  snapshot_em          DateTime? // occurred_at do ultimo snapshot aplicado
+  last_user_message_at DateTime?
+  created_at           DateTime             @default(now())
+  updated_at           DateTime             @updatedAt
 
   @@unique([tenant_id, numero_contato])
+  @@index([tenant_id, iniciado_em])
   @@map("bot_contacts")
 }
 
@@ -443,14 +466,23 @@ model FunnelEvent {
 }
 
 model BotLead {
-  id                   String       @id @default(cuid()) @db.VarChar(25)
-  tenant_id            String       @db.VarChar(25)
-  numero_contato       String       @db.VarChar(20)
-  current_stage        EFunnelStage @default(CONTATO_INICIADO)
-  perfil               String?      @db.VarChar(100)
-  acomodacao_interesse String?      @db.VarChar(255)
-  datas_interesse      Json?
-  updated_at           DateTime     @updatedAt
+  id                      String       @id @default(cuid()) @db.VarChar(25)
+  tenant_id               String       @db.VarChar(25)
+  numero_contato          String       @db.VarChar(20)
+  current_stage           EFunnelStage @default(CONTATO_INICIADO)
+  perfil                  String?      @db.VarChar(100)
+  acomodacao_interesse    String?      @db.VarChar(255)
+  datas_interesse         Json?
+  stage_em                DateTime?
+  hold_codigo             String?      @db.VarChar(20)
+  hold_status             String?      @db.VarChar(20) // DISPONIVEL | AGUARDANDO | CONFIRMADA | EXPIRADA | CANCELADA | EXCECAO
+  hold_valor_cents        Int?
+  hold_pms_reservation_id String?      @db.VarChar(60)
+  hold_em                 DateTime?
+  valor_confirmado_cents  Int          @default(0)
+  recuperar               Boolean      @default(false)
+  motivo_perda            String?      @db.VarChar(255)
+  updated_at              DateTime     @updatedAt
 
   @@unique([tenant_id, numero_contato])
   @@map("bot_leads")
@@ -463,6 +495,7 @@ model FollowupAttempt {
   tentativa      Int      @db.SmallInt // 1-4
   tipo_janela    String   @db.VarChar(10) // 4h | 24h | 72h | 7d
   status         String   @db.VarChar(20) // AGUARDANDO | RESPONDEU | FRIO
+  regua          String?  @db.VarChar(20) // anuncio | organico | pre_reserva | pagamento
   ocorrido_em    DateTime
   created_at     DateTime @default(now())
 
@@ -481,6 +514,26 @@ model BotStageWebhookDispatch {
 
   @@index([tenant_id, status])
   @@map("bot_stage_webhook_dispatches")
+}
+
+/// Outbox do canal reverso (contrato v2 §5): a acao do humano e gravada ANTES
+/// de ser enviada ao bot; o cron reconcilia as que falharem.
+model BotPanelAction {
+  id              String    @id @default(cuid()) @db.VarChar(25)
+  tenant_id       String    @db.VarChar(25)
+  action          String    @db.VarChar(30)
+  phone           String?   @db.VarChar(20)
+  actor_id        String?   @db.VarChar(25)
+  payload         Json
+  status          String    @default("PENDING") @db.VarChar(10) // PENDING | SENT | FAILED
+  attempts        Int       @default(0) @db.SmallInt
+  response_state  String?   @db.VarChar(30)
+  last_error      String?   @db.Text
+  last_attempt_at DateTime?
+  created_at      DateTime  @default(now())
+
+  @@index([tenant_id, status])
+  @@map("bot_panel_actions")
 }
 
 model BotDataRetentionSetting {
@@ -2197,6 +2250,7 @@ enum EBookingEngineType {
   HITS
   TOTVS
   GENERIC_WEBHOOK
+  HOSPEDIN
 }
 
 enum EReservationSource {
@@ -2355,18 +2409,19 @@ model MetricGoal {
 }
 
 model BotConfigProposal {
-  id             String   @id @default(cuid()) @db.VarChar(25)
-  tenant_id      String   @db.VarChar(25)
-  campo          String   @db.VarChar(100)
-  categoria      String   @db.VarChar(20) // pricing | policies | packages | hours
-  valor_atual    Json?
-  valor_proposto Json
-  status         String   @default("PENDENTE") @db.VarChar(10) // PENDENTE|APROVADA|REJEITADA
-  autor_id       String   @db.VarChar(25)
-  revisor_id     String?  @db.VarChar(25)
-  justificativa  String?  @db.Text
-  created_at     DateTime @default(now())
-  updated_at     DateTime @updatedAt
+  id                    String   @id @default(cuid()) @db.VarChar(25)
+  tenant_id             String   @db.VarChar(25)
+  campo                 String   @db.VarChar(100)
+  categoria             String   @db.VarChar(20) // pricing | policies | packages | hours
+  valor_atual           Json?
+  valor_proposto        Json
+  status                String   @default("PENDENTE") @db.VarChar(10) // PENDENTE|APROVADA|REJEITADA
+  autor_id              String   @db.VarChar(25)
+  revisor_id            String?  @db.VarChar(25)
+  justificativa         String?  @db.Text
+  justificativa_cliente String?  @db.Text
+  created_at            DateTime @default(now())
+  updated_at            DateTime @updatedAt
 
   @@index([tenant_id, status])
   @@map("bot_config_propostas")
