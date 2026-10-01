@@ -59,6 +59,8 @@ import { BotEventKeyGuard } from './infrastructure/guards/bot-event-key.guard';
 import { BotIngestBearerGuard } from './infrastructure/guards/bot-ingest-bearer.guard';
 import { BotEventIngestionService } from './application/services/bot-event-ingestion.service';
 import { BotEventProcessorService } from './application/services/bot-event-processor.service';
+import { PmsBookingWebhookService } from './application/services/pms-booking-webhook.service';
+import { PmsBookingWebhookController } from './infrastructure/controllers/pms-booking-webhook.controller';
 import { FunnelService } from './application/services/funnel.service';
 import { GuestStatusService } from './application/services/guest-status.service';
 import { BotChannelHealthService } from './application/services/bot-channel-health.service';
@@ -149,6 +151,7 @@ import { HomeService } from './application/services/home.service';
     WhatsAppTrackingController,
     WhatsAppRedirectController,
     BookingWebhookController,
+    PmsBookingWebhookController,
     AdminReservationsController,
     AdminDigestController,
     AdminMilestoneController,
@@ -201,6 +204,7 @@ import { HomeService } from './application/services/home.service';
     BotIngestBearerGuard,
     BotEventIngestionService,
     BotEventProcessorService,
+    PmsBookingWebhookService,
     FunnelService,
     GuestStatusService,
     BotChannelHealthService,

@@ -31,6 +31,7 @@ import { AdminSemesterPlanController } from './admin-semester-plan.controller';
 import { AdminWhatsAppContactController } from './admin-whatsapp-contact.controller';
 import { AdminWhatsAppFunnelController } from './admin-whatsapp-funnel.controller';
 import { BookingWebhookController } from './booking-webhook.controller';
+import { PmsBookingWebhookController } from './pms-booking-webhook.controller';
 import { BotEventIngestionController } from './bot-event-ingestion.controller';
 import { ClientPortalController } from './client-portal.controller';
 import { GuestCrmController } from './guest-crm.controller';
@@ -79,7 +80,7 @@ const RESOURCE_KEYED_CONTROLLERS = [
 const GATED_CONTROLLERS = [...TENANT_KEYED_CONTROLLERS, ...RESOURCE_KEYED_CONTROLLERS];
 
 /** @Public() por design — webhook de booking engine e redirect curto do WhatsApp. */
-const PUBLIC_CONTROLLERS = [BookingWebhookController, WhatsAppRedirectController];
+const PUBLIC_CONTROLLERS = [BookingWebhookController, WhatsAppRedirectController, PmsBookingWebhookController];
 
 function classGuards(target: unknown): unknown[] {
   return Reflect.getMetadata(GUARDS_METADATA, target as object) ?? [];
