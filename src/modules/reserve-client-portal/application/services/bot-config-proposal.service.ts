@@ -1,11 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
-import axios from 'axios';
 import { PrismaService } from '../../../../shared/database/prisma.service';
 import { errorResponse, successResponse } from '../../../../shared/helpers';
 import { ActivityLogService } from './activity-log.service';
 import { EActivityLogType } from '../../domain/enums/activity-log-type.enum';
 import { EActivityLogCategory } from '../../domain/enums/activity-log-category.enum';
 import { CreateBotConfigProposalDto, RejectBotConfigProposalDto } from '../dtos/bot-config-proposal.dto';
+import { BotPanelActionProvider } from '../../infrastructure/providers/bot-panel-action.provider';
 
 /**
  * `BotConfigProposal` (§5.5): dados operacionais do bot (preço, política,
@@ -21,6 +21,7 @@ export class BotConfigProposalService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly activityLogService: ActivityLogService,
+    private readonly panelActions: BotPanelActionProvider,
   ) {}
 
   /** Client-portal write: resolves clientId -> tenant_id before submitting (Global Constraints pattern). */
@@ -52,8 +53,9 @@ export class BotConfigProposalService {
           tenant_id: tenantId,
           campo: dto.campo,
           categoria: dto.categoria,
-          valor_atual: dto.valor_atual ?? undefined,
-          valor_proposto: dto.valor_proposto,
+          valor_atual: (dto.valor_atual ?? undefined) as any,
+          valor_proposto: dto.valor_proposto as any,
+          justificativa_cliente: dto.justificativa?.trim() || null,
           autor_id: authorId,
           status: 'PENDENTE',
         },
@@ -77,14 +79,9 @@ export class BotConfigProposalService {
   }
 
   /**
-   * Approve publishes the config to N8N best-effort (fire-and-forget, same
-   * precedent as Fase 3 Task 7's reverse webhook dispatcher) — a failed
-   * publish call does NOT roll back the APROVADA status. This plan's
-   * explicit decision (see Fase 5 Task 8): the proposal table is the source
-   * of truth for "what was approved"; a failed N8N-side publish is an
-   * ops-visible problem to reconcile separately, not a reason to re-litigate
-   * the approval. FLAGGED as needing product/eng sign-off — the alternative
-   * (block the transition until the webhook succeeds) is equally defensible.
+   * Aprovar aplica a chave no bot pelo Canal B (contrato v2 §6). A proposta
+   * aprovada e a fonte da verdade; falha de envio nao desfaz a aprovacao, o
+   * outbox (bot_panel_actions) guarda a acao e o cron de reconciliacao reenvia.
    */
   async approve(tenantId: string, id: string, revisorId: string) {
     try {
@@ -101,7 +98,13 @@ export class BotConfigProposalService {
         data: { status: 'APROVADA', revisor_id: revisorId },
       });
 
-      await this.publishToN8n(tenantId, updated.campo, updated.valor_proposto);
+      // Contrato v2 §6 passo 3: a aprovacao aplica a chave no bot pelo Canal B.
+      // A proposta aprovada e a verdade; se o bot estiver fora do ar, o cron
+      // de reconciliacao reenvia o apply_config.
+      await this.panelActions.dispatch(tenantId, 'apply_config', {
+        actorId: revisorId,
+        payload: { key: updated.campo, value: updated.valor_proposto },
+      });
 
       await this.activityLogService.record(tenantId, {
         type: EActivityLogType.AUTO,
@@ -132,23 +135,6 @@ export class BotConfigProposalService {
       return successResponse(updated);
     } catch (error) {
       return errorResponse('500:BOT_CONFIG_PROPOSAL_NOT_REJECTED', 500, error);
-    }
-  }
-
-  private async publishToN8n(tenantId: string, campo: string, valorProposto: unknown): Promise<void> {
-    try {
-      const config = await this.prisma.botIntegrationConfig.findUnique({ where: { tenant_id: tenantId } });
-      if (!config?.n8n_config_publish_webhook_url) {
-        this.logger.warn(`No n8n_config_publish_webhook_url configured for tenant ${tenantId} — skipping publish`);
-        return;
-      }
-      await axios.post(
-        config.n8n_config_publish_webhook_url,
-        { campo, valor_proposto: valorProposto },
-        { timeout: 5000 },
-      );
-    } catch (error) {
-      this.logger.error(`Failed to publish bot config to N8N for tenant ${tenantId}:`, error);
     }
   }
 }

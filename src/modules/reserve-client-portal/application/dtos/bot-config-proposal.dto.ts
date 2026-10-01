@@ -1,4 +1,4 @@
-import { IsIn, IsNotEmpty, IsOptional, IsString, Length } from 'class-validator';
+import { IsDefined, IsIn, IsNotEmpty, IsOptional, IsString, Length, MaxLength } from 'class-validator';
 
 /**
  * §5.5's "dados sim, comportamento não" boundary, enforced server-side: this
@@ -17,10 +17,16 @@ export class CreateBotConfigProposalDto {
   @IsIn(BOT_CONFIG_PROPOSAL_CATEGORIES)
   categoria: BotConfigProposalCategory;
 
+  // Sem decorator o whitelist do ValidationPipe descartaria estes campos.
   @IsOptional()
-  valor_atual?: any;
+  valor_atual?: unknown;
 
-  valor_proposto: any;
+  @IsDefined()
+  valor_proposto: unknown;
+
+  /** Por que o cliente quer a mudanca (contrato v2 §6, passo 1). */
+  @IsOptional() @IsString() @MaxLength(1000)
+  justificativa?: string;
 }
 
 export class RejectBotConfigProposalDto {

@@ -1,0 +1,59 @@
+import { plainToInstance } from 'class-transformer';
+import { validate } from 'class-validator';
+import { BotConfigProposalService } from './bot-config-proposal.service';
+import { CreateBotConfigProposalDto } from '../dtos/bot-config-proposal.dto';
+
+describe('BotConfigProposalService (contrato v2 §6)', () => {
+  let prisma: any;
+  let actions: { dispatch: jest.Mock };
+  let service: BotConfigProposalService;
+
+  beforeEach(() => {
+    prisma = {
+      botConfigProposal: {
+        create: jest.fn().mockImplementation(({ data }) => Promise.resolve({ id: 'p_1', ...data })),
+        findFirst: jest.fn().mockResolvedValue({ id: 'p_1', tenant_id: 'tenant_1', status: 'PENDENTE' }),
+        update: jest.fn().mockResolvedValue({ id: 'p_1', campo: 'tarifa:361057:A', valor_proposto: 33900, status: 'APROVADA' }),
+      },
+    };
+    actions = { dispatch: jest.fn().mockResolvedValue({ ok: true, state: null }) };
+    service = new BotConfigProposalService(prisma, { record: jest.fn() } as any, actions as any);
+  });
+
+  it('aprovar despacha apply_config com chave e valor', async () => {
+    await service.approve('tenant_1', 'p_1', 'revisor_1');
+    expect(actions.dispatch).toHaveBeenCalledWith('tenant_1', 'apply_config', {
+      actorId: 'revisor_1', payload: { key: 'tarifa:361057:A', value: 33900 },
+    });
+  });
+
+  it('proposta que nao esta pendente nao e reaplicada', async () => {
+    prisma.botConfigProposal.findFirst.mockResolvedValue({ id: 'p_1', status: 'APROVADA' });
+    const result = await service.approve('tenant_1', 'p_1', 'revisor_1');
+    expect(result.status).toBe(409);
+    expect(actions.dispatch).not.toHaveBeenCalled();
+  });
+
+  it('guarda a justificativa do cliente separada do retorno da agencia', async () => {
+    await service.submit('tenant_1', 'autor_1', {
+      campo: 'hold_min_pix_manual', categoria: 'policies', valor_proposto: 90, justificativa: 'hospedes pedem mais prazo',
+    } as any);
+    expect(prisma.botConfigProposal.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ justificativa_cliente: 'hospedes pedem mais prazo' }),
+    });
+  });
+});
+
+describe('CreateBotConfigProposalDto', () => {
+  const build = (payload: Record<string, unknown>) =>
+    validate(plainToInstance(CreateBotConfigProposalDto, payload), { whitelist: true });
+
+  it('valor_proposto sobrevive ao whitelist e e obrigatorio', async () => {
+    const dto = plainToInstance(CreateBotConfigProposalDto, { campo: 'x', categoria: 'pricing', valor_proposto: 33900 });
+    expect(await validate(dto, { whitelist: true })).toHaveLength(0);
+    expect(dto.valor_proposto).toBe(33900);
+
+    const faltando = await build({ campo: 'x', categoria: 'pricing' });
+    expect(faltando.some((e) => e.property === 'valor_proposto')).toBe(true);
+  });
+});
