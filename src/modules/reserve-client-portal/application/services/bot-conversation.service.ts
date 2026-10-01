@@ -33,7 +33,9 @@ export class BotConversationService {
             }
           : {}),
       },
-      orderBy: { last_message_at: 'desc' },
+      // Contato sem mensagem (last_message_at null) vai pro fim: no Postgres o
+      // desc poe NULL primeiro e esses contatos ficariam no topo da caixa de entrada.
+      orderBy: { last_message_at: { sort: 'desc', nulls: 'last' } },
       take: 100,
     });
 

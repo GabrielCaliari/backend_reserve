@@ -39,6 +39,13 @@ describe('BotConversationService (contrato v2)', () => {
     expect(conversations[0]).not.toHaveProperty('chatwootDeepLink');
   });
 
+  it('ordena por ultima mensagem com contatos sem mensagem no fim', async () => {
+    await service.list('client_1', {} as any);
+    expect(prisma.botContact.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ orderBy: { last_message_at: { sort: 'desc', nulls: 'last' } } }),
+    );
+  });
+
   it('detalhe traz ocasiao e o hold em reais', async () => {
     const { contact } = await service.detail('client_1', contato.numero_contato);
     expect(contact.ocasiao).toBe('romantica');

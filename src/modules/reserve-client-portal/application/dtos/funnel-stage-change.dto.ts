@@ -27,9 +27,10 @@ export class FunnelStageChangeDto {
    * primeira condicao e o @IsString recusa, que e o desejado.
    */
   @ApiPropertyOptional({
-    description: 'Obrigatorio quando para_estagio = PERDIDO (motivo da perda).',
+    description:
+      'Obrigatorio quando para_estagio = PERDIDO e deve ser um de: caro, data, pesquisando, sumiu, outro.',
     maxLength: 255,
-    example: 'Sem disponibilidade nas datas',
+    example: 'caro',
   })
   @ValidateIf(
     (dto: FunnelStageChangeDto) =>
