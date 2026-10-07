@@ -17,6 +17,7 @@ describe('BotIntegrationConfigService (canal reverso do contrato v2)', () => {
   let prisma: any;
   let keyProvider: { hash: jest.Mock };
   let aes: { encrypt: jest.Mock };
+  let ingestion: { countStuck: jest.Mock };
   let service: BotIntegrationConfigService;
 
   beforeEach(() => {
@@ -29,7 +30,8 @@ describe('BotIntegrationConfigService (canal reverso do contrato v2)', () => {
     };
     keyProvider = { hash: jest.fn().mockReturnValue({ hash: 'h', salt: 's' }) };
     aes = { encrypt: jest.fn().mockImplementation((v: string) => `enc(${v})`) };
-    service = new BotIntegrationConfigService(prisma, keyProvider as any, aes as any);
+    ingestion = { countStuck: jest.fn().mockResolvedValue(2) };
+    service = new BotIntegrationConfigService(prisma, keyProvider as any, aes as any, ingestion as any);
   });
 
   it('update: cifra o segredo, grava os campos novos e nunca devolve o segredo', async () => {
@@ -79,5 +81,24 @@ describe('BotIntegrationConfigService (canal reverso do contrato v2)', () => {
     expect(result.panel_webhook_secret_set).toBe(false);
     expect(result).not.toHaveProperty('panel_webhook_secret_enc');
     expect(result).not.toHaveProperty('tenant_key_hash');
+  });
+
+  it('GET devolve stuck_events e nunca o segredo', async () => {
+    prisma.botIntegrationConfig.findUnique.mockResolvedValue({ ...baseRow, panel_webhook_secret_enc: 'enc' });
+    const r = await service.findByTenant('tenant_1');
+    expect(r).toEqual(expect.objectContaining({ panel_webhook_secret_set: true, stuck_events: 2 }));
+    expect(ingestion.countStuck).toHaveBeenCalledWith('tenant_1');
+    expect(JSON.stringify(r)).not.toContain('enc');
+    expect(r).not.toHaveProperty('tenant_key');
+  });
+
+  it('regeneratePanelSecret grava cifrado e devolve o texto uma unica vez', async () => {
+    aes.encrypt.mockReturnValue('cifrado');
+    const r = await service.regeneratePanelSecret('tenant_1');
+    expect(r.panel_webhook_secret).toMatch(/^[0-9a-f]{64}$/);
+    expect(prisma.botIntegrationConfig.update).toHaveBeenCalledWith({
+      where: { tenant_id: 'tenant_1' },
+      data: { panel_webhook_secret_enc: 'cifrado' },
+    });
   });
 });

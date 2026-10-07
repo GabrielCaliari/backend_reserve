@@ -3,6 +3,7 @@ import * as crypto from 'crypto';
 import { PrismaService } from '../../../../shared/database/prisma.service';
 import { BotKeyProvider } from '../../infrastructure/providers/bot-key.provider';
 import { AesEncryptionProvider } from '../../infrastructure/providers/aes-encryption.provider';
+import { BotEventIngestionService } from './bot-event-ingestion.service';
 import { motivoUrlPainelInvalida } from './panel-webhook-url';
 import {
   CreateBotIntegrationConfigDto,
@@ -21,6 +22,7 @@ export class BotIntegrationConfigService {
     private readonly prisma: PrismaService,
     private readonly botKeyProvider: BotKeyProvider,
     private readonly aes: AesEncryptionProvider,
+    private readonly ingestion: BotEventIngestionService,
   ) {}
 
   async create(tenantId: string, dto: CreateBotIntegrationConfigDto) {
@@ -36,13 +38,13 @@ export class BotIntegrationConfigService {
       },
     });
 
-    return { ...this.toSafeShape(config), tenant_key: rawKey };
+    return { ...(await this.toSafeShape(config)), tenant_key: rawKey };
   }
 
   async findByTenant(tenantId: string) {
     const config = await this.prisma.botIntegrationConfig.findUnique({ where: { tenant_id: tenantId } });
     if (!config) throw new NotFoundException('Bot integration not configured for this tenant.');
-    return this.toSafeShape(config);
+    return await this.toSafeShape(config);
   }
 
   async update(tenantId: string, dto: UpdateBotIntegrationConfigDto) {
@@ -52,7 +54,7 @@ export class BotIntegrationConfigService {
         ...this.panelChannelData(dto),
       },
     });
-    return this.toSafeShape(config);
+    return await this.toSafeShape(config);
   }
 
   async regenerateKey(tenantId: string) {
@@ -62,7 +64,17 @@ export class BotIntegrationConfigService {
       where: { tenant_id: tenantId },
       data: { tenant_key_hash: hash, tenant_key_salt: salt },
     });
-    return { ...this.toSafeShape(config), tenant_key: rawKey };
+    return { ...(await this.toSafeShape(config)), tenant_key: rawKey };
+  }
+
+  /** B4: o segredo do Canal B nasce no servidor e aparece uma unica vez. */
+  async regeneratePanelSecret(tenantId: string): Promise<{ panel_webhook_secret: string }> {
+    const secret = this.generateKey();
+    await this.prisma.botIntegrationConfig.update({
+      where: { tenant_id: tenantId },
+      data: { panel_webhook_secret_enc: this.aes.encrypt(secret) },
+    });
+    return { panel_webhook_secret: secret };
   }
 
   async deactivate(tenantId: string) {
@@ -70,7 +82,7 @@ export class BotIntegrationConfigService {
       where: { tenant_id: tenantId },
       data: { active: false },
     });
-    return this.toSafeShape(config);
+    return await this.toSafeShape(config);
   }
 
   async reactivate(tenantId: string) {
@@ -78,7 +90,7 @@ export class BotIntegrationConfigService {
       where: { tenant_id: tenantId },
       data: { active: true },
     });
-    return this.toSafeShape(config);
+    return await this.toSafeShape(config);
   }
 
   /** Canal reverso (contrato v2 §5): o segredo e cifrado aqui e nunca sai do banco. */
@@ -102,7 +114,7 @@ export class BotIntegrationConfigService {
    * Never includes tenant_key_hash/tenant_key_salt/panel_webhook_secret_enc in
    * any read response; the secret is exposed only as panel_webhook_secret_set.
    */
-  private toSafeShape(config: {
+  private async toSafeShape(config: {
     id: string;
     tenant_id: string;
     active: boolean;
@@ -113,6 +125,7 @@ export class BotIntegrationConfigService {
     created_at: Date;
     updated_at: Date;
   }) {
+    const stuck_events = await this.ingestion.countStuck(config.tenant_id);
     return {
       id: config.id,
       tenant_id: config.tenant_id,
@@ -121,6 +134,7 @@ export class BotIntegrationConfigService {
       n8n_panel_webhook_url: config.n8n_panel_webhook_url,
       panel_webhook_secret_set: Boolean(config.panel_webhook_secret_enc),
       last_heartbeat_at: config.last_heartbeat_at,
+      stuck_events,
       created_at: config.created_at,
       updated_at: config.updated_at,
     };
