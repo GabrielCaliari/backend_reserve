@@ -13,13 +13,13 @@ export class PmsBookingWebhookDto {
   @ApiPropertyOptional({ description: 'Motor/PMS de origem.', example: 'hospedin' })
   engine?: string;
 
-  @ApiProperty({ description: 'Status da reserva no PMS.', enum: ['confirmed', 'modified', 'cancelled'], example: 'confirmed' })
+  @ApiProperty({ description: 'confirmed = reservation nova no Hospedin; modified = mudanca de datas ou valor; cancelled = cancelamento. pre_reservation e blocked NAO sao enviados.', enum: ['confirmed', 'modified', 'cancelled'], example: 'confirmed' })
   status: string;
 
-  @ApiPropertyOptional({ description: 'Canal: direct ou ota:<booking|expedia|airbnb|tripadvisor>.', example: 'direct' })
+  @ApiPropertyOptional({ description: 'direct | ota:<booking|expedia|airbnb|tripadvisor> | other', example: 'direct' })
   channel?: string;
 
-  @ApiPropertyOptional({ description: 'Valor total em centavos.', example: 125000 })
+  @ApiPropertyOptional({ description: 'Valor total em centavos (inteiro).', example: 125000 })
   amount?: number;
 
   @ApiProperty({ description: 'Check-in (YYYY-MM-DD).', example: '2026-12-20' })
