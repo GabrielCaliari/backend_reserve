@@ -23,6 +23,8 @@ import { AdminContentPostController } from './infrastructure/controllers/admin-c
 import { AdminActivityLogController } from './infrastructure/controllers/admin-activity-log.controller';
 import { PdfExportController } from './infrastructure/controllers/pdf-export.controller';
 import { AdminBenchmarkController } from './infrastructure/controllers/admin-benchmark.controller';
+import { BotCronController } from './infrastructure/controllers/bot-cron.controller';
+import { CronSecretGuard } from './infrastructure/guards/cron-secret.guard';
 
 // Application services
 import { HotelClientService } from './application/services/hotel-client.service';
@@ -165,6 +167,7 @@ import { HomeService } from './application/services/home.service';
     AdminActivityLogController,
     PdfExportController,
     AdminBenchmarkController,
+    BotCronController,
   ],
   providers: [
     // Application services
@@ -200,6 +203,7 @@ import { HomeService } from './application/services/home.service';
     BotKeyProvider,
     BotEventKeyGuard,
     BotIngestBearerGuard,
+    CronSecretGuard,
     BotEventIngestionService,
     BotEventProcessorService,
     PmsBookingWebhookService,
