@@ -132,6 +132,14 @@ export class AdminHotelClientController {
     return res.status(result.status).json(result.data);
   }
 
+  /** B4: o segredo do Canal C nasce no servidor e aparece uma unica vez. */
+  @Post(':id/webhook-secret')
+  @UseGuards(...TENANT_SCOPED_CHAIN)
+  async regenerateWebhookSecret(@Param('id') id: string, @Res() res: Response) {
+    const result = await this.hotelClientService.regenerateWebhookSecret(id);
+    return res.status(result.status).json(result.data);
+  }
+
   @Delete(':id')
   @UseGuards(...TENANT_SCOPED_CHAIN)
   @RequirePermissions('hotel-portal.clients.deactivate')

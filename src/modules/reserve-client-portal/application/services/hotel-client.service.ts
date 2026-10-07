@@ -1,4 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
+import * as crypto from 'crypto';
 import {
   HOTEL_CLIENT_REPOSITORY,
   IHotelClientRepository,
@@ -11,6 +12,12 @@ import { HashProvider } from '../../../../shared/providers/hash.provider';
 import { EAdminRole } from '../../../reserve-auth/domain/enums/admin-role.enum';
 import { MilestoneService } from './milestone.service';
 import { MetricGoalService } from './metric-goal.service';
+
+/** B4: o segredo HMAC do Canal C nunca sai em resposta; so a flag. */
+function toSafeClient<T extends object>(client: T) {
+  const { webhook_secret, ...rest } = client as T & { webhook_secret?: string | null };
+  return { ...rest, webhook_secret_set: Boolean(webhook_secret) };
+}
 
 @Injectable()
 export class HotelClientService {
@@ -89,6 +96,7 @@ export class HotelClientService {
           is_active: raw.is_active,
           created_at: raw.created_at,
           updated_at: raw.updated_at,
+          webhook_secret_set: Boolean(raw.webhook_secret),
           credentials: raw.ApiCredentials ?? [],
         },
         201,
@@ -102,7 +110,7 @@ export class HotelClientService {
     try {
       const result = await this.hotelClientRepository.findAll(page, limit);
       return successResponse({
-        data: result.data,
+        data: result.data.map(toSafeClient),
         pagination: {
           total: result.total,
           page,
@@ -123,7 +131,7 @@ export class HotelClientService {
         orderBy: { created_at: 'desc' },
       });
       return successResponse(
-        clients.map((c) => ({ ...c, credentials: c.ApiCredentials })),
+        clients.map((c) => ({ ...toSafeClient(c), credentials: c.ApiCredentials })),
       );
     } catch (error) {
       return errorResponse('500:HOTEL_CLIENTS_NOT_LISTED', 500, error);
@@ -137,7 +145,7 @@ export class HotelClientService {
         include: { ApiCredentials: true },
       });
       if (!raw) return errorResponse('404:HOTEL_CLIENT_NOT_FOUND', 404);
-      return successResponse({ ...raw, credentials: raw.ApiCredentials });
+      return successResponse({ ...toSafeClient(raw), credentials: raw.ApiCredentials });
     } catch (error) {
       return errorResponse('500:HOTEL_CLIENT_NOT_FOUND', 500, error);
     }
@@ -146,7 +154,7 @@ export class HotelClientService {
   async findByAdminId(adminId: string) {
     try {
       const clients = await this.hotelClientRepository.findByAdminId(adminId);
-      return successResponse(clients);
+      return successResponse(clients.map(toSafeClient));
     } catch (error) {
       return errorResponse('500:HOTEL_CLIENTS_NOT_LISTED', 500, error);
     }
@@ -159,7 +167,7 @@ export class HotelClientService {
         include: { ApiCredentials: true },
       });
       if (!client) return errorResponse('404:HOTEL_CLIENT_NOT_FOUND', 404);
-      return successResponse({ ...client, credentials: client.ApiCredentials });
+      return successResponse({ ...toSafeClient(client), credentials: client.ApiCredentials });
     } catch (error) {
       return errorResponse('500:HOTEL_CLIENT_NOT_FOUND', 500, error);
     }
@@ -170,9 +178,21 @@ export class HotelClientService {
       const client = await this.hotelClientRepository.findById(id);
       if (!client) return errorResponse('404:HOTEL_CLIENT_NOT_FOUND', 404);
       const updated = await this.hotelClientRepository.update(id, dto);
-      return successResponse(updated);
+      return successResponse(toSafeClient(updated));
     } catch (error) {
       return errorResponse('500:HOTEL_CLIENT_NOT_UPDATED', 500, error);
+    }
+  }
+
+  async regenerateWebhookSecret(id: string) {
+    try {
+      const client = await this.prisma.hotelClient.findUnique({ where: { id }, select: { id: true } });
+      if (!client) return errorResponse('404:HOTEL_CLIENT_NOT_FOUND', 404);
+      const webhook_secret = crypto.randomBytes(32).toString('hex');
+      await this.prisma.hotelClient.update({ where: { id }, data: { webhook_secret } });
+      return successResponse({ webhook_secret }, 201);
+    } catch (error) {
+      return errorResponse('500:HOTEL_CLIENT_WEBHOOK_SECRET_NOT_GENERATED', 500, error);
     }
   }
 
