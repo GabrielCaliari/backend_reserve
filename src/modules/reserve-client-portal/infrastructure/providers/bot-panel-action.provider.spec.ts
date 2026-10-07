@@ -83,6 +83,21 @@ describe('BotPanelActionProvider (contrato v2 §5)', () => {
     });
   });
 
+  it('reenvio do cron manda o mesmo action_id da primeira tentativa', async () => {
+    mockedAxios.post.mockRejectedValueOnce(new Error('ECONNREFUSED'));
+    await provider.dispatch('tenant_1', 'extend_hold', { phone: '5535999', payload: { minutes: 60 } });
+
+    prisma.botPanelAction.findUnique.mockResolvedValue({
+      id: 'act_1', tenant_id: 'tenant_1', action: 'extend_hold', phone: '5535999',
+      actor_id: null, payload: { minutes: 60 },
+    });
+    mockedAxios.post.mockResolvedValueOnce({ data: { ok: true, state: 'ATIVO' } });
+    await provider.retry('act_1');
+
+    const ids = mockedAxios.post.mock.calls.map((c) => JSON.parse(c[1] as string).action_id);
+    expect(ids).toEqual(['act_1', 'act_1']);
+  });
+
   it('canal nao configurado: FAILED sem chamar ninguem', async () => {
     prisma.botIntegrationConfig.findUnique.mockResolvedValue({ ...config, n8n_panel_webhook_url: null });
     const result = await provider.dispatch('tenant_1', 'return_to_bot', { phone: '5535999' });
