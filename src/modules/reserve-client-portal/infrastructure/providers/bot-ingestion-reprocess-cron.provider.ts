@@ -11,7 +11,12 @@ export class BotIngestionReprocessCronProvider {
 
   @Cron(CronExpression.EVERY_5_MINUTES)
   async run(): Promise<void> {
-    const { reprocessed } = await this.ingestion.reprocessStuck();
-    if (reprocessed > 0) this.logger.log(`Eventos do bot reprojetados: ${reprocessed}`);
+    // Falha aqui so e logada: o proximo tick tenta de novo.
+    try {
+      const { reprocessed } = await this.ingestion.reprocessStuck();
+      if (reprocessed > 0) this.logger.log(`Eventos do bot reprojetados: ${reprocessed}`);
+    } catch (error) {
+      this.logger.error(`Reprocesso de eventos do bot falhou: ${error}`);
+    }
   }
 }

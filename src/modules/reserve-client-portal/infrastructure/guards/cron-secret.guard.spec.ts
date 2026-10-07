@@ -20,6 +20,10 @@ describe('CronSecretGuard', () => {
     process.env.CRON_SECRET = 'x'.repeat(32);
     expect(() => new CronSecretGuard().canActivate(ctx('Bearer errado'))).toThrow(UnauthorizedException);
   });
+  it('CRON_SECRET com menos de 32 caracteres conta como ausente e recusa', () => {
+    process.env.CRON_SECRET = 'x'.repeat(31);
+    expect(() => new CronSecretGuard().canActivate(ctx(`Bearer ${'x'.repeat(31)}`))).toThrow(UnauthorizedException);
+  });
   it('sem CRON_SECRET configurado recusa sempre', () => {
     delete process.env.CRON_SECRET;
     expect(() => new CronSecretGuard().canActivate(ctx('Bearer '))).toThrow(UnauthorizedException);
