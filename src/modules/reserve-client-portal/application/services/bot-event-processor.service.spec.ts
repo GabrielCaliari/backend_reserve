@@ -67,6 +67,11 @@ describe('BotEventProcessorService (contrato v2)', () => {
       expect(prisma.botContact.upsert).not.toHaveBeenCalled();
     });
 
+    it('tipo fora do catalogo (aviso.esgotou) com contact.phone aplica o snapshot e nao lanca', async () => {
+      await expect(service.process(T, evento('aviso.esgotou'))).resolves.not.toThrow();
+      expect(prisma.botContact.updateMany).toHaveBeenCalled();
+    });
+
     it('reserva vista no PMS (sem contato) fica so no ledger, sem aviso', async () => {
       const warn = jest.spyOn((service as any).logger, 'warn').mockImplementation(() => undefined);
       await service.process(T, evento('reserva.detectada_polling', { contact: null }));
