@@ -115,21 +115,35 @@ export class BotEventProcessorService {
 
     switch (event.type) {
       case 'contato.iniciado':
-        return this.handleContatoIniciado(tenantId, snapshot, data, occurredAt);
+        return this.handleContatoIniciado(tenantId, snapshot, data, occurredAt, event.event_id);
       case 'mensagem':
-        return this.handleMensagem(tenantId, phone, data, occurredAt);
+        return this.handleMensagem(tenantId, phone, data, occurredAt, event.event_id);
       case 'transferencia':
-        return this.handleTransferencia(tenantId, phone, data, occurredAt);
+        return this.handleTransferencia(tenantId, phone, data, occurredAt, event.event_id);
       case 'reserva.confirmada':
         return this.handleReservaConfirmada(tenantId, phone, data, event.hold as Json | null);
       case 'perdido':
         return this.patchLead(tenantId, phone, { motivo_perda: texto(data.motivo, MOTIVO_MAX_LENGTH) });
       case 'followup.enviado':
-        return this.handleFollowupEnviado(tenantId, phone, data, occurredAt);
+        return this.handleFollowupEnviado(tenantId, phone, data, occurredAt, event.event_id);
       default:
         // Os demais tipos do catalogo so carregam snapshot/estagio/hold (ja
         // aplicados) ou sao lidos direto do ledger (ex.: audio.transcrito).
         return;
+    }
+  }
+
+  /**
+   * I2: insert que a projecao faz carrega o event_id (source_event_id, unico por
+   * tenant). Num replay de um evento parcialmente aplicado o insert bate no
+   * unico (P2002) e e ignorado; o resto do handler roda e completa o evento.
+   */
+  private async insertOnce(eventId: string, insert: () => Promise<unknown>): Promise<void> {
+    try {
+      await insert();
+    } catch (error) {
+      if ((error as { code?: string } | null)?.code !== 'P2002') throw error;
+      this.logger.debug(`Insert da projecao ja aplicado (event=${eventId}); seguindo o replay`);
     }
   }
 
@@ -264,6 +278,7 @@ export class BotEventProcessorService {
     s: ContactSnapshot,
     data: Json,
     occurredAt: Date,
+    eventId: string,
   ): Promise<void> {
     await this.prisma.botContact.updateMany({
       where: { tenant_id: tenantId, numero_contato: s.phone, iniciado_em: null },
@@ -271,21 +286,28 @@ export class BotEventProcessorService {
     });
 
     const origem = texto(data.origem, 20) ?? s.origin;
-    await this.attributionService.record(tenantId, {
+    await this.insertOnce(eventId, () => this.attributionService.record(tenantId, {
+      sourceEventId: eventId,
       numeroContato: s.phone,
       ocorridoEm: occurredAt,
       ctwaClid: texto(data.ctwa_clid, 255) ?? s.ctwaClid ?? undefined,
       sourceId: texto(data.source_id, 100) ?? s.sourceId ?? undefined,
       sourceType: origem === 'anuncio' ? 'ad' : undefined,
       linkCode: texto(data.link_code, 20) ?? s.linkCode ?? undefined,
-    });
+    }));
   }
 
-  private async handleMensagem(tenantId: string, phone: string, data: Json, occurredAt: Date): Promise<void> {
+  private async handleMensagem(
+    tenantId: string,
+    phone: string,
+    data: Json,
+    occurredAt: Date,
+    eventId: string,
+  ): Promise<void> {
     const role = enumValue(EBotMessageRole as Record<string, EBotMessageRole>, data.role) ?? EBotMessageRole.user;
     const tipo = enumValue(EBotMessageType as Record<string, EBotMessageType>, data.kind) ?? EBotMessageType.texto;
 
-    await this.prisma.botMessage.create({
+    await this.insertOnce(eventId, () => this.prisma.botMessage.create({
       data: {
         tenant_id: tenantId,
         numero_contato: phone,
@@ -294,8 +316,9 @@ export class BotEventProcessorService {
         // Defesa em profundidade (LGPD): corta aqui independentemente do que o bot mandar.
         content_preview: String(data.content_preview ?? '').slice(0, CONTENT_PREVIEW_MAX_LENGTH),
         ocorrido_em: occurredAt,
+        source_event_id: eventId,
       },
-    });
+    }));
 
     const where = { tenant_id: tenantId, numero_contato: phone };
     if (role !== EBotMessageRole.user) {
@@ -318,11 +341,17 @@ export class BotEventProcessorService {
    * Anotacao que nao muda estagio (de_estagio: null, para_estagio: o atual),
    * com o motivo da escalacao — e o que as metricas de handoff agregam.
    */
-  private async handleTransferencia(tenantId: string, phone: string, data: Json, occurredAt: Date): Promise<void> {
+  private async handleTransferencia(
+    tenantId: string,
+    phone: string,
+    data: Json,
+    occurredAt: Date,
+    eventId: string,
+  ): Promise<void> {
     const motivo = texto(data.motivo, 100) ?? 'nao_informado';
     const lead = await this.prisma.botLead.findUnique({ where: this.leadWhere(tenantId, phone) });
 
-    await this.prisma.funnelEvent.create({
+    await this.insertOnce(eventId, () => this.prisma.funnelEvent.create({
       data: {
         tenant_id: tenantId,
         numero_contato: phone,
@@ -331,8 +360,9 @@ export class BotEventProcessorService {
         autor_tipo: 'bot',
         motivo: `${BotEventProcessorService.HANDOFF_MOTIVO_PREFIX}${motivo}`.slice(0, MOTIVO_MAX_LENGTH),
         ocorrido_em: occurredAt,
+        source_event_id: eventId,
       },
-    });
+    }));
     await this.prisma.botContact.updateMany({
       where: { tenant_id: tenantId, numero_contato: phone },
       data: { motivo_pausa: motivo },
@@ -352,9 +382,15 @@ export class BotEventProcessorService {
     });
   }
 
-  private async handleFollowupEnviado(tenantId: string, phone: string, data: Json, occurredAt: Date): Promise<void> {
+  private async handleFollowupEnviado(
+    tenantId: string,
+    phone: string,
+    data: Json,
+    occurredAt: Date,
+    eventId: string,
+  ): Promise<void> {
     const regua = texto(data.regua, 20) ?? 'desconhecida';
-    await this.prisma.followupAttempt.create({
+    await this.insertOnce(eventId, () => this.prisma.followupAttempt.create({
       data: {
         tenant_id: tenantId,
         numero_contato: phone,
@@ -364,7 +400,8 @@ export class BotEventProcessorService {
         regua,
         status: 'sem_resposta',
         ocorrido_em: occurredAt,
+        source_event_id: eventId,
       },
-    });
+    }));
   }
 }

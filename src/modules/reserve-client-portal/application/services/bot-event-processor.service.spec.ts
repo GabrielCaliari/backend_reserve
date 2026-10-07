@@ -239,4 +239,53 @@ describe('BotEventProcessorService (contrato v2)', () => {
       expect(prisma.botContact.upsert).not.toHaveBeenCalled();
     });
   });
+
+  describe('replay idempotente (I2)', () => {
+    const p2002 = () => Object.assign(new Error('Unique constraint failed'), { code: 'P2002' });
+
+    it('inserts da projecao carregam o event_id como source_event_id', async () => {
+      await service.process(T, evento('mensagem', { data: { role: 'user', content_preview: 'oi' } }));
+      await service.process(T, evento('transferencia', { data: { motivo: 'pediu_humano' } }));
+      await service.process(T, evento('followup.enviado', { data: { toque: 1, regua: 'organico' } }));
+      await service.process(T, evento('contato.iniciado', { data: { origem: 'organico' } }));
+      expect(prisma.botMessage.create.mock.calls[0][0].data.source_event_id).toBe('e1');
+      expect(prisma.funnelEvent.create.mock.calls[0][0].data.source_event_id).toBe('e1');
+      expect(prisma.followupAttempt.create.mock.calls[0][0].data.source_event_id).toBe('e1');
+      expect(attribution.record).toHaveBeenCalledWith(T, expect.objectContaining({ sourceEventId: 'e1' }));
+    });
+
+    it('replay de mensagem com o insert ja aplicado (P2002) roda os updates seguintes e nao lanca', async () => {
+      prisma.botMessage.create.mockRejectedValueOnce(p2002());
+      await expect(service.process(T, evento('mensagem', {
+        data: { role: 'user', kind: 'texto', content_preview: 'oi' },
+      }))).resolves.toBeUndefined();
+      expect(prisma.botContact.updateMany).toHaveBeenCalledWith({
+        where: { tenant_id: T, numero_contato: PHONE },
+        data: { last_message_at: new Date(AT), last_user_message_at: new Date(AT) },
+      });
+      expect(prisma.followupAttempt.updateMany).toHaveBeenCalledWith({
+        where: { tenant_id: T, numero_contato: PHONE, status: 'sem_resposta', ocorrido_em: { lte: new Date(AT) } },
+        data: { status: 'respondeu' },
+      });
+    });
+
+    it('replay de transferencia com a anotacao ja gravada ainda pausa o contato', async () => {
+      prisma.funnelEvent.create.mockRejectedValueOnce(p2002());
+      await service.process(T, evento('transferencia', { data: { motivo: 'pediu_humano' } }));
+      expect(prisma.botContact.updateMany).toHaveBeenCalledWith({
+        where: { tenant_id: T, numero_contato: PHONE },
+        data: { motivo_pausa: 'pediu_humano' },
+      });
+    });
+
+    it('replay de followup.enviado ja gravado nao lanca', async () => {
+      prisma.followupAttempt.create.mockRejectedValueOnce(p2002());
+      await expect(service.process(T, evento('followup.enviado', { data: { toque: 1 } }))).resolves.toBeUndefined();
+    });
+
+    it('erro que nao e de unicidade continua subindo', async () => {
+      prisma.botMessage.create.mockRejectedValueOnce(new Error('db fora'));
+      await expect(service.process(T, evento('mensagem', { data: { role: 'user' } }))).rejects.toThrow('db fora');
+    });
+  });
 });

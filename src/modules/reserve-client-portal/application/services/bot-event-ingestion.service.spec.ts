@@ -46,7 +46,10 @@ describe('BotEventIngestionService.ingestBatch', () => {
     prisma.botIngestionEvent.create
       .mockResolvedValueOnce({})
       .mockRejectedValueOnce({ code: 'P2002' });
-    prisma.botIngestionEvent.findUnique.mockResolvedValue({ status: 'PROCESSED', attempts: 1 });
+    // Ja PROCESSED: o claim (status != PROCESSED) nao pega a linha.
+    prisma.botIngestionEvent.updateMany
+      .mockResolvedValueOnce({ count: 1 })
+      .mockResolvedValueOnce({ count: 0 });
     const result = await service.ingestBatch('tenant_1', [
       evento('a', '2026-10-01T10:00:00.000Z'),
       evento('a', '2026-10-01T10:00:00.000Z'),
@@ -77,7 +80,6 @@ describe('BotEventIngestionService.ingestBatch', () => {
 
   it('duplicado que nao foi PROCESSED e projetado de novo', async () => {
     prisma.botIngestionEvent.create.mockRejectedValueOnce({ code: 'P2002' });
-    prisma.botIngestionEvent.findUnique.mockResolvedValue({ status: 'FAILED', attempts: 1 });
     const result = await service.ingestBatch('tenant_1', [evento('a', '2026-10-01T10:00:00.000Z')]);
     expect(result).toEqual({ received: 1, duplicated: 1 });
     expect(processor.process).toHaveBeenCalledTimes(1);
@@ -88,7 +90,8 @@ describe('BotEventIngestionService.ingestBatch', () => {
 
   it('duplicado ja esgotado (5 tentativas) nao e projetado', async () => {
     prisma.botIngestionEvent.create.mockRejectedValueOnce({ code: 'P2002' });
-    prisma.botIngestionEvent.findUnique.mockResolvedValue({ status: 'FAILED', attempts: 5 });
+    // attempts = 5: o claim (attempts < 5) nao pega a linha.
+    prisma.botIngestionEvent.updateMany.mockResolvedValue({ count: 0 });
     await service.ingestBatch('tenant_1', [evento('a', '2026-10-01T10:00:00.000Z')]);
     expect(processor.process).not.toHaveBeenCalled();
   });
@@ -97,6 +100,56 @@ describe('BotEventIngestionService.ingestBatch', () => {
     prisma.botIngestionEvent.updateMany.mockResolvedValue({ count: 0 });
     await service.ingestBatch('tenant_1', [evento('a', '2026-10-01T10:00:00.000Z')]);
     expect(processor.process).not.toHaveBeenCalled();
+  });
+
+  it('claim e um lease: grava claimed_at e so pega lease livre ou expirado', async () => {
+    await service.ingestBatch('tenant_1', [evento('a', '2026-10-01T10:00:00.000Z')]);
+    const { where, data } = prisma.botIngestionEvent.updateMany.mock.calls[0][0];
+    expect(where).toEqual(expect.objectContaining({
+      tenant_id: 'tenant_1', event_id: 'a', status: { not: 'PROCESSED' }, attempts: { lt: 5 },
+    }));
+    expect(where.OR[0]).toEqual({ claimed_at: null });
+    expect(data.claimed_at).toBeInstanceOf(Date);
+    expect(where.OR[1].claimed_at.lt.getTime()).toBe(data.claimed_at.getTime() - 5 * 60_000);
+    expect(data.attempts).toEqual({ increment: 1 });
+    expect(prisma.botIngestionEvent.update).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ status: 'PROCESSED', claimed_at: null }),
+    }));
+  });
+
+  it('segundo claim com o lease do primeiro ativo (antes do PROCESSED) nao projeta de novo', async () => {
+    // O primeiro claim vence; enquanto ele projeta, a linha tem claimed_at recente
+    // e o status ainda e RECEIVED. O cron roda nesse intervalo e o seu claim nao pega.
+    let releaseFirst: () => void = () => undefined;
+    processor.process.mockImplementationOnce(() => new Promise<void>((r) => { releaseFirst = r; }));
+    prisma.botIngestionEvent.updateMany
+      .mockResolvedValueOnce({ count: 1 })
+      .mockResolvedValueOnce({ count: 0 });
+    prisma.botIngestionEvent.findMany.mockResolvedValue([
+      { tenant_id: 'tenant_1', event_id: 'a', payload: evento('a', '2026-10-01T10:00:00.000Z') },
+    ]);
+
+    const first = service.ingestBatch('tenant_1', [evento('a', '2026-10-01T10:00:00.000Z')]);
+    await new Promise((r) => setImmediate(r));
+    const second = await service.reprocessStuck(new Date('2026-10-01T11:00:00.000Z'));
+    releaseFirst();
+    await first;
+
+    expect(second).toEqual({ reprocessed: 0 });
+    expect(processor.process).toHaveBeenCalledTimes(1);
+    const secondWhere = prisma.botIngestionEvent.updateMany.mock.calls[1][0].where;
+    expect(secondWhere.OR).toEqual([
+      { claimed_at: null },
+      { claimed_at: { lt: expect.any(Date) } },
+    ]);
+  });
+
+  it('falha de projecao libera o lease (claimed_at: null)', async () => {
+    processor.process.mockRejectedValueOnce(new Error('boom'));
+    await service.ingestBatch('tenant_1', [evento('a', '2026-10-01T10:00:00.000Z')]);
+    expect(prisma.botIngestionEvent.update).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ status: 'FAILED', claimed_at: null }),
+    }));
   });
 
   it('reprocessStuck projeta FAILED/RECEIVED antigos em ordem de occurred_at', async () => {
@@ -111,11 +164,31 @@ describe('BotEventIngestionService.ingestBatch', () => {
         status: { in: ['FAILED', 'RECEIVED'] },
         attempts: { lt: 5 },
         received_at: { lt: new Date('2026-10-06T11:55:00.000Z') },
+        OR: [{ claimed_at: null }, { claimed_at: { lt: new Date('2026-10-06T11:55:00.000Z') } }],
       },
       orderBy: { occurred_at: 'asc' },
+      take: 500,
     }));
     expect(processor.process.mock.calls.map((c) => c[1].event_id)).toEqual(['x', 'y']);
     expect(r).toEqual({ reprocessed: 2 });
+  });
+
+  it('reprocessStuck aceita lote menor (gatilho HTTP)', async () => {
+    await service.reprocessStuck(new Date(), 100);
+    expect(prisma.botIngestionEvent.findMany).toHaveBeenCalledWith(expect.objectContaining({ take: 100 }));
+  });
+
+  it('reprocessStuck: uma linha que explode nao para as outras', async () => {
+    prisma.botIngestionEvent.findMany.mockResolvedValue([
+      { tenant_id: 't1', event_id: 'x', payload: evento('x', '2026-10-06T11:00:00.000Z') },
+      { tenant_id: 't1', event_id: 'y', payload: evento('y', '2026-10-06T11:01:00.000Z') },
+    ]);
+    prisma.botIngestionEvent.updateMany
+      .mockRejectedValueOnce(new Error('db piscou'))
+      .mockResolvedValueOnce({ count: 1 });
+    const r = await service.reprocessStuck(new Date('2026-10-06T12:00:00.000Z'));
+    expect(r).toEqual({ reprocessed: 1 });
+    expect(processor.process.mock.calls.map((c) => c[1].event_id)).toEqual(['y']);
   });
 
   it('countStuck conta presos do tenant ha mais de 5 minutos', async () => {

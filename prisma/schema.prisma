@@ -287,9 +287,12 @@ model ConversationAttribution {
   utm_campaign   String?            @db.VarChar(100)
   primeiro_toque Boolean            @default(false)
   ultimo_toque   Boolean            @default(false)
+  // Idempotencia da projecao do bot: event_id do ledger que gerou a linha
+  source_event_id String?           @db.VarChar(100)
   created_at     DateTime           @default(now())
   Tenant         Tenant             @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
 
+  @@unique([tenant_id, source_event_id])
   @@index([tenant_id, numero_contato])
   @@index([tenant_id, ocorrido_em])
   @@index([link_code])
@@ -397,6 +400,8 @@ model BotIngestionEvent {
   status        String    @default("RECEIVED") @db.VarChar(20) // RECEIVED | PROCESSED | FAILED
   error_message String?   @db.Text
   attempts      Int       @default(0)
+  // Lease da projecao: preenchido enquanto um worker projeta; expira apos STUCK_AFTER_MS
+  claimed_at    DateTime?
   received_at   DateTime  @default(now())
   processed_at  DateTime?
 
@@ -441,8 +446,11 @@ model BotMessage {
   tipo            EBotMessageType
   content_preview String?         @db.VarChar(280)
   ocorrido_em     DateTime
+  // Idempotencia da projecao do bot: event_id do ledger que gerou a linha
+  source_event_id String?         @db.VarChar(100)
   created_at      DateTime        @default(now())
 
+  @@unique([tenant_id, source_event_id])
   @@index([tenant_id, numero_contato, ocorrido_em])
   @@map("bot_messages")
 }
@@ -457,8 +465,11 @@ model FunnelEvent {
   autor_id       String?            @db.VarChar(25)
   motivo         String?            @db.VarChar(255)
   ocorrido_em    DateTime
+  // Idempotencia da projecao do bot (anotacao de transferencia): event_id do ledger
+  source_event_id String?           @db.VarChar(100)
   created_at     DateTime           @default(now())
 
+  @@unique([tenant_id, source_event_id])
   @@index([tenant_id, numero_contato, ocorrido_em])
   @@index([tenant_id, para_estagio])
   @@map("funil_eventos")
@@ -496,8 +507,11 @@ model FollowupAttempt {
   status         String   @db.VarChar(20) // AGUARDANDO | RESPONDEU | FRIO
   regua          String?  @db.VarChar(20) // anuncio | organico | pre_reserva | pagamento
   ocorrido_em    DateTime
+  // Idempotencia da projecao do bot: event_id do ledger que gerou a linha
+  source_event_id String? @db.VarChar(100)
   created_at     DateTime @default(now())
 
+  @@unique([tenant_id, source_event_id])
   @@index([tenant_id, numero_contato])
   @@map("bot_followup_attempts")
 }

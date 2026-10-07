@@ -4,6 +4,8 @@ import { AttributionSettingsService } from './attribution-settings.service';
 import { EAttributionSource } from '../../../../generated/prisma/enums';
 
 export interface IRecordAttributionInput {
+  /** event_id do ledger do bot: torna o registro idempotente num replay da projecao. */
+  sourceEventId?: string;
   numeroContato: string;
   ocorridoEm: Date;
   ctwaClid?: string;
@@ -37,6 +39,15 @@ export class AttributionService {
     // it) so two concurrent conversa.iniciada events for a brand-new contact
     // can't both observe count===0 and both write primeiro_toque:true.
     await this.prisma.$transaction(async (tx) => {
+      // Replay da projecao do bot: o evento ja gerou a sua atribuicao.
+      if (input.sourceEventId) {
+        const existing = await tx.conversationAttribution.findFirst({
+          where: { tenant_id: tenantId, source_event_id: input.sourceEventId },
+          select: { id: true },
+        });
+        if (existing) return;
+      }
+
       const priorCount = await tx.conversationAttribution.count({
         where: { tenant_id: tenantId, numero_contato: input.numeroContato },
       });
@@ -68,6 +79,7 @@ export class AttributionService {
           utm_campaign: input.utmCampaign ?? null,
           primeiro_toque: priorCount === 0,
           ultimo_toque: true,
+          source_event_id: input.sourceEventId ?? null,
         },
       });
     });
