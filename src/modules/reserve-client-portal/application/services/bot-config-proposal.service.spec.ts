@@ -43,6 +43,35 @@ describe('BotConfigProposalService (contrato v2 §6)', () => {
     expect(actions.dispatch).not.toHaveBeenCalled();
   });
 
+  it('grava string numerica como numero', async () => {
+    await service.submit('tenant_1', 'autor_1', { campo: 'tarifa:361057:A', categoria: 'pricing', valor_proposto: '33900' } as any);
+    expect(prisma.botConfigProposal.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ valor_proposto: 33900 }),
+    });
+  });
+
+  it('aprovar tarifa:* devolve pendente_no_bot: true e envia numero', async () => {
+    const r = await service.approve('tenant_1', 'p_1', 'revisor_1');
+    expect(r.data).toEqual(expect.objectContaining({ pendente_no_bot: true }));
+    expect(actions.dispatch).toHaveBeenCalledWith('tenant_1', 'apply_config', expect.objectContaining({
+      payload: { key: 'tarifa:361057:A', value: 33900 },
+    }));
+  });
+
+  it('aprovar hold_min_cartao devolve pendente_no_bot: false', async () => {
+    prisma.botConfigProposal.update.mockResolvedValue({ id: 'p_1', campo: 'hold_min_cartao', valor_proposto: 30 });
+    const r = await service.approve('tenant_1', 'p_1', 'revisor_1');
+    expect(r.data).toEqual(expect.objectContaining({ pendente_no_bot: false }));
+  });
+
+  it('proposta antiga com valor nao-string passa inalterada no approve', async () => {
+    prisma.botConfigProposal.update.mockResolvedValue({ id: 'p_1', campo: 'x', valor_proposto: { a: 1 } });
+    await service.approve('tenant_1', 'p_1', 'revisor_1');
+    expect(actions.dispatch).toHaveBeenCalledWith('tenant_1', 'apply_config', expect.objectContaining({
+      payload: { key: 'x', value: { a: 1 } },
+    }));
+  });
+
   it('guarda a justificativa do cliente separada do retorno da agencia', async () => {
     await service.submit('tenant_1', 'autor_1', {
       campo: 'hold_min_pix_manual', categoria: 'policies', valor_proposto: 90, justificativa: 'hospedes pedem mais prazo',

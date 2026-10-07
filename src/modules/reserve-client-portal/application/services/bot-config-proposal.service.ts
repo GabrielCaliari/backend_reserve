@@ -7,6 +7,13 @@ import { EActivityLogCategory } from '../../domain/enums/activity-log-category.e
 import { CreateBotConfigProposalDto, RejectBotConfigProposalDto } from '../dtos/bot-config-proposal.dto';
 import { BotPanelActionProvider } from '../../infrastructure/providers/bot-panel-action.provider';
 
+export const PENDING_IN_BOT_PREFIXES = ['tarifa:', 'calendario:'];
+
+/** "33900" -> 33900: o form manda texto, o bot espera numero para precos e minutos. Valores antigos nao-string passam inalterados. */
+export function toBotValue(v: string | number | boolean): string | number | boolean {
+  return typeof v === 'string' && /^-?\d+(\.\d+)?$/.test(v.trim()) ? Number(v.trim()) : v;
+}
+
 /**
  * `BotConfigProposal` (§5.5): dados operacionais do bot (preço, política,
  * pacote, horário) propostos pelo cliente e aprovados/rejeitados pela
@@ -53,8 +60,8 @@ export class BotConfigProposalService {
           tenant_id: tenantId,
           campo: dto.campo,
           categoria: dto.categoria,
-          valor_atual: (dto.valor_atual ?? undefined) as any,
-          valor_proposto: dto.valor_proposto as any,
+          valor_atual: (dto.valor_atual === undefined || dto.valor_atual === null ? undefined : toBotValue(dto.valor_atual)) as any,
+          valor_proposto: toBotValue(dto.valor_proposto) as any,
           justificativa_cliente: dto.justificativa?.trim() || null,
           autor_id: authorId,
           status: 'PENDENTE',
@@ -103,17 +110,19 @@ export class BotConfigProposalService {
       // de reconciliacao reenvia o apply_config.
       const delivery = await this.panelActions.dispatch(tenantId, 'apply_config', {
         actorId: revisorId,
-        payload: { key: updated.campo, value: updated.valor_proposto },
+        payload: { key: updated.campo, value: toBotValue(updated.valor_proposto as any) },
       });
+
+      const pendenteNoBot = PENDING_IN_BOT_PREFIXES.some((p) => updated.campo.startsWith(p));
 
       await this.activityLogService.record(tenantId, {
         type: EActivityLogType.AUTO,
         category: EActivityLogCategory.BOT,
-        title: `Proposta de configuração aprovada: ${updated.campo}`,
+        title: `Proposta de configuração aprovada: ${updated.campo}${pendenteNoBot ? ' (aplicacao no bot pendente: WF6 ainda nao suporta)' : ''}`,
       });
 
       // `ok: false` = aprovada e registrada, mas o bot nao foi avisado agora.
-      return successResponse({ ...updated, ok: delivery.ok, state: delivery.state });
+      return successResponse({ ...updated, ok: delivery.ok, state: delivery.state, pendente_no_bot: pendenteNoBot });
     } catch (error) {
       return errorResponse('500:BOT_CONFIG_PROPOSAL_NOT_APPROVED', 500, error);
     }
