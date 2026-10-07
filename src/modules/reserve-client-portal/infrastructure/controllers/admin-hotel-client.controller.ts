@@ -13,12 +13,14 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
+import { ApiCreatedResponse } from '@nestjs/swagger';
 import { HotelClientService } from '../../application/services/hotel-client.service';
 import { OtaDirectService } from '../../application/services/ota-direct.service';
 import { ImportHistoricalBaselineUseCase } from '../../application/use-cases/import-historical-baseline.use-case';
 import { CreateClientDto } from '../../application/dtos/create-client.dto';
 import { UpdateClientDto } from '../../application/dtos/update-client.dto';
 import { InsertOtaDataDto } from '../../application/dtos/insert-ota-data.dto';
+import { WebhookSecretResponseDto } from '../../application/dtos/hotel-client-responses.dto';
 import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
 import { TenantGuard } from '../../../../shared/auth/guards/tenant.guard';
 import { ModuleAccessGuard } from '../../../../shared/auth/guards/module-access.guard';
@@ -132,9 +134,16 @@ export class AdminHotelClientController {
     return res.status(result.status).json(result.data);
   }
 
-  /** B4: o segredo do Canal C nasce no servidor e aparece uma unica vez. */
+  /**
+   * B4: o segredo do Canal C nasce no servidor e aparece uma unica vez.
+   * M5: mesma politica da chave do tenant e do segredo do Canal B. O
+   * PermissionsGuard usa getAllAndOverride, entao esta permissao SUBSTITUI a
+   * da classe (hotel-portal.clients.manage) nesta rota.
+   */
   @Post(':id/webhook-secret')
   @UseGuards(...TENANT_SCOPED_CHAIN)
+  @RequirePermissions('hotel-portal.bot-integration.manage')
+  @ApiCreatedResponse({ type: WebhookSecretResponseDto })
   async regenerateWebhookSecret(@Param('id') id: string, @Res() res: Response) {
     const result = await this.hotelClientService.regenerateWebhookSecret(id);
     return res.status(result.status).json(result.data);

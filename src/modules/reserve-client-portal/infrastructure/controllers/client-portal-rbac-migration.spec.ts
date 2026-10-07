@@ -24,6 +24,12 @@ describe('reserve-client-portal RBAC migration', () => {
     ]);
   });
 
+  it('AdminHotelClientController — segredo do Canal C exige hotel-portal.bot-integration.manage (como Canal A/B)', () => {
+    expect(methodPermissionsOf(AdminHotelClientController, 'regenerateWebhookSecret')).toEqual([
+      'hotel-portal.bot-integration.manage',
+    ]);
+  });
+
   it('AdminHotelMetricsController — class requires hotel-portal.metrics.manage, no method override', () => {
     expect(classPermissionsOf(AdminHotelMetricsController)).toEqual(['hotel-portal.metrics.manage']);
   });
