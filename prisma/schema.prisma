@@ -396,11 +396,13 @@ model BotIngestionEvent {
   payload       Json
   status        String    @default("RECEIVED") @db.VarChar(20) // RECEIVED | PROCESSED | FAILED
   error_message String?   @db.Text
+  attempts      Int       @default(0)
   received_at   DateTime  @default(now())
   processed_at  DateTime?
 
   @@unique([tenant_id, event_id])
   @@index([tenant_id, event_type, received_at])
+  @@index([status, received_at])
   @@map("bot_ingestion_events")
 }
 

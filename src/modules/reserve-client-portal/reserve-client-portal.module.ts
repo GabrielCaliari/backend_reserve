@@ -71,6 +71,7 @@ import { BotRetentionPurgeCronProvider } from './infrastructure/providers/bot-re
 import { AdminWhatsAppContactController } from './infrastructure/controllers/admin-whatsapp-contact.controller';
 import { BotIntegrationConfigService } from './application/services/bot-integration-config.service';
 import { AdminBotIntegrationConfigController } from './infrastructure/controllers/admin-bot-integration-config.controller';
+import { BotIngestionReprocessCronProvider } from './infrastructure/providers/bot-ingestion-reprocess-cron.provider';
 import { BotReconciliationCronProvider } from './infrastructure/providers/bot-reconciliation-cron.provider';
 import { BenchmarkEligibilityService } from './application/services/benchmark-eligibility.service';
 import { BenchmarkAggregationCronProvider } from './infrastructure/providers/benchmark-aggregation-cron.provider';
@@ -212,6 +213,7 @@ import { HomeService } from './application/services/home.service';
     BotRetentionPurgeCronProvider,
     BotIntegrationConfigService,
     BotReconciliationCronProvider,
+    BotIngestionReprocessCronProvider,
     BotPanelActionProvider,
     BenchmarkEligibilityService,
     BenchmarkAggregationCronProvider,
