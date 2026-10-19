@@ -18,6 +18,7 @@ describe('BotRetentionService.eraseContact', () => {
       botIngestionEvent: { updateMany: jest.fn(op) },
       botIssue: { updateMany: jest.fn(op) },
       botFeedback: { deleteMany: jest.fn(op) },
+      motorBotEvent: { deleteMany: jest.fn(op) },
     };
     service = new BotRetentionService(prisma);
   });
@@ -70,6 +71,7 @@ describe('BotRetentionService: erros do bot (bot_issues)', () => {
       botIngestionEvent: { updateMany: jest.fn(op) },
       botIssue: { updateMany: jest.fn(op), findMany: jest.fn().mockResolvedValue([{ id: 'iss_1' }]) },
       botFeedback: { deleteMany: jest.fn(op), findMany: jest.fn().mockResolvedValue([{ id: 'fb_1' }]) },
+      motorBotEvent: { deleteMany: jest.fn(op), findMany: jest.fn().mockResolvedValue([{ id: 'mbe_1' }]) },
     };
     service = new BotRetentionService(prisma);
   });
@@ -80,6 +82,7 @@ describe('BotRetentionService: erros do bot (bot_issues)', () => {
       where: { tenant_id: 't1', numero_contato: '5535999' },
       data: {
         numero_contato: expect.stringMatching(/^[0-9a-f]{20}$/),
+        mensagem: null,
         mensagem_hospede: null,
         resposta_bot: null,
         contexto: Prisma.DbNull,
@@ -108,5 +111,21 @@ describe('BotRetentionService: erros do bot (bot_issues)', () => {
       orderBy: { ocorrido_em: 'asc' },
     });
     expect(res.feedbacks).toEqual([{ id: 'fb_1' }]);
+  });
+
+  it('erase apaga os eventos do motor que citam o contato (payload.contato_whatsapp)', async () => {
+    await service.eraseContact('t1', '5535999');
+    expect(prisma.motorBotEvent.deleteMany).toHaveBeenCalledWith({
+      where: { tenant_id: 't1', payload: { path: ['contato_whatsapp'], equals: '5535999' } },
+    });
+  });
+
+  it('export inclui os eventos do motor do contato', async () => {
+    const res = await service.exportContact('t1', '5535999');
+    expect(prisma.motorBotEvent.findMany).toHaveBeenCalledWith({
+      where: { tenant_id: 't1', payload: { path: ['contato_whatsapp'], equals: '5535999' } },
+      orderBy: { created_at: 'asc' },
+    });
+    expect(res.motorEvents).toEqual([{ id: 'mbe_1' }]);
   });
 });

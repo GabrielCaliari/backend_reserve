@@ -33,7 +33,7 @@ export class BotRetentionService {
   }
 
   async exportContact(tenantId: string, numeroContato: string) {
-    const [contact, messages, funnelEvents, issues, feedbacks] = await Promise.all([
+    const [contact, messages, funnelEvents, issues, feedbacks, motorEvents] = await Promise.all([
       this.prisma.botContact.findUnique({
         where: { tenant_id_numero_contato: { tenant_id: tenantId, numero_contato: numeroContato } },
       }),
@@ -53,9 +53,14 @@ export class BotRetentionService {
         where: { tenant_id: tenantId, numero_contato: numeroContato },
         orderBy: { ocorrido_em: 'asc' },
       }),
+      // Eventos do motor para o bot que citam o contato (hold/reserva/pagamento)
+      this.prisma.motorBotEvent.findMany({
+        where: { tenant_id: tenantId, ...this.motorEventDoContato(numeroContato) },
+        orderBy: { created_at: 'asc' },
+      }),
     ]);
 
-    return { contact, messages, funnelEvents, issues, feedbacks };
+    return { contact, messages, funnelEvents, issues, feedbacks, motorEvents };
   }
 
   /**
@@ -87,10 +92,13 @@ export class BotRetentionService {
       // linha para a contagem por codigo do relatorio.
       this.prisma.botIssue.updateMany({
         where: { tenant_id: tenantId, numero_contato: numeroContato },
-        data: { numero_contato: anonymized, mensagem_hospede: null, resposta_bot: null, contexto: Prisma.DbNull },
+        data: { numero_contato: anonymized, mensagem: null, mensagem_hospede: null, resposta_bot: null, contexto: Prisma.DbNull },
       }),
       // Feedback do hospede e texto livre dele: apaga a linha (nao ha agregado a preservar).
       this.prisma.botFeedback.deleteMany({ where: { tenant_id: tenantId, numero_contato: numeroContato } }),
+      // Outbox motor -> bot com o numero no payload: apaga (inclusive PENDING; o
+      // bot nao deve mais receber nada sobre um contato apagado).
+      this.prisma.motorBotEvent.deleteMany({ where: { tenant_id: tenantId, ...this.motorEventDoContato(numeroContato) } }),
       this.prisma.botIngestionEvent.updateMany({
         // contrato v2 grava contact.phone; 'contato' fica para eventos antigos
         where: {
@@ -103,6 +111,15 @@ export class BotRetentionService {
         data: { payload: {} },
       }),
     ]);
+  }
+
+  /**
+   * Os 4 chamadores do motor que citam o hospede (hold.expirado,
+   * pagamento.tardio.exception, reserva.confirmada) usam a chave contato_whatsapp.
+   * reserva.confirmada_ota so traz hospede_nome (sem numero): sai pela purga de retencao.
+   */
+  private motorEventDoContato(numeroContato: string) {
+    return { payload: { path: ['contato_whatsapp'], equals: numeroContato } };
   }
 
   private hashContact(tenantId: string, numeroContato: string): string {
