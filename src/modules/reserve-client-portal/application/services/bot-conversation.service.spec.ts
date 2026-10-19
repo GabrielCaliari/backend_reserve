@@ -1,4 +1,8 @@
-import { BotConversationService } from './bot-conversation.service';
+import {
+  BotConversationService,
+  decodeConversationCursor,
+  encodeConversationCursor,
+} from './bot-conversation.service';
 
 describe('BotConversationService (contrato v2)', () => {
   const contato = {
@@ -84,6 +88,7 @@ describe('BotConversationService (contrato v2)', () => {
 
   describe('historico paginado', () => {
     const msg = (min: number) => ({
+      id: 'm' + min,
       role: 'user', tipo: 'texto', content_preview: 'p' + min, content: 'texto inteiro ' + min,
       media_kind: min === 2 ? 'audio' : null, media_text: min === 2 ? 'transcricao' : null, caption: null,
       ocorrido_em: new Date(Date.UTC(2026, 9, 19, 10, min)),
@@ -93,9 +98,10 @@ describe('BotConversationService (contrato v2)', () => {
       prisma.botMessage.findMany.mockResolvedValue([msg(3), msg(2), msg(1)]); // desc, limit+1
       const r = await service.detail('client_1', contato.numero_contato, { limit: 2 });
       expect(prisma.botMessage.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({ orderBy: { ocorrido_em: 'desc' }, take: 3 }),
+        expect.objectContaining({ orderBy: [{ ocorrido_em: 'desc' }, { id: 'desc' }], take: 3 }),
       );
       expect(r.hasMore).toBe(true);
+      expect(r.nextCursor).toBe(encodeConversationCursor(msg(2)));
       expect(r.messages.map((m) => m.contentPreview)).toEqual(['p2', 'p3']);
       expect(r.messages[0]).toMatchObject({
         content: 'texto inteiro 2', mediaKind: 'audio', mediaText: 'transcricao', caption: null,
@@ -107,10 +113,61 @@ describe('BotConversationService (contrato v2)', () => {
       const r = await service.detail('client_1', contato.numero_contato);
       expect(prisma.botMessage.findMany).toHaveBeenCalledWith(expect.objectContaining({ take: 201 }));
       expect(r.hasMore).toBe(false);
+      expect(r.nextCursor).toBeNull();
       expect(r.messages.map((m) => m.contentPreview)).toEqual(['p1', 'p2']);
+      expect(r.messages[0].id).toBe('m1');
     });
 
-    it('before filtra por ocorrido_em anterior', async () => {
+    it('cursor composto: grupo empatado cortado na borda vem inteiro, sem repetir', async () => {
+      // banco falso que aplica o where/orderBy/take do Prisma em memoria
+      const t0 = new Date('2026-10-19T10:00:00.000Z');
+      const t1 = new Date('2026-10-19T10:01:00.000Z');
+      const linhas = [
+        { ...msg(0), id: 'a0', ocorrido_em: t0 },
+        { ...msg(0), id: 'b1', ocorrido_em: t1 },
+        { ...msg(0), id: 'b2', ocorrido_em: t1 },
+        { ...msg(0), id: 'b3', ocorrido_em: t1 },
+        { ...msg(0), id: 'c9', ocorrido_em: new Date('2026-10-19T10:02:00.000Z') },
+      ];
+      prisma.botMessage.findMany.mockImplementation(({ where, take }: any) => {
+        const cmp = (x: any, y: any) =>
+          y.ocorrido_em.getTime() - x.ocorrido_em.getTime() || (x.id < y.id ? 1 : x.id > y.id ? -1 : 0);
+        const ok = (m: any) =>
+          !where.OR ||
+          where.OR.some((c: any) =>
+            c.id
+              ? m.ocorrido_em.getTime() === c.ocorrido_em.getTime() && m.id < c.id.lt
+              : m.ocorrido_em < c.ocorrido_em.lt,
+          );
+        return Promise.resolve(linhas.filter(ok).sort(cmp).slice(0, take));
+      });
+
+      const ids: string[] = [];
+      let cursor: string | undefined;
+      let paginas = 0;
+      do {
+        const r = await service.detail('client_1', contato.numero_contato, { limit: 2, cursor });
+        ids.unshift(...r.messages.map((m) => m.id));
+        cursor = r.nextCursor ?? undefined;
+        paginas++;
+      } while (cursor && paginas < 10);
+
+      expect(paginas).toBe(3);
+      expect(ids).toEqual(['a0', 'b1', 'b2', 'b3', 'c9']);
+    });
+
+    it('cursor invalido da 400', async () => {
+      await expect(
+        service.detail('client_1', contato.numero_contato, { cursor: 'lixo' }),
+      ).rejects.toThrow('cursor invalido');
+    });
+
+    it('decode inverte o encode', () => {
+      const m = { ocorrido_em: new Date('2026-10-19T10:01:00.123Z'), id: 'cmabc123' };
+      expect(decodeConversationCursor(encodeConversationCursor(m))).toEqual({ ocorridoEm: m.ocorrido_em, id: m.id });
+    });
+
+    it('before (obsoleto) filtra por ocorrido_em anterior', async () => {
       await service.detail('client_1', contato.numero_contato, { before: '2026-10-19T10:02:00.000Z' });
       expect(prisma.botMessage.findMany.mock.calls[0][0].where).toMatchObject({
         ocorrido_em: { lt: new Date('2026-10-19T10:02:00.000Z') },

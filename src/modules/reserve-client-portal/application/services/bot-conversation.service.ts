@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../../shared/database/prisma.service';
 import { DetailConversationQueryDto, ListConversationsQueryDto } from '../dtos/list-conversations-query.dto';
 import { EBotContactAudience, EFunnelStage } from '../../../../generated/prisma/enums';
@@ -6,6 +6,21 @@ import { FUNNEL_ENTRY_STAGE } from '../../domain/enums/funnel-stage-groups';
 import { filtroPeriodo } from './period';
 
 const DETAIL_DEFAULT_LIMIT = 200;
+
+/** Cursor opaco da conversa: base64url de `${ocorrido_em ISO}|${id}`. */
+export function encodeConversationCursor(m: { ocorrido_em: Date; id: string }): string {
+  return Buffer.from(`${m.ocorrido_em.toISOString()}|${m.id}`, 'utf8').toString('base64url');
+}
+
+export function decodeConversationCursor(cursor: string): { ocorridoEm: Date; id: string } | null {
+  const texto = Buffer.from(cursor, 'base64url').toString('utf8');
+  const sep = texto.indexOf('|');
+  if (sep <= 0) return null;
+  const ocorridoEm = new Date(texto.slice(0, sep));
+  const id = texto.slice(sep + 1);
+  if (Number.isNaN(ocorridoEm.getTime()) || !id) return null;
+  return { ocorridoEm, id };
+}
 
 /** §5.3 Bloco Conversas — somente leitura; o atendimento humano acontece no WhatsApp Business da pousada (contrato v2 §1.1). */
 @Injectable()
@@ -69,10 +84,15 @@ export class BotConversationService {
 
   /**
    * Conversa inteira (texto completo em `content`; `contentPreview` e a previa da lista).
-   * Pagina de tras pra frente: traz as `limit` mais recentes (antes de `before`) em ordem asc.
+   * Pagina de tras pra frente em ordem (ocorrido_em, id): traz as `limit` mais
+   * recentes anteriores ao `cursor` em ordem asc. O id desempata mensagens com o
+   * mesmo instante, entao um grupo empatado cortado na borda da pagina vem
+   * inteiro na proxima, sem pular nem repetir. `before` (legado) so filtra por instante.
    */
   async detail(clientId: string, numeroContato: string, query: DetailConversationQueryDto = {}) {
     const limit = query.limit ?? DETAIL_DEFAULT_LIMIT;
+    const cursor = query.cursor ? decodeConversationCursor(query.cursor) : null;
+    if (query.cursor && !cursor) throw new BadRequestException('cursor invalido.');
     const tenantId = await this.resolveTenantId(clientId);
     if (!tenantId) throw new NotFoundException('Client has no linked tenant.');
 
@@ -86,9 +106,18 @@ export class BotConversationService {
         where: {
           tenant_id: tenantId,
           numero_contato: numeroContato,
-          ...(query.before ? { ocorrido_em: { lt: new Date(query.before) } } : {}),
+          ...(cursor
+            ? {
+                OR: [
+                  { ocorrido_em: { lt: cursor.ocorridoEm } },
+                  { ocorrido_em: cursor.ocorridoEm, id: { lt: cursor.id } },
+                ],
+              }
+            : query.before
+              ? { ocorrido_em: { lt: new Date(query.before) } }
+              : {}),
         },
-        orderBy: { ocorrido_em: 'desc' },
+        orderBy: [{ ocorrido_em: 'desc' }, { id: 'desc' }],
         take: limit + 1,
       }),
       this.prisma.botLead.findUnique({
@@ -98,6 +127,7 @@ export class BotConversationService {
 
     const hasMore = messages.length > limit;
     const page = messages.slice(0, limit).reverse();
+    const nextCursor = hasMore && page.length ? encodeConversationCursor(page[0]) : null;
 
     return {
       contact: {
@@ -115,6 +145,7 @@ export class BotConversationService {
         hold: this.holdResumo(lead),
       },
       messages: page.map((m) => ({
+        id: m.id,
         role: m.role,
         tipo: m.tipo,
         contentPreview: m.content_preview,
@@ -125,6 +156,7 @@ export class BotConversationService {
         ocorridoEm: m.ocorrido_em,
       })),
       hasMore,
+      nextCursor,
     };
   }
 

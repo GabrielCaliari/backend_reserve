@@ -83,6 +83,7 @@ export class ConversationDetailContactDto extends ConversationSummaryDto {
   @ApiProperty({ nullable: true, type: ConversationHoldDto }) hold: ConversationHoldDto | null;
 }
 export class ConversationMessageDto {
+  @ApiProperty({ description: 'Id estavel da mensagem (chave de lista; desempata mensagens com o mesmo instante).' }) id: string;
   @ApiProperty() role: string;
   @ApiProperty() tipo: string;
   @ApiProperty({ nullable: true, type: String, description: 'Previa de ate 180 caracteres (lista).' }) contentPreview: string | null;
@@ -96,6 +97,12 @@ export class ConversationDetailResponseDto {
   @ApiProperty({ type: ConversationDetailContactDto }) contact: ConversationDetailContactDto;
   @ApiProperty({ type: [ConversationMessageDto] }) messages: ConversationMessageDto[];
   @ApiProperty({ description: 'Ha mensagens mais antigas que as devolvidas.' }) hasMore: boolean;
+  @ApiProperty({
+    nullable: true,
+    type: String,
+    description: 'Cursor opaco para a pagina anterior (mande em ?cursor=). null quando hasMore e false.',
+  })
+  nextCursor: string | null;
 }
 
 // ---- GET hotel-portal/:clientId/whatsapp/funnel (board)
