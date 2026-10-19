@@ -11,8 +11,8 @@ describe('BotRetentionService.eraseContact', () => {
       botMessage: { deleteMany: jest.fn(op) },
       botContact: { deleteMany: jest.fn(op) },
       botLead: { deleteMany: jest.fn(op) },
-      followupAttempt: { deleteMany: jest.fn(op) },
-      conversationAttribution: { deleteMany: jest.fn(op) },
+      followupAttempt: { updateMany: jest.fn(op) },
+      conversationAttribution: { updateMany: jest.fn(op) },
       funnelEvent: { updateMany: jest.fn(op) },
       botIngestionEvent: { updateMany: jest.fn(op) },
     };
@@ -33,17 +33,19 @@ describe('BotRetentionService.eraseContact', () => {
     });
   });
 
-  it('apaga as tentativas de follow-up do contato', async () => {
+  it('anonimiza as tentativas de follow-up do contato', async () => {
     await service.eraseContact('t1', '5535999');
-    expect(prisma.followupAttempt.deleteMany).toHaveBeenCalledWith({
+    expect(prisma.followupAttempt.updateMany).toHaveBeenCalledWith({
       where: { tenant_id: 't1', numero_contato: '5535999' },
+      data: { numero_contato: expect.stringMatching(/^[0-9a-f]{20}$/) },
     });
   });
 
-  it('apaga a atribuicao de conversa do contato', async () => {
+  it('anonimiza a atribuicao de conversa do contato', async () => {
     await service.eraseContact('t1', '5535999');
-    expect(prisma.conversationAttribution.deleteMany).toHaveBeenCalledWith({
+    expect(prisma.conversationAttribution.updateMany).toHaveBeenCalledWith({
       where: { tenant_id: 't1', numero_contato: '5535999' },
+      data: { numero_contato: expect.stringMatching(/^[0-9a-f]{20}$/) },
     });
   });
 });

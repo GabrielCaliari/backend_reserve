@@ -62,8 +62,14 @@ export class BotRetentionService {
       this.prisma.botMessage.deleteMany({ where: { tenant_id: tenantId, numero_contato: numeroContato } }),
       this.prisma.botContact.deleteMany({ where: { tenant_id: tenantId, numero_contato: numeroContato } }),
       this.prisma.botLead.deleteMany({ where: { tenant_id: tenantId, numero_contato: numeroContato } }),
-      this.prisma.followupAttempt.deleteMany({ where: { tenant_id: tenantId, numero_contato: numeroContato } }),
-      this.prisma.conversationAttribution.deleteMany({ where: { tenant_id: tenantId, numero_contato: numeroContato } }),
+      this.prisma.followupAttempt.updateMany({
+        where: { tenant_id: tenantId, numero_contato: numeroContato },
+        data: { numero_contato: anonymized },
+      }),
+      this.prisma.conversationAttribution.updateMany({
+        where: { tenant_id: tenantId, numero_contato: numeroContato },
+        data: { numero_contato: anonymized },
+      }),
       this.prisma.funnelEvent.updateMany({
         where: { tenant_id: tenantId, numero_contato: numeroContato },
         data: { numero_contato: anonymized },
