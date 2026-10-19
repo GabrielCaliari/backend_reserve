@@ -62,12 +62,21 @@ export class BotRetentionService {
       this.prisma.botMessage.deleteMany({ where: { tenant_id: tenantId, numero_contato: numeroContato } }),
       this.prisma.botContact.deleteMany({ where: { tenant_id: tenantId, numero_contato: numeroContato } }),
       this.prisma.botLead.deleteMany({ where: { tenant_id: tenantId, numero_contato: numeroContato } }),
+      this.prisma.followupAttempt.deleteMany({ where: { tenant_id: tenantId, numero_contato: numeroContato } }),
+      this.prisma.conversationAttribution.deleteMany({ where: { tenant_id: tenantId, numero_contato: numeroContato } }),
       this.prisma.funnelEvent.updateMany({
         where: { tenant_id: tenantId, numero_contato: numeroContato },
         data: { numero_contato: anonymized },
       }),
       this.prisma.botIngestionEvent.updateMany({
-        where: { tenant_id: tenantId, payload: { path: ['contato'], equals: numeroContato } },
+        // contrato v2 grava contact.phone; 'contato' fica para eventos antigos
+        where: {
+          tenant_id: tenantId,
+          OR: [
+            { payload: { path: ['contact', 'phone'], equals: numeroContato } },
+            { payload: { path: ['contato'], equals: numeroContato } },
+          ],
+        },
         data: { payload: {} },
       }),
     ]);
