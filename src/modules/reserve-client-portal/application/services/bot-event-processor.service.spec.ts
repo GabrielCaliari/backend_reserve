@@ -288,4 +288,82 @@ describe('BotEventProcessorService (contrato v2)', () => {
       await expect(service.process(T, evento('mensagem', { data: { role: 'user' } }))).rejects.toThrow('db fora');
     });
   });
+
+  describe('conversa inteira (lote v29)', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const lote = JSON.parse(require('fs').readFileSync(require('path').join(__dirname, '__fixtures__', 'lote-v29.json'), 'utf-8'));
+    const evt = (id: string) => lote.events.find((e: any) => e.event_id === id);
+    const p2002 = () => Object.assign(new Error('Unique constraint failed'), { code: 'P2002' });
+
+    beforeEach(() => {
+      prisma.botMessage.updateMany = jest.fn().mockResolvedValue({ count: 1 });
+    });
+
+    it('texto grava o conteudo inteiro e a previa com no maximo 180', async () => {
+      const longo = 'a'.repeat(500);
+      await service.process('cli_dona_tereza', { ...evt('msg-36227'), data: { ...evt('msg-36227').data, content: longo, content_preview: longo } });
+      const msg = prisma.botMessage.create.mock.calls[0][0].data;
+      expect(msg.content).toBe(longo);
+      expect(msg.content_preview).toHaveLength(180);
+      expect(msg.wamid).toBe('wamid.g1');
+      expect(msg.media_kind).toBeNull();
+    });
+
+    it('texto da fixture grava content igual ao enviado', async () => {
+      await service.process('cli_dona_tereza', evt('msg-36227'));
+      expect(prisma.botMessage.create.mock.calls[0][0].data).toMatchObject({
+        content: 'quero reservar para 2 no fim de semana que vem', wamid: 'wamid.g1',
+      });
+    });
+
+    it('audio grava media_kind e a transcricao em media_text', async () => {
+      await service.process('cli_dona_tereza', evt('msg-36228'));
+      expect(prisma.botMessage.create.mock.calls[0][0].data).toMatchObject({
+        tipo: 'audio', media_kind: 'audio', media_text: 'oi tudo bem queria saber do chalé', wamid: 'wamid.g2',
+      });
+    });
+
+    it('mensagem do bot sem wamid grava wamid nulo', async () => {
+      await service.process('cli_dona_tereza', evt('msg-36229'));
+      expect(prisma.botMessage.create.mock.calls[0][0].data.wamid).toBeNull();
+    });
+
+    it('wamid repetido (P2002) segue como duplicado', async () => {
+      prisma.botMessage.create.mockRejectedValueOnce(p2002());
+      await expect(service.process('cli_dona_tereza', evt('msg-36227'))).resolves.toBeUndefined();
+    });
+
+    it('audio.transcrito atualiza a mensagem por wamid', async () => {
+      await service.process('cli_dona_tereza', evt('aud-36228'));
+      expect(prisma.botMessage.updateMany).toHaveBeenCalledWith({
+        where: { tenant_id: 'cli_dona_tereza', wamid: 'wamid.g2' },
+        data: { media_kind: 'audio', media_text: 'oi tudo bem queria saber do chalé' },
+      });
+    });
+
+    it('audio.transcrito sem wamid e ignorado', async () => {
+      await service.process(T, evento('audio.transcrito', { data: { transcricao: 'x' } }));
+      expect(prisma.botMessage.updateMany).not.toHaveBeenCalled();
+    });
+
+    it('jornada.enviada vira linha de sistema sem mexer em last_message_at', async () => {
+      const e = lote.events.find((x: any) => x.type === 'jornada.enviada');
+      await service.process('cli_dona_tereza', e);
+      expect(prisma.botMessage.create.mock.calls[0][0].data).toMatchObject({
+        role: 'assistant', tipo: 'sistema',
+        content: 'Jornada: avaliação enviada (modelo avaliacao)',
+        content_preview: 'Jornada: avaliação enviada (modelo avaliacao)',
+        source_event_id: e.event_id,
+      });
+      const tocouUltima = prisma.botContact.updateMany.mock.calls.some((c: any[]) => 'last_message_at' in (c[0].data ?? {}));
+      expect(tocouUltima).toBe(false);
+    });
+
+    it('jornada pendente sem modelo e toque desconhecido', async () => {
+      await service.process(T, evento('jornada.enviada', { data: { toque: 'vespera', via: 'pendente' } }));
+      expect(prisma.botMessage.create.mock.calls[0][0].data.content).toBe('Jornada: véspera pendente');
+      await service.process(T, evento('jornada.enviada', { data: { toque: 'outro', via: 'texto' } }));
+      expect(prisma.botMessage.create.mock.calls[1][0].data.content).toBe('Jornada: outro enviada');
+    });
+  });
 });

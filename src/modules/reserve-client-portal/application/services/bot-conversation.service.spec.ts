@@ -4,7 +4,7 @@ describe('BotConversationService (contrato v2)', () => {
   const contato = {
     numero_contato: '+55 (35) 98067-432', nome: 'Gabriel', status_bot: 'AGUARDANDO_PAGAMENTO',
     last_message_at: new Date('2026-10-01T10:00:00.000Z'), consentimento_lgpd: true,
-    tipo_publico: 'LEAD', ocasiao: 'romantica',
+    tipo_publico: 'LEAD', ocasiao: 'romantica', origem: 'anuncio', source_id: 'ad_123',
   };
   let prisma: any;
   let service: BotConversationService;
@@ -59,5 +59,54 @@ describe('BotConversationService (contrato v2)', () => {
     prisma.botLead.findUnique.mockResolvedValue({ current_stage: 'QUALIFICADO', hold_codigo: null, hold_status: null });
     const { contact } = await service.detail('client_1', contato.numero_contato);
     expect(contact.hold).toBeNull();
+  });
+
+  it('lista filtra por audience no banco e traz origem/sourceId', async () => {
+    const { conversations } = await service.list('client_1', { audience: 'LEAD' } as any);
+    expect(prisma.botContact.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: expect.objectContaining({ tenant_id: 'tenant_1', tipo_publico: 'LEAD' }) }),
+    );
+    expect(conversations[0]).toMatchObject({ tipoPublico: 'LEAD', origem: 'anuncio', sourceId: 'ad_123' });
+  });
+
+  it('lista sem audience nao filtra por tipo_publico', async () => {
+    await service.list('client_1', {} as any);
+    expect(prisma.botContact.findMany.mock.calls[0][0].where).not.toHaveProperty('tipo_publico');
+  });
+
+  describe('historico paginado', () => {
+    const msg = (min: number) => ({
+      role: 'user', tipo: 'texto', content_preview: 'p' + min, content: 'texto inteiro ' + min,
+      media_kind: min === 2 ? 'audio' : null, media_text: min === 2 ? 'transcricao' : null, caption: null,
+      ocorrido_em: new Date(Date.UTC(2026, 9, 19, 10, min)),
+    });
+
+    it('limit=2 com 3 mensagens devolve as 2 mais recentes em ordem asc e hasMore', async () => {
+      prisma.botMessage.findMany.mockResolvedValue([msg(3), msg(2), msg(1)]); // desc, limit+1
+      const r = await service.detail('client_1', contato.numero_contato, { limit: 2 });
+      expect(prisma.botMessage.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ orderBy: { ocorrido_em: 'desc' }, take: 3 }),
+      );
+      expect(r.hasMore).toBe(true);
+      expect(r.messages.map((m) => m.contentPreview)).toEqual(['p2', 'p3']);
+      expect(r.messages[0]).toMatchObject({
+        content: 'texto inteiro 2', mediaKind: 'audio', mediaText: 'transcricao', caption: null,
+      });
+    });
+
+    it('sem query usa 200 e hasMore false quando cabe tudo', async () => {
+      prisma.botMessage.findMany.mockResolvedValue([msg(2), msg(1)]);
+      const r = await service.detail('client_1', contato.numero_contato);
+      expect(prisma.botMessage.findMany).toHaveBeenCalledWith(expect.objectContaining({ take: 201 }));
+      expect(r.hasMore).toBe(false);
+      expect(r.messages.map((m) => m.contentPreview)).toEqual(['p1', 'p2']);
+    });
+
+    it('before filtra por ocorrido_em anterior', async () => {
+      await service.detail('client_1', contato.numero_contato, { before: '2026-10-19T10:02:00.000Z' });
+      expect(prisma.botMessage.findMany.mock.calls[0][0].where).toMatchObject({
+        ocorrido_em: { lt: new Date('2026-10-19T10:02:00.000Z') },
+      });
+    });
   });
 });

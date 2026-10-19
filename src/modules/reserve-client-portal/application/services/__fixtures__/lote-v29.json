@@ -1,0 +1,285 @@
+{
+  "tenant_id": "cli_dona_tereza",
+  "events": [
+    {
+      "event_id": "f0286751-764b-47c8-ace8-6f23085b9c07",
+      "tenant_id": "cli_dona_tereza",
+      "occurred_at": "2026-10-19T15:13:11.168018+00:00",
+      "type": "jornada.enviada",
+      "actor": {
+        "type": "bot",
+        "id": null
+      },
+      "contact": {
+        "phone": "5500970009951",
+        "name": "Gabriel Teste",
+        "audience": "LEAD",
+        "origin": "anuncio",
+        "ctwa_clid": null,
+        "source_id": null,
+        "link_code": null,
+        "bot_status": "ATIVO",
+        "occasion": null
+      },
+      "stage": null,
+      "hold": null,
+      "data": {
+        "toque": "avaliacao",
+        "via": "modelo",
+        "template": "avaliacao",
+        "check_in": null,
+        "check_out": "2026-10-18",
+        "ref": null
+      }
+    },
+    {
+      "event_id": "f6df01a1-3be5-457b-8ae2-03d761bca5d9",
+      "tenant_id": "cli_dona_tereza",
+      "occurred_at": "2026-10-19T15:13:11.168018+00:00",
+      "type": "hospede.feedback",
+      "actor": {
+        "type": "bot",
+        "id": null
+      },
+      "contact": {
+        "phone": "5500970009951",
+        "name": "Gabriel Teste",
+        "audience": "LEAD",
+        "origin": "anuncio",
+        "ctwa_clid": null,
+        "source_id": null,
+        "link_code": null,
+        "bot_status": "ATIVO",
+        "occasion": null
+      },
+      "stage": null,
+      "hold": null,
+      "data": {
+        "texto": "Adoramos, nota 10!",
+        "resumo": "adorou",
+        "nota": 10,
+        "sentimento": "positivo",
+        "link_avaliacao_enviado": true,
+        "reserva": {
+          "check_out": "2026-10-18"
+        }
+      }
+    },
+    {
+      "event_id": "7ccc96ae-e938-47c6-849f-40f1db7c2570",
+      "tenant_id": "cli_dona_tereza",
+      "occurred_at": "2026-10-19T15:13:11.168018+00:00",
+      "type": "bot.socorro",
+      "actor": {
+        "type": "bot",
+        "id": null
+      },
+      "contact": {
+        "phone": "5500970009951",
+        "name": "Gabriel Teste",
+        "audience": "LEAD",
+        "origin": "anuncio",
+        "ctwa_clid": null,
+        "source_id": null,
+        "link_code": null,
+        "bot_status": "ATIVO",
+        "occasion": null
+      },
+      "stage": null,
+      "hold": null,
+      "data": {
+        "motivo": "erro_tecnico",
+        "codigo_erro": "erros_bot#1",
+        "workflow": "WF1",
+        "no": "20k",
+        "estado_anterior": "ATIVO",
+        "codigo_atendimento": "S12"
+      }
+    },
+    {
+      "event_id": "msg-36227",
+      "tenant_id": "cli_dona_tereza",
+      "occurred_at": "2026-10-19T15:11:11.168018+00:00",
+      "type": "mensagem",
+      "actor": {
+        "type": "guest",
+        "id": null
+      },
+      "contact": {
+        "phone": "5500970009951"
+      },
+      "stage": null,
+      "hold": null,
+      "data": {
+        "role": "user",
+        "kind": "texto",
+        "content_preview": "quero reservar para 2 no fim de semana que vem",
+        "content": "quero reservar para 2 no fim de semana que vem",
+        "wamid": "wamid.g1",
+        "media": null
+      }
+    },
+    {
+      "event_id": "msg-36228",
+      "tenant_id": "cli_dona_tereza",
+      "occurred_at": "2026-10-19T15:11:11.168018+00:00",
+      "type": "mensagem",
+      "actor": {
+        "type": "guest",
+        "id": null
+      },
+      "contact": {
+        "phone": "5500970009951"
+      },
+      "stage": null,
+      "hold": null,
+      "data": {
+        "role": "user",
+        "kind": "audio",
+        "content_preview": "oi tudo bem queria saber do chalé",
+        "content": "oi tudo bem queria saber do chalé",
+        "wamid": "wamid.g2",
+        "media": {
+          "kind": "audio",
+          "transcricao": "oi tudo bem queria saber do chalé",
+          "caption": null
+        }
+      }
+    },
+    {
+      "event_id": "aud-36228",
+      "tenant_id": "cli_dona_tereza",
+      "occurred_at": "2026-10-19T15:11:11.168018+00:00",
+      "type": "audio.transcrito",
+      "actor": {
+        "type": "bot",
+        "id": null
+      },
+      "contact": {
+        "phone": "5500970009951"
+      },
+      "stage": null,
+      "hold": null,
+      "data": {
+        "wamid": "wamid.g2",
+        "transcricao": "oi tudo bem queria saber do chalé"
+      }
+    },
+    {
+      "event_id": "msg-36229",
+      "tenant_id": "cli_dona_tereza",
+      "occurred_at": "2026-10-19T15:12:11.168018+00:00",
+      "type": "mensagem",
+      "actor": {
+        "type": "bot",
+        "id": null
+      },
+      "contact": {
+        "phone": "5500970009951"
+      },
+      "stage": null,
+      "hold": null,
+      "data": {
+        "role": "assistant",
+        "kind": "texto",
+        "content_preview": "Oi, Gabriel! Me confirma as datas?",
+        "content": "Oi, Gabriel! Me confirma as datas?",
+        "wamid": null,
+        "media": null
+      }
+    },
+    {
+      "event_id": "ccc495c8-d6bc-4742-a77e-779b7a3b4651",
+      "tenant_id": "cli_dona_tereza",
+      "occurred_at": "2026-10-19T15:13:11.168018+00:00",
+      "type": "bot.erro",
+      "actor": {
+        "type": "bot",
+        "id": null
+      },
+      "contact": {
+        "phone": "5500970009951",
+        "name": "Gabriel Teste",
+        "audience": "LEAD"
+      },
+      "stage": null,
+      "hold": null,
+      "data": {
+        "categoria": "tecnico",
+        "codigo": "excecao",
+        "gravidade": "alta",
+        "workflow": "WF1 v29",
+        "no": "20k. Interpretar IA",
+        "mensagem": "Cannot read x",
+        "etapa": null,
+        "mensagem_hospede": "quero reservar",
+        "resposta_bot": "",
+        "ultimas_mensagens": [
+          {
+            "m": "quero reservar",
+            "em": "19/10 10:00",
+            "quem": "user"
+          }
+        ],
+        "socorro": true,
+        "execution_id": null,
+        "url": "http://n8n/execution/1"
+      }
+    },
+    {
+      "event_id": "405943d4-7529-4d11-9be6-86b44aed7128",
+      "tenant_id": "cli_dona_tereza",
+      "occurred_at": "2026-10-19T15:13:11.168018+00:00",
+      "type": "bot.erro",
+      "actor": {
+        "type": "bot",
+        "id": null
+      },
+      "contact": {
+        "phone": "5500970009951",
+        "name": "Gabriel Teste",
+        "audience": "LEAD"
+      },
+      "stage": null,
+      "hold": null,
+      "data": {
+        "categoria": "conversa",
+        "codigo": "revisor_corrigiu",
+        "gravidade": "baixa",
+        "workflow": "WF1",
+        "no": "20. Decisão",
+        "mensagem": "A IA escreveu valor errado",
+        "etapa": null,
+        "mensagem_hospede": "quanto é?",
+        "resposta_bot": "Confirmo com a equipe",
+        "ultimas_mensagens": [],
+        "socorro": false,
+        "execution_id": null,
+        "url": null
+      }
+    },
+    {
+      "event_id": "hb-1792422791192",
+      "tenant_id": "cli_dona_tereza",
+      "occurred_at": "2026-10-19T15:13:11.192Z",
+      "type": "heartbeat",
+      "actor": {
+        "type": "bot",
+        "id": null
+      },
+      "contact": null,
+      "stage": null,
+      "hold": null,
+      "data": {
+        "bot_enabled": true,
+        "mode": "hospedin",
+        "ai_enabled": true,
+        "last_echo_at": "2026-10-16T18:13:30.067687+00:00",
+        "last_polling_at": "2026-10-16T18:20:31.61973+00:00",
+        "active_conversations": 0,
+        "paused_awaiting_human": 0,
+        "channel": "whatsapp"
+      }
+    }
+  ]
+}

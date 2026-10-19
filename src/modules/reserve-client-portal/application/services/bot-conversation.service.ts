@@ -1,8 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../../shared/database/prisma.service';
-import { ListConversationsQueryDto } from '../dtos/list-conversations-query.dto';
-import { EFunnelStage } from '../../../../generated/prisma/enums';
+import { DetailConversationQueryDto, ListConversationsQueryDto } from '../dtos/list-conversations-query.dto';
+import { EBotContactAudience, EFunnelStage } from '../../../../generated/prisma/enums';
 import { FUNNEL_ENTRY_STAGE } from '../../domain/enums/funnel-stage-groups';
+
+const DETAIL_DEFAULT_LIMIT = 200;
 
 /** §5.3 Bloco Conversas — somente leitura; o atendimento humano acontece no WhatsApp Business da pousada (contrato v2 §1.1). */
 @Injectable()
@@ -24,6 +26,7 @@ export class BotConversationService {
               ],
             }
           : {}),
+        ...(query.audience ? { tipo_publico: query.audience as EBotContactAudience } : {}),
         ...(query.from || query.to
           ? {
               last_message_at: {
@@ -61,13 +64,20 @@ export class BotConversationService {
         lastMessageAt: c.last_message_at,
         consentimentoLgpd: c.consentimento_lgpd,
         tipoPublico: c.tipo_publico,
+        origem: c.origem ?? null,
+        sourceId: c.source_id ?? null,
         currentStage: leadByContact.get(c.numero_contato)?.current_stage ?? FUNNEL_ENTRY_STAGE,
         whatsappWebLink: this.whatsappWebLink(c.numero_contato),
       })),
     };
   }
 
-  async detail(clientId: string, numeroContato: string) {
+  /**
+   * Conversa inteira (texto completo em `content`; `contentPreview` e a previa da lista).
+   * Pagina de tras pra frente: traz as `limit` mais recentes (antes de `before`) em ordem asc.
+   */
+  async detail(clientId: string, numeroContato: string, query: DetailConversationQueryDto = {}) {
+    const limit = query.limit ?? DETAIL_DEFAULT_LIMIT;
     const tenantId = await this.resolveTenantId(clientId);
     if (!tenantId) throw new NotFoundException('Client has no linked tenant.');
 
@@ -78,13 +88,21 @@ export class BotConversationService {
 
     const [messages, lead] = await Promise.all([
       this.prisma.botMessage.findMany({
-        where: { tenant_id: tenantId, numero_contato: numeroContato },
-        orderBy: { ocorrido_em: 'asc' },
+        where: {
+          tenant_id: tenantId,
+          numero_contato: numeroContato,
+          ...(query.before ? { ocorrido_em: { lt: new Date(query.before) } } : {}),
+        },
+        orderBy: { ocorrido_em: 'desc' },
+        take: limit + 1,
       }),
       this.prisma.botLead.findUnique({
         where: { tenant_id_numero_contato: { tenant_id: tenantId, numero_contato: numeroContato } },
       }),
     ]);
+
+    const hasMore = messages.length > limit;
+    const page = messages.slice(0, limit).reverse();
 
     return {
       contact: {
@@ -94,17 +112,24 @@ export class BotConversationService {
         lastMessageAt: contact.last_message_at,
         consentimentoLgpd: contact.consentimento_lgpd,
         tipoPublico: contact.tipo_publico,
+        origem: contact.origem ?? null,
+        sourceId: contact.source_id ?? null,
         currentStage: lead?.current_stage ?? FUNNEL_ENTRY_STAGE,
         whatsappWebLink: this.whatsappWebLink(contact.numero_contato),
         ocasiao: contact.ocasiao ?? null,
         hold: this.holdResumo(lead),
       },
-      messages: messages.map((m) => ({
+      messages: page.map((m) => ({
         role: m.role,
         tipo: m.tipo,
         contentPreview: m.content_preview,
+        content: m.content ?? null,
+        mediaKind: m.media_kind ?? null,
+        mediaText: m.media_text ?? null,
+        caption: m.caption ?? null,
         ocorridoEm: m.ocorrido_em,
       })),
+      hasMore,
     };
   }
 

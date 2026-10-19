@@ -88,7 +88,7 @@ export class FunnelMetricsService {
             where: { tenant_id: tenantId, numero_contato: { in: numeros } },
             select: {
               numero_contato: true, nome: true, tipo_publico: true,
-              status_bot: true, last_user_message_at: true,
+              status_bot: true, last_user_message_at: true, origem: true, source_id: true,
             },
           })
         : [];
@@ -105,6 +105,8 @@ export class FunnelMetricsService {
             numeroContato: l.numero_contato,
             nome: contato?.nome ?? null,
             tipoPublico: contato?.tipo_publico ?? null,
+            origem: contato?.origem ?? null,
+            sourceId: contato?.source_id ?? null,
             acomodacaoInteresse: l.acomodacao_interesse,
             datasInteresse: formatDatasInteresse(l.datas_interesse),
             statusBot: contato?.status_bot ?? 'ATIVO',

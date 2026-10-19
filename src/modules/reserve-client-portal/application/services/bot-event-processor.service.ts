@@ -11,7 +11,7 @@ import {
 } from '../../../../generated/prisma/enums';
 import { FUNNEL_ENTRY_STAGE } from '../../domain/enums/funnel-stage-groups';
 
-/** Contrato v2 §8: o painel so guarda uma previa da mensagem. */
+/** Previa para a lista de conversas; o texto inteiro vai em `content`. */
 const CONTENT_PREVIEW_MAX_LENGTH = 180;
 /** Espelha o VarChar(255) de funil_eventos.motivo. */
 const MOTIVO_MAX_LENGTH = 255;
@@ -27,6 +27,12 @@ const TIPOS_SEM_CONTATO = new Set([
   'reserva.cancelada_polling',
   'config.aplicada',
 ]);
+
+const ROTULOS_JORNADA: Record<string, string> = {
+  vespera: 'véspera',
+  checkin_dia: 'dia do check-in',
+  avaliacao: 'avaliação',
+};
 
 type Json = Record<string, unknown>;
 
@@ -126,9 +132,13 @@ export class BotEventProcessorService {
         return this.patchLead(tenantId, phone, { motivo_perda: texto(data.motivo, MOTIVO_MAX_LENGTH) });
       case 'followup.enviado':
         return this.handleFollowupEnviado(tenantId, phone, data, occurredAt, event.event_id);
+      case 'audio.transcrito':
+        return this.handleAudioTranscrito(tenantId, data);
+      case 'jornada.enviada':
+        return this.handleJornadaEnviada(tenantId, phone, data, occurredAt, event.event_id);
       default:
         // Os demais tipos do catalogo so carregam snapshot/estagio/hold (ja
-        // aplicados) ou sao lidos direto do ledger (ex.: audio.transcrito).
+        // aplicados) ou sao lidos direto do ledger.
         return;
     }
   }
@@ -307,14 +317,23 @@ export class BotEventProcessorService {
     const role = enumValue(EBotMessageRole as Record<string, EBotMessageRole>, data.role) ?? EBotMessageRole.user;
     const tipo = enumValue(EBotMessageType as Record<string, EBotMessageType>, data.kind) ?? EBotMessageType.texto;
 
+    const media = data.media && typeof data.media === 'object' ? (data.media as Json) : null;
+    const content = typeof data.content === 'string' ? data.content : null;
+
+    // Um wamid repetido tambem cai no P2002 (unico por tenant) e segue como duplicado.
     await this.insertOnce(eventId, () => this.prisma.botMessage.create({
       data: {
         tenant_id: tenantId,
         numero_contato: phone,
         role,
         tipo,
-        // Defesa em profundidade (LGPD): corta aqui independentemente do que o bot mandar.
-        content_preview: String(data.content_preview ?? '').slice(0, CONTENT_PREVIEW_MAX_LENGTH),
+        content,
+        // Previa de ate 180 para a lista; cai no texto inteiro se o bot nao mandar a previa.
+        content_preview: String(data.content_preview ?? content ?? '').slice(0, CONTENT_PREVIEW_MAX_LENGTH),
+        wamid: texto(data.wamid, 120),
+        media_kind: texto(media?.kind, 20),
+        media_text: texto(media?.transcricao, 20000) ?? texto(media?.descricao, 20000),
+        caption: texto(media?.caption, 20000),
         ocorrido_em: occurredAt,
         source_event_id: eventId,
       },
@@ -399,6 +418,43 @@ export class BotEventProcessorService {
         tipo_janela: regua.slice(0, 10),
         regua,
         status: 'sem_resposta',
+        ocorrido_em: occurredAt,
+        source_event_id: eventId,
+      },
+    }));
+  }
+
+  /** A transcricao chega depois da mensagem: liga pelo wamid. Sem wamid nao ha como ligar. */
+  private async handleAudioTranscrito(tenantId: string, data: Json): Promise<void> {
+    const wamid = texto(data.wamid, 120);
+    if (!wamid) return;
+    await this.prisma.botMessage.updateMany({
+      where: { tenant_id: tenantId, wamid },
+      data: { media_kind: 'audio', media_text: texto(data.transcricao, 20000) },
+    });
+  }
+
+  /** Toque da jornada do hospede aparece na conversa como linha do sistema (sem mexer em last_message_at). */
+  private async handleJornadaEnviada(
+    tenantId: string,
+    phone: string,
+    data: Json,
+    occurredAt: Date,
+    eventId: string,
+  ): Promise<void> {
+    const toque = texto(data.toque, 40) ?? 'jornada';
+    const template = texto(data.template, 60);
+    const linha = `Jornada: ${Object.prototype.hasOwnProperty.call(ROTULOS_JORNADA, toque) ? ROTULOS_JORNADA[toque] : toque} ${data.via === 'pendente' ? 'pendente' : 'enviada'}${
+      template ? ` (modelo ${template})` : ''
+    }`;
+    await this.insertOnce(eventId, () => this.prisma.botMessage.create({
+      data: {
+        tenant_id: tenantId,
+        numero_contato: phone,
+        role: EBotMessageRole.assistant,
+        tipo: EBotMessageType.sistema,
+        content: linha,
+        content_preview: linha.slice(0, CONTENT_PREVIEW_MAX_LENGTH),
         ocorrido_em: occurredAt,
         source_event_id: eventId,
       },

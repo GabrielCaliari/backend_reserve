@@ -445,12 +445,21 @@ model BotMessage {
   role            EBotMessageRole
   tipo            EBotMessageType
   content_preview String?         @db.VarChar(280)
+  // Texto inteiro da mensagem (a previa serve a lista de conversas)
+  content         String?         @db.Text
+  // Id da mensagem no WhatsApp: liga audio.transcrito a mensagem original
+  wamid           String?         @db.VarChar(120)
+  media_kind      String?         @db.VarChar(20)
+  // Transcricao do audio ou descricao da imagem/documento
+  media_text      String?         @db.Text
+  caption         String?         @db.Text
   ocorrido_em     DateTime
   // Idempotencia da projecao do bot: event_id do ledger que gerou a linha
   source_event_id String?         @db.VarChar(100)
   created_at      DateTime        @default(now())
 
   @@unique([tenant_id, source_event_id])
+  @@unique([tenant_id, wamid])
   @@index([tenant_id, numero_contato, ocorrido_em])
   @@map("bot_messages")
 }

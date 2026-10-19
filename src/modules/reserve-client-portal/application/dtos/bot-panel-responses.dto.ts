@@ -70,6 +70,8 @@ export class ConversationSummaryDto {
   @ApiProperty({ nullable: true, type: String, format: 'date-time' }) lastMessageAt: Date | null;
   @ApiProperty() consentimentoLgpd: boolean;
   @ApiProperty({ nullable: true, enum: EBotContactAudience }) tipoPublico: EBotContactAudience | null;
+  @ApiProperty({ nullable: true, type: String, description: 'anuncio | organico' }) origem: string | null;
+  @ApiProperty({ nullable: true, type: String }) sourceId: string | null;
   @ApiProperty({ enum: EFunnelStage }) currentStage: EFunnelStage;
   @ApiProperty({ description: 'Abre a conversa no WhatsApp Web da pousada.' }) whatsappWebLink: string;
 }
@@ -83,12 +85,17 @@ export class ConversationDetailContactDto extends ConversationSummaryDto {
 export class ConversationMessageDto {
   @ApiProperty() role: string;
   @ApiProperty() tipo: string;
-  @ApiProperty({ nullable: true, type: String }) contentPreview: string | null;
+  @ApiProperty({ nullable: true, type: String, description: 'Previa de ate 180 caracteres (lista).' }) contentPreview: string | null;
+  @ApiProperty({ nullable: true, type: String, description: 'Texto inteiro da mensagem.' }) content: string | null;
+  @ApiProperty({ nullable: true, type: String }) mediaKind: string | null;
+  @ApiProperty({ nullable: true, type: String, description: 'Transcricao do audio ou descricao da midia.' }) mediaText: string | null;
+  @ApiProperty({ nullable: true, type: String }) caption: string | null;
   @ApiProperty({ type: String, format: 'date-time' }) ocorridoEm: Date;
 }
 export class ConversationDetailResponseDto {
   @ApiProperty({ type: ConversationDetailContactDto }) contact: ConversationDetailContactDto;
   @ApiProperty({ type: [ConversationMessageDto] }) messages: ConversationMessageDto[];
+  @ApiProperty({ description: 'Ha mensagens mais antigas que as devolvidas.' }) hasMore: boolean;
 }
 
 // ---- GET hotel-portal/:clientId/whatsapp/funnel (board)
@@ -96,6 +103,8 @@ export class FunnelLeadCardDto {
   @ApiProperty() numeroContato: string;
   @ApiProperty({ nullable: true, type: String }) nome: string | null;
   @ApiProperty({ nullable: true, enum: EBotContactAudience }) tipoPublico: EBotContactAudience | null;
+  @ApiProperty({ nullable: true, type: String, description: 'anuncio | organico' }) origem: string | null;
+  @ApiProperty({ nullable: true, type: String }) sourceId: string | null;
   @ApiProperty({ nullable: true, type: String }) acomodacaoInteresse: string | null;
   @ApiProperty({ nullable: true, type: String, description: 'Texto de apresentacao das datas.' }) datasInteresse: string | null;
   @ApiProperty() statusBot: string;

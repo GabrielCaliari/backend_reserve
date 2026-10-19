@@ -24,7 +24,7 @@ import { OverviewService } from '../../application/services/overview.service';
 import { LeadsOverviewService } from '../../application/services/leads-overview.service';
 import { BotChannelHealthService } from '../../application/services/bot-channel-health.service';
 import { BotConversationService } from '../../application/services/bot-conversation.service';
-import { ListConversationsQueryDto } from '../../application/dtos/list-conversations-query.dto';
+import { DetailConversationQueryDto, ListConversationsQueryDto } from '../../application/dtos/list-conversations-query.dto';
 import { FunnelMetricsService } from '../../application/services/funnel-metrics.service';
 import { HomeService } from '../../application/services/home.service';
 import { HotelClientService } from '../../application/services/hotel-client.service';
@@ -171,8 +171,9 @@ export class ClientPortalController {
   async getWhatsAppConversationDetail(
     @Param('clientId') clientId: string,
     @Param('numeroContato') numeroContato: string,
+    @Query() query: DetailConversationQueryDto,
   ) {
-    return this.botConversationService.detail(clientId, numeroContato);
+    return this.botConversationService.detail(clientId, numeroContato, query);
   }
 
   @Get(':clientId/whatsapp/funnel')

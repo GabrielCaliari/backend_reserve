@@ -44,7 +44,7 @@ describe('FunnelMetricsService.getBoard (contrato v2 §4.3)', () => {
         findMany: jest.fn().mockResolvedValue([
           {
             numero_contato: '5535999', nome: 'Ana', tipo_publico: 'LEAD', status_bot: 'AGUARDANDO_PAGAMENTO',
-            last_user_message_at: new Date('2026-10-01T10:00:00.000Z'),
+            last_user_message_at: new Date('2026-10-01T10:00:00.000Z'), origem: 'anuncio', source_id: 'ad_123',
           },
         ]),
       },
@@ -82,7 +82,7 @@ describe('FunnelMetricsService.getBoard (contrato v2 §4.3)', () => {
       acomodacaoInteresse: 'Suíte Master', datasInteresse: '20/11/2026 – 22/11/2026',
       statusBot: 'AGUARDANDO_PAGAMENTO', aguardandoDesde: '2026-10-01T10:00:00.000Z',
       valorCotacao: 1049, etiqueta: 'RECUPERAR',
-      motivoPerda: null, holdStatus: 'EXPIRADA', holdCodigo: 'M57',
+      motivoPerda: null, holdStatus: 'EXPIRADA', holdCodigo: 'M57', origem: 'anuncio', sourceId: 'ad_123',
     });
   });
 
