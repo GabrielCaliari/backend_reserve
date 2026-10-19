@@ -95,13 +95,15 @@ export class BotIntegrationConfigService {
 
   /** Canal reverso (contrato v2 §5): o segredo e cifrado aqui e nunca sai do banco. */
   private panelChannelData(dto: CreateBotIntegrationConfigDto | UpdateBotIntegrationConfigDto) {
-    if (dto.n8n_panel_webhook_url) {
-      const motivo = motivoUrlPainelInvalida(dto.n8n_panel_webhook_url);
+    for (const url of [dto.n8n_panel_webhook_url, dto.n8n_motor_webhook_url]) {
+      if (!url) continue;
+      const motivo = motivoUrlPainelInvalida(url);
       if (motivo) throw new BadRequestException(motivo);
     }
     return {
       ...(dto.bot_tenant_ref !== undefined ? { bot_tenant_ref: dto.bot_tenant_ref || null } : {}),
       ...(dto.n8n_panel_webhook_url !== undefined ? { n8n_panel_webhook_url: dto.n8n_panel_webhook_url || null } : {}),
+      ...(dto.n8n_motor_webhook_url !== undefined ? { n8n_motor_webhook_url: dto.n8n_motor_webhook_url || null } : {}),
       ...(dto.panel_webhook_secret ? { panel_webhook_secret_enc: this.aes.encrypt(dto.panel_webhook_secret) } : {}),
     };
   }
@@ -120,6 +122,7 @@ export class BotIntegrationConfigService {
     active: boolean;
     bot_tenant_ref: string | null;
     n8n_panel_webhook_url: string | null;
+    n8n_motor_webhook_url: string | null;
     panel_webhook_secret_enc: string | null;
     last_heartbeat_at: Date | null;
     created_at: Date;
@@ -132,6 +135,7 @@ export class BotIntegrationConfigService {
       active: config.active,
       bot_tenant_ref: config.bot_tenant_ref,
       n8n_panel_webhook_url: config.n8n_panel_webhook_url,
+      n8n_motor_webhook_url: config.n8n_motor_webhook_url,
       panel_webhook_secret_set: Boolean(config.panel_webhook_secret_enc),
       last_heartbeat_at: config.last_heartbeat_at,
       stuck_events,

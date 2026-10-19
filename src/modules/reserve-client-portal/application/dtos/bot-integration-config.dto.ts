@@ -13,6 +13,11 @@ export class CreateBotIntegrationConfigDto {
   @IsUrl({ require_tld: false })
   n8n_panel_webhook_url?: string;
 
+  @ApiPropertyOptional({ description: 'URL do WF9 (eventos do motor para o bot).' })
+  @IsOptional()
+  @IsUrl({ require_tld: false })
+  n8n_motor_webhook_url?: string;
+
   /** Write-only: o segredo HMAC do canal reverso. Nunca volta em resposta. */
   @ApiPropertyOptional({ description: 'Write-only. Segredo HMAC do Canal B (16-200). Prefira PATCH regenerate-panel-secret.', minLength: 16, maxLength: 200, writeOnly: true })
   @IsOptional()
@@ -33,6 +38,11 @@ export class UpdateBotIntegrationConfigDto {
   @IsOptional()
   @IsUrl({ require_tld: false })
   n8n_panel_webhook_url?: string;
+
+  @ApiPropertyOptional({ description: 'URL do WF9 (eventos do motor para o bot).' })
+  @IsOptional()
+  @IsUrl({ require_tld: false })
+  n8n_motor_webhook_url?: string;
 
   /** Write-only: o segredo HMAC do canal reverso. Nunca volta em resposta. */
   @ApiPropertyOptional({ description: 'Write-only. Segredo HMAC do Canal B (16-200). Prefira PATCH regenerate-panel-secret.', minLength: 16, maxLength: 200, writeOnly: true })

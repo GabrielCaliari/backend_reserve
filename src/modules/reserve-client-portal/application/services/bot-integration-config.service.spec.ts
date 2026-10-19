@@ -9,6 +9,7 @@ describe('BotIntegrationConfigService (canal reverso do contrato v2)', () => {
     tenant_key_salt: 'salt',
     bot_tenant_ref: null,
     n8n_panel_webhook_url: null,
+    n8n_motor_webhook_url: null,
     panel_webhook_secret_enc: null,
     last_heartbeat_at: null,
     created_at: new Date('2026-09-30T00:00:00Z'),
@@ -100,5 +101,32 @@ describe('BotIntegrationConfigService (canal reverso do contrato v2)', () => {
       where: { tenant_id: 'tenant_1' },
       data: { panel_webhook_secret_enc: 'cifrado' },
     });
+  });
+
+  it('create e update gravam n8n_motor_webhook_url e a resposta devolve o campo', async () => {
+    const created = await service.create('tenant_1', { n8n_motor_webhook_url: 'https://n8n.example/webhook/motor' });
+    expect(prisma.botIntegrationConfig.create.mock.calls[0][0].data.n8n_motor_webhook_url).toBe(
+      'https://n8n.example/webhook/motor',
+    );
+    expect(created.n8n_motor_webhook_url).toBe('https://n8n.example/webhook/motor');
+
+    const updated = await service.update('tenant_1', { n8n_motor_webhook_url: 'https://n8n.example/webhook/motor2' });
+    expect(prisma.botIntegrationConfig.update.mock.calls[0][0].data.n8n_motor_webhook_url).toBe(
+      'https://n8n.example/webhook/motor2',
+    );
+    expect(updated.n8n_motor_webhook_url).toBe('https://n8n.example/webhook/motor2');
+  });
+
+  it('findByTenant devolve n8n_motor_webhook_url', async () => {
+    prisma.botIntegrationConfig.findUnique.mockResolvedValue({
+      ...baseRow,
+      n8n_motor_webhook_url: 'https://n8n.example/webhook/motor',
+    });
+    const result = await service.findByTenant('tenant_1');
+    expect(result.n8n_motor_webhook_url).toBe('https://n8n.example/webhook/motor');
+  });
+
+  it('rejeita url do motor invalida pela mesma regra do canal B', async () => {
+    await expect(service.update('tenant_1', { n8n_motor_webhook_url: 'isso nao e url' })).rejects.toThrow();
   });
 });

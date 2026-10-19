@@ -36,6 +36,9 @@ import { MotorChannelController } from './infrastructure/controllers/motor-chann
 import { InventoryMaterializeCronProvider } from './infrastructure/providers/inventory-materialize-cron.provider';
 import { HoldExpiryCronProvider } from './infrastructure/providers/hold-expiry-cron.provider';
 import { MotorBotEventsProvider } from './infrastructure/providers/motor-bot-events.provider';
+import { MotorBotEventsRetryCronProvider } from './infrastructure/providers/motor-bot-events-retry-cron.provider';
+import { MotorCronController } from './infrastructure/controllers/motor-cron.controller';
+import { CronSecretGuard } from '../reserve-client-portal/infrastructure/guards/cron-secret.guard';
 import { Beds24ApiProvider } from './infrastructure/providers/beds24-api.provider';
 import { ChannelPushCronProvider } from './infrastructure/providers/channel-push-cron.provider';
 import { ChannelReconcileCronProvider } from './infrastructure/providers/channel-reconcile-cron.provider';
@@ -60,6 +63,7 @@ import { SiteCoexistenceCronProvider } from './infrastructure/providers/site-coe
     MotorBotController,
     Beds24WebhookController,
     MotorChannelController,
+    MotorCronController,
   ],
   providers: [
     AdminJwtGuard,
@@ -82,6 +86,8 @@ import { SiteCoexistenceCronProvider } from './infrastructure/providers/site-coe
     RateGridService,
     HoldExpiryCronProvider,
     MotorBotEventsProvider,
+    MotorBotEventsRetryCronProvider,
+    CronSecretGuard,
     AesEncryptionProvider,
     Beds24ApiProvider,
     ChannelPushService,

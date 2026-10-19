@@ -2930,3 +2930,19 @@ model MotorChannelPushQueue {
   @@index([tenant_id, room_type_id, status])
   @@map("motor_channel_push_queue")
 }
+
+/// Outbox dos eventos motor -> bot (WF9): gravado antes do envio, reenviado pelo cron.
+model MotorBotEvent {
+  id              String    @id @default(cuid()) @db.VarChar(25)
+  tenant_id       String    @db.VarChar(25)
+  evento          String    @db.VarChar(60)
+  payload         Json
+  status          String    @default("PENDING") @db.VarChar(20) // PENDING | SENT | FAILED
+  attempts        Int       @default(0)
+  last_error      String?   @db.Text
+  last_attempt_at DateTime?
+  created_at      DateTime  @default(now())
+
+  @@index([status, created_at])
+  @@map("motor_bot_events")
+}

@@ -7,6 +7,7 @@ export class BotIntegrationConfigResponseDto {
   @ApiProperty() active: boolean;
   @ApiProperty({ type: String, nullable: true, example: 'cli_dona_tereza' }) bot_tenant_ref: string | null;
   @ApiProperty({ type: String, nullable: true }) n8n_panel_webhook_url: string | null;
+  @ApiProperty({ type: String, nullable: true, description: 'URL do WF9 (eventos do motor para o bot).' }) n8n_motor_webhook_url: string | null;
   @ApiProperty({ description: 'Se o segredo do Canal B ja foi gravado. O valor nunca volta.' }) panel_webhook_secret_set: boolean;
   @ApiProperty({ type: String, format: 'date-time', nullable: true }) last_heartbeat_at: string | null;
   @ApiProperty({ description: 'Eventos do Canal A presos (FAILED/RECEIVED ha mais de 5 min).' }) stuck_events: number;
