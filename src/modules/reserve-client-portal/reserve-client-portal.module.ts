@@ -68,6 +68,7 @@ import { FunnelService } from './application/services/funnel.service';
 import { BotChannelHealthService } from './application/services/bot-channel-health.service';
 import { BotConversationService } from './application/services/bot-conversation.service';
 import { BotIssueService } from './application/services/bot-issue.service';
+import { BotFeedbackService } from './application/services/bot-feedback.service';
 import { FunnelMetricsService } from './application/services/funnel-metrics.service';
 import { HandoffSummaryService } from './application/services/handoff-summary.service';
 import { BotRetentionService } from './application/services/bot-retention.service';
@@ -214,6 +215,7 @@ import { HomeService } from './application/services/home.service';
     BotChannelHealthService,
     BotConversationService,
     BotIssueService,
+    BotFeedbackService,
     FunnelMetricsService,
     HandoffSummaryService,
     HomeService,

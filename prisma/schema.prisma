@@ -539,6 +539,28 @@ model BotIssue {
   @@map("bot_issues")
 }
 
+/// Feedback do hospede apos a estadia (hospede.feedback do contrato v29).
+model BotFeedback {
+  id              String    @id @default(cuid()) @db.VarChar(25)
+  tenant_id       String    @db.VarChar(25)
+  numero_contato  String    @db.VarChar(20)
+  texto           String?   @db.Text
+  resumo          String?   @db.VarChar(255)
+  nota            Int? // 0 a 10, so quando o bot manda um inteiro nessa faixa
+  sentimento      String    @default("neutro") @db.VarChar(10) // positivo | neutro | negativo
+  check_out       DateTime? @db.Date
+  link_enviado    Boolean   @default(false)
+  // Idempotencia da projecao do bot: event_id do ledger que gerou a linha
+  source_event_id String    @db.VarChar(100)
+  ocorrido_em     DateTime
+  created_at      DateTime  @default(now())
+
+  @@unique([tenant_id, source_event_id])
+  @@index([tenant_id, ocorrido_em])
+  @@map("bot_feedbacks")
+}
+
+
 model FollowupAttempt {
   id             String   @id @default(cuid()) @db.VarChar(25)
   tenant_id      String   @db.VarChar(25)

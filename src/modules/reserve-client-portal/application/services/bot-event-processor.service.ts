@@ -11,6 +11,7 @@ import {
 } from '../../../../generated/prisma/enums';
 import { FUNNEL_ENTRY_STAGE } from '../../domain/enums/funnel-stage-groups';
 import { BOT_ISSUE_CATEGORIAS, BOT_ISSUE_GRAVIDADES } from '../dtos/bot-issue.dto';
+import { BOT_FEEDBACK_SENTIMENTOS } from '../dtos/bot-feedback.dto';
 
 /** Previa para a lista de conversas; o texto inteiro vai em `content`. */
 const CONTENT_PREVIEW_MAX_LENGTH = 180;
@@ -55,6 +56,13 @@ function texto(value: unknown, max: number): string | null {
   if (typeof value !== 'string') return null;
   const limpo = value.trim();
   return limpo ? limpo.slice(0, max) : null;
+}
+
+/** Data YYYY-MM-DD (so o dia) ou null se nao for uma data valida. */
+function dataSoDia(value: unknown): Date | null {
+  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}/.test(value)) return null;
+  const d = new Date(value.slice(0, 10));
+  return Number.isNaN(d.getTime()) ? null : d;
 }
 
 function valorDaLista<T extends string>(lista: readonly T[], value: unknown): T | null {
@@ -149,6 +157,8 @@ export class BotEventProcessorService {
         return this.handleBotErro(tenantId, phone, data, occurredAt, event.event_id);
       case 'bot.socorro':
         return this.handleBotSocorro(tenantId, phone, data, occurredAt, event.event_id);
+      case 'hospede.feedback':
+        return this.handleHospedeFeedback(tenantId, phone, data, occurredAt, event.event_id);
       default:
         // Os demais tipos do catalogo so carregam snapshot/estagio/hold (ja
         // aplicados) ou sao lidos direto do ledger.
@@ -487,6 +497,35 @@ export class BotEventProcessorService {
         tipo: EBotMessageType.sistema,
         content: linha,
         content_preview: linha.slice(0, CONTENT_PREVIEW_MAX_LENGTH),
+        ocorrido_em: occurredAt,
+        source_event_id: eventId,
+      },
+    }));
+  }
+
+  /** Feedback do hospede apos a estadia (v29): vira linha em bot_feedbacks; nao mexe no funil. */
+  private async handleHospedeFeedback(
+    tenantId: string,
+    phone: string,
+    data: Json,
+    occurredAt: Date,
+    eventId: string,
+  ): Promise<void> {
+    const nota = typeof data.nota === 'number' && Number.isInteger(data.nota) && data.nota >= 0 && data.nota <= 10 ? data.nota : null;
+    const sentimento = typeof data.sentimento === 'string'
+      ? valorDaLista(BOT_FEEDBACK_SENTIMENTOS, data.sentimento.trim().toLowerCase())
+      : null;
+    const reserva = (data.reserva && typeof data.reserva === 'object' ? data.reserva : {}) as Json;
+    await this.insertOnce(eventId, () => this.prisma.botFeedback.create({
+      data: {
+        tenant_id: tenantId,
+        numero_contato: phone,
+        texto: texto(data.texto, ISSUE_TEXTO_MAX_LENGTH),
+        resumo: texto(data.resumo, 255),
+        nota,
+        sentimento: sentimento ?? 'neutro',
+        check_out: dataSoDia(reserva.check_out),
+        link_enviado: data.link_avaliacao_enviado === true,
         ocorrido_em: occurredAt,
         source_event_id: eventId,
       },

@@ -36,6 +36,13 @@ import { InstagramOverviewService } from '../../application/services/instagram-o
 import { ContentPostService } from '../../application/services/content-post.service';
 import { ActivityLogService } from '../../application/services/activity-log.service';
 import { BotIssueService } from '../../application/services/bot-issue.service';
+import { BotFeedbackService } from '../../application/services/bot-feedback.service';
+import {
+  BotFeedbackListQueryDto,
+  BotFeedbackListResponseDto,
+  BotFeedbackSummaryQueryDto,
+  BotFeedbackSummaryResponseDto,
+} from '../../application/dtos/bot-feedback.dto';
 import {
   BotIssueDetailResponseDto,
   BotIssueListQueryDto,
@@ -83,6 +90,7 @@ export class ClientPortalController {
     private readonly contentPostService: ContentPostService,
     private readonly activityLogService: ActivityLogService,
     private readonly botIssueService: BotIssueService,
+    private readonly botFeedbackService: BotFeedbackService,
   ) {}
 
   @Get(':clientId/overview')
@@ -214,6 +222,19 @@ export class ClientPortalController {
   @ApiOkResponse({ type: BotIssueSummaryResponseDto })
   async getBotIssuesSummary(@Param('clientId') clientId: string, @Query() query: BotIssueSummaryQueryDto) {
     return this.botIssueService.summary(clientId, query);
+  }
+
+  // `feedbacks/resumo` fica antes de qualquer `feedbacks/:id`, senao "resumo" vira um id.
+  @Get(':clientId/feedbacks')
+  @ApiOkResponse({ type: BotFeedbackListResponseDto })
+  async listFeedbacks(@Param('clientId') clientId: string, @Query() query: BotFeedbackListQueryDto) {
+    return this.botFeedbackService.list(clientId, query);
+  }
+
+  @Get(':clientId/feedbacks/resumo')
+  @ApiOkResponse({ type: BotFeedbackSummaryResponseDto })
+  async getFeedbacksSummary(@Param('clientId') clientId: string, @Query() query: BotFeedbackSummaryQueryDto) {
+    return this.botFeedbackService.summary(clientId, query);
   }
 
   @Get(':clientId/bot-issues/:id')

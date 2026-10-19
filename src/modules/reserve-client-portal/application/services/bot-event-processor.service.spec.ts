@@ -31,6 +31,7 @@ describe('BotEventProcessorService (contrato v2)', () => {
         updateMany: jest.fn().mockResolvedValue({ count: 0 }),
       },
       botIssue: { create: jest.fn().mockResolvedValue({}) },
+      botFeedback: { create: jest.fn().mockResolvedValue({}) },
       funnelEvent: { create: jest.fn().mockResolvedValue({}) },
       botMessage: { create: jest.fn().mockResolvedValue({}) },
       followupAttempt: { create: jest.fn().mockResolvedValue({}), updateMany: jest.fn().mockResolvedValue({ count: 0 }) },
@@ -551,6 +552,53 @@ describe('BotEventProcessorService (contrato v2)', () => {
         await service.process(T, evento('qualificado', { contact: contact({ bot_status: 'PAUSADO' }) }));
         expect(prisma.botLead.updateMany).not.toHaveBeenCalled();
       });
+    });
+  });
+
+  describe('feedback do hospede (lote v29)', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const lote = JSON.parse(require('fs').readFileSync(require('path').join(__dirname, '__fixtures__', 'lote-v29.json'), 'utf-8'));
+    const FEEDBACK = 'f6df01a1-3be5-457b-8ae2-03d761bca5d9';
+    const fixture = () => lote.events.find((e: any) => e.event_id === FEEDBACK);
+    const p2002 = () => Object.assign(new Error('Unique constraint failed'), { code: 'P2002' });
+
+    it('hospede.feedback do lote grava nota 10, positivo, check_out e link enviado', async () => {
+      const e = fixture();
+      await service.process('cli_dona_tereza', e);
+      expect(prisma.botFeedback.create).toHaveBeenCalledWith({
+        data: {
+          tenant_id: 'cli_dona_tereza',
+          numero_contato: '5500970009951',
+          texto: 'Adoramos, nota 10!',
+          resumo: 'adorou',
+          nota: 10,
+          sentimento: 'positivo',
+          check_out: new Date('2026-10-18'),
+          link_enviado: true,
+          ocorrido_em: new Date(e.occurred_at),
+          source_event_id: FEEDBACK,
+        },
+      });
+    });
+
+    it('nota fora de 0-10 ou nao inteira vira null; sentimento invalido vira neutro; link so com true', async () => {
+      const notas: unknown[] = [11, -1, 7.5, '9', null];
+      for (const [i, nota] of notas.entries()) {
+        await service.process(T, evento('hospede.feedback', { event_id: `f${i}`, data: { nota, sentimento: 'otimo', link_avaliacao_enviado: 'sim' } }));
+        expect(prisma.botFeedback.create.mock.calls[i][0].data).toMatchObject({ nota: null, sentimento: 'neutro', link_enviado: false, check_out: null });
+      }
+      await service.process(T, evento('hospede.feedback', { event_id: 'f9', data: { nota: 0, sentimento: 'NEGATIVO' } }));
+      expect(prisma.botFeedback.create.mock.calls[5][0].data).toMatchObject({ nota: 0, sentimento: 'negativo' });
+    });
+
+    it('check_out invalido vira null', async () => {
+      await service.process(T, evento('hospede.feedback', { data: { reserva: { check_out: 'amanha' } } }));
+      expect(prisma.botFeedback.create.mock.calls[0][0].data.check_out).toBeNull();
+    });
+
+    it('replay (P2002) nao lanca', async () => {
+      prisma.botFeedback.create.mockRejectedValueOnce(p2002());
+      await expect(service.process('cli_dona_tereza', fixture())).resolves.toBeUndefined();
     });
   });
 });

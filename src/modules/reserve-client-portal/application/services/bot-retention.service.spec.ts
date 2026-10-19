@@ -17,6 +17,7 @@ describe('BotRetentionService.eraseContact', () => {
       funnelEvent: { updateMany: jest.fn(op) },
       botIngestionEvent: { updateMany: jest.fn(op) },
       botIssue: { updateMany: jest.fn(op) },
+      botFeedback: { deleteMany: jest.fn(op) },
     };
     service = new BotRetentionService(prisma);
   });
@@ -68,6 +69,7 @@ describe('BotRetentionService: erros do bot (bot_issues)', () => {
       funnelEvent: { updateMany: jest.fn(op), findMany: jest.fn().mockResolvedValue([]) },
       botIngestionEvent: { updateMany: jest.fn(op) },
       botIssue: { updateMany: jest.fn(op), findMany: jest.fn().mockResolvedValue([{ id: 'iss_1' }]) },
+      botFeedback: { deleteMany: jest.fn(op), findMany: jest.fn().mockResolvedValue([{ id: 'fb_1' }]) },
     };
     service = new BotRetentionService(prisma);
   });
@@ -92,5 +94,19 @@ describe('BotRetentionService: erros do bot (bot_issues)', () => {
       orderBy: { ocorrido_em: 'asc' },
     });
     expect(res.issues).toEqual([{ id: 'iss_1' }]);
+  });
+
+  it('erase apaga os feedbacks do contato (texto livre do hospede)', async () => {
+    await service.eraseContact('t1', '5535999');
+    expect(prisma.botFeedback.deleteMany).toHaveBeenCalledWith({ where: { tenant_id: 't1', numero_contato: '5535999' } });
+  });
+
+  it('export inclui os feedbacks do contato', async () => {
+    const res = await service.exportContact('t1', '5535999');
+    expect(prisma.botFeedback.findMany).toHaveBeenCalledWith({
+      where: { tenant_id: 't1', numero_contato: '5535999' },
+      orderBy: { ocorrido_em: 'asc' },
+    });
+    expect(res.feedbacks).toEqual([{ id: 'fb_1' }]);
   });
 });

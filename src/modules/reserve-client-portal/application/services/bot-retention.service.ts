@@ -33,7 +33,7 @@ export class BotRetentionService {
   }
 
   async exportContact(tenantId: string, numeroContato: string) {
-    const [contact, messages, funnelEvents, issues] = await Promise.all([
+    const [contact, messages, funnelEvents, issues, feedbacks] = await Promise.all([
       this.prisma.botContact.findUnique({
         where: { tenant_id_numero_contato: { tenant_id: tenantId, numero_contato: numeroContato } },
       }),
@@ -49,9 +49,13 @@ export class BotRetentionService {
         where: { tenant_id: tenantId, numero_contato: numeroContato },
         orderBy: { ocorrido_em: 'asc' },
       }),
+      this.prisma.botFeedback.findMany({
+        where: { tenant_id: tenantId, numero_contato: numeroContato },
+        orderBy: { ocorrido_em: 'asc' },
+      }),
     ]);
 
-    return { contact, messages, funnelEvents, issues };
+    return { contact, messages, funnelEvents, issues, feedbacks };
   }
 
   /**
@@ -85,6 +89,8 @@ export class BotRetentionService {
         where: { tenant_id: tenantId, numero_contato: numeroContato },
         data: { numero_contato: anonymized, mensagem_hospede: null, resposta_bot: null, contexto: Prisma.DbNull },
       }),
+      // Feedback do hospede e texto livre dele: apaga a linha (nao ha agregado a preservar).
+      this.prisma.botFeedback.deleteMany({ where: { tenant_id: tenantId, numero_contato: numeroContato } }),
       this.prisma.botIngestionEvent.updateMany({
         // contrato v2 grava contact.phone; 'contato' fica para eventos antigos
         where: {
