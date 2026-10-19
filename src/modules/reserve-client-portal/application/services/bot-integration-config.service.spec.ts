@@ -126,6 +126,20 @@ describe('BotIntegrationConfigService (canal reverso do contrato v2)', () => {
     expect(result.n8n_motor_webhook_url).toBe('https://n8n.example/webhook/motor');
   });
 
+  it('string vazia nas urls grava null no create e no update (card salva com o WF9 vazio)', async () => {
+    await service.create('tenant_1', { n8n_motor_webhook_url: '', n8n_panel_webhook_url: '' });
+    expect(prisma.botIntegrationConfig.create.mock.calls[0][0].data).toMatchObject({
+      n8n_motor_webhook_url: null,
+      n8n_panel_webhook_url: null,
+    });
+    await service.update('tenant_1', { n8n_motor_webhook_url: '', n8n_panel_webhook_url: '', bot_tenant_ref: '' });
+    expect(prisma.botIntegrationConfig.update.mock.calls[0][0].data).toMatchObject({
+      n8n_motor_webhook_url: null,
+      n8n_panel_webhook_url: null,
+      bot_tenant_ref: null,
+    });
+  });
+
   it('rejeita url do motor invalida pela mesma regra do canal B', async () => {
     await expect(service.update('tenant_1', { n8n_motor_webhook_url: 'isso nao e url' })).rejects.toThrow();
   });

@@ -1,5 +1,5 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString, IsUrl, MaxLength, MinLength } from 'class-validator';
+import { IsOptional, IsString, IsUrl, MaxLength, MinLength, ValidateIf } from 'class-validator';
 
 export class CreateBotIntegrationConfigDto {
   @ApiPropertyOptional({ description: 'Identificador do tenant no bot (vai como tenant_id no Canal B).', maxLength: 60, example: 'cli_dona_tereza' })
@@ -8,13 +8,17 @@ export class CreateBotIntegrationConfigDto {
   @MaxLength(60)
   bot_tenant_ref?: string;
 
-  @ApiPropertyOptional({ description: 'URL do WF6 (Canal B). Em producao: https publico.', example: 'https://bot.reservemkt.com.br/webhook/painel' })
+  @ApiPropertyOptional({ description: 'URL do WF6 (Canal B). Em producao: https publico. String vazia limpa (grava null).', example: 'https://bot.reservemkt.com.br/webhook/painel' })
   @IsOptional()
+  // string vazia = limpar a URL (o service grava null)
+  @ValidateIf((o) => o.n8n_panel_webhook_url !== '')
   @IsUrl({ require_tld: false })
   n8n_panel_webhook_url?: string;
 
-  @ApiPropertyOptional({ description: 'URL do WF9 (eventos do motor para o bot).' })
+  @ApiPropertyOptional({ description: 'URL do WF9 (eventos do motor para o bot). String vazia limpa (grava null).' })
   @IsOptional()
+  // string vazia = limpar a URL (o service grava null)
+  @ValidateIf((o) => o.n8n_motor_webhook_url !== '')
   @IsUrl({ require_tld: false })
   n8n_motor_webhook_url?: string;
 
@@ -34,13 +38,17 @@ export class UpdateBotIntegrationConfigDto {
   @MaxLength(60)
   bot_tenant_ref?: string;
 
-  @ApiPropertyOptional({ description: 'URL do WF6 (Canal B). Em producao: https publico.', example: 'https://bot.reservemkt.com.br/webhook/painel' })
+  @ApiPropertyOptional({ description: 'URL do WF6 (Canal B). Em producao: https publico. String vazia limpa (grava null).', example: 'https://bot.reservemkt.com.br/webhook/painel' })
   @IsOptional()
+  // string vazia = limpar a URL (o service grava null)
+  @ValidateIf((o) => o.n8n_panel_webhook_url !== '')
   @IsUrl({ require_tld: false })
   n8n_panel_webhook_url?: string;
 
-  @ApiPropertyOptional({ description: 'URL do WF9 (eventos do motor para o bot).' })
+  @ApiPropertyOptional({ description: 'URL do WF9 (eventos do motor para o bot). String vazia limpa (grava null).' })
   @IsOptional()
+  // string vazia = limpar a URL (o service grava null)
+  @ValidateIf((o) => o.n8n_motor_webhook_url !== '')
   @IsUrl({ require_tld: false })
   n8n_motor_webhook_url?: string;
 
