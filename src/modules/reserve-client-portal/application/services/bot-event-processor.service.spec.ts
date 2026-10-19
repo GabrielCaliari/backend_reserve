@@ -470,6 +470,51 @@ describe('BotEventProcessorService (contrato v2)', () => {
       expect(prisma.botIssue.create.mock.calls[1][0].data).toMatchObject({ codigo: 'socorro', etapa: null });
     });
 
+    it('lote v29: bot.socorro seguido de eventos ATIVO no mesmo instante mantem PAUSADO e o socorro', async () => {
+      // Estado simulado do contato e do lead, aplicando os filtros que o projetor manda.
+      const contato: Record<string, unknown> = {};
+      const lead: { socorro_em: Date | null } = { socorro_em: null };
+      prisma.botContact.updateMany.mockImplementation(({ data }: any) => {
+        Object.assign(contato, data);
+        return Promise.resolve({ count: 1 });
+      });
+      prisma.botLead.findUnique.mockImplementation(() => Promise.resolve({ ...lead }));
+      prisma.botLead.upsert.mockImplementation(({ update }: any) => {
+        Object.assign(lead, update);
+        return Promise.resolve({});
+      });
+      prisma.botLead.updateMany.mockImplementation(({ where, data }: any) => {
+        const lt: Date | undefined = where.socorro_em?.lt;
+        if (lead.socorro_em && lt && lead.socorro_em.getTime() < lt.getTime()) Object.assign(lead, data);
+        return Promise.resolve({ count: 1 });
+      });
+
+      const socorro = evt(SOCORRO);
+      const at = new Date(socorro.occurred_at);
+      await service.process(TENANT, socorro);
+      expect(contato.status_bot).toBe('PAUSADO');
+
+      const jornada = lote.events.find((x: any) => x.type === 'jornada.enviada');
+      const feedback = lote.events.find((x: any) => x.type === 'hospede.feedback');
+      const erro = { ...evt(ERRO_CONVERSA), contact: { ...evt(ERRO_CONVERSA).contact, bot_status: 'ATIVO' } };
+      const mensagem = { ...evt('msg-36229'), occurred_at: socorro.occurred_at, contact: { phone: FONE, bot_status: 'ATIVO' } };
+      for (const e of [jornada, feedback, erro, mensagem]) {
+        expect(e.occurred_at).toBe(socorro.occurred_at);
+        await service.process(TENANT, e);
+      }
+
+      expect(contato.status_bot).toBe('PAUSADO');
+      // Os outros campos do snapshot continuam valendo.
+      expect(contato.nome).toBe('Gabriel Teste');
+      // socorro_em intacto => etiqueta SOCORRO no card.
+      expect(lead.socorro_em).toEqual(at);
+
+      // Um ATIVO estritamente mais novo libera a pausa e a etiqueta.
+      await service.process(TENANT, { ...mensagem, event_id: 'msg-depois', occurred_at: '2026-10-19T15:20:00.000Z' });
+      expect(contato.status_bot).toBe('ATIVO');
+      expect(lead.socorro_em).toBeNull();
+    });
+
     describe('snapshot ATIVO devolve o atendimento ao bot', () => {
       // Simula o filtro do updateMany sobre um lead com socorro_em gravado.
       function leadComSocorro(socorroEm: Date) {

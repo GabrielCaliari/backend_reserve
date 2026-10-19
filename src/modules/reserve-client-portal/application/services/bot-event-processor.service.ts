@@ -189,13 +189,22 @@ export class BotEventProcessorService {
   }
 
   private async applyContactSnapshot(tenantId: string, s: ContactSnapshot, occurredAt: Date): Promise<void> {
+    // Socorro em aberto: um snapshot ATIVO que nao e estritamente mais novo que o
+    // socorro (ex.: outro evento do mesmo lote) nao desfaz a pausa. So um ATIVO
+    // posterior ou a retomada pelo painel liberam — mesma regra da limpeza de socorro_em.
+    let manterPausa = false;
+    if (s.botStatus === EBotContactStatus.ATIVO) {
+      const lead = await this.prisma.botLead.findUnique({ where: this.leadWhere(tenantId, s.phone) });
+      manterPausa = !!lead?.socorro_em && occurredAt.getTime() <= lead.socorro_em.getTime();
+    }
+
     // Campo ausente no snapshot nao apaga o que ja se sabe; `ocasiao` e a
     // excecao: e parte do snapshot e pode voltar a null.
     const campos = {
       ...(s.name ? { nome: s.name } : {}),
       ...(s.audience ? { tipo_publico: s.audience } : {}),
       ...(s.origin ? { origem: s.origin } : {}),
-      ...(s.botStatus ? { status_bot: s.botStatus } : {}),
+      ...(s.botStatus && !manterPausa ? { status_bot: s.botStatus } : {}),
       ...(s.ctwaClid ? { ctwa_clid: s.ctwaClid } : {}),
       ...(s.sourceId ? { source_id: s.sourceId } : {}),
       ...(s.linkCode ? { link_code: s.linkCode } : {}),
