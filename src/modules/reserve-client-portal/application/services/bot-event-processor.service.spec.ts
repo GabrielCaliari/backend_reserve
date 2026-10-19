@@ -516,6 +516,41 @@ describe('BotEventProcessorService (contrato v2)', () => {
       expect(lead.socorro_em).toBeNull();
     });
 
+    it('bot.socorro reprocessado depois da retomada (snapshot_em mais novo): sem etiqueta, contato segue ATIVO', async () => {
+      // Banco simulado aplicando a guarda de snapshot_em do updateMany.
+      const socorro = evt(SOCORRO);
+      const retomadaEm = new Date(new Date(socorro.occurred_at).getTime() + 60_000);
+      const contato: { status_bot: string; snapshot_em: Date | null } = { status_bot: 'ATIVO', snapshot_em: retomadaEm };
+      const lead: { socorro_em: Date | null } = { socorro_em: null };
+      prisma.botContact.updateMany.mockImplementation(({ where, data }: any) => {
+        const lte: Date | undefined = where.OR?.[1]?.snapshot_em?.lte;
+        const passa = !where.OR || contato.snapshot_em === null || (lte && contato.snapshot_em.getTime() <= lte.getTime());
+        if (!passa) return Promise.resolve({ count: 0 });
+        Object.assign(contato, data);
+        return Promise.resolve({ count: 1 });
+      });
+      prisma.botLead.findUnique.mockImplementation(() => Promise.resolve({ ...lead }));
+      prisma.botLead.upsert.mockImplementation(({ update }: any) => {
+        Object.assign(lead, update);
+        return Promise.resolve({});
+      });
+
+      await service.process(TENANT, socorro);
+
+      expect(contato.status_bot).toBe('ATIVO');
+      expect(lead.socorro_em).toBeNull();
+      expect(prisma.botLead.upsert).not.toHaveBeenCalledWith(expect.objectContaining({ update: { socorro_em: expect.anything() } }));
+      // A issue continua registrada como historico.
+      expect(prisma.botIssue.create).toHaveBeenCalled();
+    });
+
+    it('bot.socorro mais antigo que um snapshot ATIVO ja aplicado nao grava socorro_em', async () => {
+      prisma.botContact.updateMany.mockResolvedValue({ count: 0 });
+      await service.process(TENANT, evt(SOCORRO));
+      const marcou = prisma.botLead.upsert.mock.calls.some((c: any[]) => c[0].update?.socorro_em);
+      expect(marcou).toBe(false);
+    });
+
     describe('snapshot ATIVO devolve o atendimento ao bot', () => {
       // Simula o filtro do updateMany sobre um lead com socorro_em gravado.
       function leadComSocorro(socorroEm: Date) {

@@ -225,7 +225,7 @@ describe('FunnelService.resumeConversation', () => {
     expect(evt).toEqual({ id: 'evt_resume', ok: true, state: 'ATIVO' });
     expect(prisma.botContact.updateMany).toHaveBeenCalledWith({
       where: { tenant_id: tenantId, numero_contato: numeroContato },
-      data: { status_bot: 'ATIVO', motivo_pausa: null },
+      data: { status_bot: 'ATIVO', motivo_pausa: null, snapshot_em: expect.any(Date) },
     });
     expect(prisma.funnelEvent.create).toHaveBeenCalledWith(
       expect.objectContaining({

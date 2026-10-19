@@ -591,8 +591,12 @@ export class BotEventProcessorService {
         source_event_id: eventId,
       },
     }));
-    // Mesma regra do snapshot: um snapshot mais novo que este evento vence.
-    await this.prisma.botContact.updateMany({
+    // Mesma regra do snapshot: um snapshot mais novo que este evento vence. A
+    // retomada pelo painel tambem avanca snapshot_em, entao um socorro antigo
+    // reprocessado (WF11 refaz 5xx, cron de FAILED) depois de um ATIVO mais novo
+    // ou de uma retomada nao pausa o contato nem volta a etiqueta SOCORRO; a
+    // issue fica gravada como historico.
+    const pausado = await this.prisma.botContact.updateMany({
       where: {
         tenant_id: tenantId,
         numero_contato: phone,
@@ -600,6 +604,10 @@ export class BotEventProcessorService {
       },
       data: { status_bot: EBotContactStatus.PAUSADO },
     });
+    if (pausado.count === 0) {
+      this.logger.debug(`bot.socorro mais antigo que o estado atual ignorado (event=${eventId})`);
+      return;
+    }
     await this.patchLead(tenantId, phone, { socorro_em: occurredAt });
   }
 }

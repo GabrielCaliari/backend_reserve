@@ -142,10 +142,14 @@ export class FunnelService {
     const currentStage = lead?.current_stage ?? FUNNEL_ENTRY_STAGE;
     const paraEstagio = estagio ?? currentStage;
 
+    const agora = new Date();
     const ops: any[] = [
+      // snapshot_em = agora: a retomada e o estado mais novo do contato. Assim um
+      // evento do bot anterior a ela (ex.: bot.socorro reprocessado) nao volta a
+      // pausar o contato nem a marcar SOCORRO (mesma guarda do projetor).
       this.prisma.botContact.updateMany({
         where: { tenant_id: tenantId, numero_contato: numeroContato },
-        data: { status_bot: 'ATIVO', motivo_pausa: null },
+        data: { status_bot: 'ATIVO', motivo_pausa: null, snapshot_em: agora },
       }),
       this.prisma.funnelEvent.create({
         data: {
