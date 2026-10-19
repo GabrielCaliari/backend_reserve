@@ -28,7 +28,9 @@ describe('BotEventProcessorService (contrato v2)', () => {
         findUnique: jest.fn().mockResolvedValue(null),
         upsert: jest.fn().mockResolvedValue({}),
         update: jest.fn().mockResolvedValue({}),
+        updateMany: jest.fn().mockResolvedValue({ count: 0 }),
       },
+      botIssue: { create: jest.fn().mockResolvedValue({}) },
       funnelEvent: { create: jest.fn().mockResolvedValue({}) },
       botMessage: { create: jest.fn().mockResolvedValue({}) },
       followupAttempt: { create: jest.fn().mockResolvedValue({}), updateMany: jest.fn().mockResolvedValue({ count: 0 }) },
@@ -364,6 +366,146 @@ describe('BotEventProcessorService (contrato v2)', () => {
       expect(prisma.botMessage.create.mock.calls[0][0].data.content).toBe('Jornada: véspera pendente');
       await service.process(T, evento('jornada.enviada', { data: { toque: 'outro', via: 'texto' } }));
       expect(prisma.botMessage.create.mock.calls[1][0].data.content).toBe('Jornada: outro enviada');
+    });
+  });
+
+  describe('erros e socorro do bot (lote v29)', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const lote = JSON.parse(require('fs').readFileSync(require('path').join(__dirname, '__fixtures__', 'lote-v29.json'), 'utf-8'));
+    const evt = (id: string) => lote.events.find((e: any) => e.event_id === id);
+    const TENANT = 'cli_dona_tereza';
+    const FONE = '5500970009951';
+    const ERRO_TECNICO = 'ccc495c8-d6bc-4742-a77e-779b7a3b4651';
+    const ERRO_CONVERSA = '405943d4-7529-4d11-9be6-86b44aed7128';
+    const SOCORRO = '7ccc96ae-e938-47c6-849f-40f1db7c2570';
+    const p2002 = () => Object.assign(new Error('Unique constraint failed'), { code: 'P2002' });
+
+    it('bot.erro tecnico grava a issue com o data inteiro em contexto', async () => {
+      const e = evt(ERRO_TECNICO);
+      await service.process(TENANT, e);
+      expect(prisma.botIssue.create).toHaveBeenCalledWith({
+        data: {
+          tenant_id: TENANT,
+          numero_contato: FONE,
+          categoria: 'tecnico',
+          codigo: 'excecao',
+          gravidade: 'alta',
+          workflow: 'WF1 v29',
+          no: '20k. Interpretar IA',
+          etapa: null,
+          mensagem: 'Cannot read x',
+          mensagem_hospede: 'quero reservar',
+          resposta_bot: null,
+          contexto: e.data,
+          socorro: true,
+          ocorrido_em: new Date(e.occurred_at),
+          source_event_id: ERRO_TECNICO,
+        },
+      });
+    });
+
+    it('bot.erro de conversa grava categoria, gravidade baixa e socorro false; nao mexe no contato', async () => {
+      await service.process(TENANT, evt(ERRO_CONVERSA));
+      expect(prisma.botIssue.create.mock.calls[0][0].data).toMatchObject({
+        categoria: 'conversa', codigo: 'revisor_corrigiu', gravidade: 'baixa', socorro: false,
+        resposta_bot: 'Confirmo com a equipe',
+      });
+      const pausou = prisma.botContact.updateMany.mock.calls.some((c: any[]) => c[0].data?.status_bot === 'PAUSADO');
+      expect(pausou).toBe(false);
+      expect(prisma.botLead.upsert).not.toHaveBeenCalled();
+    });
+
+    it('bot.erro sem campos usa os padroes', async () => {
+      await service.process(T, evento('bot.erro', { data: { categoria: 'inventada', gravidade: 'xx' } }));
+      expect(prisma.botIssue.create.mock.calls[0][0].data).toMatchObject({
+        categoria: 'tecnico', codigo: 'desconhecido', gravidade: 'media', socorro: false,
+      });
+    });
+
+    it('bot.erro sem contato ainda grava a issue sem numero', async () => {
+      const warn = jest.spyOn((service as any).logger, 'warn').mockImplementation(() => undefined);
+      await service.process(T, evento('bot.erro', { contact: null, data: { codigo: 'excecao' } }));
+      expect(prisma.botIssue.create.mock.calls[0][0].data).toMatchObject({ numero_contato: null, codigo: 'excecao' });
+      expect(prisma.botContact.upsert).not.toHaveBeenCalled();
+      expect(warn).not.toHaveBeenCalled();
+    });
+
+    it('replay de bot.erro ja gravado (P2002) nao lanca', async () => {
+      prisma.botIssue.create.mockRejectedValueOnce(p2002());
+      await expect(service.process(TENANT, evt(ERRO_TECNICO))).resolves.toBeUndefined();
+    });
+
+    it('bot.socorro grava issue de socorro, pausa o contato e marca socorro_em', async () => {
+      const e = evt(SOCORRO);
+      const at = new Date(e.occurred_at);
+      await service.process(TENANT, e);
+      expect(prisma.botIssue.create.mock.calls[0][0].data).toMatchObject({
+        tenant_id: TENANT, numero_contato: FONE, categoria: 'socorro', codigo: 'erros_bot#1',
+        gravidade: 'alta', socorro: true, etapa: 'S12', workflow: 'WF1', no: '20k',
+        contexto: e.data, source_event_id: SOCORRO, ocorrido_em: at,
+      });
+      expect(prisma.botContact.updateMany).toHaveBeenCalledWith({
+        where: { tenant_id: TENANT, numero_contato: FONE, OR: [{ snapshot_em: null }, { snapshot_em: { lte: at } }] },
+        data: { status_bot: 'PAUSADO' },
+      });
+      expect(prisma.botLead.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({ update: { socorro_em: at } }),
+      );
+    });
+
+    it('bot.socorro com snapshot ATIVO no proprio evento: o socorro prevalece (handler roda depois do snapshot)', async () => {
+      await service.process(TENANT, evt(SOCORRO));
+      const ordemLimpeza = prisma.botLead.updateMany.mock.invocationCallOrder[0];
+      const ordemMarca = prisma.botLead.upsert.mock.invocationCallOrder[0];
+      expect(ordemLimpeza).toBeLessThan(ordemMarca);
+      const ordemAtivo = prisma.botContact.updateMany.mock.invocationCallOrder[0];
+      const pausa = prisma.botContact.updateMany.mock.calls.findIndex((c: any[]) => c[0].data?.status_bot === 'PAUSADO');
+      expect(ordemAtivo).toBeLessThan(prisma.botContact.updateMany.mock.invocationCallOrder[pausa]);
+    });
+
+    it('bot.socorro sem codigo_erro usa o motivo; sem os dois, usa socorro', async () => {
+      await service.process(T, evento('bot.socorro', { data: { motivo: 'pediu_humano' } }));
+      expect(prisma.botIssue.create.mock.calls[0][0].data.codigo).toBe('pediu_humano');
+      await service.process(T, evento('bot.socorro', { event_id: 'e2', data: {} }));
+      expect(prisma.botIssue.create.mock.calls[1][0].data).toMatchObject({ codigo: 'socorro', etapa: null });
+    });
+
+    describe('snapshot ATIVO devolve o atendimento ao bot', () => {
+      // Simula o filtro do updateMany sobre um lead com socorro_em gravado.
+      function leadComSocorro(socorroEm: Date) {
+        const lead = { socorro_em: socorroEm as Date | null };
+        prisma.botLead.updateMany.mockImplementation(({ where, data }: any) => {
+          const lt: Date | undefined = where.socorro_em?.lt;
+          if (lead.socorro_em && lt && lead.socorro_em.getTime() < lt.getTime()) {
+            Object.assign(lead, data);
+            return Promise.resolve({ count: 1 });
+          }
+          return Promise.resolve({ count: 0 });
+        });
+        return lead;
+      }
+
+      it('snapshot ATIVO posterior ao socorro zera socorro_em', async () => {
+        const lead = leadComSocorro(new Date('2026-10-01T09:00:00.000Z'));
+        await service.process(T, evento('mensagem', { data: { role: 'assistant', content_preview: 'oi' } }));
+        expect(prisma.botLead.updateMany).toHaveBeenCalledWith({
+          where: { tenant_id: T, numero_contato: PHONE, socorro_em: { lt: new Date(AT) } },
+          data: { socorro_em: null },
+        });
+        expect(lead.socorro_em).toBeNull();
+      });
+
+      it('snapshot ATIVO anterior ao socorro nao zera', async () => {
+        const socorroEm = new Date('2026-10-01T11:00:00.000Z');
+        const lead = leadComSocorro(socorroEm);
+        await service.process(T, evento('mensagem', { data: { role: 'assistant', content_preview: 'oi' } }));
+        expect(lead.socorro_em).toEqual(socorroEm);
+      });
+
+      it('snapshot sem bot_status ATIVO nao mexe no socorro', async () => {
+        await service.process(T, evento('qualificado', { contact: contact({ bot_status: 'PAUSADO' }) }));
+        expect(prisma.botLead.updateMany).not.toHaveBeenCalled();
+      });
     });
   });
 });

@@ -113,7 +113,9 @@ export class FunnelMetricsService {
             // Contrato §4.3: a espera conta da ultima mensagem DO HOSPEDE.
             aguardandoDesde: contato?.last_user_message_at?.toISOString() ?? null,
             valorCotacao: l.hold_valor_cents == null ? null : reais(l.hold_valor_cents),
-            etiqueta: l.recuperar ? ('RECUPERAR' as const) : null,
+            // SOCORRO (bot pediu ajuda da equipe) tem prioridade sobre RECUPERAR.
+            etiqueta: l.socorro_em ? ('SOCORRO' as const) : l.recuperar ? ('RECUPERAR' as const) : null,
+            socorroEm: l.socorro_em?.toISOString() ?? null,
             motivoPerda: l.motivo_perda ?? null,
             holdStatus: l.hold_status ?? null,
             holdCodigo: l.hold_codigo ?? null,

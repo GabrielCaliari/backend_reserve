@@ -181,7 +181,7 @@ describe('FunnelService.moveStage', () => {
 
 describe('FunnelService.resumeConversation', () => {
   let prisma: {
-    botLead: { findUnique: jest.Mock; upsert: jest.Mock };
+    botLead: { findUnique: jest.Mock; upsert: jest.Mock; updateMany: jest.Mock };
     botContact: { findUnique: jest.Mock; updateMany: jest.Mock };
     funnelEvent: { create: jest.Mock };
     $transaction: jest.Mock;
@@ -195,7 +195,7 @@ describe('FunnelService.resumeConversation', () => {
 
   beforeEach(() => {
     prisma = {
-      botLead: { findUnique: jest.fn(), upsert: jest.fn() },
+      botLead: { findUnique: jest.fn(), upsert: jest.fn(), updateMany: jest.fn().mockResolvedValue({ count: 1 }) },
       botContact: {
         findUnique: jest.fn().mockResolvedValue({ id: 'c_1', status_bot: 'PAUSADO' }),
         updateMany: jest.fn().mockResolvedValue({ count: 1 }),
@@ -241,6 +241,17 @@ describe('FunnelService.resumeConversation', () => {
     // sem mudanca de estagio nao ha upsert do lead
     expect(prisma.botLead.upsert).not.toHaveBeenCalled();
     expect(actions.dispatch).toHaveBeenCalledWith(tenantId, 'return_to_bot', { phone: numeroContato, actorId: adminId });
+  });
+
+  it('retomada pelo painel zera o socorro do lead', async () => {
+    prisma.botLead.findUnique.mockResolvedValue({ current_stage: EFunnelStage.OFERTA_FEITA });
+
+    await service.resumeConversation(tenantId, numeroContato, adminId);
+
+    expect(prisma.botLead.updateMany).toHaveBeenCalledWith({
+      where: { tenant_id: tenantId, numero_contato: numeroContato },
+      data: { socorro_em: null },
+    });
   });
 
   it('com estagio de retorno move o lead junto', async () => {
@@ -293,7 +304,11 @@ describe('FunnelService — canal reverso (contrato v2 §5)', () => {
 
   beforeEach(() => {
     prisma = {
-      botLead: { findUnique: jest.fn().mockResolvedValue({ current_stage: 'OFERTA_FEITA' }), upsert: jest.fn() },
+      botLead: {
+        findUnique: jest.fn().mockResolvedValue({ current_stage: 'OFERTA_FEITA' }),
+        upsert: jest.fn(),
+        updateMany: jest.fn().mockResolvedValue({ count: 1 }),
+      },
       botContact: {
         findUnique: jest.fn().mockResolvedValue({ id: 'c_1', status_bot: 'ATIVO' }),
         updateMany: jest.fn().mockResolvedValue({ count: 1 }),

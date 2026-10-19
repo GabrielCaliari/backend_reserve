@@ -110,7 +110,10 @@ export class FunnelLeadCardDto {
   @ApiProperty() statusBot: string;
   @ApiProperty({ nullable: true, type: String, description: 'Ultima mensagem do hospede (ISO).' }) aguardandoDesde: string | null;
   @ApiProperty({ nullable: true, type: Number, description: 'Valor da cotacao em reais.' }) valorCotacao: number | null;
-  @ApiProperty({ nullable: true, enum: ['RECUPERAR'] }) etiqueta: 'RECUPERAR' | null;
+  @ApiProperty({ nullable: true, enum: ['SOCORRO', 'RECUPERAR'], description: 'SOCORRO tem prioridade sobre RECUPERAR.' })
+  etiqueta: 'SOCORRO' | 'RECUPERAR' | null;
+  @ApiProperty({ nullable: true, type: String, description: 'Quando o bot pediu socorro (ISO); null se o bot ja retomou.' })
+  socorroEm: string | null;
   @ApiProperty({ nullable: true, type: String }) motivoPerda: string | null;
   @ApiProperty({ nullable: true, type: String }) holdStatus: string | null;
   @ApiProperty({ nullable: true, type: String }) holdCodigo: string | null;

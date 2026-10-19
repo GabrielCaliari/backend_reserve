@@ -159,6 +159,11 @@ export class FunnelService {
           ocorrido_em: new Date(),
         },
       }),
+      // A equipe assumiu e devolveu ao bot: sai a etiqueta SOCORRO do card.
+      this.prisma.botLead.updateMany({
+        where: { tenant_id: tenantId, numero_contato: numeroContato },
+        data: { socorro_em: null },
+      }),
     ];
     if (paraEstagio !== currentStage) {
       ops.push(

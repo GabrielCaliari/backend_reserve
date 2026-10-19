@@ -1,5 +1,6 @@
 import 'reflect-metadata';
 import { REQUIRE_PERMISSIONS_KEY } from '../../../../shared/auth/decorators/require-permissions.decorator';
+import { AdminBotIssuesController } from './admin-bot-issues.controller';
 import { AdminHotelClientController } from './admin-hotel-client.controller';
 import { AdminHotelMetricsController } from './admin-hotel-metrics.controller';
 import { AdminReservationsController } from './admin-reservations.controller';
@@ -49,6 +50,10 @@ describe('reserve-client-portal RBAC migration', () => {
 
   it('WhatsAppController — class requires hotel-portal.whatsapp.manage', () => {
     expect(classPermissionsOf(WhatsAppController)).toEqual(['hotel-portal.whatsapp.manage']);
+  });
+
+  it('AdminBotIssuesController — status dos erros do bot usa hotel-portal.whatsapp-funnel.manage', () => {
+    expect(classPermissionsOf(AdminBotIssuesController)).toEqual(['hotel-portal.whatsapp-funnel.manage']);
   });
 
   it('WhatsAppTrackingController — class requires hotel-portal.whatsapp-links.manage', () => {

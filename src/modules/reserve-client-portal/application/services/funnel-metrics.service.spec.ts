@@ -81,8 +81,17 @@ describe('FunnelMetricsService.getBoard (contrato v2 §4.3)', () => {
       numeroContato: '5535999', nome: 'Ana', tipoPublico: 'LEAD',
       acomodacaoInteresse: 'Suíte Master', datasInteresse: '20/11/2026 – 22/11/2026',
       statusBot: 'AGUARDANDO_PAGAMENTO', aguardandoDesde: '2026-10-01T10:00:00.000Z',
-      valorCotacao: 1049, etiqueta: 'RECUPERAR',
+      valorCotacao: 1049, etiqueta: 'RECUPERAR', socorroEm: null,
       motivoPerda: null, holdStatus: 'EXPIRADA', holdCodigo: 'M57', origem: 'anuncio', sourceId: 'ad_123',
+    });
+  });
+
+  it('socorro tem prioridade sobre recuperar e expoe socorroEm', async () => {
+    const socorroEm = new Date('2026-10-19T15:13:11.168Z');
+    const { service } = build({ FECHAMENTO_INICIADO: [{ ...lead, socorro_em: socorroEm }] });
+    const board = await service.getBoard('client_1');
+    expect(board.find((c) => c.stage === 'FECHAMENTO_INICIADO')!.leads[0]).toMatchObject({
+      etiqueta: 'SOCORRO', socorroEm: '2026-10-19T15:13:11.168Z',
     });
   });
 

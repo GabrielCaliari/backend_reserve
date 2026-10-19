@@ -501,10 +501,42 @@ model BotLead {
   valor_confirmado_cents  Int          @default(0)
   recuperar               Boolean      @default(false)
   motivo_perda            String?      @db.VarChar(255)
+  // Bot pausou e pediu ajuda da equipe (bot.socorro); volta a null quando o bot retoma
+  socorro_em              DateTime?
   updated_at              DateTime     @updatedAt
 
   @@unique([tenant_id, numero_contato])
   @@map("bot_leads")
+}
+
+/// Erros do bot (bot.erro) e pedidos de socorro (bot.socorro) do contrato v29.
+model BotIssue {
+  id               String   @id @default(cuid()) @db.VarChar(25)
+  tenant_id        String   @db.VarChar(25)
+  numero_contato   String?  @db.VarChar(20)
+  categoria        String   @db.VarChar(20) // tecnico | conversa | socorro
+  codigo           String   @db.VarChar(60)
+  gravidade        String   @db.VarChar(10) // alta | media | baixa
+  workflow         String?  @db.VarChar(60)
+  no               String?  @db.VarChar(120)
+  etapa            String?  @db.VarChar(60)
+  mensagem         String?  @db.Text
+  mensagem_hospede String?  @db.Text
+  resposta_bot     String?  @db.Text
+  // O data inteiro do evento
+  contexto         Json?
+  socorro          Boolean  @default(false)
+  status           String   @default("ABERTO") @db.VarChar(12) // ABERTO | VISTO | CORRIGIDO
+  // Idempotencia da projecao do bot: event_id do ledger que gerou a linha
+  source_event_id  String   @db.VarChar(100)
+  ocorrido_em      DateTime
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+
+  @@unique([tenant_id, source_event_id])
+  @@index([tenant_id, ocorrido_em])
+  @@index([tenant_id, status])
+  @@map("bot_issues")
 }
 
 model FollowupAttempt {

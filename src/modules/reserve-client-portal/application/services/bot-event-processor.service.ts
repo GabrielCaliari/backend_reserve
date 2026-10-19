@@ -10,11 +10,14 @@ import {
   EFunnelStage,
 } from '../../../../generated/prisma/enums';
 import { FUNNEL_ENTRY_STAGE } from '../../domain/enums/funnel-stage-groups';
+import { BOT_ISSUE_CATEGORIAS, BOT_ISSUE_GRAVIDADES } from '../dtos/bot-issue.dto';
 
 /** Previa para a lista de conversas; o texto inteiro vai em `content`. */
 const CONTENT_PREVIEW_MAX_LENGTH = 180;
 /** Espelha o VarChar(255) de funil_eventos.motivo. */
 const MOTIVO_MAX_LENGTH = 255;
+/** Teto dos textos livres da issue (colunas Text). */
+const ISSUE_TEXTO_MAX_LENGTH = 20000;
 /** Tipos que viram a etiqueta RECUPERAR no card (contrato §3.5 e §4.3). */
 const TIPOS_RECUPERAR = new Set(['hold.expirado', 'followup.regua_esgotada', 'followup.fora_da_janela']);
 /**
@@ -52,6 +55,10 @@ function texto(value: unknown, max: number): string | null {
   if (typeof value !== 'string') return null;
   const limpo = value.trim();
   return limpo ? limpo.slice(0, max) : null;
+}
+
+function valorDaLista<T extends string>(lista: readonly T[], value: unknown): T | null {
+  return typeof value === 'string' && (lista as readonly string[]).includes(value) ? (value as T) : null;
 }
 
 function enumValue<T extends string>(enumObj: Record<string, T>, value: unknown): T | null {
@@ -92,6 +99,8 @@ export class BotEventProcessorService {
 
     const snapshot = this.parseContact(event.contact);
     if (!snapshot) {
+      // Erro do bot pode nao ter contato (falha fora de uma conversa): grava a issue sem numero.
+      if (event.type === 'bot.erro') return this.handleBotErro(tenantId, null, data, occurredAt, event.event_id);
       if (!TIPOS_SEM_CONTATO.has(event.type)) {
         this.logger.warn(`Evento "${event.type}" sem contact.phone (tenant=${tenantId}, event=${event.event_id})`);
       }
@@ -136,6 +145,10 @@ export class BotEventProcessorService {
         return this.handleAudioTranscrito(tenantId, data);
       case 'jornada.enviada':
         return this.handleJornadaEnviada(tenantId, phone, data, occurredAt, event.event_id);
+      case 'bot.erro':
+        return this.handleBotErro(tenantId, phone, data, occurredAt, event.event_id);
+      case 'bot.socorro':
+        return this.handleBotSocorro(tenantId, phone, data, occurredAt, event.event_id);
       default:
         // Os demais tipos do catalogo so carregam snapshot/estagio/hold (ja
         // aplicados) ou sao lidos direto do ledger.
@@ -203,6 +216,16 @@ export class BotEventProcessorService {
       },
       data: campos,
     });
+
+    // Snapshot ATIVO mais novo que o socorro: o atendimento voltou ao bot. No
+    // proprio bot.socorro o snapshot roda antes do handler, que grava depois —
+    // e o filtro e estrito (lt), entao o socorro prevalece.
+    if (s.botStatus === EBotContactStatus.ATIVO) {
+      await this.prisma.botLead.updateMany({
+        where: { tenant_id: tenantId, numero_contato: s.phone, socorro_em: { lt: occurredAt } },
+        data: { socorro_em: null },
+      });
+    }
   }
 
   private leadWhere(tenantId: string, phone: string) {
@@ -459,5 +482,76 @@ export class BotEventProcessorService {
         source_event_id: eventId,
       },
     }));
+  }
+
+  /** Erro do bot (v29): vira linha em bot_issues; nao mexe no estado do contato. */
+  private async handleBotErro(
+    tenantId: string,
+    phone: string | null,
+    data: Json,
+    occurredAt: Date,
+    eventId: string,
+  ): Promise<void> {
+    await this.insertOnce(eventId, () => this.prisma.botIssue.create({
+      data: {
+        tenant_id: tenantId,
+        numero_contato: phone,
+        categoria: valorDaLista(BOT_ISSUE_CATEGORIAS, data.categoria) ?? 'tecnico',
+        codigo: texto(data.codigo, 60) ?? 'desconhecido',
+        gravidade: valorDaLista(BOT_ISSUE_GRAVIDADES, data.gravidade) ?? 'media',
+        workflow: texto(data.workflow, 60),
+        no: texto(data.no, 120),
+        etapa: texto(data.etapa, 60),
+        mensagem: texto(data.mensagem, ISSUE_TEXTO_MAX_LENGTH),
+        mensagem_hospede: texto(data.mensagem_hospede, ISSUE_TEXTO_MAX_LENGTH),
+        resposta_bot: texto(data.resposta_bot, ISSUE_TEXTO_MAX_LENGTH),
+        contexto: data as object,
+        socorro: data.socorro === true,
+        ocorrido_em: occurredAt,
+        source_event_id: eventId,
+      },
+    }));
+  }
+
+  /**
+   * Bot pausou e passou a conversa para a equipe (v29): issue de socorro, contato
+   * pausado e etiqueta SOCORRO no card (socorro_em) ate o bot retomar.
+   */
+  private async handleBotSocorro(
+    tenantId: string,
+    phone: string,
+    data: Json,
+    occurredAt: Date,
+    eventId: string,
+  ): Promise<void> {
+    await this.insertOnce(eventId, () => this.prisma.botIssue.create({
+      data: {
+        tenant_id: tenantId,
+        numero_contato: phone,
+        categoria: 'socorro',
+        codigo: texto(data.codigo_erro, 60) ?? texto(data.motivo, 60) ?? 'socorro',
+        gravidade: 'alta',
+        workflow: texto(data.workflow, 60),
+        no: texto(data.no, 120),
+        etapa: texto(data.codigo_atendimento, 60),
+        mensagem: texto(data.mensagem, ISSUE_TEXTO_MAX_LENGTH),
+        mensagem_hospede: texto(data.mensagem_hospede, ISSUE_TEXTO_MAX_LENGTH),
+        resposta_bot: texto(data.resposta_bot, ISSUE_TEXTO_MAX_LENGTH),
+        contexto: data as object,
+        socorro: true,
+        ocorrido_em: occurredAt,
+        source_event_id: eventId,
+      },
+    }));
+    // Mesma regra do snapshot: um snapshot mais novo que este evento vence.
+    await this.prisma.botContact.updateMany({
+      where: {
+        tenant_id: tenantId,
+        numero_contato: phone,
+        OR: [{ snapshot_em: null }, { snapshot_em: { lte: occurredAt } }],
+      },
+      data: { status_bot: EBotContactStatus.PAUSADO },
+    });
+    await this.patchLead(tenantId, phone, { socorro_em: occurredAt });
   }
 }

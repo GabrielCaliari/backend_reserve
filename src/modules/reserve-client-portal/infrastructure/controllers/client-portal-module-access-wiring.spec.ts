@@ -19,6 +19,7 @@ import { AdminActivityLogController } from './admin-activity-log.controller';
 import { AdminAttributionSettingsController } from './admin-attribution-settings.controller';
 import { AdminBenchmarkController } from './admin-benchmark.controller';
 import { AdminBotConfigProposalController } from './admin-bot-config-proposal.controller';
+import { AdminBotIssuesController } from './admin-bot-issues.controller';
 import { AdminBotIntegrationConfigController } from './admin-bot-integration-config.controller';
 import { AdminContentPostController } from './admin-content-post.controller';
 import { AdminDigestController } from './admin-digest.controller';
@@ -51,6 +52,7 @@ const TENANT_KEYED_CONTROLLERS = [
   AdminAttributionSettingsController,
   AdminBotConfigProposalController,
   AdminBotIntegrationConfigController,
+  AdminBotIssuesController,
   AdminContentPostController,
   AdminMetricGoalController,
   AdminMilestoneController,

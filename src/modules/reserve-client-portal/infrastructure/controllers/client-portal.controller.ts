@@ -35,6 +35,14 @@ import { CreateBotConfigProposalDto } from '../../application/dtos/bot-config-pr
 import { InstagramOverviewService } from '../../application/services/instagram-overview.service';
 import { ContentPostService } from '../../application/services/content-post.service';
 import { ActivityLogService } from '../../application/services/activity-log.service';
+import { BotIssueService } from '../../application/services/bot-issue.service';
+import {
+  BotIssueDetailResponseDto,
+  BotIssueListQueryDto,
+  BotIssueListResponseDto,
+  BotIssueSummaryQueryDto,
+  BotIssueSummaryResponseDto,
+} from '../../application/dtos/bot-issue.dto';
 import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
 import { TenantGuard } from '../../../../shared/auth/guards/tenant.guard';
 import { ModuleAccessGuard } from '../../../../shared/auth/guards/module-access.guard';
@@ -74,6 +82,7 @@ export class ClientPortalController {
     private readonly instagramOverviewService: InstagramOverviewService,
     private readonly contentPostService: ContentPostService,
     private readonly activityLogService: ActivityLogService,
+    private readonly botIssueService: BotIssueService,
   ) {}
 
   @Get(':clientId/overview')
@@ -192,6 +201,25 @@ export class ClientPortalController {
     const fromDate = from ? new Date(from) : this.defaultFrom();
     const toDate = to ? new Date(to) : new Date();
     return this.funnelMetricsService.getMetrics(clientId, fromDate, toDate);
+  }
+
+  // `bot-issues/resumo` precisa vir antes de `bot-issues/:id`, senao "resumo" vira um id.
+  @Get(':clientId/bot-issues')
+  @ApiOkResponse({ type: BotIssueListResponseDto })
+  async listBotIssues(@Param('clientId') clientId: string, @Query() query: BotIssueListQueryDto) {
+    return this.botIssueService.list(clientId, query);
+  }
+
+  @Get(':clientId/bot-issues/resumo')
+  @ApiOkResponse({ type: BotIssueSummaryResponseDto })
+  async getBotIssuesSummary(@Param('clientId') clientId: string, @Query() query: BotIssueSummaryQueryDto) {
+    return this.botIssueService.summary(clientId, query);
+  }
+
+  @Get(':clientId/bot-issues/:id')
+  @ApiOkResponse({ type: BotIssueDetailResponseDto })
+  async getBotIssue(@Param('clientId') clientId: string, @Param('id') id: string) {
+    return this.botIssueService.detail(clientId, id);
   }
 
   @Get('my-clients')

@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import * as crypto from 'crypto';
 import { PrismaService } from '../../../../shared/database/prisma.service';
+import { Prisma } from '../../../../generated/prisma/client';
 
 const DEFAULT_RETENTION_DAYS = 365;
 
@@ -32,7 +33,7 @@ export class BotRetentionService {
   }
 
   async exportContact(tenantId: string, numeroContato: string) {
-    const [contact, messages, funnelEvents] = await Promise.all([
+    const [contact, messages, funnelEvents, issues] = await Promise.all([
       this.prisma.botContact.findUnique({
         where: { tenant_id_numero_contato: { tenant_id: tenantId, numero_contato: numeroContato } },
       }),
@@ -44,9 +45,13 @@ export class BotRetentionService {
         where: { tenant_id: tenantId, numero_contato: numeroContato },
         orderBy: { ocorrido_em: 'asc' },
       }),
+      this.prisma.botIssue.findMany({
+        where: { tenant_id: tenantId, numero_contato: numeroContato },
+        orderBy: { ocorrido_em: 'asc' },
+      }),
     ]);
 
-    return { contact, messages, funnelEvents };
+    return { contact, messages, funnelEvents, issues };
   }
 
   /**
@@ -73,6 +78,12 @@ export class BotRetentionService {
       this.prisma.funnelEvent.updateMany({
         where: { tenant_id: tenantId, numero_contato: numeroContato },
         data: { numero_contato: anonymized },
+      }),
+      // Erros do bot: tira o numero e o conteudo da conversa, mas mantem a
+      // linha para a contagem por codigo do relatorio.
+      this.prisma.botIssue.updateMany({
+        where: { tenant_id: tenantId, numero_contato: numeroContato },
+        data: { numero_contato: anonymized, mensagem_hospede: null, resposta_bot: null, contexto: Prisma.DbNull },
       }),
       this.prisma.botIngestionEvent.updateMany({
         // contrato v2 grava contact.phone; 'contato' fica para eventos antigos

@@ -19,6 +19,7 @@ import { AdminBotConfigProposalController } from './infrastructure/controllers/a
 import { AdminAttributionSettingsController } from './infrastructure/controllers/admin-attribution-settings.controller';
 import { BotEventIngestionController } from './infrastructure/controllers/bot-event-ingestion.controller';
 import { AdminWhatsAppFunnelController } from './infrastructure/controllers/admin-whatsapp-funnel.controller';
+import { AdminBotIssuesController } from './infrastructure/controllers/admin-bot-issues.controller';
 import { AdminContentPostController } from './infrastructure/controllers/admin-content-post.controller';
 import { AdminActivityLogController } from './infrastructure/controllers/admin-activity-log.controller';
 import { PdfExportController } from './infrastructure/controllers/pdf-export.controller';
@@ -66,6 +67,7 @@ import { PmsBookingWebhookController } from './infrastructure/controllers/pms-bo
 import { FunnelService } from './application/services/funnel.service';
 import { BotChannelHealthService } from './application/services/bot-channel-health.service';
 import { BotConversationService } from './application/services/bot-conversation.service';
+import { BotIssueService } from './application/services/bot-issue.service';
 import { FunnelMetricsService } from './application/services/funnel-metrics.service';
 import { HandoffSummaryService } from './application/services/handoff-summary.service';
 import { BotRetentionService } from './application/services/bot-retention.service';
@@ -161,6 +163,7 @@ import { HomeService } from './application/services/home.service';
     AdminAttributionSettingsController,
     BotEventIngestionController,
     AdminWhatsAppFunnelController,
+    AdminBotIssuesController,
     AdminWhatsAppContactController,
     AdminBotIntegrationConfigController,
     AdminContentPostController,
@@ -210,6 +213,7 @@ import { HomeService } from './application/services/home.service';
     FunnelService,
     BotChannelHealthService,
     BotConversationService,
+    BotIssueService,
     FunnelMetricsService,
     HandoffSummaryService,
     HomeService,
