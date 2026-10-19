@@ -77,6 +77,14 @@ describe('BotFeedbackService', () => {
       });
     });
 
+    it('periodo em data pura: from 00:00 e to ate o fim do dia em Brasilia', async () => {
+      await service.list('c1', { from: '2026-10-13', to: '2026-10-19' });
+      expect(prisma.botFeedback.findMany.mock.calls[0][0].where.ocorrido_em).toEqual({
+        gte: new Date('2026-10-13T03:00:00.000Z'),
+        lt: new Date('2026-10-20T03:00:00.000Z'),
+      });
+    });
+
     it('limita o limit a 200 e check_out nulo vira null', async () => {
       prisma.botFeedback.findMany.mockResolvedValue([fb({ check_out: null })]);
       const res = await service.list('c1', { limit: 9999 });

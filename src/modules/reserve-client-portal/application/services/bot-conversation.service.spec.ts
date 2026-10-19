@@ -69,6 +69,14 @@ describe('BotConversationService (contrato v2)', () => {
     expect(conversations[0]).toMatchObject({ tipoPublico: 'LEAD', origem: 'anuncio', sourceId: 'ad_123' });
   });
 
+  it('lista com to data pura inclui o dia inteiro em Brasilia', async () => {
+    await service.list('client_1', { from: '2026-10-19', to: '2026-10-19' } as any);
+    expect(prisma.botContact.findMany.mock.calls[0][0].where.last_message_at).toEqual({
+      gte: new Date('2026-10-19T03:00:00.000Z'),
+      lt: new Date('2026-10-20T03:00:00.000Z'),
+    });
+  });
+
   it('lista sem audience nao filtra por tipo_publico', async () => {
     await service.list('client_1', {} as any);
     expect(prisma.botContact.findMany.mock.calls[0][0].where).not.toHaveProperty('tipo_publico');

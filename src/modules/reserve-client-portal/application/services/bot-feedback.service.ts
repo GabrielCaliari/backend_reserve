@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../../shared/database/prisma.service';
+import { filtroPeriodo } from './period';
 import {
   BOT_FEEDBACK_LIST_DEFAULT_LIMIT,
   BOT_FEEDBACK_LIST_MAX_LIMIT,
@@ -38,13 +39,8 @@ export class BotFeedbackService {
   }
 
   private periodo(query: BotFeedbackSummaryQueryDto) {
-    if (!query.from && !query.to) return {};
-    return {
-      ocorrido_em: {
-        ...(query.from ? { gte: new Date(query.from) } : {}),
-        ...(query.to ? { lte: new Date(query.to) } : {}),
-      },
-    };
+    const ocorrido_em = filtroPeriodo(query.from, query.to);
+    return ocorrido_em ? { ocorrido_em } : {};
   }
 
   async list(clientId: string, query: BotFeedbackListQueryDto): Promise<BotFeedbackListResponseDto> {

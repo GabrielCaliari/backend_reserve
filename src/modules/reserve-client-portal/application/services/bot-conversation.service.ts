@@ -3,6 +3,7 @@ import { PrismaService } from '../../../../shared/database/prisma.service';
 import { DetailConversationQueryDto, ListConversationsQueryDto } from '../dtos/list-conversations-query.dto';
 import { EBotContactAudience, EFunnelStage } from '../../../../generated/prisma/enums';
 import { FUNNEL_ENTRY_STAGE } from '../../domain/enums/funnel-stage-groups';
+import { filtroPeriodo } from './period';
 
 const DETAIL_DEFAULT_LIMIT = 200;
 
@@ -15,6 +16,7 @@ export class BotConversationService {
     const tenantId = await this.resolveTenantId(clientId);
     if (!tenantId) return { conversations: [] };
 
+    const periodo = filtroPeriodo(query.from, query.to);
     const contacts = await this.prisma.botContact.findMany({
       where: {
         tenant_id: tenantId,
@@ -27,14 +29,7 @@ export class BotConversationService {
             }
           : {}),
         ...(query.audience ? { tipo_publico: query.audience as EBotContactAudience } : {}),
-        ...(query.from || query.to
-          ? {
-              last_message_at: {
-                ...(query.from ? { gte: new Date(query.from) } : {}),
-                ...(query.to ? { lte: new Date(query.to) } : {}),
-              },
-            }
-          : {}),
+        ...(periodo ? { last_message_at: periodo } : {}),
       },
       // Contato sem mensagem (last_message_at null) vai pro fim: no Postgres o
       // desc poe NULL primeiro e esses contatos ficariam no topo da caixa de entrada.

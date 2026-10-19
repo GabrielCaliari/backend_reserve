@@ -85,6 +85,19 @@ describe('BotIssueService', () => {
       expect(res).toEqual({ items: [itemEsperado], total: 1 });
     });
 
+    it('to data pura inclui o dia inteiro em Brasilia; from data pura comeca 00:00 -03:00', async () => {
+      await service.list('client_1', { from: '2026-10-13', to: '2026-10-19' });
+      expect(prisma.botIssue.findMany.mock.calls[0][0].where.ocorrido_em).toEqual({
+        gte: new Date('2026-10-13T03:00:00.000Z'),
+        lt: new Date('2026-10-20T03:00:00.000Z'),
+      });
+    });
+
+    it('resumo tambem trata to data pura como fim do dia', async () => {
+      await service.summary('client_1', { to: '2026-10-19' });
+      expect(prisma.botIssue.count.mock.calls[0][0].where.ocorrido_em).toEqual({ lt: new Date('2026-10-20T03:00:00.000Z') });
+    });
+
     it('sem filtros usa so o tenant, limite 50 e pagina 1', async () => {
       await service.list('client_1', {});
       expect(prisma.botIssue.findMany).toHaveBeenCalledWith({

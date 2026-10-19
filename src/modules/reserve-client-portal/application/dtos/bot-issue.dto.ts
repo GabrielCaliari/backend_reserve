@@ -18,12 +18,12 @@ export const BOT_ISSUE_LIST_MAX_LIMIT = 200;
 
 /** Periodo comum a lista e ao resumo (ISO, filtra por ocorrido_em). */
 export class BotIssueSummaryQueryDto {
-  @ApiPropertyOptional({ description: 'ISO: so erros com ocorrido_em a partir deste instante.' })
+  @ApiPropertyOptional({ description: 'Instante ISO (gte exato) ou data YYYY-MM-DD (00:00 desse dia em America/Sao_Paulo).' })
   @IsOptional()
   @IsISO8601()
   from?: string;
 
-  @ApiPropertyOptional({ description: 'ISO: so erros com ocorrido_em ate este instante.' })
+  @ApiPropertyOptional({ description: 'Instante ISO (lte exato) ou data YYYY-MM-DD (inclui o dia inteiro em America/Sao_Paulo).' })
   @IsOptional()
   @IsISO8601()
   to?: string;
