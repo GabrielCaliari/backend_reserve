@@ -1,0 +1,140 @@
+# Producao na VPS unica: Caddy (HTTPS) + API + Redis + n8n + Postgres do bot.
+# O banco do painel fica na Neon e o dashboard na Vercel (nao estao aqui).
+#
+# Uso (a partir da raiz do repo):
+#   docker compose -f deploy/docker-compose.prod.yml up -d --build
+# Arquivos de segredo (NAO versionados): deploy/.env.production e deploy/.env.bot
+#
+# Memoria (VPS de 8 GB): api 2.5g + n8n 1.5g + bot-postgres 0.75g + redis 0.3g + caddy 0.15g
+# = ~5.2g de teto, sobra ~2.8g para o sistema, build e picos.
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "5"
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      API_DOMAIN: ${API_DOMAIN:-api.reservemkt.com.br}
+      BOT_DOMAIN: ${BOT_DOMAIN:-bot.reservemkt.com.br}
+      API_PORT: ${API_PORT:-3000}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - api
+      - n8n
+    mem_limit: 150m
+    logging: *default-logging
+
+  api:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      target: runtime
+    image: reserve-api:prod
+    restart: unless-stopped
+    env_file: .env.production
+    environment:
+      NODE_ENV: production
+      NODE_OPTIONS: --max-old-space-size=1792
+    depends_on:
+      redis:
+        condition: service_healthy
+    mem_limit: 2560m
+    logging: *default-logging
+
+  # Usado so para migrations:
+  #   docker compose -f deploy/docker-compose.prod.yml --profile tools run --rm migrate
+  migrate:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      target: migrate
+    image: reserve-api-migrate:prod
+    profiles: ["tools"]
+    env_file: .env.production
+    mem_limit: 1g
+    logging: *default-logging
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    env_file: .env.production
+    # noeviction: filas do Bull nao podem perder chaves. A senha vem de REDIS_PASSWORD.
+    command:
+      - sh
+      - -c
+      - exec redis-server --requirepass "$$REDIS_PASSWORD" --appendonly yes --maxmemory 256mb --maxmemory-policy noeviction
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$$REDIS_PASSWORD\" --no-auth-warning ping | grep -q PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    mem_limit: 300m
+    logging: *default-logging
+
+  bot-postgres:
+    image: postgres:16
+    restart: unless-stopped
+    env_file: .env.bot
+    environment:
+      POSTGRES_USER: postgres
+    volumes:
+      - bot_pg_data:/var/lib/postgresql/data
+      - ./bot-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    mem_limit: 768m
+    logging: *default-logging
+
+  n8n:
+    # Versao fixa (a mesma do ambiente local). Para atualizar, troque a tag de proposito.
+    image: n8nio/n8n:2.39.5
+    restart: unless-stopped
+    env_file: .env.bot
+    depends_on:
+      bot-postgres:
+        condition: service_healthy
+    environment:
+      DB_TYPE: postgresdb
+      DB_POSTGRESDB_HOST: bot-postgres
+      DB_POSTGRESDB_DATABASE: n8n
+      DB_POSTGRESDB_USER: postgres
+      N8N_HOST: bot.reservemkt.com.br
+      N8N_PROTOCOL: https
+      N8N_PORT: "5678"
+      WEBHOOK_URL: https://bot.reservemkt.com.br/
+      N8N_EDITOR_BASE_URL: https://bot.reservemkt.com.br/
+      N8N_PROXY_HOPS: "1"
+      N8N_SECURE_COOKIE: "true"
+      N8N_RUNNERS_ENABLED: "true"
+      EXECUTIONS_DATA_PRUNE: "true"
+      EXECUTIONS_DATA_MAX_AGE: "168"
+      NODE_FUNCTION_ALLOW_BUILTIN: crypto
+      GENERIC_TIMEZONE: ${TZ:-America/Sao_Paulo}
+    volumes:
+      - n8n_data:/home/node/.n8n
+    mem_limit: 1536m
+    logging: *default-logging
+
+volumes:
+  caddy_data:
+  caddy_config:
+  redis_data:
+  bot_pg_data:
+  n8n_data:

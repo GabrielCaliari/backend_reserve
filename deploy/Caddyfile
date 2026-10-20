@@ -1,0 +1,32 @@
+# HTTPS automatico (Let's Encrypt). Os DNS de api. e bot. precisam apontar para esta VPS.
+# Dominios e porta vem das variaveis do servico caddy no docker-compose (com padroes abaixo).
+
+{$API_DOMAIN:api.reservemkt.com.br} {
+	encode zstd gzip
+
+	# Teto de seguranca do corpo da requisicao (ingest do bot com 250 eventos e uploads do CMS).
+	# A API aplica o limite fino por rota: 100kb padrao, 5mb no CMS/ingest.
+	request_body {
+		max_size 10MB
+	}
+
+	reverse_proxy api:{$API_PORT:3000} {
+		# uploads e PDF lentos: nao derruba a conexao cedo
+		transport http {
+			response_header_timeout 5m
+		}
+	}
+}
+
+{$BOT_DOMAIN:bot.reservemkt.com.br} {
+	encode zstd gzip
+
+	request_body {
+		max_size 25MB
+	}
+
+	# n8n usa websocket/SSE no editor; o reverse_proxy do Caddy ja cuida disso.
+	reverse_proxy n8n:5678 {
+		flush_interval -1
+	}
+}
