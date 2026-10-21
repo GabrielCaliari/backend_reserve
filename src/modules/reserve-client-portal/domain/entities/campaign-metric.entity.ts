@@ -4,6 +4,7 @@ export class CampaignMetricEntity {
   id: string;
   client_id: string;
   channel: ECampaignChannel;
+  campaign_id?: string | null;
   campaign_name: string;
   metric_date: Date;
   spend: number;

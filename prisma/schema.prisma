@@ -1937,6 +1937,7 @@ model HotelClient {
   ApiCredentials        HotelApiCredential[]
   DashboardSnapshots    DashboardSnapshot[]
   CampaignMetrics       CampaignMetric[]
+  AdMetrics             AdMetric[]
   SiteMetrics           SiteMetric[]
   OtaMonthlyData        OtaMonthlyData[]
   MonthlyReports        MonthlyReport[]
@@ -1957,7 +1958,9 @@ model HotelApiCredential {
   id                     String             @id @default(cuid()) @db.VarChar(25)
   client_id              String             @db.VarChar(25)
   platform               EPlatform
-  encrypted_token        String             @db.Text
+  // Nullable so para META_ADS: sem token proprio, a sync usa o system user
+  // global da Reserve (env META_SYSTEM_USER_TOKEN).
+  encrypted_token        String?            @db.Text
   refresh_token          String?            @db.Text
   token_expires_at       DateTime?
   last_sync_at           DateTime?
@@ -2011,6 +2014,9 @@ model CampaignMetric {
   id                 String           @id @default(cuid()) @db.VarChar(25)
   client_id          String           @db.VarChar(25)
   channel            ECampaignChannel
+  // ID da campanha na plataforma (hoje so o Meta preenche). O join com a
+  // atribuicao e por ID; o nome muda quando o hotel renomeia a campanha.
+  campaign_id        String?          @db.VarChar(100)
   campaign_name      String           @db.VarChar(255)
   metric_date        DateTime
   spend              Float            @default(0)
@@ -2025,7 +2031,37 @@ model CampaignMetric {
   HotelClient        HotelClient      @relation(fields: [client_id], references: [id])
 
   @@index([client_id, channel, metric_date])
+  @@index([client_id, campaign_id])
   @@map("campaign_metrics")
+}
+
+/// Gasto diario por anuncio do Meta Ads (insights level=ad). Cruza com
+/// atribuicao_conversa.ad_id e bot_reservas.source_id (o source_id do
+/// click-to-WhatsApp e o ID do anuncio). campaign_metrics e a soma destas
+/// linhas por campanha e dia.
+model AdMetric {
+  id            String      @id @default(cuid()) @db.VarChar(25)
+  client_id     String      @db.VarChar(25)
+  ad_id         String      @db.VarChar(100)
+  ad_name       String?     @db.VarChar(255)
+  adset_id      String?     @db.VarChar(100)
+  adset_name    String?     @db.VarChar(255)
+  campaign_id   String?     @db.VarChar(100)
+  campaign_name String?     @db.VarChar(255)
+  metric_date   DateTime // meia-noite UTC do dia, como em campaign_metrics
+  spend         Float       @default(0)
+  impressions   Int         @default(0)
+  clicks        Int         @default(0) // inline_link_clicks
+  reach         Int         @default(0)
+  conversations Int         @default(0) // messaging_conversation_started_7d
+  created_at    DateTime    @default(now())
+  updated_at    DateTime    @updatedAt
+  HotelClient   HotelClient @relation(fields: [client_id], references: [id])
+
+  @@unique([client_id, ad_id, metric_date])
+  @@index([client_id, metric_date])
+  @@index([client_id, campaign_id, metric_date])
+  @@map("ad_metrics")
 }
 
 model SiteMetric {

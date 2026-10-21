@@ -158,7 +158,7 @@ export class PrismaHotelClientRepository
         where: {
           client_id: data.client_id,
           channel: data.channel as any,
-          campaign_name: data.campaign_name,
+          ...(data.campaign_id ? { campaign_id: data.campaign_id } : { campaign_name: data.campaign_name }),
           metric_date: data.metric_date,
         },
       });
@@ -168,6 +168,7 @@ export class PrismaHotelClientRepository
         result = await this.prisma.campaignMetric.update({
           where: { id: existing.id },
           data: {
+            campaign_name: data.campaign_name,
             spend: data.spend,
             impressions: data.impressions,
             clicks: data.clicks,

@@ -10,11 +10,9 @@ import { SyncGa4DataUseCase } from './sync-ga4-data.use-case';
  * dia do onboarding como baseline"). Acao manual, disparada uma vez por
  * cliente no onboarding - nao e um cron.
  *
- * NOTE: MetaAdsProvider.fetchCampaignMetrics / Ga4Provider.fetchSiteMetrics
- * are stubs today (return []), so this currently imports nothing in
- * practice — but the range-parameter plumbing (this task's actual scope,
- * per the plan) is in place end-to-end for when those providers are wired to
- * the real APIs.
+ * NOTE: MetaAdsProvider.fetchAdMetrics calls the real insights API in
+ * one-month chunks (37 months is also Meta's own retention ceiling); Ga4Provider.fetchSiteMetrics
+ * is still a stub (returns []), so the GA4 half imports nothing yet.
  */
 @Injectable()
 export class ImportHistoricalBaselineUseCase {

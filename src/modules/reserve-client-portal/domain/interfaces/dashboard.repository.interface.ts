@@ -21,6 +21,8 @@ export interface IUpsertDashboardSnapshot {
 export interface IUpsertCampaignMetric {
   client_id: string;
   channel: ECampaignChannel;
+  /** ID da campanha na plataforma; quando vem, e a chave do upsert (o nome pode mudar). */
+  campaign_id?: string;
   campaign_name: string;
   metric_date: Date;
   spend?: number;

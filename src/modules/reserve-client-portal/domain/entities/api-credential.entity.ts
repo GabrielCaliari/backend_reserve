@@ -5,7 +5,7 @@ export class ApiCredentialEntity {
   id: string;
   client_id: string;
   platform: EPlatform;
-  encrypted_token: string;
+  encrypted_token: string | null;
   refresh_token?: string | null;
   token_expires_at?: Date | null;
   last_sync_at?: Date | null;

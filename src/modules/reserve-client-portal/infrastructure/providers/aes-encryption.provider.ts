@@ -45,7 +45,11 @@ export class AesEncryptionProvider {
   /**
    * Decrypts a base64-encoded string produced by `encrypt`.
    */
-  decrypt(encryptedData: string): string {
+  decrypt(encryptedData: string | null): string {
+    // encrypted_token e nullable (credencial META_ADS que usa o system user global).
+    if (!encryptedData) {
+      throw new Error('No encrypted token stored for this credential');
+    }
     const parts = encryptedData.split(':');
     if (parts.length !== 3) {
       throw new Error('Invalid encrypted data format');
