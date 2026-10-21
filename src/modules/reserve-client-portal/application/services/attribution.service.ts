@@ -67,10 +67,10 @@ export class AttributionService {
           numero_contato: input.numeroContato,
           ocorrido_em: input.ocorridoEm,
           fonte,
-          // Meta's referral payload only gives a generic ad/post source_id, not a
-          // distinct ad_id/adset_id/campaign_id triad. Stored as campaign_id since
-          // that is the join key Fase 2 Task 5's per-campaign rollup depends on;
-          // ad_id/adset_id stay null pending a richer ingestion payload.
+          // O source_id do referral click-to-WhatsApp e o ID do anuncio: vai em
+          // ad_id (cruza com ad_metrics -> campanha). Tambem fica em campaign_id
+          // porque o Nivel 2 (roiByCampaign) ainda agrupa por essa coluna.
+          ad_id: input.sourceId ?? null,
           campaign_id: input.sourceId ?? null,
           ctwa_clid: input.ctwaClid ?? null,
           link_code: input.linkCode ?? null,
