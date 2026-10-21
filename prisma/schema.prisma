@@ -560,6 +560,31 @@ model BotFeedback {
   @@map("bot_feedbacks")
 }
 
+/// Reserva confirmada pelo bot (reserva.confirmada do contrato v2). Fonte do
+/// ROI nivel 3: o telefone e o mesmo do contato (casa com atribuicao_conversa
+/// sem heuristica) e o anuncio de origem vem no snapshot do evento. Linha de
+/// agregado: o apagamento LGPD so anonimiza o numero, a purga nao apaga.
+model BotReservation {
+  id              String   @id @default(cuid()) @db.VarChar(25)
+  tenant_id       String   @db.VarChar(25)
+  numero_contato  String   @db.VarChar(20)
+  codigo          String?  @db.VarChar(20)
+  valor_cents     Int      @default(0)
+  // Snapshot de origem no momento da confirmacao
+  source_id       String?  @db.VarChar(100)
+  ctwa_clid       String?  @db.VarChar(255)
+  link_code       String?  @db.VarChar(20)
+  // Idempotencia da projecao do bot: event_id do ledger que gerou a linha
+  source_event_id String   @db.VarChar(100)
+  confirmado_em   DateTime
+  created_at      DateTime @default(now())
+
+  @@unique([tenant_id, source_event_id])
+  @@index([tenant_id, confirmado_em])
+  @@index([tenant_id, numero_contato])
+  @@map("bot_reservas")
+}
+
 
 model FollowupAttempt {
   id             String   @id @default(cuid()) @db.VarChar(25)
@@ -1948,6 +1973,10 @@ model HotelApiCredential {
   // required this field since the google-ads-api SDK needs a customer_id, not
   // just a token, to run a report query.
   google_ads_customer_id String?            @db.VarChar(20)
+  // Conta de anuncios do Meta (act_<id>) que o insights consulta (platform:
+  // META_ADS only). Mesmo motivo do google_ads_customer_id: o token sozinho
+  // nao diz de qual conta puxar o gasto.
+  meta_ad_account_id     String?            @db.VarChar(40)
   created_at             DateTime           @default(now())
   updated_at             DateTime           @updatedAt
   HotelClient            HotelClient        @relation(fields: [client_id], references: [id])

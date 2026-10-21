@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../../shared/database/prisma.service';
 import { PeriodComparisonService } from '../../../../shared/analytics/period-comparison.service';
 import { errorResponse, successResponse } from '../../../../shared/helpers';
+import { ECampaignChannel } from '../../domain/enums/campaign-channel.enum';
 
 /**
  * ROI Analysis — Níveis 1 e 2 (§3.9). Capstone service combining Fases 1-3's
@@ -22,7 +23,7 @@ export class RoiAnalysisService {
     try {
       const client = await this.prisma.hotelClient.findUnique({
         where: { id: clientId },
-        select: { tenant_id: true, booking_engine_type: true },
+        select: { tenant_id: true },
       });
       if (!client) return errorResponse('404:HOTEL_CLIENT_NOT_FOUND', 404);
       if (!client.tenant_id) {
@@ -94,20 +95,16 @@ export class RoiAnalysisService {
       };
 
       // §3.9's "regra inegociável": never compute/return an estimated revenue
-      // field without booking-engine integration. This service never adds a
-      // `revenue` key at all when MANUAL — Nível 3 (Fase 6 Task 2) is the only
-      // place a revenue field is ever introduced, gated the same way.
+      // field. Nível 3 is the only place a revenue field is ever introduced,
+      // and only from reservations the bot saw confirmed (bot_reservas).
 
       if (botConfig?.active) {
         payload.nivel2 = await this.buildNivel2(tenantId, from, to, spendNow, conversasNow);
-      }
 
-      // Nível 3 (Fase 6 Task 2) — gated the same way OverviewService.resolveMode
-      // gates 'conversion' mode: any non-MANUAL booking engine has real
-      // reservation data to attribute revenue against.
-      if (client.booking_engine_type !== 'MANUAL') {
+        // Nível 3 — a receita vem do reserva.confirmada do bot, entao o gate e
+        // o mesmo do Nível 2: sem bot nao ha conversa nem reserva para atribuir.
         const windowDays = attributionSettings?.window_days ?? 30;
-        payload.nivel3 = await this.buildNivel3(tenantId, from, to, spendNow, conversasNow, windowDays);
+        payload.nivel3 = await this.buildNivel3(clientId, tenantId, from, to, conversasNow, windowDays);
       }
 
       return successResponse(payload);
@@ -116,9 +113,14 @@ export class RoiAnalysisService {
     }
   }
 
-  private async sumSpend(clientId: string, from: Date, to: Date): Promise<number> {
+  private async sumSpend(
+    clientId: string,
+    from: Date,
+    to: Date,
+    channel?: ECampaignChannel,
+  ): Promise<number> {
     const agg = await this.prisma.campaignMetric.aggregate({
-      where: { client_id: clientId, metric_date: { gte: from, lte: to } },
+      where: { client_id: clientId, metric_date: { gte: from, lte: to }, ...(channel ? { channel } : {}) },
       _sum: { spend: true },
     });
     return agg._sum.spend ?? 0;
@@ -210,107 +212,95 @@ export class RoiAnalysisService {
   }
 
   /**
-   * Nível 3 (Fase 6 Task 2) — ROAS, ticket médio, taxa lead→reserva.
+   * Nível 3 — receita atribuída, ROAS, ticket médio, taxa lead→reserva.
    *
-   * Matching `HotelReservation.guest_phone` to `ConversationAttribution.
-   * numero_contato` by phone number is exactly the "real, non-trivial
-   * data-cleaning problem" the plan flags it as, not a one-line join:
-   * `guest_phone` comes from each booking engine's adapter
-   * (foco/omnibees/stays/generic — see `infrastructure/providers/adapters/
-   * *.adapter.ts`) completely unnormalized (verified: none of the four
-   * adapters touch the phone format at all), while `numero_contato` is
-   * whatever the bot/WhatsApp side sends (typically E.164-ish, with country
-   * code). `normalizeForMatch` + `findAttributionMatch` do a best-effort
-   * digits-only match with a suffix fallback (to tolerate a missing/extra
-   * country code on either side) rather than a strict equality join — this
-   * is a heuristic, not a guaranteed-correct match, and undercounts are
-   * expected whenever a booking engine stores a landline, a malformed
-   * number, or a number for a different guest than the one who chatted.
-   * **Flagged in the final report** — a real fix needs either normalizing
-   * `guest_phone` at ingestion time (per adapter) or a dedicated
-   * `HotelReservation.attributed_contact_id` link written by whoever
-   * processes the reservation, rather than a query-time guess.
+   * Fonte: bot_reservas (reserva.confirmada do bot). O telefone ali é o mesmo
+   * `numero_contato` da atribuicao_conversa (os dois vêm do bot), então o
+   * casamento é exato — o motor de reservas não serve porque o Canal C manda o
+   * contato criptografado. Uma reserva confirmada em [from, to] conta quando o
+   * contato teve uma conversa atribuída até `windowDays` antes da confirmação.
+   *
+   * ROAS usa só o gasto do Meta Ads contra a receita das reservas que vieram de
+   * anúncio (atribuição `anuncio` ou ctwa_clid/source_id no snapshot da
+   * reserva): o gasto do Google leva ao site, não ao WhatsApp.
    */
   private async buildNivel3(
+    clientId: string,
     tenantId: string,
     from: Date,
     to: Date,
-    spend: number,
     conversas: number,
     windowDays: number,
   ) {
-    const attributions = await this.prisma.conversationAttribution.findMany({
-      where: { tenant_id: tenantId, ocorrido_em: { gte: from, lte: to }, ultimo_toque: true },
-      select: { numero_contato: true, ocorrido_em: true },
-    });
+    const windowMs = windowDays * 24 * 60 * 60 * 1000;
+    const [reservations, adSpend] = await Promise.all([
+      this.prisma.botReservation.findMany({
+        where: { tenant_id: tenantId, confirmado_em: { gte: from, lte: to } },
+        select: {
+          numero_contato: true,
+          valor_cents: true,
+          confirmado_em: true,
+          source_id: true,
+          ctwa_clid: true,
+        },
+      }),
+      this.sumSpend(clientId, from, to, ECampaignChannel.META_ADS),
+    ]);
 
-    const zero = {
-      revenueAttributed: this.periodComparison.money(0),
-      roas: 0,
-      avgTicket: this.periodComparison.money(0),
-      leadToReservationRate: 0,
-    };
-    if (attributions.length === 0) return zero;
+    const contacts = [...new Set(reservations.map((r) => r.numero_contato))];
+    const attributions = contacts.length
+      ? await this.prisma.conversationAttribution.findMany({
+          where: {
+            tenant_id: tenantId,
+            numero_contato: { in: contacts },
+            ocorrido_em: { gte: new Date(from.getTime() - windowMs), lte: to },
+          },
+          select: { numero_contato: true, ocorrido_em: true, fonte: true },
+          orderBy: { ocorrido_em: 'desc' },
+        })
+      : [];
 
-    const attributionByContact = new Map<string, Date>();
+    const byContact = new Map<string, { ocorrido_em: Date; fonte: string }[]>();
     for (const a of attributions) {
-      attributionByContact.set(this.normalizeForMatch(a.numero_contato), a.ocorrido_em);
+      const list = byContact.get(a.numero_contato) ?? [];
+      list.push(a);
+      byContact.set(a.numero_contato, list);
     }
 
-    const reservationSearchTo = new Date(to.getTime() + windowDays * 24 * 60 * 60 * 1000);
-    const reservations = await this.prisma.hotelReservation.findMany({
-      where: {
-        tenant_id: tenantId,
-        booking_date: { gte: from, lte: reservationSearchTo },
-        guest_phone: { not: null },
-      },
-      select: { guest_phone: true, total_amount: true, booking_date: true },
-    });
-
-    let revenueAttributed = 0;
+    let revenueCents = 0;
+    let revenueFromAdsCents = 0;
     let matchedCount = 0;
-    for (const reservation of reservations) {
-      const normalizedGuestPhone = this.normalizeForMatch(reservation.guest_phone as string);
-      const attributedAt = this.findAttributionMatch(attributionByContact, normalizedGuestPhone);
-      if (!attributedAt) continue;
+    for (const r of reservations) {
+      // Último toque antes da confirmação, dentro da janela (lista já vem desc).
+      const touch = byContact
+        .get(r.numero_contato)
+        ?.find(
+          (a) =>
+            a.ocorrido_em <= r.confirmado_em &&
+            r.confirmado_em.getTime() - a.ocorrido_em.getTime() <= windowMs,
+        );
+      if (!touch) continue;
 
-      const windowEnd = new Date(attributedAt.getTime() + windowDays * 24 * 60 * 60 * 1000);
-      if (reservation.booking_date >= attributedAt && reservation.booking_date <= windowEnd) {
-        revenueAttributed += reservation.total_amount;
-        matchedCount += 1;
+      matchedCount += 1;
+      revenueCents += r.valor_cents;
+      if (touch.fonte === 'anuncio' || r.ctwa_clid || r.source_id) {
+        revenueFromAdsCents += r.valor_cents;
       }
     }
 
+    // Money do contrato e em centavos; o gasto em campaign_metrics e em reais.
+    const adSpendCents = adSpend * 100;
+
     return {
-      revenueAttributed: this.periodComparison.money(revenueAttributed),
-      roas: this.periodComparison.round2(this.periodComparison.ratio(revenueAttributed, spend)),
-      avgTicket: this.periodComparison.money(
-        this.periodComparison.ratio(revenueAttributed, matchedCount),
-      ),
+      revenueAttributed: this.periodComparison.money(revenueCents),
+      roas: this.periodComparison.round2(this.periodComparison.ratio(revenueFromAdsCents, adSpendCents)),
+      avgTicket: this.periodComparison.money(this.periodComparison.ratio(revenueCents, matchedCount)),
       leadToReservationRate: this.periodComparison.round1(
         this.periodComparison.pct(matchedCount, conversas),
       ),
+      revenueFromAds: this.periodComparison.money(revenueFromAdsCents),
+      adSpend: this.periodComparison.money(adSpendCents),
+      reservations: matchedCount,
     };
-  }
-
-  private normalizeForMatch(phone: string): string {
-    return phone.replace(/\D/g, '');
-  }
-
-  /** Exact digits match first; falls back to a suffix match (>=8 digits) to
-   * tolerate a missing/extra country code on either side. */
-  private findAttributionMatch(
-    byContact: Map<string, Date>,
-    normalizedPhone: string,
-  ): Date | undefined {
-    const exact = byContact.get(normalizedPhone);
-    if (exact) return exact;
-    if (normalizedPhone.length < 8) return undefined;
-
-    for (const [key, date] of byContact) {
-      if (key.length < 8) continue;
-      if (key.endsWith(normalizedPhone) || normalizedPhone.endsWith(key)) return date;
-    }
-    return undefined;
   }
 }

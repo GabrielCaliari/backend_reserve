@@ -33,7 +33,7 @@ export class BotRetentionService {
   }
 
   async exportContact(tenantId: string, numeroContato: string) {
-    const [contact, messages, funnelEvents, issues, feedbacks, motorEvents] = await Promise.all([
+    const [contact, messages, funnelEvents, issues, feedbacks, motorEvents, reservations] = await Promise.all([
       this.prisma.botContact.findUnique({
         where: { tenant_id_numero_contato: { tenant_id: tenantId, numero_contato: numeroContato } },
       }),
@@ -58,9 +58,13 @@ export class BotRetentionService {
         where: { tenant_id: tenantId, ...this.motorEventDoContato(numeroContato) },
         orderBy: { created_at: 'asc' },
       }),
+      this.prisma.botReservation.findMany({
+        where: { tenant_id: tenantId, numero_contato: numeroContato },
+        orderBy: { confirmado_em: 'asc' },
+      }),
     ]);
 
-    return { contact, messages, funnelEvents, issues, feedbacks, motorEvents };
+    return { contact, messages, funnelEvents, issues, feedbacks, motorEvents, reservations };
   }
 
   /**
@@ -83,6 +87,12 @@ export class BotRetentionService {
       this.prisma.conversationAttribution.updateMany({
         where: { tenant_id: tenantId, numero_contato: numeroContato },
         data: { numero_contato: anonymized },
+      }),
+      // Reserva e agregado do ROI: mesmo hash da atribuicao, entao o casamento
+      // reserva -> conversa continua valendo depois do apagamento.
+      this.prisma.botReservation.updateMany({
+        where: { tenant_id: tenantId, numero_contato: numeroContato },
+        data: { numero_contato: anonymized, ctwa_clid: null },
       }),
       this.prisma.funnelEvent.updateMany({
         where: { tenant_id: tenantId, numero_contato: numeroContato },

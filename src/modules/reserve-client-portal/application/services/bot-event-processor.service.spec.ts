@@ -32,6 +32,7 @@ describe('BotEventProcessorService (contrato v2)', () => {
       },
       botIssue: { create: jest.fn().mockResolvedValue({}) },
       botFeedback: { create: jest.fn().mockResolvedValue({}) },
+      botReservation: { create: jest.fn().mockResolvedValue({}) },
       funnelEvent: { create: jest.fn().mockResolvedValue({}) },
       botMessage: { create: jest.fn().mockResolvedValue({}) },
       followupAttempt: { create: jest.fn().mockResolvedValue({}), updateMany: jest.fn().mockResolvedValue({ count: 0 }) },
@@ -213,6 +214,35 @@ describe('BotEventProcessorService (contrato v2)', () => {
       }));
       expect(prisma.botLead.upsert).toHaveBeenCalledWith(
         expect.objectContaining({ update: { valor_confirmado_cents: 104900, recuperar: false } }),
+      );
+    });
+
+    it('reserva.confirmada vira uma linha em bot_reservas com o anuncio de origem', async () => {
+      await service.process(T, evento('reserva.confirmada', {
+        contact: contact({ ctwa_clid: 'clid_9' }),
+        stage: 'RESERVA_CONFIRMADA', data: { codigo: 'M57', valor_cents: 104900 },
+      }));
+      expect(prisma.botReservation.create).toHaveBeenCalledWith({
+        data: {
+          tenant_id: T, numero_contato: PHONE, codigo: 'M57', valor_cents: 104900,
+          source_id: 'ad_123', ctwa_clid: 'clid_9', link_code: null,
+          source_event_id: 'e1', confirmado_em: new Date(AT),
+        },
+      });
+    });
+
+    it('reserva.confirmada sem valor no data usa o do hold', async () => {
+      await service.process(T, evento('reserva.confirmada', { hold: { code: 'H1', amount_cents: 50000 } }));
+      expect(prisma.botReservation.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({ codigo: 'H1', valor_cents: 50000 }),
+      });
+    });
+
+    it('reserva.confirmada reprocessada (P2002) nao duplica e ainda atualiza o lead', async () => {
+      prisma.botReservation.create.mockRejectedValueOnce({ code: 'P2002' });
+      await service.process(T, evento('reserva.confirmada', { data: { valor_cents: 100 } }));
+      expect(prisma.botLead.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({ update: { valor_confirmado_cents: 100, recuperar: false } }),
       );
     });
 

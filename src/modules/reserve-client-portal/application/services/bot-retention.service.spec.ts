@@ -19,6 +19,7 @@ describe('BotRetentionService.eraseContact', () => {
       botIssue: { updateMany: jest.fn(op) },
       botFeedback: { deleteMany: jest.fn(op) },
       motorBotEvent: { deleteMany: jest.fn(op) },
+      botReservation: { updateMany: jest.fn(op) },
     };
     service = new BotRetentionService(prisma);
   });
@@ -72,6 +73,7 @@ describe('BotRetentionService: erros do bot (bot_issues)', () => {
       botIssue: { updateMany: jest.fn(op), findMany: jest.fn().mockResolvedValue([{ id: 'iss_1' }]) },
       botFeedback: { deleteMany: jest.fn(op), findMany: jest.fn().mockResolvedValue([{ id: 'fb_1' }]) },
       motorBotEvent: { deleteMany: jest.fn(op), findMany: jest.fn().mockResolvedValue([{ id: 'mbe_1' }]) },
+      botReservation: { updateMany: jest.fn(op), findMany: jest.fn().mockResolvedValue([{ id: 'res_1' }]) },
     };
     service = new BotRetentionService(prisma);
   });
@@ -118,6 +120,20 @@ describe('BotRetentionService: erros do bot (bot_issues)', () => {
     expect(prisma.motorBotEvent.deleteMany).toHaveBeenCalledWith({
       where: { tenant_id: 't1', payload: { path: ['contato_whatsapp'], equals: '5535999' } },
     });
+  });
+
+  it('erase anonimiza as reservas com o mesmo hash da atribuicao', async () => {
+    await service.eraseContact('t1', '5535999');
+    const hash = prisma.conversationAttribution.updateMany.mock.calls[0][0].data.numero_contato;
+    expect(prisma.botReservation.updateMany).toHaveBeenCalledWith({
+      where: { tenant_id: 't1', numero_contato: '5535999' },
+      data: { numero_contato: hash, ctwa_clid: null },
+    });
+  });
+
+  it('export inclui as reservas do contato', async () => {
+    const res = await service.exportContact('t1', '5535999');
+    expect(res.reservations).toEqual([{ id: 'res_1' }]);
   });
 
   it('export inclui os eventos do motor do contato', async () => {

@@ -144,7 +144,7 @@ export class BotEventProcessorService {
       case 'transferencia':
         return this.handleTransferencia(tenantId, phone, data, occurredAt, event.event_id);
       case 'reserva.confirmada':
-        return this.handleReservaConfirmada(tenantId, phone, data, event.hold as Json | null);
+        return this.handleReservaConfirmada(tenantId, snapshot, data, event.hold as Json | null, occurredAt, event.event_id);
       case 'perdido':
         return this.patchLead(tenantId, phone, { motivo_perda: texto(data.motivo, MOTIVO_MAX_LENGTH) });
       case 'followup.enviado':
@@ -430,15 +430,38 @@ export class BotEventProcessorService {
     });
   }
 
+  /**
+   * O lead guarda so o ultimo valor (card do funil); cada confirmacao vira uma
+   * linha em bot_reservas com o anuncio de origem, fonte do ROI nivel 3.
+   */
   private async handleReservaConfirmada(
     tenantId: string,
-    phone: string,
+    snapshot: ContactSnapshot,
     data: Json,
     hold: Json | null,
+    occurredAt: Date,
+    eventId: string,
   ): Promise<void> {
     const valor = Number(data.valor_cents ?? hold?.amount_cents);
-    await this.patchLead(tenantId, phone, {
-      valor_confirmado_cents: Number.isFinite(valor) ? Math.round(valor) : 0,
+    const valorCents = Number.isFinite(valor) ? Math.round(valor) : 0;
+
+    await this.insertOnce(eventId, () =>
+      this.prisma.botReservation.create({
+        data: {
+          tenant_id: tenantId,
+          numero_contato: snapshot.phone,
+          codigo: texto(data.codigo ?? hold?.code, 20),
+          valor_cents: valorCents,
+          source_id: snapshot.sourceId,
+          ctwa_clid: snapshot.ctwaClid,
+          link_code: snapshot.linkCode,
+          source_event_id: eventId,
+          confirmado_em: occurredAt,
+        },
+      }),
+    );
+    await this.patchLead(tenantId, snapshot.phone, {
+      valor_confirmado_cents: valorCents,
       recuperar: false,
     });
   }
