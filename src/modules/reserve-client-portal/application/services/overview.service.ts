@@ -130,7 +130,9 @@ export class OverviewService {
   ) {
     const roasNow = this.periodComparison.ratio(current.attributedRevenue, current.spend);
     const roasPrev = this.periodComparison.ratio(previous.attributedRevenue, previous.spend);
-    const costPerBooking = this.periodComparison.ratio(current.spend, current.campaignConversions);
+    // Custo por RESERVA: as conversions do Meta sao conversas iniciadas, nao
+    // reservas; o denominador e o que o bot confirmou vindo de anuncio.
+    const costPerBooking = this.periodComparison.ratio(current.spend, current.adBookings);
 
     return {
       spend: this.periodComparison.money(current.spend),

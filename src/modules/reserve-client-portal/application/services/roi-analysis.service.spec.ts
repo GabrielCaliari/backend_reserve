@@ -27,10 +27,37 @@ describe('RoiAnalysisService — Nível 3 (bot_reservas)', () => {
     service = new RoiAnalysisService(prisma, new PeriodComparisonService());
   });
 
-  /** buildRoiByCampaign (nivel2) chama findMany antes; o nivel3 e a 2a chamada. */
+  /** O nivel2 chama findMany duas vezes antes (safra da qualificacao e
+   * buildRoiByCampaign); o nivel3 e a 3a chamada. */
   function attributionsForNivel3(rows: unknown[]) {
-    prisma.conversationAttribution.findMany.mockResolvedValueOnce([]).mockResolvedValueOnce(rows);
+    prisma.conversationAttribution.findMany
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce(rows);
   }
+
+  it('devolve gasto e custo por conversa em centavos, como o resto do dinheiro do contrato', async () => {
+    prisma.botIntegrationConfig.findUnique.mockResolvedValue(null);
+    const res: any = await service.getRoi('c1', FROM, TO);
+    // campaign_metrics guarda 800 reais; 10 conversas
+    expect(res.data.nivel1.spend.value).toBe(80000);
+    expect(res.data.nivel1.costPerConversation.value).toBe(8000);
+  });
+
+  it('taxa de qualificacao conta contatos distintos da safra do periodo', async () => {
+    prisma.conversationAttribution.findMany
+      .mockResolvedValueOnce([{ numero_contato: 'a' }, { numero_contato: 'b' }])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([]);
+    prisma.funnelEvent.findMany.mockResolvedValueOnce([{ numero_contato: 'a' }]);
+    prisma.botReservation.findMany.mockResolvedValue([]);
+
+    const res: any = await service.getRoi('c1', FROM, TO);
+    expect(prisma.funnelEvent.findMany.mock.calls[0][0].where.numero_contato).toEqual({ in: ['a', 'b'] });
+    // 1 qualificado / 10 conversas; a taxa nunca soma eventos soltos de fora da safra
+    expect(res.data.nivel2.qualificationRate).toBe(10);
+    expect(res.data.nivel2.costPerQualifiedLead).toBe(80000);
+  });
 
   it('casa a reserva com a conversa do mesmo numero dentro da janela e calcula ROAS so com o Meta', async () => {
     const confirmada = new Date('2026-10-10T12:00:00.000Z');

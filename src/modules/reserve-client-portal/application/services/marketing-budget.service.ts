@@ -58,8 +58,13 @@ export class MarketingBudgetService {
   }
 
   async getComparison(clientId: string, referenceMonth: string) {
+    const monthDate = new Date(referenceMonth);
+    // Sem `month` (ou com data invalida) o Prisma recebia Invalid Date e a rota
+    // respondia 500; e parametro obrigatorio do cliente, entao 400.
+    if (!referenceMonth || Number.isNaN(monthDate.getTime())) {
+      return errorResponse('400:MARKETING_BUDGET_MONTH_REQUIRED', 400);
+    }
     try {
-      const monthDate = new Date(referenceMonth);
       const monthStart = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1);
       const monthEnd = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0, 23, 59, 59);
 

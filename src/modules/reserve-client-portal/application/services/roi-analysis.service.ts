@@ -99,7 +99,7 @@ export class RoiAnalysisService {
       // and only from reservations the bot saw confirmed (bot_reservas).
 
       if (botConfig?.active) {
-        payload.nivel2 = await this.buildNivel2(tenantId, from, to, spendNow, conversasNow);
+        payload.nivel2 = await this.buildNivel2(clientId, tenantId, from, to, spendNow, conversasNow);
 
         // Nível 3 — a receita vem do reserva.confirmada do bot, entao o gate e
         // o mesmo do Nível 2: sem bot nao ha conversa nem reserva para atribuir.
@@ -113,6 +113,11 @@ export class RoiAnalysisService {
     }
   }
 
+  /**
+   * Gasto em CENTAVOS. campaign_metrics guarda reais, mas todo dinheiro do
+   * contrato do painel e em centavos (o front formata dividindo por 100) —
+   * converter aqui evita que spend e custos saiam 100x menores na tela.
+   */
   private async sumSpend(
     clientId: string,
     from: Date,
@@ -123,10 +128,11 @@ export class RoiAnalysisService {
       where: { client_id: clientId, metric_date: { gte: from, lte: to }, ...(channel ? { channel } : {}) },
       _sum: { spend: true },
     });
-    return agg._sum.spend ?? 0;
+    return Math.round((agg._sum.spend ?? 0) * 100);
   }
 
   private async buildNivel2(
+    clientId: string,
     tenantId: string,
     from: Date,
     to: Date,
@@ -142,20 +148,17 @@ export class RoiAnalysisService {
       // deste painel, o que e decisao do dono, nao consequencia do rename.
       // Com 9 etapas o buraco fica maior (da para pular QUALIFICADO indo de
       // PUBLICO_IDENTIFICADO direto para ACOMODACAO_APRESENTADA).
-      this.prisma.funnelEvent.count({
-        where: {
-          tenant_id: tenantId,
-          para_estagio: 'QUALIFICADO',
-          ocorrido_em: { gte: from, lte: to },
-        },
-      }),
+      // Contatos distintos, e so os que abriram conversa no periodo: contar
+      // eventos soltos deixava a taxa passar de 100% (quem conversou no mes
+      // anterior e qualificou neste entrava no numerador e nao no denominador).
+      this.countQualifiedFromCohort(tenantId, from, to),
       // Task 5 (Fase 3)'s ambiguity resolution: "prontos para fechar" is a
       // same-stage annotation event carrying motivo: 'TRANSFERIR', not a
       // distinct EFunnelStage value.
       this.prisma.funnelEvent.count({
         where: { tenant_id: tenantId, motivo: 'TRANSFERIR', ocorrido_em: { gte: from, lte: to } },
       }),
-      this.buildRoiByCampaign(tenantId, from, to),
+      this.buildRoiByCampaign(clientId, tenantId, from, to),
     ]);
 
     return {
@@ -172,8 +175,28 @@ export class RoiAnalysisService {
     };
   }
 
+  private async countQualifiedFromCohort(tenantId: string, from: Date, to: Date): Promise<number> {
+    const cohort = await this.prisma.conversationAttribution.findMany({
+      where: { tenant_id: tenantId, ocorrido_em: { gte: from, lte: to } },
+      select: { numero_contato: true },
+      distinct: ['numero_contato'],
+    });
+    if (cohort.length === 0) return 0;
+    const qualified = await this.prisma.funnelEvent.findMany({
+      where: {
+        tenant_id: tenantId,
+        para_estagio: 'QUALIFICADO',
+        ocorrido_em: { gte: from, lte: to },
+        numero_contato: { in: cohort.map((c) => c.numero_contato) },
+      },
+      select: { numero_contato: true },
+      distinct: ['numero_contato'],
+    });
+    return qualified.length;
+  }
+
   /** Per-campaign conversas/qualificados, joined through each contact's last-touch attribution. */
-  private async buildRoiByCampaign(tenantId: string, from: Date, to: Date) {
+  private async buildRoiByCampaign(clientId: string, tenantId: string, from: Date, to: Date) {
     const attributions = await this.prisma.conversationAttribution.findMany({
       where: {
         tenant_id: tenantId,
@@ -208,7 +231,22 @@ export class RoiAnalysisService {
       byCampaign.set(key, entry);
     }
 
-    return [...byCampaign.entries()].map(([campaignId, v]) => ({ campaignId, ...v }));
+    // A atribuicao guarda o ad_id do Meta em campaign_id; o nome vem do ad_metrics
+    // (anuncio e campanha) para a tabela nao mostrar so o numero.
+    const names = await this.prisma.adMetric.findMany({
+      where: { client_id: clientId, ad_id: { in: [...byCampaign.keys()] } },
+      select: { ad_id: true, ad_name: true, campaign_name: true },
+      distinct: ['ad_id'],
+      orderBy: [{ ad_id: 'asc' }, { metric_date: 'desc' }],
+    });
+    const nameById = new Map(names.map((n) => [n.ad_id, n]));
+
+    return [...byCampaign.entries()].map(([campaignId, v]) => ({
+      campaignId,
+      adName: nameById.get(campaignId)?.ad_name ?? null,
+      campaignName: nameById.get(campaignId)?.campaign_name ?? null,
+      ...v,
+    }));
   }
 
   /**
@@ -288,8 +326,7 @@ export class RoiAnalysisService {
       }
     }
 
-    // Money do contrato e em centavos; o gasto em campaign_metrics e em reais.
-    const adSpendCents = adSpend * 100;
+    const adSpendCents = adSpend;
 
     return {
       revenueAttributed: this.periodComparison.money(revenueCents),

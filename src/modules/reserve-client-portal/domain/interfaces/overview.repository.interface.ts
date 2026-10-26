@@ -15,11 +15,14 @@ export interface IOverviewPeriodTotals {
   otaCommissionPaid: number;
   occupancyAvg: number; // 0..1
   siteVisitors: number;
-  // From CampaignMetric
+  // From CampaignMetric, em centavos (a tabela guarda reais; o repositorio converte)
   spend: number;
+  // CampaignMetric.revenue_attributed + reservas do bot vindas de anuncio, em centavos
   attributedRevenue: number;
   campaignConversions: number;
   campaignClicks: number;
+  // Reservas confirmadas pelo bot que vieram de anuncio
+  adBookings: number;
   // From SiteMetric
   organicVisitors: number;
   paidVisitors: number;

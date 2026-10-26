@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, UseFilters, UseGuards } from '@nestjs/common';
 import {
   ApiTags,
   ApiBearerAuth,
@@ -17,6 +17,7 @@ import { PermissionsGuard } from '../../../../shared/auth/guards/permissions.gua
 import { RequirePermissions } from '../../../../shared/auth/decorators/require-permissions.decorator';
 import { CurrentAdmin, CurrentAdminPayload } from '../../../../shared/auth/decorators/current-admin.decorator';
 import { SettingsService } from '../../application/services/settings.service';
+import { SettingsErrorsFilter } from '../filters/settings-errors.filter';
 import { UpdateModuleSettingsDto } from '../../application/dtos/update-module-settings.dto';
 import { SettingDescriptorResponseDto } from '../../application/dtos/settings-response.dto';
 
@@ -32,6 +33,7 @@ const MODULE_SETTINGS_SCHEMA = {
 @ApiTags('Tenant Settings')
 @ApiBearerAuth()
 @ApiHeader({ name: 'x-tenant-id', required: true, description: 'Tenant ID' })
+@UseFilters(SettingsErrorsFilter)
 @UseGuards(AdminJwtGuard, TenantGuard, PermissionsGuard)
 @ApiExtraModels(SettingDescriptorResponseDto)
 @Controller()

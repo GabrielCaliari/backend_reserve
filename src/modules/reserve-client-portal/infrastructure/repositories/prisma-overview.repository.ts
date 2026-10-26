@@ -10,6 +10,9 @@ import {
   IOverviewTimeseriesPoint,
 } from '../../domain/interfaces/overview.repository.interface';
 
+/** campaign_metrics guarda reais; o contrato do painel e em centavos. */
+const reaisToCents = (reais: number | null | undefined) => Math.round((reais ?? 0) * 100);
+
 /**
  * Read-only aggregation repository backing GET /hotel-portal/:clientId/overview.
  * Every query is zero-safe: missing rows yield 0, never null/undefined.
@@ -30,13 +33,39 @@ export class PrismaOverviewRepository implements IOverviewRepository {
     }
   }
 
+  /**
+   * Reservas que o bot confirmou e que vieram de anuncio (ad_id ou ctwa_clid no
+   * snapshot da reserva). E a receita atribuida real: o Meta nao sabe do Pix.
+   */
+  private async sumBotAdReservations(
+    clientId: string,
+    from: Date,
+    to: Date,
+  ): Promise<{ valorCents: number; count: number }> {
+    const client = await this.prisma.hotelClient.findUnique({
+      where: { id: clientId },
+      select: { tenant_id: true },
+    });
+    if (!client?.tenant_id) return { valorCents: 0, count: 0 };
+    const agg = await this.prisma.botReservation.aggregate({
+      where: {
+        tenant_id: client.tenant_id,
+        confirmado_em: { gte: from, lte: to },
+        OR: [{ source_id: { not: null } }, { ctwa_clid: { not: null } }],
+      },
+      _sum: { valor_cents: true },
+      _count: { _all: true },
+    });
+    return { valorCents: agg._sum.valor_cents ?? 0, count: agg._count._all };
+  }
+
   async aggregatePeriod(
     clientId: string,
     from: Date,
     to: Date,
   ): Promise<IOverviewPeriodTotals> {
     try {
-      const [snapshots, campaigns, site] = await Promise.all([
+      const [snapshots, campaigns, site, botAds] = await Promise.all([
         this.prisma.dashboardSnapshot.aggregate({
           where: { client_id: clientId, snapshot_date: { gte: from, lte: to } },
           _sum: {
@@ -67,6 +96,7 @@ export class PrismaOverviewRepository implements IOverviewRepository {
             social_visitors: true,
           },
         }),
+        this.sumBotAdReservations(clientId, from, to),
       ]);
 
       return {
@@ -77,9 +107,10 @@ export class PrismaOverviewRepository implements IOverviewRepository {
         otaCommissionPaid: snapshots._sum.ota_commission_paid ?? 0,
         occupancyAvg: snapshots._avg.occupancy_rate ?? 0,
         siteVisitors: snapshots._sum.site_visitors ?? 0,
-        spend: campaigns._sum.spend ?? 0,
-        attributedRevenue: campaigns._sum.revenue_attributed ?? 0,
+        spend: reaisToCents(campaigns._sum.spend),
+        attributedRevenue: reaisToCents(campaigns._sum.revenue_attributed) + botAds.valorCents,
         campaignConversions: campaigns._sum.conversions ?? 0,
+        adBookings: botAds.count,
         campaignClicks: campaigns._sum.clicks ?? 0,
         organicVisitors: site._sum.organic_visitors ?? 0,
         paidVisitors: site._sum.paid_visitors ?? 0,
@@ -97,16 +128,22 @@ export class PrismaOverviewRepository implements IOverviewRepository {
     to: Date,
   ): Promise<IOverviewChannelTotals[]> {
     try {
-      const groups = await this.prisma.campaignMetric.groupBy({
-        by: ['channel'],
-        where: { client_id: clientId, metric_date: { gte: from, lte: to } },
-        _sum: { spend: true, revenue_attributed: true, conversions: true },
-      });
+      const [groups, botAds] = await Promise.all([
+        this.prisma.campaignMetric.groupBy({
+          by: ['channel'],
+          where: { client_id: clientId, metric_date: { gte: from, lte: to } },
+          _sum: { spend: true, revenue_attributed: true, conversions: true },
+        }),
+        this.sumBotAdReservations(clientId, from, to),
+      ]);
 
       return groups.map((g) => ({
         channel: String(g.channel),
-        spend: g._sum.spend ?? 0,
-        attributedRevenue: g._sum.revenue_attributed ?? 0,
+        spend: reaisToCents(g._sum.spend),
+        // Reserva do bot vinda de anuncio e click-to-WhatsApp do Meta.
+        attributedRevenue:
+          reaisToCents(g._sum.revenue_attributed) +
+          (String(g.channel) === 'META_ADS' ? botAds.valorCents : 0),
         conversions: g._sum.conversions ?? 0,
       }));
     } catch (error) {
@@ -240,7 +277,7 @@ export class PrismaOverviewRepository implements IOverviewRepository {
           otaRevenue: 0,
           spend: 0,
         };
-        point.spend += c._sum.spend ?? 0;
+        point.spend += reaisToCents(c._sum.spend);
         points.set(key, point);
       }
 

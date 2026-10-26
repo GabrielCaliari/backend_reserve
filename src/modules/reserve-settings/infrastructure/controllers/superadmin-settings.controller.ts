@@ -1,10 +1,11 @@
-import { Body, Controller, Get, Param, Patch, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, UseFilters, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiParam, ApiOkResponse, ApiBadRequestResponse } from '@nestjs/swagger';
 import { AdminJwtGuard } from '../../../../shared/auth/guards/admin-jwt.guard';
 import { PermissionsGuard } from '../../../../shared/auth/guards/permissions.guard';
 import { RequirePermissions } from '../../../../shared/auth/decorators/require-permissions.decorator';
 import { CurrentAdmin, CurrentAdminPayload } from '../../../../shared/auth/decorators/current-admin.decorator';
 import { SettingsService } from '../../application/services/settings.service';
+import { SettingsErrorsFilter } from '../filters/settings-errors.filter';
 import { UpdateModuleSettingsDto } from '../../application/dtos/update-module-settings.dto';
 
 const MODULE_SETTINGS_SCHEMA = {
@@ -19,6 +20,7 @@ const MODULE_SETTINGS_SCHEMA = {
 // Platform-level: superadmin addresses any tenant by route param — deliberately NO TenantGuard.
 @ApiTags('Superadmin Settings')
 @ApiBearerAuth()
+@UseFilters(SettingsErrorsFilter)
 @UseGuards(AdminJwtGuard, PermissionsGuard)
 @RequirePermissions('settings.modules.manage')
 @Controller('tenants/:tenantId')
