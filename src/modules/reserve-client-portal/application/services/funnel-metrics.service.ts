@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../../shared/database/prisma.service';
 import { PeriodComparisonService } from '../../../../shared/analytics/period-comparison.service';
+import { filtroPeriodo } from './period';
 import { EBotMessageRole } from '../../../../generated/prisma/enums';
 import {
   FUNNEL_LOST_STAGE,
@@ -8,7 +9,9 @@ import {
   QUALIFIED_OR_BEYOND_STAGES,
 } from '../../domain/enums/funnel-stage-groups';
 
-const LEADS_PER_STAGE_CAP = 50;
+/** Cards por coluna: 20 por padrao (cabe na tela); o painel pede mais pelo `limit`. */
+const LEADS_PER_STAGE_DEFAULT = 20;
+const LEADS_PER_STAGE_CAP = 100;
 const ALL_STAGES = FUNNEL_STAGES_IN_ORDER;
 
 function dataBr(iso: string): string {
@@ -51,22 +54,35 @@ export class FunnelMetricsService {
   /** Holds que ainda representam dinheiro em aberto na coluna (contrato v2 §4.3). */
   private static readonly HOLD_EM_ABERTO = ['DISPONIVEL', 'AGUARDANDO', 'EXPIRADA'];
 
-  async getBoard(clientId: string) {
+  /**
+   * Quadro do funil. `from`/`to` filtram pelo ultimo movimento do lead
+   * (updated_at): sem periodo o quadro traz tudo, e dois meses de bot viram
+   * colunas sem fim. `limit` e o numero de cards por coluna; `count` continua
+   * sendo o total da coluna no periodo, para o painel mostrar quantos faltam.
+   */
+  async getBoard(
+    clientId: string,
+    opts: { from?: string | null; to?: string | null; limit?: number | null } = {},
+  ) {
     const tenantId = await this.resolveTenantId(clientId);
     if (!tenantId) return [];
+
+    const periodo = filtroPeriodo(opts.from, opts.to);
+    const noPeriodo = periodo ? { updated_at: periodo } : {};
+    const porColuna = Math.min(Math.max(opts.limit ?? LEADS_PER_STAGE_DEFAULT, 1), LEADS_PER_STAGE_CAP);
 
     // Os totais vem da projecao do lead (alimentada pelos eventos do bot) —
     // o funil nao le mais o motor de reservas: a pre-reserva vive no PMS.
     const [porEstagio, abertoPorEstagio] = await Promise.all([
       this.prisma.botLead.groupBy({
         by: ['current_stage'],
-        where: { tenant_id: tenantId },
+        where: { tenant_id: tenantId, ...noPeriodo },
         _count: { _all: true },
         _sum: { valor_confirmado_cents: true },
       }),
       this.prisma.botLead.groupBy({
         by: ['current_stage'],
-        where: { tenant_id: tenantId, hold_status: { in: FunnelMetricsService.HOLD_EM_ABERTO } },
+        where: { tenant_id: tenantId, hold_status: { in: FunnelMetricsService.HOLD_EM_ABERTO }, ...noPeriodo },
         _sum: { hold_valor_cents: true },
       }),
     ]);
@@ -78,8 +94,8 @@ export class FunnelMetricsService {
     // Sequencial de proposito: pool pg max 3.
     for (const stage of ALL_STAGES) {
       const leads = await this.prisma.botLead.findMany({
-        where: { tenant_id: tenantId, current_stage: stage },
-        take: LEADS_PER_STAGE_CAP,
+        where: { tenant_id: tenantId, current_stage: stage, ...noPeriodo },
+        take: porColuna,
         orderBy: { updated_at: 'desc' },
       });
       const numeros = leads.map((l) => l.numero_contato);

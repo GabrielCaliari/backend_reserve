@@ -280,3 +280,37 @@ describe('FunnelMetricsService.getMetrics (contrato v2 §4.4)', () => {
     expect(m.conversasPorAnuncio).toEqual([{ sourceId: 'ad_123', count: 5 }]);
   });
 });
+
+describe('FunnelMetricsService.getBoard — periodo e limite por coluna', () => {
+  function build() {
+    const prisma: any = {
+      hotelClient: { findUnique: jest.fn().mockResolvedValue({ tenant_id: 'tenant_1' }) },
+      botLead: {
+        groupBy: jest.fn().mockResolvedValue([]),
+        findMany: jest.fn().mockResolvedValue([]),
+      },
+      botContact: { findMany: jest.fn().mockResolvedValue([]) },
+    };
+    return { prisma, service: new FunnelMetricsService(prisma, {} as any) };
+  }
+
+  it('sem periodo traz tudo, 20 cards por coluna', async () => {
+    const { prisma, service } = build();
+    await service.getBoard('client_1');
+    const where = prisma.botLead.findMany.mock.calls[0][0].where;
+    expect(where.updated_at).toBeUndefined();
+    expect(prisma.botLead.findMany.mock.calls[0][0].take).toBe(20);
+    expect(prisma.botLead.groupBy.mock.calls[0][0].where.updated_at).toBeUndefined();
+  });
+
+  it('com periodo filtra contagens e cards pelo ultimo movimento; limite respeita o teto', async () => {
+    const { prisma, service } = build();
+    await service.getBoard('client_1', { from: '2026-10-01', to: '2026-10-31', limit: 500 });
+    const periodo = prisma.botLead.findMany.mock.calls[0][0].where.updated_at;
+    expect(periodo.gte.toISOString()).toBe('2026-10-01T03:00:00.000Z');
+    expect(periodo.lt.toISOString()).toBe('2026-11-01T03:00:00.000Z');
+    expect(prisma.botLead.groupBy.mock.calls[0][0].where.updated_at).toEqual(periodo);
+    expect(prisma.botLead.groupBy.mock.calls[1][0].where.updated_at).toEqual(periodo);
+    expect(prisma.botLead.findMany.mock.calls[0][0].take).toBe(100);
+  });
+});

@@ -9,7 +9,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { Response } from 'express';
-import { ApiOkResponse } from '@nestjs/swagger';
+import { ApiOkResponse, ApiQuery } from '@nestjs/swagger';
 import {
   ChannelsResponseDto,
   ConversationDetailResponseDto,
@@ -195,8 +195,21 @@ export class ClientPortalController {
 
   @Get(':clientId/whatsapp/funnel')
   @ApiOkResponse({ type: [FunnelColumnDto] })
-  async getWhatsAppFunnelBoard(@Param('clientId') clientId: string) {
-    return this.funnelMetricsService.getBoard(clientId);
+  @ApiQuery({ name: 'from', required: false, description: 'Data pura (YYYY-MM-DD) ou ISO; filtra pelo ultimo movimento do lead.' })
+  @ApiQuery({ name: 'to', required: false })
+  @ApiQuery({ name: 'limit', required: false, description: 'Cards por coluna (padrao 20, maximo 100).' })
+  async getWhatsAppFunnelBoard(
+    @Param('clientId') clientId: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+    @Query('limit') limit?: string,
+  ) {
+    const porColuna = limit ? Number.parseInt(limit, 10) : undefined;
+    return this.funnelMetricsService.getBoard(clientId, {
+      from,
+      to,
+      limit: Number.isFinite(porColuna) ? porColuna : undefined,
+    });
   }
 
   @Get(':clientId/whatsapp/funnel/metrics')
