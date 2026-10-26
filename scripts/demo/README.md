@@ -19,14 +19,20 @@ DATABASE_URL=postgresql://test:test@127.0.0.1:15432/reserve_demo npx prisma db s
 ## Subir
 
 ```bash
-node scripts/demo/start-local.cjs              # API em http://localhost:3002
-node scripts/demo/setup-demo-hotel.cjs         # tenant, hotel, chave do bot, gasto Meta (idempotente)
-node scripts/demo/simulate-bot.cjs --historico 60   # 60 conversas nos ultimos 30 dias
-node scripts/demo/simulate-bot.cjs --ao-vivo        # conversas novas chegando em tempo real
+node scripts/demo/start-local.cjs --port 3012  # compila e sobe a API em http://localhost:3012
+DEMO_API_URL=http://localhost:3012/api node scripts/demo/setup-demo-hotel.cjs    # tenant, hotel, chave do bot, gasto Meta (idempotente)
+DEMO_API_URL=http://localhost:3012/api node scripts/demo/simulate-bot.cjs --historico 60
+DEMO_API_URL=http://localhost:3012/api node scripts/demo/simulate-bot.cjs --ao-vivo   # rode UM so
 ```
 
-No front: `node scripts/dev-local-api.cjs` (painel em http://localhost:3000 apontando
-para a API local).
+No front: `node scripts/dev-local-api.cjs --api http://localhost:3012/api` (painel em
+http://localhost:3000). O `.claude/launch.json` do front ja sobe os dois assim.
+
+Sem `--port`, a API usa a 3002. Os dois launchers rodam o servidor no proprio
+processo: parar o launcher para o servidor, sem deixar porta presa.
+
+Rode um simulador ao vivo por vez: cada um abre uma conversa a cada ~25 s, e dois
+ou tres juntos enchem a lista de "ao vivo".
 
 Logins (super admin e hotel) e a chave do bot ficam em
 `scripts/demo/.demo-hotel.local.json`, fora do git.
@@ -34,7 +40,7 @@ Logins (super admin e hotel) e a chave do bot ficam em
 ## Conferir as rotas
 
 ```bash
-node scripts/demo/smoke-routes.cjs
+DEMO_API_ORIGIN=http://localhost:3012 node scripts/demo/smoke-routes.cjs
 ```
 
 Chama todas as rotas GET do painel listadas no Swagger com os ids da pousada demo.
