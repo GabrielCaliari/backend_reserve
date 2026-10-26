@@ -77,3 +77,6 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 /deploy/.env.production
 /deploy/.env.bot
 /deploy/.env
+
+# Hotel demo local (logins e chave do bot)
+scripts/demo/.demo-hotel.local.json
