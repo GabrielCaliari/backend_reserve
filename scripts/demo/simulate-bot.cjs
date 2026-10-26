@@ -142,6 +142,21 @@ function evento(phone, nome, origem, passo, ocorrido) {
   };
 }
 
+/** Heartbeat no formato que o painel le (cartao do canal WhatsApp). */
+function heartbeatData(ativas, aguardandoHumano) {
+  return {
+    versao: 'simulador',
+    bot_enabled: true,
+    ai_enabled: true,
+    mode: 'producao',
+    active_conversations: ativas,
+    paused_awaiting_human: aguardandoHumano,
+    last_polling_at: new Date().toISOString(),
+  };
+}
+
+let emSocorro = 0;
+
 async function enviar(events) {
   for (let i = 0; i < events.length; i += 200) {
     const res = await fetch(`${API}/ingest/bot-events`, {
@@ -189,7 +204,7 @@ async function historico(total) {
       }, new Date(Math.min(t + 3 * 86400000, agora - 500))));
     }
   }
-  events.push({ event_id: crypto.randomUUID(), occurred_at: new Date().toISOString(), type: 'heartbeat', data: { versao: 'simulador', workflows_ativos: 11 } });
+  events.push({ event_id: crypto.randomUUID(), occurred_at: new Date().toISOString(), type: 'heartbeat', data: heartbeatData(0, 0) });
   await enviar(events);
   console.log(`Historico enviado: ${total} conversas, ${events.length} eventos`, resumo);
 }
@@ -200,6 +215,7 @@ async function conversaAoVivo() {
   const nome = pick(NOMES);
   const origem = origemAleatoria();
   console.log(`[ao vivo] ${nome} (${phone}) via ${origem.origin} -> ${desfecho}`);
+  if (desfecho === 'socorro') emSocorro += 1;
   for (const passo of roteiro(desfecho, new Date())) {
     await enviar([evento(phone, nome, origem, passo, new Date())]);
     await sleep(passo.type === 'mensagem' ? 4000 + Math.random() * 5000 : 800);
@@ -211,8 +227,8 @@ async function aoVivo() {
   const ativas = new Set();
   let ultimoHeartbeat = 0;
   for (;;) {
-    if (Date.now() - ultimoHeartbeat > 60000) {
-      await enviar([{ event_id: crypto.randomUUID(), occurred_at: new Date().toISOString(), type: 'heartbeat', data: { versao: 'simulador' } }]);
+    if (Date.now() - ultimoHeartbeat > 30000) {
+      await enviar([{ event_id: crypto.randomUUID(), occurred_at: new Date().toISOString(), type: 'heartbeat', data: heartbeatData(ativas.size, emSocorro) }]);
       ultimoHeartbeat = Date.now();
     }
     if (ativas.size < 3) {
