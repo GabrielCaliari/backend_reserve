@@ -63,7 +63,7 @@ async function main() {
              (select count(*) from bot_contacts c where c.tenant_id = t.id) as contatos,
              (select count(*) from bot_messages m where m.tenant_id = t.id) as mensagens,
              (select max(m.ocorrido_em) from bot_messages m where m.tenant_id = t.id) as ultima_mensagem
-      from tenants t
+      from "Tenant" t
       join bot_integration_configs b on b.tenant_id = t.id
       order by contatos desc`)
   ).rows;
@@ -98,7 +98,14 @@ async function main() {
       }
     }
 
+    const existentes = new Set(
+      (await src.query("select table_name from information_schema.tables where table_schema = 'public'")).rows.map((r) => r.table_name),
+    );
     for (const table of TABLES) {
+      if (!existentes.has(table)) {
+        console.log(table + ': nao existe na origem (migration ainda nao aplicada), pulando');
+        continue;
+      }
       const { rows } = await src.query(`select * from ${table} where tenant_id = $1`, [origem.id]);
       let inseridas = 0;
       for (const row of rows) {
