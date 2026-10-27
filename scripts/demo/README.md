@@ -53,3 +53,16 @@ Cada conversa segue um roteiro com desfecho (reserva, perda, socorro com humano
 assumindo, erro tecnico do bot, em andamento), vinda de anuncio (ad_id de
 `demo-ads.cjs`, os mesmos do gasto gravado no setup), link rastreavel ou organico.
 Telefones na faixa ficticia `+55 11 90000-xxxx`.
+
+## Conversas reais do bot (em vez do simulador)
+
+As conversas que o n8n ja mandou para a API de producao podem ser copiadas para a
+Pousada Demo local (so SELECT na origem; apaga o que o simulador inventou):
+
+```bash
+node scripts/demo/import-bot-data.cjs                 # lista os tenants com dado de bot
+node scripts/demo/import-bot-data.cjs --tenant <slug>  # importa para o tenant demo
+```
+
+Origem: `SOURCE_DATABASE_URL` ou o `DATABASE_URL` do `.env`. Use `--manter` para
+nao apagar os dados do simulador antes.

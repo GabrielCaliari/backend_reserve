@@ -29,7 +29,7 @@ Object.assign(process.env, {
   REDIS_HOST: '127.0.0.1',
   REDIS_PORT: '16379',
   REDIS_PASSWORD: '',
-  CORS_ORIGINS: 'http://localhost:3000,http://127.0.0.1:3000',
+  CORS_ORIGINS: 'http://localhost:3000,http://127.0.0.1:3000,http://localhost:3001,http://127.0.0.1:3001,http://localhost:3002,http://127.0.0.1:3002',
   // Sem token real: a sync do Meta so roda quando houver credencial de verdade.
   META_SYSTEM_USER_TOKEN: '',
 });
